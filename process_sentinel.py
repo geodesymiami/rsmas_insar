@@ -328,7 +328,6 @@ def set_default_options(inps, template):
         ]
     optional_template_vals = \
         [ TemplateTuple('sentinelStack.slcDir', 'slcDir', inps.work_dir + '/SLC'),
-          TemplateTuple('sentinelStack.slcDir', 'slcDir', inps.work_dir + '/SLC'),
           TemplateTuple('sentinelStack.workflow', 'workflow', 'interferogram'),
           TemplateTuple('sentinelStack.azimuthLooks', 'azimuthLooks', 3),
           TemplateTuple('sentinelStack.filtStrength', 'filtStrength', 0.5),
@@ -716,6 +715,8 @@ def main(argv):
     if inps.flag_ssara:
         if not os.path.isdir(inps.slcDir):
             os.mkdir(inps.slcDir)
+        if inps.slcDir is not inps. work_dir+'/SLC':  
+            os.symlink(inps.slcDir,inps.work_dir+'/SLC')
         os.chdir(inps.slcDir)
 
         call_ssara(custom_template, inps.slcDir)
