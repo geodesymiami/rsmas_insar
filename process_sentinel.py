@@ -1,6 +1,6 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python3 
 ###############################################################################
-#
+#   
 # Project: process_sentinel.py
 # Purpose: runs H Fattahi's sentinelStack code
 # Author: Falk Amelung
