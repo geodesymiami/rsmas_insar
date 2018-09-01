@@ -715,7 +715,7 @@ def main(argv):
     if inps.flag_ssara:
         if not os.path.isdir(inps.slcDir):
             os.mkdir(inps.slcDir)
-        if inps.slcDir is not inps. work_dir+'/SLC':  
+        if inps.slcDir is not inps. work_dir+'/SLC' and not os.path.isdir(inps.work_dir+'/SLC'):  
             os.symlink(inps.slcDir,inps.work_dir+'/SLC')
         os.chdir(inps.slcDir)
 
