@@ -514,8 +514,11 @@ def create_stack_sentinel_run_files(inps, dem_file):
     # TODO: Change subprocess call to get back error code and send error code to logger
     logger.info(command)
     messageRsmas.log(command)
-    status = subprocess.Popen(command, env=inps.isce_env, shell=True).wait()
-    if status is not 0:
+    process = subprocess.Popen(
+            command, shell=True, env=inps.isce_env, 
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (output, error) = process.communicate()
+    if process.returncode is not 0 or error or 'Traceback' in output.decode("utf-8"):
         logger.error(
             'Problem with making run_files using stackSentinel.py')
         raise Exception('ERROR making run_files using stackSentinel.py')
