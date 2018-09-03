@@ -191,8 +191,8 @@ def run_process_sentinel():
 	
 	logger.info("JOB NUMBER: %s", job_number)
 	
-	stdout_file_path = '/projects/scratch/insarlab/'+user+'/'+dataset+'/z_processSentinel_'+job_number+'.o'
-	stderr_file_path = '/projects/scratch/insarlab/'+user+'/'+dataset+'/z_processSentinel_'+job_number+'.e'
+	stdout_file_path = os.getenv('SCRATCHDIR')+dataset+'/z_processSentinel_'+job_number+'.o'
+	stderr_file_path = os.getenv('SCRATCHDIR')+dataset+'/z_processSentinel_'+job_number+'.e'
 	
 	return [stdout_file_path, stderr_file_path]
 

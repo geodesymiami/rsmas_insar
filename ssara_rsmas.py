@@ -4,16 +4,7 @@ import os
 import sys
 import time
 import subprocess
-import argparse
 
-def get_dirsize(path):
-	total_size = 0
-	for dirpath, dirnames, filenames in os.walk(path):
-		for f in filenames:
-			fp = os.path.join(dirpath, f)
-			total_size += os.path.getsize(fp)
-	print(total_size)
-	return total_size
 	
 def run_ssara(run_number=1):
 
@@ -44,11 +35,9 @@ def run_ssara(run_number=1):
 			break;
 		
 		time.sleep(60*wait_time)
-		completion_status = ssara_process.poll()
-		download_speed = (curr_size - prev_size) / 1024 /  wait_time / 60
-		print("{} minutes: {:.1f} GB, {:.1f} MB/s, {:.1f} GB/hr, completion_status: {} ".format(i*wait_time, 
-                  curr_size/1024/1024, download_speed, download_speed*3600/1024, completion_status))
 		prev_size = curr_size
+		completion_status = ssara_process.poll()
+		print("{} minutes: {:.1f}GB, completion_status {} ".format(i*wait_time, curr_size/1024/1024, completion_status))
 			
 	exit_code = completion_status
 
@@ -57,7 +46,21 @@ def run_ssara(run_number=1):
 	if exit_code in bad_codes or hang_status:
 		print("Run Again")
 		run_ssara(run_number=run_number+1)
+
+	ssara_output = subprocess.check_output(['ssara_federated_query.py']+sys.argv[1:len(sys.argv)]+["--print"])
+	ssara_output_array = ssara_output.decode('utf-8').split('\n')
+	ssara_output_filtered = ssara_output_array[5:len(ssara_output_array)-1]
+
+	files_to_check = []
+	for entry in ssara_output_filtered:
+		files_to_check.append(entry.split(',')[-1].split('/')[-1])
 		
+
+	for f in files_to_check:
+		if not os.path.isfile(f):
+			run_ssara(run_number+1)
+			return
+
 	return
 
 
