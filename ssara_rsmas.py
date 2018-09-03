@@ -5,7 +5,39 @@ import sys
 import time
 import subprocess
 
+"""
+    Checks if the files too be downloaded actually exist or not on the system as a means of validating whether
+    or not the wrapper completed succesdully.
+
+    Parameters: run_number: int, the current iteration the wrapper is on (maxiumum 10 before quitting)
+    Returns: none
+
+"""
+def check_downloads(run_number):
+	ssara_output = subprocess.check_output(['ssara_federated_query.py']+sys.argv[1:len(sys.argv)]+["--print"])
+        ssara_output_array = ssara_output.decode('utf-8').split('\n')
+        ssara_output_filtered = ssara_output_array[5:len(ssara_output_array)-1]
+
+        files_to_check = []
+        for entry in ssara_output_filtered:
+                files_to_check.append(entry.split(',')[-1].split('/')[-1])
+
+
+        for f in files_to_check:
+                if not os.path.isfile(f):
+                        run_ssara(run_number+1)
+                        return
+
 	
+
+"""
+     Runs ssara_federated_query-cj.py and checks continuously for whether the data download has hung without comleting
+     or exited with an error code. If either of the above occur, the function is run again, for a maxiumum of 10 times.
+         
+     Parameters: run_number: int, the current iteration the wrapper is on (maxiumum 10 before quitting)
+     Returns: none
+
+"""	
 def run_ssara(run_number=1):
 
 	print("RUN NUMBER: "+str(run_number))	
@@ -47,19 +79,7 @@ def run_ssara(run_number=1):
 		print("Run Again")
 		run_ssara(run_number=run_number+1)
 
-	ssara_output = subprocess.check_output(['ssara_federated_query.py']+sys.argv[1:len(sys.argv)]+["--print"])
-	ssara_output_array = ssara_output.decode('utf-8').split('\n')
-	ssara_output_filtered = ssara_output_array[5:len(ssara_output_array)-1]
-
-	files_to_check = []
-	for entry in ssara_output_filtered:
-		files_to_check.append(entry.split(',')[-1].split('/')[-1])
-		
-
-	for f in files_to_check:
-		if not os.path.isfile(f):
-			run_ssara(run_number+1)
-			return
+	check_downloadss(run_number)
 
 	return
 
