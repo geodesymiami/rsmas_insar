@@ -498,7 +498,7 @@ def create_stack_sentinel_run_files(inps, dem_file):
     suffix  = ''
     extraOptions = ''
     if inps.ProcessingMethod is 'squeesar' or inps.ProcessingMethod is 'ps':
-       suffix       = 'squeesar'
+       suffix       = '_squeesar'
        extraOptions = ' -P ' + inps.ProcessingMethod
     command = 'stackSentinel'+suffix+'.py -n ' + str(inps.subswath) + ' -b ' + inps.boundingBox + \
               ' -c ' + str(inps.numConnections) + \
