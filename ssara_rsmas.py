@@ -27,15 +27,15 @@ logger.addHandler(general)
 """
 def check_downloads(run_number):
 	ssara_output = subprocess.check_output(['ssara_federated_query.py']+sys.argv[1:len(sys.argv)]+["--print"])
-    ssara_output_array = ssara_output.decode('utf-8').split('\n')
-    ssara_output_filtered = ssara_output_array[5:len(ssara_output_array)-1]
+	ssara_output_array = ssara_output.decode('utf-8').split('\n')
+	ssara_output_filtered = ssara_output_array[5:len(ssara_output_array)-1]
 
-    files_to_check = []
-    for entry in ssara_output_filtered:
-        files_to_check.append(entry.split(',')[-1].split('/')[-1])
+	files_to_check = []
+	for entry in ssara_output_filtered:
+		files_to_check.append(entry.split(',')[-1].split('/')[-1])
 
 
-    for f in files_to_check:
+	for f in files_to_check:
 		if not os.path.isfile(f):
 			logger.warning("The file, %s, didn't download correctly. Running ssara again.", f)
 			run_ssara(run_number+1, serial=True)
