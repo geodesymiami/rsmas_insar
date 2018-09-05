@@ -43,22 +43,35 @@ logger.addHandler(console)
 info_handler = None
 error_handler = None
 
+"""
+    Initializes logging handlers for INFO label and ERROR level file logging. Needed so as to be able to continue logging
+    data to the appropiate dataset log after run_operations completes.
+    Parameters: dset: str, the dataset to write log output for
+                mode: str, the logfile write mode (can be write or append)
+    Returns:    none
+"""
 def setup_logging_handlers(dset, mode):
 	global info_handler, error_handler
 	# create a file handler
-	info_handler = logging.FileHandler(os.getenv('OPERATIONS')+'/LOGS/'+dataset+'_info.log', mode, encoding=None)
+	info_handler = logging.FileHandler(os.getenv('OPERATIONS')+'/LOGS/'+dset+'_info.log', mode, encoding=None)
 	info_handler.setLevel(logging.INFO)
 	info_handler.setFormatter(std_formatter)
 	logger.addHandler(info_handler)
 
 	# create a file handler
-	error_handler = logging.FileHandler(os.getenv('OPERATIONS')+'/LOGS/'+dataset+'_error.log', mode, encoding=None)
+	error_handler = logging.FileHandler(os.getenv('OPERATIONS')+'/LOGS/'+dset+'_error.log', mode, encoding=None)
 	err_formatter = logging.Formatter("%(levelname)s - %(message)s")
 	error_handler.setLevel(logging.ERROR)
 	error_handler.setFormatter(err_formatter)
 	logger.addHandler(error_handler)
 
 ###################### Command Line Argument Processing #################
+
+"""
+    Defines commandline argument parser and command line arguments to accept
+    Parameters: none
+    Returns:    parser: argument parser object
+"""
 def create_process_sentinel_parser():
 	parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
 
@@ -74,7 +87,11 @@ def create_process_sentinel_parser():
 
 	return parser
 
-	
+"""
+    Parses command line arguments into inps object as object parameters
+    Parameters: args: [str], array of command line arguments
+    Returns:    none
+"""	
 def command_line_parse(args):
 	global inps;
 
@@ -92,11 +109,21 @@ def command_line_parse(args):
 	
 	
 ###################### Auxiliary Functions #####################
+"""
+    Obtains the currently logged in user using the `whoami` command with subprocess
+    Parameters: none
+    Returns:    none
+"""
 def get_user(): 
 	global user
 	user = subprocess.check_output(['whoami']).decode('utf-8').strip("\n")
 
-
+"""
+    Reads template file for the current dataset and parses out the 'ssaraopt' option before creating command options line options 
+    array for ssara_federated_query.py
+    Parameters: none
+    Returns:    ssara_options: [str], array of command line options to run ssara_federated_query with
+"""
 def create_ssara_options():
 	
 	with open('/nethome/'+user+'/insarlab/OPERATIONS/TEMPLATES/'+dataset+'.template', 'r') as template_file:
@@ -112,13 +139,17 @@ def create_ssara_options():
 	logger.debug("OPTIONS ARRAY: %s", str(options))
 
 	ssara_options = ['ssara_federated_query.py'] + options + ['--print']
-	#ssara_options = ['ssara_federated_query.py', '-r', '10', '--platform', 'COSMO-SKYMED-1,COSMO-SKYMED-2,COSMO-SKYMED-3,COSMO-SKYMED-4', '--collectionName=', 'Supersites CSK Hawaii', '-s', '2016-01-01', '--print']
 	
 	logger.debug("SSARA OPTIONS: %s", str(ssara_options))	
 		
 	return ssara_options
 		
-
+"""
+    Reads the most recently stored date for the given dataset from the stored_date.date file, and parses the newest data date from
+    ssara_federated_query.
+    Parameters: ssara_output: str, string output from ssara_federated_query.py ... --print
+    Returns:    none
+"""
 def set_dates(ssara_output):
 	global stored_date, most_recent
 	
@@ -139,12 +170,21 @@ def set_dates(ssara_output):
 				data = str(dataset + ": "+str(datetime.strftime(most_recent, "%Y-%m-%dT%H:%M:%S.%f"))+"\n")
 				date_file.write(data)
 
+"""
+    Compares the most recent and stored dates 
+    Parameters: none
+    Returns:    boolean, whether the most recent data is more recent than the stored date
+"""
 def compare_dates():
 	global stored_date, most_recent
 	
 	return most_recent > stored_date
 	
-
+"""
+    Overwrites the date stored in the stored_date.date file for the given dataset
+    Parameters: none
+    Returns:    none
+"""
 def overwrite_stored_date():
 	global user, most_recent
 
@@ -163,7 +203,11 @@ def overwrite_stored_date():
 	with open(os.getenv('OPERATIONS')+'/stored_date.date', 'w') as date_file:
 		date_file.writelines(data)
 
-
+"""
+    Runs processSentinel.py with the associated options as defined by the provided command line arguments
+    Parameters: none
+    Returns:    [files], [str] an array of file paths to the processSentinel output and error files
+"""
 def run_process_sentinel():
 	global user, dataset
 	
@@ -196,7 +240,11 @@ def run_process_sentinel():
 	
 	return [stdout_file_path, stderr_file_path]
 
-
+"""
+    Copies the output and error files from processSentinel to the $OPERATIONS/ERRORS directory
+    Parameters: files_to_move: [str], arrays of files to move to the ERRORS directory
+    Returns:    none
+"""
 def post_processing(files_to_move):
 	global output_file, most_recent
 	
@@ -233,9 +281,10 @@ def post_processing(files_to_move):
 
 if __name__ == "__main__":
 	
+	# Parse command line arguments
 	command_line_parse(sys.argv[1:])
 	
-	# Determine Currently Logged in User                                                                                                                                                              
+	# Determine Currently Logged in User                                                                                                                                     
 	get_user()
 	
 	# Generate Template Files
@@ -260,9 +309,9 @@ if __name__ == "__main__":
 	
 	templates_directory = os.getenv('OPERATIONS') + "/TEMPLATES/"
 	
+	# Obtains list of datasets to run processSentinel on
 	datasets = glob.glob(templates_directory+"*.template")
-	datasets = [d.split('.', 1)[0].split('/')[-1] for d in datasets]
-	
+	datasets = [d.split('.', 1)[0].split('/')[-1] for d in datasets]	
 	if inps.dataset:
 		datasets = [d for d in datasets if d == inps.dataset]
 			
@@ -272,13 +321,14 @@ if __name__ == "__main__":
 
 	all_output_files = []
 
+	# Perform the processing routine for each dataset
 	for dset in datasets:
 		
 		dataset = dset;
 		
 		setup_logging_handlers(dataset, "a")
 		
-		# Debugguing Outfile and Error File                                                                                                                                                                
+		# Debugguing Outfile and Error File                                                                                                                              
 		logger.info("\nSTART TIME: %s", datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
 		logger.info("USER: %s\n", user)
 		logger.info("DATASET: %s", dataset)
@@ -289,6 +339,7 @@ if __name__ == "__main__":
 		# Run SSARA and check output	
 		ssara_output = subprocess.check_output(ssara_options).decode('utf-8');
 		
+		# Sets date variables for stored and most recent dates
 		set_dates(ssara_output)
 
 		if compare_dates():
@@ -306,7 +357,6 @@ if __name__ == "__main__":
 			all_output_files += files_to_move;
 			
 		else:
-			
 			logger.info("NO NEW DATA!\n")
 			logger.info("----------------------------------")
 			logger.error("-----------------------------------")
@@ -314,7 +364,7 @@ if __name__ == "__main__":
 		logger.removeHandler(info_handler)
 		logger.removeHandler(error_handler)
 		
-		
+		# Perform post processing on all of the output and error files produced by processSentinel
 		while len(all_output_files) != 0:
 			for i, file in enumerate(all_output_files):
 				if os.path.exists(file) and os.path.isfile(file):
@@ -325,10 +375,7 @@ if __name__ == "__main__":
 				
 			time.sleep(60)
 
-		
-		#logger.info("PROCESS SENTINEL JOB ENDED AT: %s", datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
-
-	logger.warning("run_operations COMPLETE")
+      	logger.warning("run_operations COMPLETE")
 	logger.info("END TIME: %s", datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))	
 	
 	sys.exit()
