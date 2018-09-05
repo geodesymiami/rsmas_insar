@@ -38,9 +38,8 @@ def check_downloads(run_number):
     for f in files_to_check:
 		if not os.path.isfile(f):
 			logger.warning("The file, %s, didn't download correctly. Running ssara again.", f)
-			run_ssara(run_number+1)
+			run_ssara(run_number+1, serial=True)
 			return
-
 
 """
      Runs ssara_federated_query-cj.py and checks continuously for whether the data download has hung without comleting
@@ -50,14 +49,25 @@ def check_downloads(run_number):
      Returns: none
 
 """	
-def run_ssara(run_number=1):
+def run_ssara(run_number=1, serial=False):
 
 	logger.info("RUN NUMBER: %s\n", str(run_number))	
-	if run_number > 10:
+	if not serial and run_number > 10:
+		return
+		
+	if serial and run_number > 2:
 		return
 	
-	command = 'ssara_federated_query-cj.py ' + ' '.join(sys.argv[1:len(sys.argv)])
-	ssara_process = subprocess.Popen(["ssara_federated_query-cj.py"] + sys.argv[1:len(sys.argv)])
+	args = sys.argv[1:len(sys.argv)]
+	if serial:
+		if "--parallel" in args:
+			args.remove("--parallel");
+			
+	
+	
+	command = 'ssara_federated_query-cj.py ' + ' '.join(args)
+	
+	ssara_process = subprocess.Popen(["ssara_federated_query-cj.py"] + args)
 		
 	completion_status = ssara_process.poll()
 	hang_status = False

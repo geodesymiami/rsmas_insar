@@ -354,12 +354,8 @@ def set_default_options(inps, template):
 
 def call_ssara(custom_template, slcDir):
         out_file = '../out_ssara.log' 
-        ssara_command = 'ssara_rsmas.py ' + \
-            custom_template['ssaraopt'] + \
-            ' --print --parallel=10 --asfResponseTimeout=360 --download |& tee ' + out_file
-        command = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' + \
-            os.getenv('PARENTDIR') + '/sources/rsmas_isce/' + \
-            ssara_command + '\"'
+        ssara_command = 'ssara_rsmas.py ' + custom_template['ssaraopt'] + ' --print --parallel=10 --asfResponseTimeout=360 --download |& tee ' + out_file
+        command = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' + os.getenv('PARENTDIR') + '/sources/rsmas_isce/' + ssara_command + '\"'
         ''' os.getenv('PARENTDIR') + '/sources/rsmas_isce/' + \     #FA 8/2018: use ssara_rsmas.py which uses ASF's ssara_federated_query-cj.py until Scott's ssara is fixed '''
 
         messageRsmas.log(command)
@@ -373,8 +369,7 @@ def call_pysar(custom_template, custom_template_file):
 
     # TODO: Change subprocess call to get back error code and send error code to logger
     logger.debug('\n*************** running pysar ****************')
-    command = 'pysarApp.py ' + custom_template_file + \
-        ' --load-data |& tee out_pysar.log'
+    command = 'pysarApp.py ' + custom_template_file + ' --load-data |& tee out_pysar.log'
     messageRsmas.log(command)
     status = subprocess.Popen(command, shell=True).wait()
     if status is not 0:
@@ -400,10 +395,7 @@ def call_pysar(custom_template, custom_template_file):
 
 def get_environment_from_source_file(source_file):
 
-    get_environment_command = 'source {source_file} ; ' \
-                              'python -c "import os, json; ' \
-                              'print(json.dumps(dict(os.environ)))"'\
-        .format(source_file= source_file)
+    get_environment_command = 'source {source_file} ; ' 'python -c "import os, json; ' 'print(json.dumps(dict(os.environ)))"'.format(source_file= source_file)
 
     shell_command = str('cd ' + os.getenv('PARENTDIR') + '; ' + get_environment_command)
 
@@ -578,8 +570,7 @@ def submit_isce_jobs(isce_env, run_file_list, cwd, subswath, custom_template_fil
     sswath = subswath.strip('\'').split(' ')[0]
     xml_file = glob.glob('master/*.xml')[0]
 
-    command = 'prep4timeseries.py -i merged/interferograms/ -x ' + xml_file + \
-              ' -b baselines/ -g merged/geom_master/ '
+    command = 'prep4timeseries.py -i merged/interferograms/ -x ' + xml_file + ' -b baselines/ -g merged/geom_master/ '
     messageRsmas.log(command)
     # TODO: Change subprocess call to get back error code and send error code to logger
     status = subprocess.Popen(command, env=isce_env, shell=True).wait()
@@ -600,8 +591,7 @@ def run_insar_maps(work_dir):
     hdfeos_file = hdfeos_file[0]
 
     json_folder = work_dir + '/PYSAR/JSON'
-    mbtiles_file = json_folder + '/' + \
-                   os.path.splitext(os.path.basename(hdfeos_file))[0] + '.mbtiles'
+    mbtiles_file = json_folder + '/' + os.path.splitext(os.path.basename(hdfeos_file))[0] + '.mbtiles'
 
     if os.path.isdir(json_folder):
         logger.info('Removing directory: %s', json_folder)
