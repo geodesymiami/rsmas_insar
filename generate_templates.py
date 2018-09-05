@@ -5,8 +5,22 @@ import pandas as pd
 import sys
 import requests
 import argparse
+import time
+import logging
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
+std_formatter = logging.Formatter("%(levelname)s - %(message)s")
+
+general = logging.FileHandler(os.getenv('OPERATIONS')+'/LOGS/generate_templates.log', 'a+', encoding=None)
+general.setLevel(logging.INFO)
+general.setFormatter(std_formatter)
+logger.addHandler(general)
+
 
 inps = None
+date_format = "%Y-%m-%dT%H:%M:%S.%f"
 
 def cmdLineParse(argv):
     global inps
@@ -130,17 +144,13 @@ def generate_and_save_template_files(df, output_location):
         os.mkdir(output_location)
 
     files_to_save = generate_template_files(df)
+    
+    logging.info("Template files being generated for: %s", str(files_to_save))
 
     for key, value in files_to_save.items():
         # Print contents for debugging purposes
         if value == None:
             continue;
-
-        #print(key)
-        #print();
-
-        #for i in value.split('\n'):
-            #print(i)
 
         with open(os.path.join(output_location, key + ".template"), "w") as f:
             f.write(value)
@@ -156,11 +166,14 @@ def generate_and_save_template_files_from_dataframe(df, output_location):
 
 
 def main(args):
+    
+    logger.info("GENERATING TEMPLATES ON %s\n", datetime.fromtimestamp(time.time()).strftime(date_format))
+    
     inps = cmdLineParse(args)
 
-    csv_file = "1zAsa5cykv-WS39ufkCZdvFvaOem3Akol8aqzANnsdhE"
-    test_sheet = ""
-    output_location = os.getenv('OPERATIONS') + '/TEMPLATES/'
+    csv_file         = "1zAsa5cykv-WS39ufkCZdvFvaOem3Akol8aqzANnsdhE"
+    test_sheet       = "1Mvxf-O1NV-TJK9Ax7vWTvZ8q9jWx-GQD4y5WGgTOcMc"
+    output_location  = os.getenv('OPERATIONS') + '/TEMPLATES/'
 
     if inps.csv:
         csv_file = inps.csv
