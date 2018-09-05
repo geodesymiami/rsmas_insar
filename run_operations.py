@@ -13,20 +13,10 @@ import generate_templates as gt
 
 import logging
 
+#################### LOGGERS AND LOGGING SETUP ####################
+
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-
-job_to_dset = {}
-
-#################### GLOBAL VARIABLES ####################
-
-dataset = 'GalapagosSenDT128VV'		                # Single Dataset for Testing
-
-user = subprocess.check_output(['whoami']).decode('utf-8').strip("\n")  			# Currently logged in user
-	
-stored_date = None					# previously stored date
-most_recent = None					# date parsed from SSARA
-inps = None;
 
 std_formatter = logging.Formatter("%(message)s")
 
@@ -43,27 +33,49 @@ logger.addHandler(console)
 info_handler = None
 error_handler = None
 
+#################### GLOBAL VARIABLES ####################
+
+dataset = 'GalapagosSenDT128VV'		                								# Single Dataset for Testing
+
+user = subprocess.check_output(['whoami']).decode('utf-8').strip("\n")  			# Currently logged in user
+	
+stored_date = None																	# previously stored date
+most_recent = None																	# date parsed from SSARA
+inps = None;																		# command line arguments
+
+job_to_dset = {}																	# dictionary of jobs to datasets
+
+date_format = "%Y-%m-%dT%H:%M:%S.%f"												# date format for reading and writing dates
+
+
+
+
 """
-    Initializes logging handlers for INFO label and ERROR level file logging. Needed so as to be able to continue logging
-    data to the appropiate dataset log after run_operations completes.
+    Initializes logging handlers for INFO level and ERROR level file logging. Needed so as to be able to continue logging
+    data to the appropiate dataset log after processSentinel completes.
     Parameters: dset: str, the dataset to write log output for
                 mode: str, the logfile write mode (can be write or append)
     Returns:    none
 """
 def setup_logging_handlers(dset, mode):
 	global info_handler, error_handler
-	# create a file handler
-	info_handler = logging.FileHandler(os.getenv('OPERATIONS')+'/LOGS/'+dset+'_info.log', mode, encoding=None)
+	
+	# create a file handler for INFO level logging
+	info_log_file = os.getenv('OPERATIONS')+'/LOGS/'+dset+'_info.log'
+	info_handler = logging.FileHandler(info_log_file, mode, encoding=None)
+	info_formatter = logging.Formatter("%(levelname)s - %(message)s")
 	info_handler.setLevel(logging.INFO)
-	info_handler.setFormatter(std_formatter)
+	info_handler.setFormatter(info_formatter)
 	logger.addHandler(info_handler)
 
-	# create a file handler
-	error_handler = logging.FileHandler(os.getenv('OPERATIONS')+'/LOGS/'+dset+'_error.log', mode, encoding=None)
+	# create a file handler for ERROR level logging
+	error_log_file = os.getenv('OPERATIONS')+'/LOGS/'+dset+'_error.log'
+ 	error_handler = logging.FileHandler(error_log_file, mode, encoding=None)
 	err_formatter = logging.Formatter("%(levelname)s - %(message)s")
 	error_handler.setLevel(logging.ERROR)
 	error_handler.setFormatter(err_formatter)
 	logger.addHandler(error_handler)
+
 
 ###################### Command Line Argument Processing #################
 
@@ -83,7 +95,7 @@ def create_process_sentinel_parser():
 	parser.add_argument('--startprocess', dest='startprocess', action='store_true', help='process using sentinelstack package')
 	parser.add_argument('--startpysar', dest='startpysar', action='store_true', help='run pysar')
 	parser.add_argument('--startinsarmaps', dest='startinsarmaps', action='store_true', help='ingest into insarmaps')
-	parser.add_argument("--testsheet", dest="test_sheet", action='store_true', help="whether or not to use the test sheet rather than the production sheet")
+	parser.add_argument("--testsheet", dest="test_sheet", action='store_true', help='whether or not to use the test sheet')
 
 	return parser
 
@@ -98,25 +110,20 @@ def command_line_parse(args):
 	parser = create_process_sentinel_parser()
 	inps = parser.parse_args(args)
 	
-	logger.info("--dataset	      	: %s", inps.dataset)
-	logger.info("--templatecsv      : %s", inps.template_csv)
-	logger.info("--singletemplate   : %s", inps.single_template)
-	logger.info("--startssara       : %s", inps.startssara)
-	logger.info("--startprocess     : %s", inps.startprocess)
-	logger.info("--startpysar       : %s", inps.startpysar)
-	logger.info("--startinsarmaps   : %s", inps.startinsarmaps)
-	logger.info("--testsheet	: %s", inps.test_sheet)
+	logger.info("\tCOMMAND LINE VARIABLES:")
+	logger.info("\t\t--dataset	      	: %s\n", inps.dataset)
+	logger.info("\t\t--templatecsv      : %s\n", inps.template_csv)
+	logger.info("\t\t--singletemplate   : %s\n", inps.single_template)
+	logger.info("\t\t--startssara       : %s\n", inps.startssara)
+	logger.info("\t\t--startprocess     : %s\n", inps.startprocess)
+	logger.info("\t\t--startpysar       : %s\n", inps.startpysar)
+	logger.info("\t\t--startinsarmaps   : %s\n", inps.startinsarmaps)
+	logger.info("\t\t--testsheet		: %s\n", inps.test_sheet)
 	
+
 	
 ###################### Auxiliary Functions #####################
-"""
-    Obtains the currently logged in user using the `whoami` command with subprocess
-    Parameters: none
-    Returns:    none
-"""
-def get_user(): 
-	global user
-	user = subprocess.check_output(['whoami']).decode('utf-8').strip("\n")
+
 
 """
     Reads template file for the current dataset and parses out the 'ssaraopt' option before creating command options line options 
@@ -131,16 +138,12 @@ def create_ssara_options():
 		for line in template_file:
 			if 'ssaraopt' in line:
 				options = line.strip('\n').rstrip().split("= ")[1]
-				logger.info("OPTIONS: %s", str(options))
 				break;
 					
 	# Compute SSARA options to use
 	options = options.split(' ')
-	logger.debug("OPTIONS ARRAY: %s", str(options))
 
-	ssara_options = ['ssara_federated_query.py'] + options + ['--print']
-	
-	logger.debug("SSARA OPTIONS: %s", str(ssara_options))	
+	ssara_options = ['ssara_federated_query.py'] + options + ['--print']	
 		
 	return ssara_options
 		
@@ -154,20 +157,20 @@ def set_dates(ssara_output):
 	global stored_date, most_recent
 	
 	most_recent_data = ssara_output.split("\n")[-2]
-	most_recent = datetime.strptime(most_recent_data.split(",")[3], "%Y-%m-%dT%H:%M:%S.%f")
+	most_recent = datetime.strptime(most_recent_data.split(",")[3], date_format)
 
 	# Write Most Recent Date to File
-	logger.info("\nNEWEST DATE: %s\n", str(most_recent))
-
 	with open(os.getenv('OPERATIONS')+'/stored_date.date', 'rb') as stored_date_file:
 	
 		try:
 			date_line = subprocess.check_output(['grep', dataset, os.getenv('OPERATIONS')+'/stored_date.date']).decode('utf-8')
-			stored_date = datetime.strptime(date_line.split(": ")[1].strip('\n'), "%Y-%m-%dT%H:%M:%S.%f")
+			stored_date = datetime.strptime(date_line.split(": ")[1].strip('\n'), date_format)
 		except subprocess.CalledProcessError as e:
-			stored_date = datetime.strptime("1970-01-01T12:00:00.000000", "%Y-%m-%dT%H:%M:%S.%f")
+			
+			stored_date = datetime.strptime("1970-01-01T12:00:00.000000", date_format)
+			
 			with open(os.getenv('OPERATIONS')+'/stored_date.date', 'a+') as date_file:
-				data = str(dataset + ": "+str(datetime.strftime(most_recent, "%Y-%m-%dT%H:%M:%S.%f"))+"\n")
+				data = str(dataset + ": "+str(datetime.strftime(most_recent, date_format))+"\n")
 				date_file.write(data)
 
 """
@@ -187,8 +190,6 @@ def compare_dates():
 """
 def overwrite_stored_date():
 	global user, most_recent
-
-	logger.info("STORED DATE OVERWRITTEN TO: %s", str(most_recent))
 	
 	data = []
 	with open(os.getenv('OPERATIONS')+'/stored_date.date', 'r') as date_file:
@@ -196,9 +197,7 @@ def overwrite_stored_date():
 	
 	for i, line in enumerate(data):
 		if dataset in line:
-			data[i] = str(dataset + ": "+str(datetime.strftime(most_recent, "%Y-%m-%dT%H:%M:%S.%f"))+"\n")
-
-	logger.debug("DATE FILE OVERWRITTEN WITH: %s", str(data))
+			data[i] = str(dataset + ": "+str(datetime.strftime(most_recent, date_format))+"\n")
 	
 	with open(os.getenv('OPERATIONS')+'/stored_date.date', 'w') as date_file:
 		date_file.writelines(data)
@@ -230,10 +229,9 @@ def run_process_sentinel():
 	psen_output = subprocess.check_output(psen_options).decode('utf-8')
 	
 	job_number = psen_output.split('\n')[0].split("<")[1].split('>')[0]
+	logger.info("JOB NUMBER: %s", job_number)
 	
 	job_to_dset[job_number] = dataset
-	
-	logger.info("JOB NUMBER: %s", job_number)
 	
 	stdout_file_path = os.getenv('SCRATCHDIR')+dataset+'/z_processSentinel_'+job_number+'.o'
 	stderr_file_path = os.getenv('SCRATCHDIR')+dataset+'/z_processSentinel_'+job_number+'.e'
@@ -267,41 +265,31 @@ def post_processing(files_to_move):
 				dest += '.e'
 
 			shutil.copy(file, dest)
-			logger.info("COPIED %s to %s", file, dest)
 			
 		else:
-			logger.error("%s does not exist!", file)
 			raise IOError
 			
-	logger.info("----------------------------------")
-	logger.error("-----------------------------------")
 	logger.removeHandler(info_handler)
 	logger.removeHandler(error_handler)
 
 
 if __name__ == "__main__":
 	
+	logger.info("RUN_OPERATIONS for %s:\n", datetime.fromtimestamp(time.time()).strftime(date_format))
+	
 	# Parse command line arguments
 	command_line_parse(sys.argv[1:])
-	
-	# Determine Currently Logged in User                                                                                                                                     
-	get_user()
 	
 	# Generate Template Files
 	template_options = []
 	if inps.template_csv:
 		template_options.append('--csv')
 		template_options.append(inps.template_csv)
-		logger.debug("GENERATING TEMPLATE FROM FILE: %s", inps.template_csv)
 	if inps.dataset:
 		template_options.append('--dataset')
 		template_options.append(inps.dataset)
-		logger.info("GENERATING TEMPLATE FOR DATASET: %s", inps.dataset)
 	if inps.test_sheet:
 		template_options.append('--testsheet')
-		logger.info("USING TEST GOOGLE SHEET")
-	
-	logger.debug("TEMPLATE OPTIONS: %s", str(template_options))
 	
 	gt.main(template_options);
 	
@@ -314,12 +302,12 @@ if __name__ == "__main__":
 	datasets = [d.split('.', 1)[0].split('/')[-1] for d in datasets]	
 	if inps.dataset:
 		datasets = [d for d in datasets if d == inps.dataset]
-			
-	logger.warning("DATASETS: %s", str(datasets));
-
-	logger.info("TEMPLATE GENERATION COMPLETED\n")
 
 	all_output_files = []
+	
+	
+	logger.info("\tDATASETS: \n "+str(datasets))
+	
 
 	# Perform the processing routine for each dataset
 	for dset in datasets:
@@ -327,11 +315,6 @@ if __name__ == "__main__":
 		dataset = dset;
 		
 		setup_logging_handlers(dataset, "a")
-		
-		# Debugguing Outfile and Error File                                                                                                                              
-		logger.info("\nSTART TIME: %s", datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
-		logger.info("USER: %s\n", user)
-		logger.info("DATASET: %s", dataset)
 		
 		# Generate SSARA Options to Use
 		ssara_options = create_ssara_options()
@@ -342,24 +325,24 @@ if __name__ == "__main__":
 		# Sets date variables for stored and most recent dates
 		set_dates(ssara_output)
 
+		psen_time = datetime.fromtimestamp(time.time()).strftime(date_format)
+
 		if compare_dates():
 
 			# Write that stored date was overwritten
-			logger.info("NEW DATA EXISTS, STORED DATE BEING OVERWRITTEN")
 			overwrite_stored_date()
 			
 			# Submit job via process_sentinel and store output
-			logger.warning("STARTING PROCESS SENTINEL JOB")
+			logger.info("%s: STARTING PROCESS SENTINEL JOB AT: %s (newest date: %s)\n", dataset, psen_time, most_recent)
 			files_to_move = run_process_sentinel()
-		
-			logger.info("PROCESS SENTINEL JOB BEGAN AT: %s", datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
 			
 			all_output_files += files_to_move;
 			
 		else:
-			logger.info("NO NEW DATA!\n")
-			logger.info("----------------------------------")
-			logger.error("-----------------------------------")
+			logger.info("%s: NO NEW DATA on %s (most recent: %s)\n", dataset, psen_time, stored_date)
+
+		logger.info("----------------------------------\n")
+		logger.info("----------------------------------\n")
 
 		logger.removeHandler(info_handler)
 		logger.removeHandler(error_handler)
@@ -374,8 +357,8 @@ if __name__ == "__main__":
 					all_output_files[:] = [f for fi in files_to_move if fi not in file and fi not in all_output_files[i+1]]
 				
 			time.sleep(60)
-
-      	logger.warning("run_operations COMPLETE")
-	logger.info("END TIME: %s", datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))	
+			
+		logger.info("\tCOMPLETED AT: %s", datetime.fromtimestamp(time.time()).strftime(date_format))
+		logger.info("----------------------------------\n")	
 	
 	sys.exit()
