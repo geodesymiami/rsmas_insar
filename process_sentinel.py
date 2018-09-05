@@ -497,7 +497,7 @@ def create_or_copy_dem(work_dir, template, custom_template_file, isce_env):
 def create_stack_sentinel_run_files(inps, dem_file):
     suffix  = ''
     extraOptions = ''
-    if inps.ProcessingMethod is 'squeesar' or inps.ProcessingMethod is 'ps':
+    if inps.ProcessingMethod == 'squeesar' or inps.ProcessingMethod == 'ps':
        suffix       = '_squeesar'
        extraOptions = ' -P ' + inps.ProcessingMethod
     command = 'stackSentinel'+suffix+'.py -n ' + str(inps.subswath) + ' -b ' + inps.boundingBox + \
