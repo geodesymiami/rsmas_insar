@@ -5,17 +5,23 @@ import sys
 import time
 import subprocess
 import logging
+import datetime 
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 std_formatter = logging.Formatter("%(levelname)s - %(message)s")
 
-general = logging.FileHandler(os.getenv('OPERATIONS')+'/LOGS/ssara_rsmas.log', 'a+', encoding=None)
-general.setLevel(logging.INFO)
-general.setFormatter(std_formatter)
-logger.addHandler(general)
+fileHandler = logging.FileHandler(os.getenv('OPERATIONS')+'/LOGS/ssara_rsmas.log', 'a+', encoding=None)
+fileHandler.setLevel(logging.INFO)
+fileHandler.setFormatter(std_formatter)
 
+streamHandler = logging.StreamHandler()
+streamHandler.setLevel(logging.INFO)
+streamHandler.setFormatter(std_formatter)
+
+logger.addHandler(fileHandler)
+logger.addHandler(streamHandler)
 
 """
     Checks if the files too be downloaded actually exist or not on the system as a means of validating whether
@@ -25,8 +31,8 @@ logger.addHandler(general)
     Returns: none
 
 """
-def check_downloads(run_number):
-	ssara_output = subprocess.check_output(['ssara_federated_query.py']+sys.argv[1:len(sys.argv)]+["--print"])
+def check_downloads(run_number, args):
+	ssara_output = subprocess.check_output(['ssara_federated_query-cj.py']+args[1:len(args)]+["--print"])
 	ssara_output_array = ssara_output.decode('utf-8').split('\n')
 	ssara_output_filtered = ssara_output_array[5:len(ssara_output_array)-1]
 
@@ -36,10 +42,11 @@ def check_downloads(run_number):
 
 
 	for f in files_to_check:
-		if not os.path.isfile(f):
+		if not os.path.isfile(str(os.getcwd())+"/"+str(f)):
 			logger.warning("The file, %s, didn't download correctly. Running ssara again.", f)
 			run_ssara(run_number+1, serial=True)
 			return
+	print("Everything is there!")
 
 """
      Runs ssara_federated_query-cj.py and checks continuously for whether the data download has hung without comleting
@@ -51,7 +58,7 @@ def check_downloads(run_number):
 """	
 def run_ssara(run_number=1, serial=False):
 
-	logger.info("RUN NUMBER: %s\n", str(run_number))	
+	logger.info("RUN NUMBER: %s", str(run_number))	
 	if not serial and run_number > 10:
 		return
 		
@@ -83,14 +90,14 @@ def run_ssara(run_number=1, serial=False):
 
 		if prev_size == curr_size:
 			hang_status = True
-			logger.warning("SSARA Hung\n")
+			logger.warning("SSARA Hung")
 			ssara_process.terminate()
 			break;
 		
 		time.sleep(60*wait_time)
 		prev_size = curr_size
 		completion_status = ssara_process.poll()
-		logger.info("{} minutes: {:.1f}GB, completion_status {} \n".format(i*wait_time, curr_size/1024/1024, completion_status))
+		logger.info("{} minutes: {:.1f}GB, completion_status {}".format(i*wait_time, curr_size/1024/1024, completion_status))
 			
 	exit_code = completion_status
 	logger.info("EXIT CODE: %s", str(exit_code))
@@ -98,17 +105,14 @@ def run_ssara(run_number=1, serial=False):
 	bad_codes = [137]
 	
 	if exit_code in bad_codes or hang_status:
-		logger.warning("Something went wrong, running again\n")
+		logger.warning("Something went wrong, running again")
 		run_ssara(run_number=run_number+1)
 
-	check_downloads(run_number)
-	
-	logger.info("-------------------------------------------")
-
+	check_downloads(run_number, sys.argv)
 	return
 
 
 if __name__ == "__main__":
-	
+	logger.info("DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
 	run_ssara()					
 					

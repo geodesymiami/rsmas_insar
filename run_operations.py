@@ -21,12 +21,12 @@ logger.setLevel(logging.DEBUG)
 std_formatter = logging.Formatter("%(message)s")
 
 general = logging.FileHandler(os.getenv('OPERATIONS')+'/LOGS/run_operations.log', 'a+', encoding=None)
-general.setLevel(logging.DEBUG)
+general.setLevel(logging.INFO)
 general.setFormatter(std_formatter)
 logger.addHandler(general)
 
 console = logging.StreamHandler()
-console.setLevel(logging.WARNING)
+console.setLevel(logging.DEBUG)
 console.setFormatter(std_formatter)
 logger.addHandler(console)
 
@@ -35,17 +35,17 @@ error_handler = None
 
 #################### GLOBAL VARIABLES ####################
 
-dataset = 'GalapagosSenDT128VV'		                								# Single Dataset for Testing
+dataset = 'GalapagosSenDT128VV'		                				        # Single Dataset for Testing
 
 user = subprocess.check_output(['whoami']).decode('utf-8').strip("\n")  			# Currently logged in user
 	
-stored_date = None																	# previously stored date
-most_recent = None																	# date parsed from SSARA
-inps = None;																		# command line arguments
+stored_date = None			  							# previously stored date
+most_recent = None										# date parsed from SSARA
+inps = None;				       							# command line arguments
 
-job_to_dset = {}																	# dictionary of jobs to datasets
+job_to_dset = {}										# dictionary of jobs to datasets
 
-date_format = "%Y-%m-%dT%H:%M:%S.%f"												# date format for reading and writing dates
+date_format = "%Y-%m-%dT%H:%M:%S.%f"								# date format for reading and writing dates
 
 
 
@@ -70,7 +70,7 @@ def setup_logging_handlers(dset, mode):
 
 	# create a file handler for ERROR level logging
 	error_log_file = os.getenv('OPERATIONS')+'/LOGS/'+dset+'_error.log'
- 	error_handler = logging.FileHandler(error_log_file, mode, encoding=None)
+	error_handler = logging.FileHandler(error_log_file, mode, encoding=None)
 	err_formatter = logging.Formatter("%(levelname)s - %(message)s")
 	error_handler.setLevel(logging.ERROR)
 	error_handler.setFormatter(err_formatter)
@@ -111,14 +111,14 @@ def command_line_parse(args):
 	inps = parser.parse_args(args)
 	
 	logger.info("\tCOMMAND LINE VARIABLES:")
-	logger.info("\t\t--dataset	      	: %s\n", inps.dataset)
+	logger.info("\t\t--dataset     	    : %s\n", inps.dataset)
 	logger.info("\t\t--templatecsv      : %s\n", inps.template_csv)
 	logger.info("\t\t--singletemplate   : %s\n", inps.single_template)
 	logger.info("\t\t--startssara       : %s\n", inps.startssara)
 	logger.info("\t\t--startprocess     : %s\n", inps.startprocess)
 	logger.info("\t\t--startpysar       : %s\n", inps.startpysar)
 	logger.info("\t\t--startinsarmaps   : %s\n", inps.startinsarmaps)
-	logger.info("\t\t--testsheet		: %s\n", inps.test_sheet)
+	logger.info("\t\t--testsheet	    : %s\n", inps.test_sheet)
 	
 
 	
@@ -203,7 +203,7 @@ def overwrite_stored_date():
 		date_file.writelines(data)
 
 """
-    Runs processSentinel.py with the associated options as defined by the provided command line arguments
+    Submits a  processSentinel.py job with the associated options as defined by the provided command line arguments
     Parameters: none
     Returns:    [files], [str] an array of file paths to the processSentinel output and error files
 """
@@ -224,7 +224,7 @@ def run_process_sentinel():
 	if len(psen_extra_options) == 0:
 		psen_extra_options.append('--insarmaps')
 		
-	psen_options = ['process_sentinel.py', '/nethome/'+user+'/insarlab/OPERATIONS/TEMPLATES/'+dataset+'.template'] + psen_extra_options + ['--bsub']
+	psen_options = ['process_sentinel.py', os.getenv('OPERATIONS')+'/TEMPLATES/'+dataset+'.template'] + psen_extra_options + ['--bsub']
 	
 	psen_output = subprocess.check_output(psen_options).decode('utf-8')
 	
@@ -233,8 +233,8 @@ def run_process_sentinel():
 	
 	job_to_dset[job_number] = dataset
 	
-	stdout_file_path = os.getenv('SCRATCHDIR')+dataset+'/z_processSentinel_'+job_number+'.o'
-	stderr_file_path = os.getenv('SCRATCHDIR')+dataset+'/z_processSentinel_'+job_number+'.e'
+	stdout_file_path = os.getenv('SCRATCHDIR')+'/'+dataset+'/z_processSentinel_'+job_number+'.o'
+	stderr_file_path = os.getenv('SCRATCHDIR')+'/'+dataset+'/z_processSentinel_'+job_number+'.e'
 	
 	return [stdout_file_path, stderr_file_path]
 
@@ -274,6 +274,8 @@ def post_processing(files_to_move):
 
 
 if __name__ == "__main__":
+
+	from datetime import datetime
 	
 	logger.info("RUN_OPERATIONS for %s:\n", datetime.fromtimestamp(time.time()).strftime(date_format))
 	
@@ -340,9 +342,6 @@ if __name__ == "__main__":
 			
 		else:
 			logger.info("%s: NO NEW DATA on %s (most recent: %s)\n", dataset, psen_time, stored_date)
-
-		logger.info("----------------------------------\n")
-		logger.info("----------------------------------\n")
 
 		logger.removeHandler(info_handler)
 		logger.removeHandler(error_handler)

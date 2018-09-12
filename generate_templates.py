@@ -7,6 +7,7 @@ import requests
 import argparse
 import time
 import logging
+from datetime import datetime
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
