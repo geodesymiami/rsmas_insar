@@ -65,16 +65,22 @@ def run_ssara(run_number=1, serial=False):
 	if serial and run_number > 2:
 		return
 	
-	args = sys.argv[1:len(sys.argv)]
-	if serial:
-		if "--parallel" in args:
-			args.remove("--parallel");
-			
-	
-	
 	command = 'ssara_federated_query-cj.py ' + ' '.join(args)
 	
-	ssara_process = subprocess.Popen(["ssara_federated_query-cj.py"] + args)
+	ssara_process = subprocess.Popen(command)
+	
+	with open(sys.argv[1], 'r') as template_file:
+		options = ''
+		for line in template_file:
+			if 'ssaraopt' in line:
+				options = line.strip('\n').rstrip().split("= ")[1]
+				break;
+					
+	# Compute SSARA options to use
+	options = options.split(' ')
+
+	ssara_options = ['ssara_federated_query.py'] + options + ['--print', '--download']	
+
 		
 	completion_status = ssara_process.poll()
 	hang_status = False
@@ -113,6 +119,8 @@ def run_ssara(run_number=1, serial=False):
 
 
 if __name__ == "__main__":
+	logger.info("DATASET: %s", str(sys.argv[1].split('/')[-1].split(".")[0]))
 	logger.info("DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
-	run_ssara()					
+	run_ssara()
+	logger.info("------------------------------------")					
 					
