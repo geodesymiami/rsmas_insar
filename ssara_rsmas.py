@@ -60,14 +60,11 @@ def run_ssara(run_number=1, serial=False):
 
 	logger.info("RUN NUMBER: %s", str(run_number))	
 	if not serial and run_number > 10:
-		return
+		return False
 		
 	if serial and run_number > 2:
-		return
+		return False
 	
-	command = 'ssara_federated_query-cj.py ' + ' '.join(args)
-	
-	ssara_process = subprocess.Popen(command)
 	
 	with open(sys.argv[1], 'r') as template_file:
 		options = ''
@@ -81,6 +78,7 @@ def run_ssara(run_number=1, serial=False):
 
 	ssara_options = ['ssara_federated_query.py'] + options + ['--print', '--download']	
 
+	ssara_process = subprocess.Popen(ssara_options)
 		
 	completion_status = ssara_process.poll()
 	hang_status = False
@@ -115,12 +113,15 @@ def run_ssara(run_number=1, serial=False):
 		run_ssara(run_number=run_number+1)
 
 	check_downloads(run_number, sys.argv)
-	return
+	return True
 
 
 if __name__ == "__main__":
 	logger.info("DATASET: %s", str(sys.argv[1].split('/')[-1].split(".")[0]))
 	logger.info("DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
-	run_ssara()
+	succesful = run_ssara()
+	logger.info("SUCCESS: %s", str(success))
 	logger.info("------------------------------------")					
-					
+	if succesful:
+		return 1
+	return 0
