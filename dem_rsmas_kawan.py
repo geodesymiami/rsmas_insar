@@ -175,7 +175,7 @@ def dem_parser():
     parser.add_argument('--ssara',
                         dest='ssara',
                         action='store_true',
-                        help='run ssara_federated_query w/ tiff output file')
+                        help='run ssara_federated_query w/ grd output file')
     parser.add_argument('--isce',
                         dest='isce',
                         action='store_true',
@@ -210,8 +210,8 @@ def make_slc_dir():
     return work_dir_slc
 
 
-def tiff_to_xml():
-    print('you have started tiff_to_xml')
+def grd_to_xml():
+    print('you have started grd_to_xml')
 
     filename = 'dem.grd'
     tempfile = filename.replace('grd','temp')
@@ -266,7 +266,7 @@ def call_ssara_dem(custom_template, inps):
     print('command currently executing: ' + command)
     status = subprocess.Popen(command, shell=True).wait()
     print('Files Downloaded')
-    tiff_to_xml()
+    grd_to_xml()
 
     return
 
