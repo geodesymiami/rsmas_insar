@@ -20,8 +20,7 @@ import messageRsmas
 from pysar.utils import readfile
 
 
-import json
-import fnmatch
+import re
 
 EXAMPLE='''example:
   dem_rsmas.py  $SAMPLES/GalapagosT128SenVVD.template
@@ -39,7 +38,7 @@ EXAMPLE='''example:
 
 '''
 
-XML='''<imageFile>
+xmltext='''<imageFile>
     <property name="ISCE_VERSION">
         <value>Release: 2.0.0_20170403, svn-2256, 20170403. Current: svn-exported.</value>
     </property>
@@ -214,59 +213,55 @@ def make_slc_dir():
 def tiff_to_xml():
     print('you have started tiff_to_xml')
 
-    command = 'unzip \'*.zip\''
+    filename = 'dem.grd'
+    tempfile = filename.replace('grd','temp')
+    outfile = filename.replace('grd','xml')
+    command = '/nethome/famelung/test/test/rsmas_insar/3rdparty/python/anaconda2/bin/gdalinfo {file} >> {temp_file}'.format(file= filename,temp_file=tempfile)
     subprocess.Popen(command, shell=True).wait()
+
+    with(open(tempfile,'r')) as temp:
+        xmldict= dict()
+        tempstr= temp.read()
+        print('TEST :', re.findall(r'GEOGCS\["(.+)",', tempstr)[0].replace(' ','')) 
+
+        xmldict['c1delta']= re.findall(r'Pixel Size = \((.+),.+\)', tempstr)[0] 
+        xmldict['c1ev']= round(float(re.findall(r'Upper Right\s+\( (.\d+.\d+),', tempstr)[0]),1)
+        xmldict['c1size']= int(re.findall(r'Size is (\d+),\s+\d+',tempstr)[0])  
+        xmldict['c1sv']= round(float(re.findall(r'Lower Left\s+\( (.\d+.\d+),', tempstr)[0]),1)
+
+        xmldict['c2delta']= re.findall(r'Pixel Size = \(.+,(.+)\)', tempstr)[0]
+        xmldict['c2ev']= round(float(re.findall(r'Lower Left\s+\( .\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0]),1)
+        xmldict['c2size']= int(re.findall(r'Size is \d+,\s+(\d+)',tempstr)[0])
+        xmldict['c2sv']= round(float(re.findall(r'Upper Right\s+\( .\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0]),1)
+
+        xmldict['numbands']= re.findall(r'Band (\d+) \w', tempstr)[0]
+        xmldict['ref']= re.findall(r'GEOGCS\["(.+)",', tempstr)[0].replace(' ','')
+        xmldict['length']= xmldict['c2size']
+        xmldict['width']= xmldict['c1size']
+        xmldict['xmax']= xmldict['c1ev']
+        xmldict['xmin']= xmldict['c1sv']
+
+        #xml file name
+        xmldict['filename'] = 'Unknown'
+        xmldict['extrafilename'] = 'Unknown'
+    os.remove(tempfile)
     
-    # search for .tiff files
-    for root, dirnames,filenames in os.walk('.'):
-        for filename in fnmatch.filter(filenames, '*.tiff'): 
-            tempfile = filename.replace('tiff','temp')
-            outfile = filename.replace('tiff','xml')
-            command = '/nethome/famelung/test/testqqqq/rsmas_insar/3rdparty/gdal/gdal-210_work/bin/gdalinfo {work_dir}/{file} >> {temp_file}'.format(work_dir= root,file= filename,temp_file=tempfile)
-            subprocess.Popen(command, shell=True).wait()
-            os.chdir(root)
-
-            with(open(tempfile,'r')) as temp:
-                xmldict= dict()
-                tempstr= temp.read()
-                print('TEST :', re.findall(r'GEOGCS\["(.+)",', tempstr)[0].replace(' ','')) 
-
-                xmldict['c1delta']= re.findall(r'Pixel Size = \((.+),.+\)', tempstr)[0] 
-                xmldict['c1ev']= round(float(re.findall(r'Upper Right\s+\( (.\d+.\d+),', tempstr)[0]),1)
-                xmldict['c1size']= int(re.findall(r'Size is (\d+),\s+\d+',tempstr)[0])  
-                xmldict['c1sv']= round(float(re.findall(r'Lower Left\s+\( (.\d+.\d+),', tempstr)[0]),1)
-
-                xmldict['c2delta']= re.findall(r'Pixel Size = \(.+,(.+)\)', tempstr)[0]
-                xmldict['c2ev']= round(float(re.findall(r'Lower Left\s+\( .\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0]),1)
-                xmldict['c2size']= int(re.findall(r'Size is \d+,\s+(\d+)',tempstr)[0])
-                xmldict['c2sv']= round(float(re.findall(r'Upper Right\s+\( .\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0]),1)
-
-                xmldict['numband']= re.findall(r'Band (\d+) \w', tempstr)[0]
-                xmldict['ref']= re.findall(r'GEOGCS\["(.+)",', tempstr)[0].replace(' ','')
-                xmldict['length']= xmldict['c2size']
-                xmldict['width']= xmldict['c1size']
-                xmldict['xmax']= xmldict['c1ev']
-                xmldict['xmin']= xmldict['c1sv']
-
-                #xml file name
-                xmldict['filename'] = 'Unknown'
-                xmldict['extrafilename'] = 'Unknown'
-            os.remove(tempfile)
-            
-            with(open(outfile,'w')) as out:
-                out.write(xmltext.format(**xmldict))
+    with(open(outfile,'w')) as out:
+        out.write(xmltext.format(**xmldict))
                
-    print('you have exited tiff to xml')
+    print('you have exited grd to xml')
 
 
 def call_ssara_dem(custom_template, inps):
+    #import pdb; pdb.set_trace()
     print('You have started ssara!')
     
     slc_dir = make_slc_dir()
     parent_dir = os.getenv('PARENTDIR')    
     out_file = 'ssara_output_1.log'
-    ssara_command = 'ssara_federated_query.py {ssaraopt} --dem --asfResponseTimeout=360 --parallel=20 --download >& {outfile}'.format(ssaraopt=custom_template['ssaraopt'],outfile=out_file)
-    command = 'ssh pegasus.ccs.miami.edu "s.cgood; cd {slcdir};  {parentdir}/3rdparty/SSARA/{ssaracommand}"'.format(slcdir=slc_dir,parentdir=parent_dir,ssaracommand=ssara_command)
+    ssara_command = 'ssara_federated_query.py {ssaraopt} --dem >& {outfile}'.format(ssaraopt=custom_template['ssaraopt'],outfile=out_file)
+#    command = 'ssh pegasus.ccs.miami.edu "s.cgood; cd {slcdir};  {parentdir}/3rdparty/SSARA/{ssaracommand}"'.format(slcdir=slc_dir,parentdir=parent_dir,ssaracommand=ssara_command)
+    command = 'cd {slcdir}; {ssaracommand}'.format(slcdir=slc_dir,ssaracommand=ssara_command)
 
     print('command currently executing: ' + command)
     status = subprocess.Popen(command, shell=True).wait()
