@@ -201,21 +201,12 @@ def make_dem_dir():
     return os.getcwd()
 
 
-def make_slc_dir():
-    work_dir_slc = os.path.abspath(os.getcwd()) + '/SLC'
-
-    if not os.path.isdir(work_dir_slc):
-        os.mkdir(work_dir_slc)
-    os.chdir(work_dir_slc)
-    return work_dir_slc
-
-
 def grd_to_xml():
     print('you have started grd_to_xml')
 
     filename = 'dem.grd'
-    tempfile = filename.replace('grd','temp')
-    outfile = filename.replace('grd','xml')
+    tempfile = 'dem.temp'
+    outfile = 'dem.wgs84.xml'
     command = '/nethome/famelung/test/test/rsmas_insar/3rdparty/python/anaconda2/bin/gdalinfo {file} >> {temp_file}'.format(file= filename,temp_file=tempfile)
     subprocess.Popen(command, shell=True).wait()
 
@@ -241,24 +232,30 @@ def grd_to_xml():
         xmldict['xmin']= xmldict['c1sv']
 
         #xml file name
-        xmldict['filename'] = 'Unknown'
+        xmldict['filename'] = os.getcwd + 'dem.dem.wgs84'
         xmldict['extrafilename'] = 'Unknown'
     os.remove(tempfile)
     os.chdir('..')
 
     with(open(outfile,'w')) as out:
         out.write(xmltext.format(**xmldict))
+    grd_to_i2()
+    return
+
+
+def grd_to_i2():
+    command = 'gdal_translate -ot Int16 dem.grd dem.dem.wgs84'
+    print(command)
+    subprocess.Popen(command, shell=True).wait()
+    return
 
 
 def call_ssara_dem(custom_template, inps):
     print('You have started ssara!')
     
-    slc_dir = make_slc_dir()
     parent_dir = os.getenv('PARENTDIR')    
-    out_file = 'ssara_output_1.log'
-    ssara_command = 'ssara_federated_query.py {ssaraopt} --dem >& {outfile}'.format(ssaraopt=custom_template['ssaraopt'],outfile=out_file)
-    command = 'cd {slcdir}; {ssaracommand}'.format(slcdir=slc_dir,ssaracommand=ssara_command)
-
+    out_file = 'ssara_dem.log'
+    command = 'ssara_federated_query.py {ssaraopt} --dem >& {outfile}'.format(ssaraopt=custom_template['ssaraopt'],outfile=out_file)
     print('command currently executing: ' + command)
     status = subprocess.Popen(command, shell=True).wait()
     print('dem.grd downloaded')
@@ -273,72 +270,55 @@ def main(argv):
     inps = dem_parser()
     custom_template = readfile.read_template(inps.custom_template_file)
     cwd = make_dem_dir()
-
-    # can sentinelStack.demMethod be removed? I think parser is the replacement
+  #  import pdb; pdb.set_trace()
+   # can sentinelStack.demMethod be removed? I think parser is the replacement
     if 'sentinelStack.demMethod' not in custom_template.keys():
-       custom_template['sentinelStack.demMethod']='bbox'
+        custom_template['sentinelStack.demMethod']='?'
 
-    if custom_template['sentinelStack.demMethod']=='bbox':
-       bbox=custom_template['sentinelStack.boundingBox']
-       south=bbox.split(' ')[0].split('\'')[1]   # assumes quotes '-1 0.15 -91.3 -91.0'
-       north=bbox.split(' ')[1]
-       west =bbox.split(' ')[2]
-       east =bbox.split(' ')[3].split('\'')[0]
-    elif custom_template['sentinelStack.demMethod']=='ssara':
-       call_ssara_dem(custom_template, inps)
-       cmd = 'ssara_federated_query.py '+custom_template['ssaraopt']+' --dem'
-       output = subprocess.check_output(cmd, shell=True)
-       output=output.split("\n")
-       for line in output:
-         if line.startswith("wget"):
-           coordList = line.split("?")[1].split("&")[0:4]
-           for item in coordList:
-              if "north" in item:
-                 north=item.split("=")[1]
-              if "south" in item:
-                 south=item.split("=")[1]
-              if "east" in item:
-                 east=item.split("=")[1]
-              if "west" in item:
-                 west=item.split("=")[1]
-    else:
-       sys.ext('Error unspported demMethod option: '+custom_template['sentinelStack.demMethod'])
- 
-    if inps.ssara:
+    if custom_template['sentinelStack.demMethod']=='bbox' or custom_template['sentinelStack.demMethod']=='isce' or inps.isce:
+        print('You hace started isce')
+        bbox=custom_template['sentinelStack.boundingBox']
+        south=bbox.split(' ')[0].split('\'')[1]   # assumes quotes '-1 0.15 -91.3 -91.0'
+        north=bbox.split(' ')[1]
+        west =bbox.split(' ')[2]
+        east =bbox.split(' ')[3].split('\'')[0]
+    
+        south=round(float(south)-0.5)
+        north=round(float(north)+0.5)
+        west =round(float(west)-0.5)
+        east =round(float(east)+0.5)
+
+        demBbox=str(int(south))+' '+str(int(north))+' '+str(int(west))+' '+str(int(east))
+        cmd ='dem.py -a stitch -b '+demBbox+' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
+        messageRsmas.log(cmd)
+
+        try:
+            output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True, universal_newlines=True)
+        except subprocess.CalledProcessError as exc:
+            print("Command failed. Exit code, StdErr:", exc.returncode,exc.output)
+            sys.exit('Error produced by dem.py')
+        else:
+           #print("Success.        StdOut \n{}\n".format(output))
+            if 'Could not create a stitched DEM. Some tiles are missing' in output:
+                os.chdir('..')
+                shutil.rmtree('DEM')
+                sys.exit('Error in dem.py: Tiles are missing. Ocean???')
+
+        xmlFile = glob.glob('demLat_*.wgs84.xml')[0]
+        fin = open(xmlFile,'r')
+        fout = open("tmp.txt", "wt")
+        for line in fin:
+            fout.write( line.replace('demLat', cwd+'/demLat') )
+        fin.close()
+        fout.close()
+        os.rename('tmp.txt',xmlFile)
+
+    elif custom_template['sentinelStack.demMethod']=='ssara' or inps.ssara:
         call_ssara_dem(custom_template, inps)
-        print('####### CONTINUED')
-    else: 
-        print('not ssara')
-    south=round(float(south)-0.5)
-    north=round(float(north)+0.5)
-    west =round(float(west)-0.5)
-    east =round(float(east)+0.5)
-  
-    demBbox=str(int(south))+' '+str(int(north))+' '+str(int(west))+' '+str(int(east))
-    cmd ='dem.py -a stitch -b '+demBbox+' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
-    messageRsmas.log(cmd)
 
-    try:
-       output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True, universal_newlines=True)
-    except subprocess.CalledProcessError as exc:
-       print("Command failed. Exit code, StdErr:", exc.returncode,exc.output)
-       sys.exit('Error produced by dem.py')
     else:
-       #print("Success.        StdOut \n{}\n".format(output))
-       if 'Could not create a stitched DEM. Some tiles are missing' in output:
-          os.chdir('..')
-          shutil.rmtree('DEM')
-          sys.exit('Error in dem.py: Tiles are missing. Ocean???')
-
-    xmlFile = glob.glob('demLat_*.wgs84.xml')[0]
-    fin = open(xmlFile,'r')
-    fout = open("tmp.txt", "wt")
-    for line in fin:
-        fout.write( line.replace('demLat', cwd+'/demLat') )
-    fin.close()
-    fout.close()
-    os.rename('tmp.txt',xmlFile)
-
+        sys.ext('Error unspported demMethod option: '+custom_template['sentinelStack.demMethod'])
+ 
     print '\n###############################################'
     print 'End of dem_rsmas.py'
     print '################################################\n'
