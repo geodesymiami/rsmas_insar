@@ -232,8 +232,8 @@ def grd_to_xml():
         xmldict['xmin']= xmldict['c1sv']
 
         #xml file name
-        xmldict['filename'] = str(os.getcwd) + '/dem.dem.wgs84'
-        xmldict['extrafilename'] = 'Unknown'
+        xmldict['filename'] = os.getcwd() + '/dem.dem.wgs84'
+        xmldict['extrafilename'] = os.getcwd() + '/dem.dem.wgs84.vrt'
     os.remove(tempfile)
 
     with(open(outfile,'w')) as out:
@@ -242,7 +242,7 @@ def grd_to_xml():
 
 
 def grd_to_i2():
-    command = 'gdal_translate -ot Int16 dem.grd dem.dem.wgs84'
+    command = 'gdal_translate -ot Int16 -of ENVI dem.grd dem.dem.wgs84' 
     print(command)
     subprocess.Popen(command, shell=True).wait()
     return
