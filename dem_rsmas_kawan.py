@@ -245,16 +245,16 @@ def grd_to_xml_vrt(cwd):
         fulldict['filename'] = cwd + '/' +  outfilexml
         fulldict['extrafilename'] = cwd + '/' + outfilevrt
 
-        fulldict['srs']= ':'.join (thing for thing in re.findall(r'UNIT.+\s.+\s.+AUTHORITY\["(\w+)","(\d+)"]]',tempstr)[0])
-        fulldict['geotransform'] = '{c1sv}, {c1delta}, 0, {c2sv}, {c2delta}, 0' #north up images? for [2] and [4] see "affine geotransform" https://www.gdal.org/gdal_datamodel.html
-        fulldict['datatype'] = re.findall(r'Type=([A-Za-z0-9]+)', tempstr)[0]
-        fulldict['sfilename'] = outfilevrt
-        fulldict['lineoffset'] = int(fulldict['c1size']) * 2 #how is lineoffset calculated
+    #    fulldict['srs']= ':'.join (thing for thing in re.findall(r'UNIT.+\s.+\s.+AUTHORITY\["(\w+)","(\d+)"]]',tempstr)[0])
+    #    fulldict['geotransform'] = '{c1sv}, {c1delta}, 0, {c2sv}, {c2delta}, 0' #north up images? for [2] and [4] see "affine geotransform" https://www.gdal.org/gdal_datamodel.html
+    #    fulldict['datatype'] = re.findall(r'Type=([A-Za-z0-9]+)', tempstr)[0]
+    #    fulldict['sfilename'] = outfilevrt
+    #    fulldict['lineoffset'] = int(fulldict['c1size']) * 2 #how is lineoffset calculated
 
     os.remove(tempfile)
 
-    with(open(outfilevrt, 'w')) as out:
-        out.write(vrttext.format(**fulldict))
+   # with(open(outfilevrt, 'w')) as out:
+    #    out.write(vrttext.format(**fulldict))
 
     with(open(outfilexml,'w')) as out:
         out.write(xmltext.format(**fulldict))
@@ -262,7 +262,7 @@ def grd_to_xml_vrt(cwd):
 
 
 def grd_to_i2():
-    command = 'gdal_translate -ot Int16 -of ENVI dem.grd dem.dem.wgs84' 
+    command = 'gdal_translate -ot Int16 -of ENVI dem.grd dem.dem.wgs84;gdal_translate -of vrt dem.grd dem.dem.wgs84.xml.vrt' 
     print('command currently executing: ' + command)
     subprocess.Popen(command, shell=True).wait()
     return
