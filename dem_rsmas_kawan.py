@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2
 ###############################################################################
 # 
 # Project: dem_ssara_kawan.py
@@ -242,10 +242,8 @@ def grd_to_xml_vrt(cwd):
         fulldict['width']= fulldict['c1size']
         fulldict['xmax']= fulldict['c1ev']
         fulldict['xmin']= fulldict['c1sv']
-        fulldict['filename'] = cwd + outfilexml
-        fulldict['extrafilename'] = cwd + outfilevrt
-        fulldict['extrafilename'] = cwd + outfilevrt
-        fulldict['extrafilename'] = cwd + outfilevrt
+        fulldict['filename'] = cwd + '/' +  outfilexml
+        fulldict['extrafilename'] = cwd + '/' + outfilevrt
 
         fulldict['srs']= ':'.join (thing for thing in re.findall(r'UNIT.+\s.+\s.+AUTHORITY\["(\w+)","(\d+)"]]',tempstr)[0])
         fulldict['geotransform'] = '{c1sv}, {c1delta}, 0, {c2sv}, {c2delta}, 0' #north up images? for [2] and [4] see "affine geotransform" https://www.gdal.org/gdal_datamodel.html
