@@ -165,7 +165,7 @@ xmltext='''<imageFile>
 vrttext='''<VRTDataset rasterXSize="{c1size}" rasterYSize="{c2size}">
     <SRS>{srs}</SRS>
     <GeoTransform>{geotransform}</GeoTransform>
-    <VRTRasterBand band="{numbands}" dataType="{ddatatype}" subClass="VRTRawRasterBand">
+    <VRTRasterBand band="{numbands}" dataType="{datatype}" subClass="VRTRawRasterBand">
         <SourceFilename relativeToVRT="1">{sfilename}</SourceFilename>
         <ByteOrder>LSB</ByteOrder>
         <ImageOffset>0</ImageOffset>
@@ -280,7 +280,6 @@ def call_ssara_dem(custom_template, inps, cwd):
     print('dem.grd downloaded')
     grd_to_i2(cwd)
     grd_to_xml_vrt(cwd)
-
     return
 
 
