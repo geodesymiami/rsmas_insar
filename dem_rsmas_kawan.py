@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python
 ###############################################################################
 # 
 # Project: dem_ssara_kawan.py
@@ -22,7 +22,8 @@ from pysar.utils import readfile
 
 import re
 
-EXAMPLE='''example:
+EXAMPLE='''
+  example:
   dem_rsmas.py  $SAMPLES/GalapagosT128SenVVD.template
 
       uses sentinelStack.boundingBox to generate a dem in DEM folder as dem.py requires integer degrees
@@ -38,7 +39,8 @@ EXAMPLE='''example:
 
 '''
 
-xmltext='''<imageFile>
+xmltext='''
+<imageFile>
     <property name="ISCE_VERSION">
         <value>Release: 2.0.0_20170403, svn-2256, 20170403. Current: svn-exported.</value>
     </property>
@@ -162,7 +164,8 @@ xmltext='''<imageFile>
     </property>
 </imageFile>'''
 
-vrttext='''<VRTDataset rasterXSize="{c1size}" rasterYSize="{c2size}">
+vrttext='''
+<VRTDataset rasterXSize="{c1size}" rasterYSize="{c2size}">
     <SRS>{srs}</SRS>
     <GeoTransform>{geotransform}</GeoTransform>
     <VRTRasterBand band="{numbands}" dataType="{datatype}" subClass="VRTRawRasterBand">
@@ -196,10 +199,8 @@ def dem_parser():
     # set default to ISCE
     if inps.ssara:
         inps.isce = False
-        print('inps.ssara')
     else:
         inps.isce = True
-        print('inps.isce')
     return inps
 
 
@@ -249,13 +250,13 @@ def grd_to_xml_vrt(cwd):
         fulldict['srs']= ':'.join (thing for thing in re.findall(r'UNIT.+\s.+\s.+AUTHORITY\["(\w+)","(\d+)"]]',tempstr)[0])
         fulldict['geotransform'] = '{c1sv}, {c1delta}, 0, {c2sv}, {c2delta}, 0' #north up images? for [2] and [4] see "affine geotransform" https://www.gdal.org/gdal_datamodel.html
         fulldict['datatype'] = re.findall(r'Type=([A-Za-z0-9]+)', tempstr)[0]
-        fulldict['sfilename'] = outfile
-        fulldict['lineoffset'] = int(fulldict['c1size']) * 2
+        fulldict['sfilename'] = outfilevrt
+        fulldict['lineoffset'] = int(fulldict['c1size']) * 2 #how is lineoffset calculated
 
     os.remove(tempfile)
 
-    with(open(outfilevert, 'w')) as out:
-        out.write(vrtttext.format(**fulldict))
+    with(open(outfilevrt, 'w')) as out:
+        out.write(vrttext.format(**fulldict))
 
     with(open(outfilexml,'w')) as out:
         out.write(xmltext.format(**fulldict))
@@ -270,7 +271,7 @@ def grd_to_i2():
 
 
 def call_ssara_dem(custom_template, inps, cwd):
-    print('You have started ssara!')
+    print('You have started SSARA!')
     
     parent_dir = os.getenv('PARENTDIR')    
     out_file = 'ssara_dem.log'
@@ -278,7 +279,7 @@ def call_ssara_dem(custom_template, inps, cwd):
     print('command currently executing: ' + command)
     status = subprocess.Popen(command, shell=True).wait()
     print('dem.grd downloaded')
-    grd_to_i2(cwd)
+    grd_to_i2()
     grd_to_xml_vrt(cwd)
     return
 
@@ -334,7 +335,7 @@ def main(argv):
 
     elif custom_template['sentinelStack.demMethod']=='ssara' or inps.ssara:
         call_ssara_dem(custom_template, inps, cwd)
-
+        print('You have finished SSARA!')
     else:
         sys.ext('Error unspported demMethod option: '+custom_template['sentinelStack.demMethod'])
  
