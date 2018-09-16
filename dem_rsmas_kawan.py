@@ -206,7 +206,7 @@ def grd_to_xml():
 
     filename = 'dem.grd'
     tempfile = 'dem.temp'
-    outfile = 'dem.wgs84.xml'
+    outfile = 'dem.dem.wgs84.xml'
     command = '/nethome/famelung/test/test/rsmas_insar/3rdparty/python/anaconda2/bin/gdalinfo {file} >> {temp_file}'.format(file= filename,temp_file=tempfile)
     subprocess.Popen(command, shell=True).wait()
 
@@ -232,14 +232,12 @@ def grd_to_xml():
         xmldict['xmin']= xmldict['c1sv']
 
         #xml file name
-        xmldict['filename'] = os.getcwd + 'dem.dem.wgs84'
+        xmldict['filename'] = str(os.getcwd) + '/dem.dem.wgs84'
         xmldict['extrafilename'] = 'Unknown'
     os.remove(tempfile)
-    os.chdir('..')
 
     with(open(outfile,'w')) as out:
         out.write(xmltext.format(**xmldict))
-    grd_to_i2()
     return
 
 
@@ -259,6 +257,7 @@ def call_ssara_dem(custom_template, inps):
     print('command currently executing: ' + command)
     status = subprocess.Popen(command, shell=True).wait()
     print('dem.grd downloaded')
+    grd_to_i2()
     grd_to_xml()
 
     return
