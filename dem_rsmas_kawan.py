@@ -1,9 +1,9 @@
-#! /usr/bin/env python2
+#! /usr/bin/env python3
 ###############################################################################
 # 
-# Project: dem_ssara.py
-# Author: Falk Amelung
-# Created: 3/2018
+# Project: dem_ssara_kawan.py
+# Author: Kawan & Falk Amelung
+# Created:9/2018
 #
 ###############################################################################
 
@@ -162,7 +162,17 @@ xmltext='''<imageFile>
     </property>
 </imageFile>'''
 
-
+vrttext='''<VRTDataset rasterXSize="{c1size}" rasterYSize="{c2size}">
+    <SRS>{srs}</SRS>
+    <GeoTransform>{geotransform}</GeoTransform>
+    <VRTRasterBand band="{numbands}" dataType="{ddatatype}" subClass="VRTRawRasterBand">
+        <SourceFilename relativeToVRT="1">{sfilename}</SourceFilename>
+        <ByteOrder>LSB</ByteOrder>
+        <ImageOffset>0</ImageOffset>
+        <PixelOffset>2</PixelOffset>
+        <LineOffset>{lineoffset}</LineOffset>
+    </VRTRasterBand>
+</VRTDataset>'''
 
 ##########################################################################
 def dem_parser():
@@ -201,64 +211,75 @@ def make_dem_dir():
     return os.getcwd()
 
 
-def grd_to_xml():
+def grd_to_xml_vrt(cwd):
     print('you have started grd_to_xml')
 
     filename = 'dem.grd'
     tempfile = 'dem.temp'
-    outfile = 'dem.dem.wgs84.xml'
-    command = '/nethome/famelung/test/test/rsmas_insar/3rdparty/python/anaconda2/bin/gdalinfo {file} >> {temp_file}'.format(file= filename,temp_file=tempfile)
+    outfilexml = 'dem.dem.wgs84.xml'
+    outfilevrt = 'dem.dem.wgs84.vrt'
+    command = '/nethome/famelung/test/test/rsmas_insar/3rdparty/python/anaconda2/bin/gdalinfo {file} >> {tempfile}'.format(file= filename,tempfile=tempfile)
     subprocess.Popen(command, shell=True).wait()
 
     with(open(tempfile,'r')) as temp:
-        xmldict= dict()
+        fulldict= dict()
         tempstr= temp.read()
 
-        xmldict['c1delta']= re.findall(r'Pixel Size = \((.+),.+\)', tempstr)[0] 
-        xmldict['c1ev']= round(float(re.findall(r'Upper Right\s+\( (.\d+.\d+),', tempstr)[0]),1)
-        xmldict['c1size']= int(re.findall(r'Size is (\d+),\s+\d+',tempstr)[0])  
-        xmldict['c1sv']= round(float(re.findall(r'Lower Left\s+\( (.\d+.\d+),', tempstr)[0]),1)
+        fulldict['c1delta']= re.findall(r'Pixel Size = \((.+),.+\)', tempstr)[0] 
+        fulldict['c1ev']= round(float(re.findall(r'Upper Right\s+\( (.\d+.\d+),', tempstr)[0]),1)
+        fulldict['c1size']= int(re.findall(r'Size is (\d+),\s+\d+',tempstr)[0])  
+        fulldict['c1sv']= round(float(re.findall(r'Lower Left\s+\( (.\d+.\d+),', tempstr)[0]),1)
 
-        xmldict['c2delta']= re.findall(r'Pixel Size = \(.+,(.+)\)', tempstr)[0]
-        xmldict['c2ev']= round(float(re.findall(r'Lower Left\s+\( .\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0]),1)
-        xmldict['c2size']= int(re.findall(r'Size is \d+,\s+(\d+)',tempstr)[0])
-        xmldict['c2sv']= round(float(re.findall(r'Upper Right\s+\( .\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0]),1)
+        fulldict['c2delta']= re.findall(r'Pixel Size = \(.+,(.+)\)', tempstr)[0]
+        fulldict['c2ev']= round(float(re.findall(r'Lower Left\s+\( .\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0]),1)
+        fulldict['c2size']= int(re.findall(r'Size is \d+,\s+(\d+)',tempstr)[0])
+        fulldict['c2sv']= round(float(re.findall(r'Upper Right\s+\( .\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0]),1)
 
-        xmldict['numbands']= re.findall(r'Band (\d+) \w', tempstr)[0]
-        xmldict['ref']= re.findall(r'GEOGCS\["(.+)",', tempstr)[0].replace(' ','')
-        xmldict['length']= xmldict['c2size']
-        xmldict['width']= xmldict['c1size']
-        xmldict['xmax']= xmldict['c1ev']
-        xmldict['xmin']= xmldict['c1sv']
+        fulldict['numbands']= re.findall(r'Band (\d+) \w', tempstr)[0]
+        fulldict['ref']= re.findall(r'GEOGCS\["(.+)",', tempstr)[0].replace(' ','')
+        fulldict['length']= fulldict['c2size']
+        fulldict['width']= fulldict['c1size']
+        fulldict['xmax']= fulldict['c1ev']
+        fulldict['xmin']= fulldict['c1sv']
+        fulldict['filename'] = cwd + outfilexml
+        fulldict['extrafilename'] = cwd + outfilevrt
+        fulldict['extrafilename'] = cwd + outfilevrt
+        fulldict['extrafilename'] = cwd + outfilevrt
 
-        #xml file name
-        xmldict['filename'] = os.getcwd() + '/dem.dem.wgs84'
-        xmldict['extrafilename'] = os.getcwd() + '/dem.dem.wgs84.vrt'
+        fulldict['srs']= ':'.join (thing for thing in re.findall(r'UNIT.+\s.+\s.+AUTHORITY\["(\w+)","(\d+)"]]',tempstr)[0])
+        fulldict['geotransform'] = '{c1sv}, {c1delta}, 0, {c2sv}, {c2delta}, 0' #north up images? for [2] and [4] see "affine geotransform" https://www.gdal.org/gdal_datamodel.html
+        fulldict['datatype'] = re.findall(r'Type=([A-Za-z0-9]+)', tempstr)[0]
+        fulldict['sfilename'] = outfile
+        fulldict['lineoffset'] = int(fulldict['c1size']) * 2
+
     os.remove(tempfile)
 
-    with(open(outfile,'w')) as out:
-        out.write(xmltext.format(**xmldict))
+    with(open(outfilevert, 'w')) as out:
+        out.write(vrtttext.format(**fulldict))
+
+    with(open(outfilexml,'w')) as out:
+        out.write(xmltext.format(**fulldict))
     return
 
 
 def grd_to_i2():
     command = 'gdal_translate -ot Int16 -of ENVI dem.grd dem.dem.wgs84' 
-    print(command)
+    print('command currently executing: ' + command)
     subprocess.Popen(command, shell=True).wait()
     return
 
 
-def call_ssara_dem(custom_template, inps):
+def call_ssara_dem(custom_template, inps, cwd):
     print('You have started ssara!')
     
     parent_dir = os.getenv('PARENTDIR')    
     out_file = 'ssara_dem.log'
-    command = 'ssara_federated_query.py {ssaraopt} --dem >& {outfile}'.format(ssaraopt=custom_template['ssaraopt'],outfile=out_file)
+    command = 'ssara_federated_query.py {ssaraopt} --dem >& {outfile}'.format(ssaraopt=custom_template['ssaraopt'], outfile=out_file)
     print('command currently executing: ' + command)
     status = subprocess.Popen(command, shell=True).wait()
     print('dem.grd downloaded')
-    grd_to_i2()
-    grd_to_xml()
+    grd_to_i2(cwd)
+    grd_to_xml_vrt(cwd)
 
     return
 
@@ -313,7 +334,7 @@ def main(argv):
         os.rename('tmp.txt',xmlFile)
 
     elif custom_template['sentinelStack.demMethod']=='ssara' or inps.ssara:
-        call_ssara_dem(custom_template, inps)
+        call_ssara_dem(custom_template, inps, cwd)
 
     else:
         sys.ext('Error unspported demMethod option: '+custom_template['sentinelStack.demMethod'])
