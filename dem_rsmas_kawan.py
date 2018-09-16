@@ -222,7 +222,6 @@ def grd_to_xml():
     with(open(tempfile,'r')) as temp:
         xmldict= dict()
         tempstr= temp.read()
-        print('TEST :', re.findall(r'GEOGCS\["(.+)",', tempstr)[0].replace(' ','')) 
 
         xmldict['c1delta']= re.findall(r'Pixel Size = \((.+),.+\)', tempstr)[0] 
         xmldict['c1ev']= round(float(re.findall(r'Upper Right\s+\( (.\d+.\d+),', tempstr)[0]),1)
@@ -245,27 +244,24 @@ def grd_to_xml():
         xmldict['filename'] = 'Unknown'
         xmldict['extrafilename'] = 'Unknown'
     os.remove(tempfile)
-    
+    os.chdir('..')
+
     with(open(outfile,'w')) as out:
         out.write(xmltext.format(**xmldict))
-               
-    print('you have exited grd to xml')
 
 
 def call_ssara_dem(custom_template, inps):
-    #import pdb; pdb.set_trace()
     print('You have started ssara!')
     
     slc_dir = make_slc_dir()
     parent_dir = os.getenv('PARENTDIR')    
     out_file = 'ssara_output_1.log'
     ssara_command = 'ssara_federated_query.py {ssaraopt} --dem >& {outfile}'.format(ssaraopt=custom_template['ssaraopt'],outfile=out_file)
-#    command = 'ssh pegasus.ccs.miami.edu "s.cgood; cd {slcdir};  {parentdir}/3rdparty/SSARA/{ssaracommand}"'.format(slcdir=slc_dir,parentdir=parent_dir,ssaracommand=ssara_command)
     command = 'cd {slcdir}; {ssaracommand}'.format(slcdir=slc_dir,ssaracommand=ssara_command)
 
     print('command currently executing: ' + command)
     status = subprocess.Popen(command, shell=True).wait()
-    print('Files Downloaded')
+    print('dem.grd downloaded')
     grd_to_xml()
 
     return
