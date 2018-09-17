@@ -60,10 +60,10 @@ def run_ssara(run_number=1, serial=False):
 
 	logger.info("RUN NUMBER: %s", str(run_number))	
 	if not serial and run_number > 10:
-		return False
+		return 0
 		
 	if serial and run_number > 2:
-		return False
+		return 0
 	
 	
 	with open(sys.argv[1], 'r') as template_file:
@@ -113,15 +113,12 @@ def run_ssara(run_number=1, serial=False):
 		run_ssara(run_number=run_number+1)
 
 	check_downloads(run_number, sys.argv)
-	return True
+	return 1
 
 
 if __name__ == "__main__":
 	logger.info("DATASET: %s", str(sys.argv[1].split('/')[-1].split(".")[0]))
 	logger.info("DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
 	succesful = run_ssara()
-	logger.info("SUCCESS: %s", str(success))
+	logger.info("SUCCESS: %s", str(successful))
 	logger.info("------------------------------------")					
-	if succesful:
-		return 1
-	return 0
