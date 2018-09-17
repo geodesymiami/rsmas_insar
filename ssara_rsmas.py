@@ -60,11 +60,7 @@ def run_ssara(run_number=1, serial=False):
 
 	logger.info("RUN NUMBER: %s", str(run_number))	
 	if not serial and run_number > 10:
-		return 0
-		
-	if serial and run_number > 2:
-		return 0
-	
+		return 0	
 	
 	with open(sys.argv[1], 'r') as template_file:
 		options = ''
@@ -75,6 +71,18 @@ def run_ssara(run_number=1, serial=False):
 					
 	# Compute SSARA options to use
 	options = options.split(' ')
+	
+	if serial and run_number > 2:
+		return 0
+	else:
+		subprocess.Popen(['ssara_federated_query.py']+options+['--print', '|', 'awk', "'BEGIN{FS=","; ORS=","}{ print $14}'", '>', 'files.csv']]).wait()
+		serial_status = subprocess.Popen(['download_ASF_serial.py', '-username', 'famelung', '-password', 'Falk@1234:', 'files.csv']).wait()
+		
+		if serial_status is not 0:
+			return 1
+		else:
+			run_ssara(run_number+1, serial=serial)
+
 
 	ssara_options = ['ssara_federated_query.py'] + options + ['--print', '--download']	
 
@@ -110,9 +118,9 @@ def run_ssara(run_number=1, serial=False):
 	
 	if exit_code in bad_codes or hang_status:
 		logger.warning("Something went wrong, running again")
-		run_ssara(run_number=run_number+1)
+		run_ssara(run_number=run_number+1, serial=serial)
 
-	check_downloads(run_number, sys.argv)
+	#check_downloads(run_number, sys.argv)
 	return 1
 
 
