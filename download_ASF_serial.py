@@ -106,12 +106,14 @@ class bulk_downloader:
                         pass
                  
                 elif arg.endswith('.metalink') or arg.endswith('.csv'):
-                    if os.path.isfile( arg ):
+                    if os.path.isfile(arg):
                         input_files.append( arg )
                         if arg.endswith('.metalink'):
                             new_files = self.process_metalink(arg)
                         else:
                             new_files = self.process_csv(arg)
+                        
+                        #print(new_files)
                         if new_files is not None:
                             for file_url in (new_files):
                                 download_files.append( file_url )
@@ -292,6 +294,8 @@ class bulk_downloader:
     # Download the file
     def download_file_with_cookiejar(self, url, file_count, total, recursion=False):
        # see if we've already download this file and if it is that it is the correct size
+       print("URL: "+url)
+       print(os.path.basename(url))
        download_file = os.path.basename(url).split('?')[0]
        if os.path.isfile(download_file):
           try:
@@ -513,15 +517,15 @@ class bulk_downloader:
        dl_urls = []
        with open(csv_file, 'r') as csvf:
           try:
-             csvr = csv.DictReader(csvf)
+             csvr = csv.reader(csvf, delimiter=',')
              for row in csvr:
-                dl_urls.append(row['URL'])
+                dl_urls.append(row)
           except csv.Error as e:
              print ("WARNING: Could not parse file %s, line %d: %s. Skipping." % (csv_file, csvr.line_num, e))
              return None
           except KeyError as e:
              print ("WARNING: Could not find URL column in file %s. Skipping." % (csv_file))
-
+       
        if len(dl_urls) > 0:
           return dl_urls
        else:
@@ -529,6 +533,7 @@ class bulk_downloader:
     
     # Download all the files in the list
     def download_files(self):
+        self.files = self.files[0]
         for file_name in self.files:
 
             # download counter
