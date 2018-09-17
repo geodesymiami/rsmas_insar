@@ -14,7 +14,7 @@ import glob
 import argparse
 import shutil
 import subprocess
-import messageRsmas
+from . import messageRsmas
 import re
 from pysar.utils import readfile
 
@@ -286,7 +286,7 @@ def main(argv):
     custom_template = readfile.read_template(inps.custom_template_file)
     cwd = make_dem_dir()
     # can sentinelStack.demMethod be removed? I think parser is the replacement
-    if 'sentinelStack.demMethod' not in custom_template.keys():
+    if 'sentinelStack.demMethod' not in list(custom_template.keys()):
         custom_template['sentinelStack.demMethod'] = '?'
 
     if custom_template['sentinelStack.demMethod'] == 'bbox' or custom_template['sentinelStack.demMethod'] == 'isce' or inps.isce:
