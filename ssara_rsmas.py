@@ -133,6 +133,6 @@ def run_ssara(run_number=1, serial=False):
 if __name__ == "__main__":
 	logger.info("DATASET: %s", str(sys.argv[1].split('/')[-1].split(".")[0]))
 	logger.info("DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
-	succesful = run_ssara(serial=True)
+	succesful = run_ssara(serial=False)
 	logger.info("SUCCESS: %s", str(succesful))
 	logger.info("------------------------------------")					
