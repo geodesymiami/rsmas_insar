@@ -2,10 +2,12 @@
 
 import os
 import sys
+sys.path.insert(0, '/nethome/'+os.getlogin()+'/test/testq/rsmas_insar/3rdparty/accounts/SSARA')
 import time
 import subprocess
 import logging
-import datetime 
+import datetime  
+import password_config as password
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -81,7 +83,7 @@ def run_ssara(run_number=1, serial=False):
 		filescsv_status = subprocess.Popen(csv_command, shell=True).wait()
 		sed_command = "sed 's/^.\{5\}//' files.csv > new_files.csv";
 		subprocess.Popen(sed_command, shell=True).wait()
-		serial_status = subprocess.Popen(['download_ASF_serial.py', '-username', 'famelung', '-password', 'Falk@1234:', 'new_files.csv']).wait()
+		serial_status = subprocess.Popen(['download_ASF_serial.py', '-username', password.asfuser, '-password', password.asfpass, 'new_files.csv']).wait()
 		if serial_status is not 0:
 			return 1
 		else:
@@ -131,6 +133,6 @@ def run_ssara(run_number=1, serial=False):
 if __name__ == "__main__":
 	logger.info("DATASET: %s", str(sys.argv[1].split('/')[-1].split(".")[0]))
 	logger.info("DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
-	succesful = run_ssara(serial=False)
+	succesful = run_ssara(serial=True)
 	logger.info("SUCCESS: %s", str(succesful))
 	logger.info("------------------------------------")					
