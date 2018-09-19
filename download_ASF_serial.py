@@ -35,6 +35,7 @@ import base64
 import time
 import getpass
 import ssl
+#import httplib2
 
 import xml.etree.ElementTree as ET
 
@@ -294,8 +295,7 @@ class bulk_downloader:
     # Download the file
     def download_file_with_cookiejar(self, url, file_count, total, recursion=False):
        # see if we've already download this file and if it is that it is the correct size
-       print("URL: "+url)
-       print(os.path.basename(url))
+       #httplib2.Http(disable_ssl_certificate_validation=True)
        download_file = os.path.basename(url).split('?')[0]
        if os.path.isfile(download_file):
           try:
