@@ -196,10 +196,8 @@ def dem_parser():
     inps = parser.parse_args()
 
     # set default to ISCE
-    if inps.ssara:
-        inps.isce = False
-    else:
-        inps.isce = True
+    inps.isce = not(inps.ssara)
+
     return inps
 
 
@@ -215,56 +213,44 @@ def grd_to_xml(cwd):
     print('you have started grd_to_xml')
 
     filename = 'dem.grd'
-    tempfile = 'dem.temp'
     outfilexml = 'dem.dem.wgs84.xml'
     outfilevrt = 'dem.dem.wgs84.vrt'
-    command = '/nethome/famelung/test/test/rsmas_insar/3rdparty/python/anaconda2/bin/gdalinfo {file} >> {tempfile}'.format(file=filename, tempfile=tempfile)
-    subprocess.Popen(command, shell=True).wait()
+    gdalinfopath = '/nethome/famelung/test/test/rsmas_insar/3rdparty/python/anaconda2/bin/gdalinfo'
+    command = '{gdalinfopath} {file}'.format(gdalinfopath = gdalinfopath, file=filename)
+    
+    tempstr = subprocess.getoutput(command, shell=True).wait()
 
-    with(open(tempfile, 'r')) as temp:
-        fulldict = dict()
-        tempstr = temp.read()
+    xmlparamters = dict()
 
-        fulldict['c1delta'] = re.findall(r'Pixel Size = \((.+),.+\)', tempstr)[0] 
-        fulldict['c1ev'] = round(float(re.findall(r'Upper Right\s+\( (.\d+.\d+),', tempstr)[0]), 1)
-        fulldict['c1size'] = int(re.findall(r'Size is (\d+),\s+\d+', tempstr)[0])  
-        fulldict['c1sv'] = round(float(re.findall(r'Lower Left\s+\( (.\d+.\d+),', tempstr)[0]), 1)
+    xmlparamters['c1delta'] = re.findall(r'Pixel Size = \((.+),.+\)', tempstr)[0] 
+    xmlparamters['c1ev'] = round(float(re.findall(r'Upper Right\s+\( (.\d+.\d+),', tempstr)[0]), 1)
+    xmlparamters['c1size'] = int(re.findall(r'Size is (\d+),\s+\d+', tempstr)[0])  
+    xmlparamters['c1sv'] = round(float(re.findall(r'Lower Left\s+\( (.\d+.\d+),', tempstr)[0]), 1)
 
-        fulldict['c2delta'] = re.findall(r'Pixel Size = \(.+,(.+)\)', tempstr)[0]
-        fulldict['c2ev'] = round(float(re.findall(r'Lower Left\s+\( .\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0]), 1)
-        fulldict['c2size'] = int(re.findall(r'Size is \d+,\s+(\d+)', tempstr)[0])
-        fulldict['c2sv'] = round(float(re.findall(r'Upper Right\s+\( .\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0]), 1)
+    xmlparamters['c2delta'] = re.findall(r'Pixel Size = \(.+,(.+)\)', tempstr)[0]
+    xmlparamters['c2ev'] = round(float(re.findall(r'Lower Left\s+\( .\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0]), 1)
+    xmlparamters['c2size'] = int(re.findall(r'Size is \d+,\s+(\d+)', tempstr)[0])
+    xmlparamters['c2sv'] = round(float(re.findall(r'Upper Right\s+\( .\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0]), 1)
 
-        fulldict['numbands'] = re.findall(r'Band (\d+) \w', tempstr)[0]
-        fulldict['ref'] = re.findall(r'GEOGCS\["(.+)",', tempstr)[0].replace(' ', '')
-        fulldict['length'] = fulldict['c2size']
-        fulldict['width'] = fulldict['c1size']
-        fulldict['xmax'] = fulldict['c1ev']
-        fulldict['xmin'] = fulldict['c1sv']
-        fulldict['filename'] = cwd + '/' + outfilexml
-        fulldict['extrafilename'] = cwd + '/' + outfilevrt
-
-    #    fulldict['srs']= ':'.join (thing for thing in re.findall(r'UNIT.+\s.+\s.+AUTHORITY\["(\w+)","(\d+)"]]',tempstr)[0])
-    #    fulldict['geotransform'] = '{c1sv}, {c1delta}, 0, {c2sv}, {c2delta}, 0' #north up images? for [2] and [4] see "affine geotransform" https://www.gdal.org/gdal_datamodel.html
-    #    fulldict['datatype'] = re.findall(r'Type=([A-Za-z0-9]+)', tempstr)[0]
-    #    fulldict['sfilename'] = outfilevrt
-    #    fulldict['lineoffset'] = int(fulldict['c1size']) * 2 #how is lineoffset calculated
-
-    os.remove(tempfile)
-
-    # with(open(outfilevrt, 'w')) as out:
-    #     out.write(vrttext.format(**fulldict))
+    xmlparamters['numbands'] = re.findall(r'Band (\d+) \w', tempstr)[0]
+    xmlparamters['ref'] = re.findall(r'GEOGCS\["(.+)",', tempstr)[0].replace(' ', '')
+    xmlparamters['length'] = xmlparamters['c2size']
+    xmlparamters['width'] = xmlparamters['c1size']
+    xmlparamters['xmax'] = xmlparamters['c1ev']
+    xmlparamters['xmin'] = xmlparamters['c1sv']
+    xmlparamters['filename'] = cwd + '/' + outfilexml
+    xmlparamters['extrafilename'] = cwd + '/' + outfilevrt
 
     with(open(outfilexml, 'w')) as out:
-        out.write(xmltext.format(**fulldict))
-    return
+        out.write(xmltext.format(**xmlparamters))
 
 
-def grd_to_envi_vrt():
-    command = 'gdal_translate -ot Int16 -of ENVI dem.grd dem.dem.wgs84;gdal_translate -of vrt dem.grd dem.dem.wgs84.xml.vrt' 
+def grd_to_envi_and_vrt():
+    # Commands to create ENVI .hdr Labelled Raster and vrt xml file
+    command = '''gdal_translate -ot Int16 -of ENVI dem.grd dem.dem.wgs84; 
+                 gdal_translate -of vrt dem.grd dem.dem.wgs84.xml.vrt'''
     print('command currently executing: ' + command)
     subprocess.Popen(command, shell=True).wait()
-    return
 
 
 def call_ssara_dem(custom_template, inps, cwd):
@@ -274,18 +260,16 @@ def call_ssara_dem(custom_template, inps, cwd):
     print('command currently executing: ' + command)
     subprocess.Popen(command, shell=True).wait()
     print('dem.grd downloaded')
-    grd_to_envi_vrt()
+    grd_to_envi_and_vrt()
     grd_to_xml(cwd)
-    return
 
 
 def main(argv):
-
     messageRsmas.log(' '.join(argv))
     inps = dem_parser()
     custom_template = readfile.read_template(inps.custom_template_file)
     cwd = make_dem_dir()
-    # can sentinelStack.demMethod be removed? I think parser is the replacement
+
     if 'sentinelStack.demMethod' not in list(custom_template.keys()):
         custom_template['sentinelStack.demMethod'] = '?'
 
@@ -312,7 +296,6 @@ def main(argv):
             print("Command failed. Exit code, StdErr:", exc.returncode, exc.output)
             sys.exit('Error produced by dem.py')
         else:
-            # print("Success.        StdOut \n{}\n".format(output))
             if 'Could not create a stitched DEM. Some tiles are missing' in output:
                 os.chdir('..')
                 shutil.rmtree('DEM')
