@@ -352,9 +352,9 @@ def set_default_options(inps, template):
                                      inps_name = template_val.inps_name,
                                      default_value= template_val.default_value)
 
-def call_ssara(custom_template, slcDir):
+def call_ssara(custom_template_file, slcDir):
         out_file = '../out_ssara.log' 
-        ssara_command = 'ssara_rsmas.py ' + custom_template['ssaraopt'] + ' --print --parallel=10 --asfResponseTimeout=360 --download |& tee ' + out_file
+        ssara_command = 'ssara_rsmas.py ' + custom_template_file + ' |& tee ' + out_file
         command = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' + os.getenv('PARENTDIR') + '/sources/rsmas_isce/' + ssara_command + '\"'
         ''' os.getenv('PARENTDIR') + '/sources/rsmas_isce/' + \     #FA 8/2018: use ssara_rsmas.py which uses ASF's ssara_federated_query-cj.py until Scott's ssara is fixed '''
 
@@ -612,7 +612,7 @@ def run_insar_maps(work_dir):
 
     # TODO: Change subprocess call to get back error code and send error code to logger
     status = subprocess.Popen(command1, shell=True).wait()
-    if status is not 0:
+    if status is not inps.custom_template_file:
         logger.error('ERROR in hdfeos5_2json_mbtiles.py')
         raise Exception('ERROR in hdfeos5_2json_mbtiles.py')
 
@@ -712,7 +712,7 @@ def main(argv):
             os.symlink(inps.slcDir,inps.work_dir+'/SLC')
         os.chdir(inps.slcDir)
 
-        call_ssara(custom_template, inps.slcDir)
+        call_ssara(inps.custom_template_file, inps.slcDir)
 
     if inps.stopssara:
         logger.debug('Exit as planned after ssara')
