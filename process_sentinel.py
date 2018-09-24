@@ -612,7 +612,7 @@ def run_insar_maps(work_dir):
 
     # TODO: Change subprocess call to get back error code and send error code to logger
     status = subprocess.Popen(command1, shell=True).wait()
-    if status is not inps.custom_template_file:
+    if status is not 0:
         logger.error('ERROR in hdfeos5_2json_mbtiles.py')
         raise Exception('ERROR in hdfeos5_2json_mbtiles.py')
 
