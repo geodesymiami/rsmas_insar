@@ -433,11 +433,11 @@ def get_work_directory(work_dir, project_name):
 def create_custom_template(custom_template_file, work_dir):
     if custom_template_file:
         # Copy custom template file to work directory
-        if utils.update_file(
+        if utils.run_or_skip(
                 os.path.basename(
                     custom_template_file),
                 custom_template_file,
-                check_readable=False):
+                check_readable=False) == 'run':
             shutil.copy2(custom_template_file, work_dir)
 
         # Read custom template
