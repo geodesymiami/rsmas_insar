@@ -53,7 +53,6 @@ def main(argv):
 
     cwd = os.getcwd()
 
-    import pdb; pdb.set_trace()
     if 'sentinelStack.demMethod' not in custom_template.keys():
        custom_template['sentinelStack.demMethod']='bbox'
 
