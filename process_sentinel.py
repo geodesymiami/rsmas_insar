@@ -469,7 +469,7 @@ def create_or_copy_dem(work_dir, template, custom_template_file, isce_env):
         else:
             # TODO: Change subprocess call to get back error code and send error code to logger
             cmd = 'dem_rsmas.py ' + custom_template_file
-            status = subprocess.Popen(cmd, env=isce_env, shell=True).wait()
+            status = subprocess.Popen(cmd, shell=True).wait()
             if status is not 0:
                 logger.error('ERROR while making DEM')
                 raise Exception('ERROR while making DEM')
@@ -507,7 +507,7 @@ def create_stack_sentinel_run_files(inps, dem_file):
     logger.info(command)
     messageRsmas.log(command)
     process = subprocess.Popen(
-            command, shell=True, env=inps.isce_env, 
+            command, shell=True, 
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (output, error) = process.communicate()
     if process.returncode is not 0 or error or 'Traceback' in output.decode("utf-8"):
@@ -562,7 +562,7 @@ def submit_isce_jobs(isce_env, run_file_list, cwd, subswath, custom_template_fil
         # FA 7/18: Should hardwire the memory requirements for the different workflows into a function and use those
         # TODO: Change subprocess call to get back error code and send error code to logger
         status=0
-        status = subprocess.Popen(cmd, env=isce_env, shell=True).wait()
+        status = subprocess.Popen(cmd,  shell=True).wait()
         if status is not 0:
             logger.error('ERROR submitting jobs using createBatch.pl')
             raise Exception('ERROR submitting jobs using createBatch.pl')
@@ -573,7 +573,7 @@ def submit_isce_jobs(isce_env, run_file_list, cwd, subswath, custom_template_fil
     command = 'prep4timeseries.py -i merged/interferograms/ -x ' + xml_file + ' -b baselines/ -g merged/geom_master/ '
     messageRsmas.log(command)
     # TODO: Change subprocess call to get back error code and send error code to logger
-    status = subprocess.Popen(command, env=isce_env, shell=True).wait()
+    status = subprocess.Popen(command, shell=True).wait()
     if status is not 0:
         logger.error('ERROR in prep4timeseries.py')
         raise Exception('ERROR in prep4timeseries.py')
