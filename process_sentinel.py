@@ -410,16 +410,6 @@ def get_environment_from_source_file(source_file):
     #return json.loads(output)
 
 
-def get_isce_environment(flag_latest_version):
-    if flag_latest_version:        # load from 3rdparty/sentinelstack
-        source_file = 'cshrc_isce_latest'
-    else:
-        # load from source/sentinelstack  (9/17 version)
-        source_file = 'cshrc_isce'
-
-    return get_environment_from_source_file(source_file)
-
-
 def get_project_name(custom_template_file):
     project_name = None
     if custom_template_file:
@@ -457,7 +447,7 @@ def create_custom_template(custom_template_file, work_dir):
         return dict()
 
 
-def create_or_copy_dem(work_dir, template, custom_template_file, isce_env):
+def create_or_copy_dem(work_dir, template, custom_template_file):
     dem_dir = work_dir + '/DEM'
     if os.path.isdir(dem_dir) and len(os.listdir(dem_dir)) == 0:
         os.rmdir(dem_dir)
@@ -504,6 +494,7 @@ def create_stack_sentinel_run_files(inps, dem_file):
         command = command + ' -x ' + inps.excludeDate
 
     # TODO: Change subprocess call to get back error code and send error code to logger
+    #import pdb; pdb.set_trace()
     logger.info(command)
     messageRsmas.log(command)
     process = subprocess.Popen(
@@ -546,7 +537,7 @@ def get_memory_defaults(inps):
     return memoryuse
 
 
-def submit_isce_jobs(isce_env, run_file_list, cwd, subswath, custom_template_file, memoryuse):
+def submit_isce_jobs(run_file_list, cwd, subswath, custom_template_file, memoryuse):
     for item in run_file_list:
         memorymax = str(memoryuse[int(item.split('_')[2]) - 1])
         if os.getenv('QUEUENAME')=='debug':
@@ -698,11 +689,6 @@ def main(argv):
         custom_template['cleanopt'] = '0'
 
     #########################################
-    # Get the environment for ISCE (can be ommitted once it is part of the regular installation)
-    #########################################
-    inps.isce_env = get_isce_environment(inps.flag_latest_version)
-
-    #########################################
     # startssara: Getting Data
     #########################################
     if inps.flag_ssara:
@@ -726,8 +712,7 @@ def main(argv):
 
         dem_file = create_or_copy_dem(work_dir= inps.work_dir,
                                       template= template,
-                                      custom_template_file= inps.custom_template_file,
-                                      isce_env= inps.isce_env)
+                                      custom_template_file= inps.custom_template_file)
         # Clean up files
         # temp_list = clean_list1 + clean_list2 + clean_list3 + ['PYSAR']
         temp_list =['run_files']
@@ -740,7 +725,7 @@ def main(argv):
         # submit jobs
         #########################################
         memoryUse = get_memory_defaults(inps)
-        submit_isce_jobs(inps.isce_env, run_file_list,
+        submit_isce_jobs(run_file_list,
                          inps.cwd, inps.subswath,
                          inps.custom_template_file,
                          memoryUse)
