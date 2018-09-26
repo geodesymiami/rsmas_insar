@@ -1,9 +1,16 @@
 #!/usr/bin/python
-
-import subprocess
 import os
+import sys
+import subprocess
 
 if __name__ == "__main__":
+	
+	with open(sys.argv[1], 'r') as template_file:
+		options = ''
+		for line in template_file:
+			if 'ssaraopt' in line:
+				options = line.strip('\n').rstrip().split("= ")[1].split(' ')
+				break;				
 	
 	filecsv_options = ['ssara_federated_query.py']+options+['--print', '|', 'awk', "'BEGIN{FS=\",\"; ORS=\",\"}{ print $14}'", '>', 'files.csv']
 	csv_command = ' '.join(filecsv_options)
