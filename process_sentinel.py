@@ -20,6 +20,9 @@ import subprocess
 import json
 from collections import namedtuple
 
+sys.path.insert(0, os.getenv('SSARAHOME'))
+import password_config as password
+
 import h5py
 import logging
 
@@ -589,7 +592,7 @@ def run_insar_maps(work_dir):
         shutil.rmtree(json_folder)
 
     command1 = 'hdfeos5_2json_mbtiles.py ' + hdfeos_file + ' ' + json_folder + ' |& tee out_insarmaps.log'
-    command2 = 'json_mbtiles2insarmaps.py -u insaradmin -p Insar123 --host ' + \
+    command2 = 'json_mbtiles2insarmaps.py -u '+password.insaruser+' -p '+password.insarpass+' --host ' + \
                'insarmaps.miami.edu -P rsmastest -U rsmas\@gmail.com --json_folder ' + \
                json_folder + ' --mbtiles_file ' + mbtiles_file + ' |& tee -a out_insarmaps.log'
 
