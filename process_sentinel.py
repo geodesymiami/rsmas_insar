@@ -364,6 +364,7 @@ def call_ssara(custom_template_file, slcDir):
 
         messageRsmas.log(command)
         os.chdir('..')
+        messageRsmas.log(ssara_command)
         messageRsmas.log(command)
         os.chdir(slcDir)
 
