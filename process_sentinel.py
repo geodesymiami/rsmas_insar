@@ -461,8 +461,10 @@ def create_or_copy_dem(work_dir, template, custom_template_file):
             shutil.copytree(template['sentinelStack.demDir'], dem_dir)
         else:
             # TODO: Change subprocess call to get back error code and send error code to logger
-            cmd = 'dem_rsmas.py ' + custom_template_file
-            status = subprocess.Popen(cmd, shell=True).wait()
+            command = 'dem_rsmas.py ' + custom_template_file
+            print command
+            messageRsmas.log(command)
+            status = subprocess.Popen(command, shell=True).wait()
             if status is not 0:
                 logger.error('ERROR while making DEM')
                 raise Exception('ERROR while making DEM')
