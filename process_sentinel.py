@@ -47,6 +47,7 @@ logger = logging.getLogger("process_sentinel")
 TEMPLATE = '''# vim: set filetype=cfg:
 ##------------------------ sentinelStack_template.txt ------------------------##
 ## 1. sentinelStack options
+sentinelStack.demDir         = auto  #[DEM]
 sentinelStack.slcDir         = auto  #[SLC]
 sentinelStack.orbitDir       = auto  #[orbits]
 sentinelStack.auxDir         = auto  #[/nethome/swdowinski/S1aux/]
@@ -454,8 +455,8 @@ def create_or_copy_dem(work_dir, template, custom_template_file):
 
     
     if not os.path.isdir(dem_dir):
-        if 'sentinelStack.dem_dir' in list(template.keys()):
-            shutil.copytree(template['sentinelStack.dem_dir'], dem_dir)
+        if 'sentinelStack.demDir' in list(template.keys()):
+            shutil.copytree(template['sentinelStack.demDir'], dem_dir)
         else:
             # TODO: Change subprocess call to get back error code and send error code to logger
             cmd = 'dem_rsmas.py ' + custom_template_file
@@ -494,7 +495,6 @@ def create_stack_sentinel_run_files(inps, dem_file):
         command = command + ' -x ' + inps.excludeDate
 
     # TODO: Change subprocess call to get back error code and send error code to logger
-    #import pdb; pdb.set_trace()
     logger.info(command)
     messageRsmas.log(command)
     process = subprocess.Popen(

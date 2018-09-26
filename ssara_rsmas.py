@@ -2,11 +2,11 @@
 
 import os
 import sys
-sys.path.insert(0, '/nethome/'+os.getlogin()+'/test/testq/rsmas_insar/3rdparty/accounts/SSARA')
 import time
 import subprocess
 import logging
 import datetime  
+sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
 
 logger = logging.getLogger()
