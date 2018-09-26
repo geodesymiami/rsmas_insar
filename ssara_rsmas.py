@@ -46,7 +46,7 @@ def check_downloads(run_number, args):
 	for f in files_to_check:
 		if not os.path.isfile(str(os.getcwd())+"/"+str(f)):
 			logger.warning("The file, %s, didn't download correctly. Running ssara again.", f)
-			run_ssara(run_number+1, serial=True)
+			run_ssara(run_number+1)
 			return
 	print("Everything is there!")
 
@@ -58,7 +58,7 @@ def check_downloads(run_number, args):
      Returns: none
 
 """	
-def run_ssara(run_number=1, serial=False):
+def run_ssara(run_number=1):
 
 	logger.info("RUN NUMBER: %s", str(run_number))	
 	if not serial and run_number > 10:
@@ -73,22 +73,6 @@ def run_ssara(run_number=1, serial=False):
 					
 	# Compute SSARA options to use
 	options = options.split(' ')
-	
-	if serial and run_number > 2:
-		return 0
-	
-	if serial:
-		filecsv_options = ['ssara_federated_query.py']+options+['--print', '|', 'awk', "'BEGIN{FS=\",\"; ORS=\",\"}{ print $14}'", '>', 'files.csv']
-		csv_command = ' '.join(filecsv_options)
-		filescsv_status = subprocess.Popen(csv_command, shell=True).wait()
-		sed_command = "sed 's/^.\{5\}//' files.csv > new_files.csv";
-		subprocess.Popen(sed_command, shell=True).wait()
-		serial_status = subprocess.Popen(['download_ASF_serial.py', '-username', password.asfuser, '-password', password.asfpass, 'new_files.csv']).wait()
-		if serial_status is not 0:
-			return 1
-		else:
-			run_ssara(run_number+1, serial=serial)
-
 
 	ssara_options = ['ssara_federated_query.py'] + options + ['--parallel', '10', '--print', '--download']	
 
@@ -133,6 +117,6 @@ def run_ssara(run_number=1, serial=False):
 if __name__ == "__main__":
 	logger.info("DATASET: %s", str(sys.argv[1].split('/')[-1].split(".")[0]))
 	logger.info("DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
-	succesful = run_ssara(serial=False)
+	succesful = run_ssara()
 	logger.info("SUCCESS: %s", str(succesful))
 	logger.info("------------------------------------")					
