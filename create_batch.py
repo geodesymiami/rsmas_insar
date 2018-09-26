@@ -2,6 +2,7 @@
 
 import os
 import sys
+import subprocess
 import argparse
 
 inps = None;
@@ -42,20 +43,21 @@ def write_job_files():
 	
 	files_array = read_input_file_to_array()
 	
+	job_files = []
+	
 	for i, file_name in enumerate(files_array):
 	
 		job_file_name = inps.file.split("/")[-1]+"_"+str(i)+".job";
-		print(inps.file)
-		print(job_file_name)
+		job_name = job_file_name.split(".")[0]
 		job_file_lines = [
 			
 			"#! /bin/bash",
-			"\n#BSUB -J "+job_file_name.split(".")[0], 
+			"\n#BSUB -J "+ job_name, 
 			"\n#BSUB -P insarlab",
 			"\n#BSUB -n 1",
 			"\n#BSUB -R span[hosts=1]",
-			"\n#BSUB -o "+job_file_name.split(".")[0]+"%J.o",
-			"\n#BSUB -e "+job_file_name.split(".")[0]+"%J.e",
+			"\n#BSUB -o "+job_name+"%J.o",
+			"\n#BSUB -e "+job_name+"%J.e",
 			"\n#BSUB -q general",
 			"\n#BSUB -W "+str(inps.wall),
 			"\n#BSUB -R rusage[mem="+str(inps.memory)+"]",
@@ -67,8 +69,18 @@ def write_job_files():
 		
 		with open("/Users/joshua/Desktop/"+job_file_name, "w+") as job_file:
 			job_file.writelines(job_file_lines)
+			job_files.append(job_file.name)
+			
+	return job_files
+	
+def submmit_jobs_to_bsub(job_files):
+	
+	for job in job_files:
+		command = "bsub < "+job
+		subprocess.Popen(command)
 			
 if __name__ == "__main__":
 	
 	parse_arguments(sys.argv[1:])
-	write_job_files()
+	job_files = write_job_files()
+	print(job_files)
