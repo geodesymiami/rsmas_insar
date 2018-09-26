@@ -456,9 +456,8 @@ def create_or_copy_dem(work_dir, template, custom_template_file):
     if os.path.isdir(dem_dir) and len(os.listdir(dem_dir)) == 0:
         os.rmdir(dem_dir)
 
-    
     if not os.path.isdir(dem_dir):
-        if 'sentinelStack.demDir' in list(template.keys()):
+        if 'sentinelStack.demDir' in list(template.keys()) and template['sentinelStack.demDir'] != str('auto'):
             shutil.copytree(template['sentinelStack.demDir'], dem_dir)
         else:
             # TODO: Change subprocess call to get back error code and send error code to logger
