@@ -1,4 +1,4 @@
-#! /usr/bin/env python2
+#! /usr/bin/env python3
 ###############################################################################
 # 
 # Project: dem_ssara.py
@@ -53,7 +53,6 @@ def main(argv):
 
     cwd = os.getcwd()
 
-    import pdb; pdb.set_trace()
     if 'sentinelStack.demMethod' not in custom_template.keys():
        custom_template['sentinelStack.demMethod']='bbox'
 
@@ -112,9 +111,9 @@ def main(argv):
     fout.close()
     os.rename('tmp.txt',xmlFile)
 
-    print '\n###############################################'
-    print 'End of dem_rsmas.py'
-    print '################################################\n'
+    print('\n###############################################')
+    print('End of dem_rsmas.py')
+    print('################################################\n')
 
 ###########################################################################################
 if __name__ == '__main__':

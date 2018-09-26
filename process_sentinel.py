@@ -20,6 +20,9 @@ import subprocess
 import json
 from collections import namedtuple
 
+sys.path.insert(0, os.getenv('SSARAHOME'))
+import password_config as password
+
 import h5py
 import logging
 
@@ -47,6 +50,7 @@ logger = logging.getLogger("process_sentinel")
 TEMPLATE = '''# vim: set filetype=cfg:
 ##------------------------ sentinelStack_template.txt ------------------------##
 ## 1. sentinelStack options
+sentinelStack.demDir         = auto  #[DEM]
 sentinelStack.slcDir         = auto  #[SLC]
 sentinelStack.orbitDir       = auto  #[orbits]
 sentinelStack.auxDir         = auto  #[/nethome/swdowinski/S1aux/]
@@ -352,14 +356,15 @@ def set_default_options(inps, template):
                                      inps_name = template_val.inps_name,
                                      default_value= template_val.default_value)
 
-def call_ssara(custom_template, slcDir):
+def call_ssara(custom_template_file, slcDir):
         out_file = '../out_ssara.log' 
-        ssara_command = 'ssara_rsmas.py ' + custom_template['ssaraopt'] + ' --print --parallel=10 --asfResponseTimeout=360 --download |& tee ' + out_file
+        ssara_command = 'ssara_rsmas.py ' + custom_template_file + ' |& tee ' + out_file
         command = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' + os.getenv('PARENTDIR') + '/sources/rsmas_isce/' + ssara_command + '\"'
         ''' os.getenv('PARENTDIR') + '/sources/rsmas_isce/' + \     #FA 8/2018: use ssara_rsmas.py which uses ASF's ssara_federated_query-cj.py until Scott's ssara is fixed '''
 
         messageRsmas.log(command)
         os.chdir('..')
+        messageRsmas.log(ssara_command)
         messageRsmas.log(command)
         os.chdir(slcDir)
 
@@ -410,16 +415,6 @@ def get_environment_from_source_file(source_file):
     #return json.loads(output)
 
 
-def get_isce_environment(flag_latest_version):
-    if flag_latest_version:        # load from 3rdparty/sentinelstack
-        source_file = 'cshrc_isce_latest'
-    else:
-        # load from source/sentinelstack  (9/17 version)
-        source_file = 'cshrc_isce'
-
-    return get_environment_from_source_file(source_file)
-
-
 def get_project_name(custom_template_file):
     project_name = None
     if custom_template_file:
@@ -443,11 +438,11 @@ def get_work_directory(work_dir, project_name):
 def create_custom_template(custom_template_file, work_dir):
     if custom_template_file:
         # Copy custom template file to work directory
-        if utils.update_file(
+        if utils.run_or_skip(
                 os.path.basename(
                     custom_template_file),
                 custom_template_file,
-                check_readable=False):
+                check_readable=False) == 'run':
             shutil.copy2(custom_template_file, work_dir)
 
         # Read custom template
@@ -457,19 +452,20 @@ def create_custom_template(custom_template_file, work_dir):
         return dict()
 
 
-def create_or_copy_dem(work_dir, template, custom_template_file, isce_env):
+def create_or_copy_dem(work_dir, template, custom_template_file):
     dem_dir = work_dir + '/DEM'
     if os.path.isdir(dem_dir) and len(os.listdir(dem_dir)) == 0:
         os.rmdir(dem_dir)
 
-    
     if not os.path.isdir(dem_dir):
-        if 'sentinelStack.dem_dir' in list(template.keys()):
-            shutil.copytree(template['sentinelStack.dem_dir'], dem_dir)
+        if 'sentinelStack.demDir' in list(template.keys()) and template['sentinelStack.demDir'] != str('auto'):
+            shutil.copytree(template['sentinelStack.demDir'], dem_dir)
         else:
             # TODO: Change subprocess call to get back error code and send error code to logger
-            cmd = 'dem_rsmas.py ' + custom_template_file
-            status = subprocess.Popen(cmd, env=isce_env, shell=True).wait()
+            command = 'dem_rsmas.py ' + custom_template_file
+            print (command)
+            messageRsmas.log(command)
+            status = subprocess.Popen(command, shell=True).wait()
             if status is not 0:
                 logger.error('ERROR while making DEM')
                 raise Exception('ERROR while making DEM')
@@ -507,7 +503,7 @@ def create_stack_sentinel_run_files(inps, dem_file):
     logger.info(command)
     messageRsmas.log(command)
     process = subprocess.Popen(
-            command, shell=True, env=inps.isce_env, 
+            command, shell=True, 
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (output, error) = process.communicate()
     if process.returncode is not 0 or error or 'Traceback' in output.decode("utf-8"):
@@ -546,7 +542,7 @@ def get_memory_defaults(inps):
     return memoryuse
 
 
-def submit_isce_jobs(isce_env, run_file_list, cwd, subswath, custom_template_file, memoryuse):
+def submit_isce_jobs(run_file_list, cwd, subswath, custom_template_file, memoryuse):
     for item in run_file_list:
         memorymax = str(memoryuse[int(item.split('_')[2]) - 1])
         if os.getenv('QUEUENAME')=='debug':
@@ -562,7 +558,7 @@ def submit_isce_jobs(isce_env, run_file_list, cwd, subswath, custom_template_fil
         # FA 7/18: Should hardwire the memory requirements for the different workflows into a function and use those
         # TODO: Change subprocess call to get back error code and send error code to logger
         status=0
-        status = subprocess.Popen(cmd, env=isce_env, shell=True).wait()
+        status = subprocess.Popen(cmd,  shell=True).wait()
         if status is not 0:
             logger.error('ERROR submitting jobs using createBatch.pl')
             raise Exception('ERROR submitting jobs using createBatch.pl')
@@ -573,7 +569,7 @@ def submit_isce_jobs(isce_env, run_file_list, cwd, subswath, custom_template_fil
     command = 'prep4timeseries.py -i merged/interferograms/ -x ' + xml_file + ' -b baselines/ -g merged/geom_master/ '
     messageRsmas.log(command)
     # TODO: Change subprocess call to get back error code and send error code to logger
-    status = subprocess.Popen(command, env=isce_env, shell=True).wait()
+    status = subprocess.Popen(command, shell=True).wait()
     if status is not 0:
         logger.error('ERROR in prep4timeseries.py')
         raise Exception('ERROR in prep4timeseries.py')
@@ -598,7 +594,7 @@ def run_insar_maps(work_dir):
         shutil.rmtree(json_folder)
 
     command1 = 'hdfeos5_2json_mbtiles.py ' + hdfeos_file + ' ' + json_folder + ' |& tee out_insarmaps.log'
-    command2 = 'json_mbtiles2insarmaps.py -u insaradmin -p Insar123 --host ' + \
+    command2 = 'json_mbtiles2insarmaps.py -u '+password.insaruser+' -p '+password.insarpass+' --host ' + \
                'insarmaps.miami.edu -P rsmastest -U rsmas\@gmail.com --json_folder ' + \
                json_folder + ' --mbtiles_file ' + mbtiles_file + ' |& tee -a out_insarmaps.log'
 
@@ -698,11 +694,6 @@ def main(argv):
         custom_template['cleanopt'] = '0'
 
     #########################################
-    # Get the environment for ISCE (can be ommitted once it is part of the regular installation)
-    #########################################
-    inps.isce_env = get_isce_environment(inps.flag_latest_version)
-
-    #########################################
     # startssara: Getting Data
     #########################################
     if inps.flag_ssara:
@@ -712,7 +703,7 @@ def main(argv):
             os.symlink(inps.slcDir,inps.work_dir+'/SLC')
         os.chdir(inps.slcDir)
 
-        call_ssara(custom_template, inps.slcDir)
+        call_ssara(inps.custom_template_file, inps.slcDir)
 
     if inps.stopssara:
         logger.debug('Exit as planned after ssara')
@@ -726,8 +717,7 @@ def main(argv):
 
         dem_file = create_or_copy_dem(work_dir= inps.work_dir,
                                       template= template,
-                                      custom_template_file= inps.custom_template_file,
-                                      isce_env= inps.isce_env)
+                                      custom_template_file= inps.custom_template_file)
         # Clean up files
         # temp_list = clean_list1 + clean_list2 + clean_list3 + ['PYSAR']
         temp_list =['run_files']
@@ -740,7 +730,7 @@ def main(argv):
         # submit jobs
         #########################################
         memoryUse = get_memory_defaults(inps)
-        submit_isce_jobs(inps.isce_env, run_file_list,
+        submit_isce_jobs(run_file_list,
                          inps.cwd, inps.subswath,
                          inps.custom_template_file,
                          memoryUse)
