@@ -61,7 +61,7 @@ def check_downloads(run_number, args):
 def run_ssara(run_number=1):
 
 	logger.info("RUN NUMBER: %s", str(run_number))	
-	if not serial and run_number > 10:
+	if  run_number > 10:
 		return 0	
 	
 	with open(sys.argv[1], 'r') as template_file:
@@ -108,7 +108,7 @@ def run_ssara(run_number=1):
 	
 	if exit_code in bad_codes or hang_status:
 		logger.warning("Something went wrong, running again")
-		run_ssara(run_number=run_number+1, serial=serial)
+		run_ssara(run_number=run_number+1)
 
 	#check_downloads(run_number, sys.argv)
 	return 1

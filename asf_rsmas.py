@@ -3,6 +3,10 @@ import os
 import sys
 import subprocess
 
+sys.path.insert(0, os.getenv('SSARAHOME'))
+import password_config as password
+
+
 if __name__ == "__main__":
 	
 	with open(sys.argv[1], 'r') as template_file:
@@ -18,7 +22,5 @@ if __name__ == "__main__":
 	sed_command = "sed 's/^.\{5\}//' files.csv > new_files.csv";
 	subprocess.Popen(sed_command, shell=True).wait()
 	
-	asf_command = "download_ASF_serial.py --username "+password.asfuser+" --password "+password.asfpass+' new_files.csv'
-	
-	serial_status = subprocess.Popen(asf_command).wait()
+	serial_status = subprocess.Popen(['download_ASF_serial.py', '-username', password.asfuser, '-password', password.asfpass, 'new_files.csv']).wait()
 	
