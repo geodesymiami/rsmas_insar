@@ -89,8 +89,7 @@ def run_ssara(run_number=1, serial=False):
 		else:
 			run_ssara(run_number+1, serial=serial)
 
-
-	ssara_options = ['ssara_federated_query.py'] + options + ['--parallel', '10', '--print', '--download']	
+	ssara_options = ['ssara_federated_query-cj.py'] + options + ['--parallel', '10', '--print', '--download']	
 
 	ssara_process = subprocess.Popen(ssara_options)
 		
