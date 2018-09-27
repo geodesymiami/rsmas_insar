@@ -357,18 +357,23 @@ def set_default_options(inps, template):
                                      default_value= template_val.default_value)
 
 def call_ssara(custom_template_file, slcDir):
-        out_file = '../out_ssara.log' 
-        ssara_command = 'ssara_rsmas.py ' + custom_template_file + ' |& tee ' + out_file
-        command = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' + os.getenv('PARENTDIR') + '/sources/rsmas_isce/' + ssara_command + '\"'
-        ''' os.getenv('PARENTDIR') + '/sources/rsmas_isce/' + \     #FA 8/2018: use ssara_rsmas.py which uses ASF's ssara_federated_query-cj.py until Scott's ssara is fixed '''
 
+        out_file = os.getcwd() + '/' + 'out_download.log' 
+        download_command = 'download_ssara_rsmas.py ' + custom_template_file + ' |& tee ' + out_file
+        command = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' + os.getenv('PARENTDIR') + '/sources/rsmas_isce/' + download_command + '\"'
         messageRsmas.log(command)
-        os.chdir('..')
-        messageRsmas.log(ssara_command)
-        messageRsmas.log(command)
-        os.chdir(slcDir)
-
+        messageRsmas.log(download_command)
+        os.chdir(slcDir) 
         status = subprocess.Popen(command, shell=True).wait()
+        os.chdir('..')
+
+        download_command = 'download_asfserial_rsmas.py ' + custom_template_file + ' |& tee ' + out_file
+        command = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' + os.getenv('PARENTDIR') + '/sources/rsmas_isce/' + download_command + '\"'
+        messageRsmas.log(command)
+        messageRsmas.log(download_command)
+        os.chdir(slcDir) 
+        status = subprocess.Popen(command, shell=True).wait()
+        os.chdir('..')
 
 def call_pysar(custom_template, custom_template_file):
 
@@ -699,9 +704,8 @@ def main(argv):
     if inps.flag_ssara:
         if not os.path.isdir(inps.slcDir):
             os.mkdir(inps.slcDir)
-        if inps.slcDir is not inps. work_dir+'/SLC' and not os.path.isdir(inps.work_dir+'/SLC'):  
+        if inps.slcDir is not inps.work_dir+'/SLC' and not os.path.isdir(inps.work_dir+'/SLC'):  
             os.symlink(inps.slcDir,inps.work_dir+'/SLC')
-        os.chdir(inps.slcDir)
 
         call_ssara(inps.custom_template_file, inps.slcDir)
 
