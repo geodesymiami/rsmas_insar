@@ -133,6 +133,7 @@ def run_ssara(run_number=1):
 
 
 if __name__ == "__main__":
+	command_line_parse(sys.argv[1:])
 	logger.info("DATASET: %s", str(inps.template.split('/')[-1].split(".")[0]))
 	logger.info("DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
 	succesful = run_ssara()
