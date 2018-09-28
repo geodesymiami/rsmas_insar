@@ -148,8 +148,7 @@ def create_ssara_options():
 	return ssara_options
 		
 """
-    Reads the most recently stored date for the given dataset from the stored_date.date file, and parses the newest data date from
-    ssara_federated_query.
+    Reads the most recently stored date for the given dataset from the stored_date.date file, and parses the newest data date from ssara_federated_query.
     Parameters: ssara_output: str, string output from ssara_federated_query.py ... --print
     Returns:    none
 """
