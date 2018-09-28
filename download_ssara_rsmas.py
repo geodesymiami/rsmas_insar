@@ -5,9 +5,14 @@ import sys
 import time
 import subprocess
 import logging
-import datetime  
+import datetime
+import argparse
+
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
+
+
+inps = None
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -25,12 +30,24 @@ streamHandler.setFormatter(std_formatter)
 logger.addHandler(fileHandler)
 logger.addHandler(streamHandler)
 
-"""
-    Checks if the files too be downloaded actually exist or not on the system as a means of validating whether
-    or not the wrapper completed succesdully.
+def create_parser():
+	parser = argparse.ArgumentParser()
+	parser.add_argument('template', dest='template', metavar="FILE", help='template file to use.')
+	
+	return parser
+	
+def command_line_parse(args):
+	global inps;
+	
+	parser = create_parser();
+	inps = parser.parse_args(args)
 
-    Parameters: run_number: int, the current iteration the wrapper is on (maxiumum 10 before quitting)
-    Returns: none
+"""
+	Checks if the files too be downloaded actually exist or not on the system as a means of validating 
+	whether or not the wrapper completed succesdully.
+
+	Parameters: run_number: int, the current iteration the wrapper is on (maxiumum 10 before quitting)
+	Returns: none
 
 """
 def check_downloads(run_number, args):
@@ -51,20 +68,21 @@ def check_downloads(run_number, args):
 	print("Everything is there!")
 
 """
-     Runs ssara_federated_query-cj.py and checks continuously for whether the data download has hung without comleting
-     or exited with an error code. If either of the above occur, the function is run again, for a maxiumum of 10 times.
-         
-     Parameters: run_number: int, the current iteration the wrapper is on (maxiumum 10 before quitting)
-     Returns: none
+	Runs ssara_federated_query-cj.py and checks continuously for whether the data download has hung without 
+	comleting or exited with an error code. If either of the above occur, the function is run again, for a 
+	maxiumum of 10 times.
+	
+	Parameters: run_number: int, the current iteration the wrapper is on (maxiumum 10 before quitting)
+	Returns: none
 
 """	
 def run_ssara(run_number=1):
 
 	logger.info("RUN NUMBER: %s", str(run_number))	
-	if  run_number > 10:
+	if not serial and run_number > 10:
 		return 0	
 	
-	with open(sys.argv[1], 'r') as template_file:
+	with open(inps.template, 'r') as template_file:
 		options = ''
 		for line in template_file:
 			if 'ssaraopt' in line:
@@ -108,14 +126,15 @@ def run_ssara(run_number=1):
 	
 	if exit_code in bad_codes or hang_status:
 		logger.warning("Something went wrong, running again")
-		run_ssara(run_number=run_number+1)
+		run_ssara(run_number=run_number+1, serial=serial)
 
 	#check_downloads(run_number, sys.argv)
 	return 1
 
 
 if __name__ == "__main__":
-	logger.info("DATASET: %s", str(sys.argv[1].split('/')[-1].split(".")[0]))
+	command_line_parse(sys.argv[1:])
+	logger.info("DATASET: %s", str(inps.template.split('/')[-1].split(".")[0]))
 	logger.info("DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
 	succesful = run_ssara()
 	logger.info("SUCCESS: %s", str(succesful))

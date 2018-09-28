@@ -329,7 +329,6 @@ class bulk_downloader:
              if "ssl.c" in "{0}".format(e.reason):
                  print ("IMPORTANT: Remote location may not be accepting your SSL configuration. This is a terminal error.")
              return False,None
-
        # attempt https connection
        try:
           request = Request(url)
