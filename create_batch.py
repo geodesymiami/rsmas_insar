@@ -75,12 +75,18 @@ def write_job_files():
 	
 def submmit_jobs_to_bsub(job_files):
 	
+	files = []
+	
 	for job in job_files:
 		command = "bsub < "+job
-		subprocess.Popen(command)
+		output = subprocess.check_output(command.split(" "))
+		job_number = output.split('\n')[0].split("<")[1].split('>')[0]
+		
+		files_to_add = 
 			
 if __name__ == "__main__":
 	
 	parse_arguments(sys.argv[1:])
 	job_files = write_job_files()
 	print(job_files)
+	submmit_jobs_to_bsub(job_files)
