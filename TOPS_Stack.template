@@ -1,0 +1,29 @@
+################ topsStack template file ##############
+
+slc_directory               = # Directory with all Sentinel SLCs 
+orbit_directory             = # Directory with all orbits
+aux_directory               = # Directory with all aux files
+working_directory           = # Working directory
+dem                         = # Directory with the DEM
+master_date                 = # Directory with master acquisition
+num_connections             = # number of interferograms between each date and subsequent dates. -- Default : 1
+num_overlap_connections     = # number of overlap interferograms between each date and subsequent dates used for
+                              # NESD computation (for azimuth offsets misregistration). -- Default : 3
+swath_num                   = # A list of swaths to be processed. -- Default : '1 2 3'
+bbox                        = # Lat/Lon Bounding SNWE. -- Example : '19 20 -99.5 -98.5' -- Default : common overlap between stack
+text_cmd                    = # text command to be added to the beginning of each line of the run files. -- Example : 
+                              # 'source ~/.bash_profile;' -- Default : ''
+exclude_dates               = # List of the dates to be excluded for processing. Example : '20141007,20141031' -- Default: No dates excluded
+include_dates               =
+azimuth_looks               =
+range_looks                 =
+filter_strength             =
+esd_coherence_threshold     =
+snr_misreg_threshold        =
+unw_method                  =
+polarization                =
+coregistration              =
+workflow                    =
+start_date                  =
+stop_date                   =
+useGPU                      =
