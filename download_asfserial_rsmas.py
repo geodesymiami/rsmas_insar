@@ -2,9 +2,31 @@
 import os
 import sys
 import subprocess
+import logging
+import argparse
+import datetime
+from rsmas_logging import rsmas_logger
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
+
+logfile_name = os.getenv('OPERATIONS') + '/LOGS/asfserial_rsmas.log'
+logger = rsmas_logger(file=logfile_name)
+
+inps = None
+
+def create_parser():
+	parser = argparse.ArgumentParser()
+	parser.add_argument('template', dest='template', metavar="FILE", help='template file to use.')
+
+	return parser
+
+
+def command_line_parse(args):
+	global inps
+
+	parser = create_parser()
+	inps = parser.parse_args(args)
 
 def generate_files_csv():
 	""" Generates a csv file of the files to download serially.
@@ -14,17 +36,17 @@ def generate_files_csv():
 		empty values to eliminate errors in download_ASF_serial.py.
 	
 	"""
-	with open(sys.argv[1], 'r') as template_file:
+	with open(inps.template, 'r') as template_file:
 		options = ''
 		for line in template_file:
 			if 'ssaraopt' in line:
 				options = line.strip('\n').rstrip().split("= ")[1].split(' ')
-				break;				
+				break
 	
 	filecsv_options = ['ssara_federated_query.py']+options+['--print', '|', 'awk', "'BEGIN{FS=\",\"; ORS=\",\"}{ print $14}'", '>', 'files.csv']
 	csv_command = ' '.join(filecsv_options)
-	filescsv_status = subprocess.Popen(csv_command, shell=True).wait()
-	sed_command = "sed 's/^.\{5\}//' files.csv > new_files.csv";
+	subprocess.Popen(csv_command, shell=True).wait()
+	sed_command = "sed 's/^.\{5\}//' files.csv > new_files.csv"
 	
 	subprocess.Popen(sed_command, shell=True).wait()
 	
@@ -37,13 +59,14 @@ def run_download_asf_serial():
 	"""
 	
 	status = subprocess.Popen(['download_ASF_serial.py', '-username', password.asfuser, '-password', password.asfpass, 'new_files.csv']).wait()
-	
+	logger.log(logging.INFO, status)
 	return status
 
 if __name__ == "__main__":
-	
+	logger.log(logging.INFO, "DATASET: %s", str(inps.template.split('/')[-1].split(".")[0]))
+	logger.log(logging.INFO, "DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
 	generate_files_csv()
-	run_download_asf_serial()
-	
-	
-	
+	succesful = run_download_asf_serial()
+	logger.log(logging.INFO, "SUCCESS: %s", str(succesful))
+	logger.log(logging.INFO, "------------------------------------")
+
