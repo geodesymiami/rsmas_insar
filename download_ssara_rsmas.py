@@ -8,9 +8,6 @@ import logging
 import datetime
 import argparse
 
-sys.path.insert(0, os.getenv('SSARAHOME'))
-import password_config as password
-
 inps = None
 
 logger = logging.getLogger()

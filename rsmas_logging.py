@@ -9,6 +9,8 @@ class rsmas_logger():
 
     def __init__(self, console=True, file=None):
 
+        self.logfile_name = file
+
         self.logger.setLevel(logging.DEBUG)
         self.set_format(self.format)
 
@@ -40,3 +42,30 @@ class rsmas_logger():
 
         self.logger.addHandler(self.file_handler)
         self.logger.addHandler(self.console_handler)
+
+    def log(self, level=logging.INFO, message="", *args, **kwargs):
+        if level is logging.DEBUG:
+            self.logger.debug(message, *args, **kwargs)
+        elif level is logging.INFO:
+            self.logger.info(message, *args, **kwargs)
+        elif level is logging.WARNING:
+            self.logger.warning(message, *args, **kwargs)
+        elif level is logging.ERROR:
+            self.logger.error(message, *args, **kwargs)
+        elif level is logging.CRITICAL:
+            self.logger.critical(message, *args, **kwargs)
+        else:
+            raise ValueError("\nLevel should be one of the standard python logging error levels: "
+                             "\nDEBUG"
+                             "\nINFO"
+                             "\nWARNING"
+                             "\nERROR"
+                             "\nCRITICAL")
+
+if __name__ == "__main__":
+
+    rsmas_logger = rsmas_logger(file="/Users/joshua/Desktop/test.log")
+
+    rsmas_logger.log(level=logging.INFO, message="Test")
+    rsmas_logger.log(level=logging.CRITICAL, message="Test")
+    rsmas_logger.log(level="", message="")
