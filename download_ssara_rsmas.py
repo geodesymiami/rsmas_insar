@@ -34,7 +34,7 @@ def create_parser():
 	""" Creates command line argument parser object. """
 	
 	parser = argparse.ArgumentParser()
-	parser.add_argument('template', dest='template', metavar="FILE", help='template file to use.')
+	parser.add_argument('template', type=str,  metavar="FILE", help='template file to use.')
 	
 	return parser
 	

@@ -372,7 +372,7 @@ def call_ssara(custom_template_file, slcDir):
         messageRsmas.log(command)
         messageRsmas.log(download_command)
         os.chdir(slcDir) 
-        #status = subprocess.Popen(command, shell=True).wait()
+        status = subprocess.Popen(command, shell=True).wait()
         os.chdir('..')
 
 def call_pysar(custom_template, custom_template_file):
