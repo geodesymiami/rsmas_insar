@@ -6,6 +6,7 @@ import logging
 import argparse
 import datetime
 from rsmas_logging import rsmas_logger
+from dataset_template import Template
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
@@ -36,12 +37,8 @@ def generate_files_csv():
 		empty values to eliminate errors in download_ASF_serial.py.
 	
 	"""
-	with open(inps.template, 'r') as template_file:
-		options = ''
-		for line in template_file:
-			if 'ssaraopt' in line:
-				options = line.strip('\n').rstrip().split("= ")[1].split(' ')
-				break
+	options = Template(inps.template).get_options()['ssaraopt']
+	options = options.split(' ')
 	
 	filecsv_options = ['ssara_federated_query.py']+options+['--print', '|', 'awk', "'BEGIN{FS=\",\"; ORS=\",\"}{ print $14}'", '>', 'files.csv']
 	csv_command = ' '.join(filecsv_options)

@@ -13,7 +13,7 @@ class Template:
 
                 if "####################" not in line:
 
-                    parts = line.split("=")
+                    parts = line.split(" = ")
 
                     key = parts[0].rstrip()
                     value = parts[1].rstrip().split("#")[0].strip(" ")
@@ -32,4 +32,4 @@ if __name__ == "__main__":
 
     temp = Template("/Users/joshua/Desktop/pysar/template_files/GalapagosSenDT128.template")
 
-    print(temp.get_dataset_name())
+    print(temp.get_options()['ssaraopt'])
