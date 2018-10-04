@@ -2,10 +2,9 @@
 import os
 import sys
 import subprocess
-import logging
 import argparse
 import datetime
-from rsmas_logging import rsmas_logger
+from rsmas_logging import rsmas_logger, loglevel
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
@@ -59,14 +58,14 @@ def run_download_asf_serial():
 	"""
 	
 	status = subprocess.Popen(['download_ASF_serial.py', '-username', password.asfuser, '-password', password.asfpass, 'new_files.csv']).wait()
-	logger.log(logging.INFO, status)
+	logger.log(loglevel.INFO, status)
 	return status
 
 if __name__ == "__main__":
-	logger.log(logging.INFO, "DATASET: %s", str(inps.template.split('/')[-1].split(".")[0]))
-	logger.log(logging.INFO, "DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
+	logger.log(loglevel.INFO, "DATASET: %s", str(inps.template.split('/')[-1].split(".")[0]))
+	logger.log(loglevel.INFO, "DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
 	generate_files_csv()
 	succesful = run_download_asf_serial()
-	logger.log(logging.INFO, "SUCCESS: %s", str(succesful))
-	logger.log(logging.INFO, "------------------------------------")
+	logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
+	logger.log(loglevel.INFO, "------------------------------------")
 

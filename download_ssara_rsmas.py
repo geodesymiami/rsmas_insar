@@ -4,10 +4,9 @@ import os
 import sys
 import time
 import subprocess
-import logging
 import datetime
 import argparse
-from rsmas_logging import rsmas_logger
+from rsmas_logging import rsmas_logger, loglevel
 
 inps = None
 
@@ -76,7 +75,7 @@ def check_downloads(run_number, args):
             run_ssara(run_number + 1)
             return
 
-    logger.log(logging.INFO, "Everything is there!")
+    logger.log(loglevel.INFO, "Everything is there!")
 
 
 def run_ssara(run_number=1):
@@ -124,24 +123,24 @@ def run_ssara(run_number=1):
         # Compare the current and previous directory sizes to determine determine hang status
         if prev_size == curr_size:
             hang_status = True
-            logger.log(logging.WARNING, "SSARA Hung")
+            logger.log(loglevel.WARNING, "SSARA Hung")
             ssara_process.terminate()  # teminate the process beacause download hung
             break;  # break the completion loop 
 
         time.sleep(60 * wait_time)  # wait 'wait_time' minutes before continuing
         prev_size = curr_size
         completion_status = ssara_process.poll()
-        logger.log(logging.INFO, "{} minutes: {:.1f}GB, completion_status {}".format(i * wait_time, curr_size / 1024 / 1024,
+        logger.log(loglevel.INFO, "{} minutes: {:.1f}GB, completion_status {}".format(i * wait_time, curr_size / 1024 / 1024,
                                                                         completion_status))
 
     exit_code = completion_status  # get the exit code of the command
-    logger.log(logging.INFO, "EXIT CODE: %s", str(exit_code))
+    logger.log(loglevel.INFO, "EXIT CODE: %s", str(exit_code))
 
     bad_codes = [137]
 
     # If the exit code is one that signifies an error, rerun the entire command
     if exit_code in bad_codes or hang_status:
-        logger.log(logging.WARNING, "Something went wrong, running again")
+        logger.log(loglevel.WARNING, "Something went wrong, running again")
         run_ssara(run_number=run_number + 1)
 
     return 1
@@ -149,8 +148,8 @@ def run_ssara(run_number=1):
 
 if __name__ == "__main__":
     command_line_parse(sys.argv[1:])
-    logger.log(logging.INFO, "DATASET: %s", str(inps.template.split('/')[-1].split(".")[0]))
-    logger.log(logging.INFO, "DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
+    logger.log(loglevel.INFO, "DATASET: %s", str(inps.template.split('/')[-1].split(".")[0]))
+    logger.log(loglevel.INFO, "DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
     succesful = run_ssara()
-    logger.log(logging.INFO, "SUCCESS: %s", str(succesful))
-    logger.log(logging.INFO, "------------------------------------")
+    logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
+    logger.log(loglevel.INFO, "------------------------------------")

@@ -1,4 +1,14 @@
 import logging
+from enum import Enum
+
+
+class loglevel(Enum):
+    DEBUG       = 0
+    INFO        = 1
+    WARNING     = 2
+    ERROR       = 3
+    CRITICAL    = 4
+
 
 class rsmas_logger():
 
@@ -43,16 +53,16 @@ class rsmas_logger():
         self.logger.addHandler(self.file_handler)
         self.logger.addHandler(self.console_handler)
 
-    def log(self, level=logging.INFO, message="", *args, **kwargs):
-        if level is logging.DEBUG:
+    def log(self, level=loglevel.INFO, message="", *args, **kwargs):
+        if level is loglevel.DEBUG:
             self.logger.debug(message, *args, **kwargs)
-        elif level is logging.INFO:
+        elif level is loglevel.INFO:
             self.logger.info(message, *args, **kwargs)
-        elif level is logging.WARNING:
+        elif level is loglevel.WARNING:
             self.logger.warning(message, *args, **kwargs)
-        elif level is logging.ERROR:
+        elif level is loglevel.ERROR:
             self.logger.error(message, *args, **kwargs)
-        elif level is logging.CRITICAL:
+        elif level is loglevel.CRITICAL:
             self.logger.critical(message, *args, **kwargs)
         else:
             raise ValueError("\nLevel should be one of the standard python logging error levels: "
@@ -66,6 +76,6 @@ if __name__ == "__main__":
 
     rsmas_logger = rsmas_logger(file="/Users/joshua/Desktop/test.log")
 
-    rsmas_logger.log(level=logging.INFO, message="Test")
-    rsmas_logger.log(level=logging.CRITICAL, message="Test")
-    rsmas_logger.log(level="", message="")
+    rsmas_logger.log(level=loglevel.INFO, message="Test")
+    rsmas_logger.log(level=loglevel.CRITICAL, message="Test")
+    rsmas_logger.log(level=loglevel.INFO, message="")
