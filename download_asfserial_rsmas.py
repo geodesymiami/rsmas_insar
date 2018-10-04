@@ -10,7 +10,7 @@ sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
 
 logfile_name = os.getenv('OPERATIONS') + '/LOGS/asfserial_rsmas.log'
-logger = rsmas_logger(file=logfile_name)
+logger = rsmas_logger(file_name=logfile_name)
 
 inps = None
 
@@ -62,6 +62,7 @@ def run_download_asf_serial():
 	return status
 
 if __name__ == "__main__":
+	command_line_parse(sys.argv[1:])
 	logger.log(loglevel.INFO, "DATASET: %s", str(inps.template.split('/')[-1].split(".")[0]))
 	logger.log(loglevel.INFO, "DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
 	generate_files_csv()

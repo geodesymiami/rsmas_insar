@@ -17,9 +17,8 @@ class rsmas_logger():
     logfile_name = None
     logger = logging.getLogger()
 
-    def __init__(self, console=True, file=None):
-
-        self.logfile_name = file
+    def __init__(self, file_name=None):
+        self.logfile_name = file_name
 
         self.logger.setLevel(logging.DEBUG)
         self.set_format(self.format)
@@ -27,7 +26,7 @@ class rsmas_logger():
 
     def setup_filehandler(self, formatter):
         file_handler = logging.FileHandler(self.logfile_name, 'a+', encoding=None)
-        file_handler.setLevel(logging.INFO)
+        file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(formatter)
         return file_handler
 
@@ -38,11 +37,8 @@ class rsmas_logger():
         return console_handler
 
     def set_format(self, new_format):
-
-        if self.console_handler is not None:
-            self.logger.removeHandler(self.console_handler)
-        if self.file_handler is not None:
-            self.logger.removeHandler(self.file_handler)
+        self.logger.removeHandler(self.console_handler)
+        self.logger.removeHandler(self.file_handler)
 
         self.format = new_format
         formatter = logging.Formatter(self.format)
@@ -74,7 +70,7 @@ class rsmas_logger():
 
 if __name__ == "__main__":
 
-    rsmas_logger = rsmas_logger(file="/Users/joshua/Desktop/test.log")
+    rsmas_logger = rsmas_logger(file_name="/Users/joshua/Desktop/test.log")
 
     rsmas_logger.log(level=loglevel.INFO, message="Test")
     rsmas_logger.log(level=loglevel.CRITICAL, message="Test")

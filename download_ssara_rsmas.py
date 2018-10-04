@@ -10,25 +10,8 @@ from rsmas_logging import rsmas_logger, loglevel
 
 inps = None
 
-# logger = logging.getLogger()
-# logger.setLevel(logging.DEBUG)
-# std_formatter = logging.Formatter("%(levelname)s - %(message)s")
-# 
-# # ssara_rsmas.log File Logging
-# fileHandler = logging.FileHandler(os.getenv('OPERATIONS') + '/LOGS/ssara_rsmas.log', 'a+', encoding=None)
-# fileHandler.setLevel(logging.INFO)
-# fileHandler.setFormatter(std_formatter)
-# 
-# # command line logging
-# streamHandler = logging.StreamHandler()
-# streamHandler.setLevel(logging.INFO)
-# streamHandler.setFormatter(std_formatter)
-# 
-# logger.addHandler(fileHandler)
-# logger.addHandler(streamHandler)
-
 logfile_name = os.getenv('OPERATIONS') + '/LOGS/ssara_rsmas.log'
-logger = rsmas_logger(file=logfile_name)
+logger = rsmas_logger(file_name=logfile_name)
 
 
 def create_parser():
@@ -80,16 +63,17 @@ def check_downloads(run_number, args):
 
 def run_ssara(run_number=1):
     """ Runs ssara_federated_query-cj.py and checks for download issues.
-    Runs ssara_federated_query-cj.py and checks continuously for whether the data download has hung without 
-    comleting or exited with an error code. If either of the above occur, the function is run again, for a 
-    maxiumum of 10 times.
-    
-    Parameters: run_number: int, the current iteration the wrapper is on (maxiumum 10 before quitting)
-    Returns: status_cod: int, the status of the donwload (0 for failed, 1 for success)
+
+        Runs ssara_federated_query-cj.py and checks continuously for whether the data download has hung without
+        comleting or exited with an error code. If either of the above occur, the function is run again, for a
+        maxiumum of 10 times.
+
+        Parameters: run_number: int, the current iteration the wrapper is on (maxiumum 10 before quitting)
+        Returns: status_cod: int, the status of the donwload (0 for failed, 1 for success)
 
     """
     
-    logger.log(logging.INFO, "RUN NUMBER: %s", str(run_number))
+    logger.log(loglevel.INFO, "RUN NUMBER: %s", str(run_number))
     if run_number > 10:
         return 0
 
@@ -107,7 +91,7 @@ def run_ssara(run_number=1):
     ssara_process = subprocess.Popen(ssara_options)
 
     completion_status = ssara_process.poll()  # the completion status of the process
-    hang_status = False  # whether ot not the download has hung
+    hang_status = False  # whether or not the download has hung
     wait_time = 10  # wait time in 'minutes' to determine hang status
     prev_size = -1  # initial download directory size
     i = 0  # the iteration number (for logging only)
