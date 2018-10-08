@@ -730,14 +730,14 @@ def call_pysar(custom_template, custom_template_file):
     # clean after loading data for cleanopt >= 2
     if 'All data needed found' in open('out_pysar.log').read():
         cleanlist = clean_list()
-        print('Cleaning files:  ' + cleanlist[int(custom_template['cleanopt'])])
+        print('Cleaning files:  ' + str(cleanlist[int(custom_template['cleanopt'])]))
         if int(custom_template['cleanopt']) >= 2:
             _remove_directories(cleanlist[int(custom_template['cleanopt'])])
 
     command = 'pysarApp.py ' + custom_template_file + ' |& tee -a out_pysar.log'
     messageRsmas.log(command)
     # Check the performance, change in subprocess
-    status = subprocess.Popen(command, shell=True)
+    status = subprocess.Popen(command, shell=True).wait()
     if status is not 0:
         logger.error('ERROR in pysarApp.py')
         raise Exception('ERROR in pysarApp.py')
