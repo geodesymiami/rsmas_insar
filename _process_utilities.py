@@ -200,8 +200,8 @@ def step_process(inps):
                                       template=inps.template,
                                       custom_template_file=inps.custom_template_file)
 
-        #temp_list = ['run_files', 'configs']
-        #_remove_directories(temp_list)
+        temp_list = ['run_files', 'configs']
+        _remove_directories(temp_list)
 
         run_file_list = create_stack_sentinel_run_files(inps, dem_file)
         inps.cwd = os.getcwd()
@@ -920,28 +920,12 @@ def submit_isce_jobs(run_file_list, cwd, subswath, memoryuse):
         # FA 7/18: Should hardwire the memory requirements for the different workflows into a function and use those
 
         # TODO: Change subprocess call to get back error code and send error code to logger
-        status = 0
+        
         status = subprocess.Popen(cmd, shell=True).wait()
         if status is not 0:
            logger.error('ERROR submitting jobs using createBatch.pl')
            raise Exception('ERROR submitting jobs using createBatch.pl')
 
-    #sswath = subswath.strip('\'').split(' ')[0]
-    #print('sswath: ', subswath)
-
-    xml_file = glob.glob('master/*.xml')[0]
-
-    #command = 'prep4timeseries.py -i merged/interferograms/ -x ' + xml_file + ' -b baselines/ -g merged/geom_master/ '
-    #messageRsmas.log(command)
-
-    # TODO: Change subprocess call to get back error code and send error code to logger
-    #status = subprocess.Popen(command, shell=True).wait()
-    #if status is not 0:
-    #    logger.error('ERROR in prep4timeseries.py')
-    #    raise Exception('ERROR in prep4timeseries.py')
-
-        # FA 3/2018 check_error_files_sentinelstack('run_files/run_*.e')      # exit if
-        # non-zero-size or non-zero-lines run*e files are found
 
 ##########################################################################
 
@@ -991,7 +975,7 @@ def run_insar_maps(work_dir):
 def clean_list():
     cleanlist = []
     cleanlist.append([''])
-    cleanlist.append(['configs', 'baselines', 'stack',
+    cleanlist.append(['baselines', 'stack',
                    'coreg_slaves', 'misreg', 'orbits',
                    'coarse_interferograms', 'ESD', 'interferograms',
                    'slaves', 'master', 'geom_master'])
