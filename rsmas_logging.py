@@ -66,10 +66,10 @@ class rsmas_logger():
                              "\nERROR"
                              "\nCRITICAL")
 
-if __name__ == "__main__":
-
-    rsmas_logger = rsmas_logger(file_name="/Users/joshua/Desktop/test.log")
-
-    rsmas_logger.log(level=loglevel.INFO, message="Test")
-    rsmas_logger.log(level=loglevel.CRITICAL, message="Test")
-    rsmas_logger.log(level=loglevel.INFO, message="")
+# if __name__ == "__main__":
+#
+#     rsmas_logger = rsmas_logger(file_name="/Users/joshua/Desktop/test.log")
+#
+#     rsmas_logger.log(level=loglevel.INFO, message="Test")
+#     rsmas_logger.log(level=loglevel.CRITICAL, message="Test")
+#     rsmas_logger.log(level=loglevel.INFO, message="")
