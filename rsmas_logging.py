@@ -12,17 +12,15 @@ class loglevel(Enum):
 
 class rsmas_logger():
 
-    format = "%(levelname)s - %(message)s"
-    console_handler, file_handler = None, None
-    logfile_name = None
-    logger = logging.getLogger()
-
     def __init__(self, file_name=None):
+        self.format = "%(levelname)s - %(message)s"
+        self.console_handler = None
+        self.file_handler = None
+        self.logger = logging.getLogger()
         self.logfile_name = file_name
 
         self.logger.setLevel(logging.DEBUG)
         self.set_format(self.format)
-
 
     def setup_filehandler(self, formatter):
         file_handler = logging.FileHandler(self.logfile_name, 'a+', encoding=None)
