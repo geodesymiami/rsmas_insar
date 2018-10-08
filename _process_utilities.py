@@ -921,10 +921,10 @@ def submit_isce_jobs(run_file_list, cwd, subswath, memoryuse):
 
         # TODO: Change subprocess call to get back error code and send error code to logger
         status = 0
-    #status = subprocess.Popen(cmd, shell=True).wait()
-    #if status is not 0:
-    #       logger.error('ERROR submitting jobs using createBatch.pl')
-    #        raise Exception('ERROR submitting jobs using createBatch.pl')
+        status = subprocess.Popen(cmd, shell=True).wait()
+        if status is not 0:
+           logger.error('ERROR submitting jobs using createBatch.pl')
+           raise Exception('ERROR submitting jobs using createBatch.pl')
 
     #sswath = subswath.strip('\'').split(' ')[0]
     #print('sswath: ', subswath)
