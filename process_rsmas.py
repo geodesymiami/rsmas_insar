@@ -62,7 +62,7 @@ def main(argv):
 
     putils.step_insarmaps(inps)
 
-    log_end_message()
+    putils.log_end_message()
 
 if __name__ == '__main__':
     main(sys.argv[:])
