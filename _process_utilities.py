@@ -200,8 +200,8 @@ def step_process(inps):
                                       template=inps.template,
                                       custom_template_file=inps.custom_template_file)
 
-        temp_list = ['run_files', 'configs']
-        _remove_directories(temp_list)
+        #temp_list = ['run_files', 'configs']
+        #_remove_directories(temp_list)
 
         run_file_list = create_stack_sentinel_run_files(inps, dem_file)
         inps.cwd = os.getcwd()
@@ -737,17 +737,10 @@ def call_pysar(custom_template, custom_template_file):
     command = 'pysarApp.py ' + custom_template_file + ' |& tee -a out_pysar.log'
     messageRsmas.log(command)
     # Check the performance, change in subprocess
-    proc = subprocess.Popen(command, shell=True)
-    try:
-        outs, errs = proc.communicate('Check running pysarApp.py:', timeout=23000)
-        logger.info(repr(outs))
-        logger.error('ERROR value: ', repr(errs))
-    except TimeoutExpired:
-        proc.kill()
-        outs, errs = proc.communicate('Check running pysarApp.py:')
-        logger.info(repr(outs))
-        logger.error('ERROR value: ', repr(errs))
-        raise Exception('ERROR in pysarApp.py: ' + repr(errs))
+    status = subprocess.Popen(command, shell=True)
+    if status is not 0:
+        logger.error('ERROR in pysarApp.py')
+        raise Exception('ERROR in pysarApp.py')
 
 ##########################################################################
 
@@ -902,7 +895,7 @@ def create_default_template():
 
 def get_memory_defaults(inps):
     if inps.workflow == 'interferogram':
-        memoryuse = ['3700', '3700', '3700', '4000', '3700', '3700', '5000', '3700', '3700', '3700', '5000', '3700']
+        memoryuse = ['3700', '3700', '3700', '4000', '3700', '3700', '5000', '3700', '3700', '3700', '6000', '3700']
     elif inps.workflow == 'slc':
         memoryuse = ['3700', '3700', '3700', '4000', '3700', '3700', '5000', '3700', '3700', '5000', '3700', '3700',
                      '3700']
@@ -928,12 +921,14 @@ def submit_isce_jobs(run_file_list, cwd, subswath, memoryuse):
 
         # TODO: Change subprocess call to get back error code and send error code to logger
         status = 0
-        status = subprocess.Popen(cmd, shell=True).wait()
-        if status is not 0:
-            logger.error('ERROR submitting jobs using createBatch.pl')
-            raise Exception('ERROR submitting jobs using createBatch.pl')
+    #status = subprocess.Popen(cmd, shell=True).wait()
+    #if status is not 0:
+    #       logger.error('ERROR submitting jobs using createBatch.pl')
+    #        raise Exception('ERROR submitting jobs using createBatch.pl')
 
-    sswath = subswath.strip('\'').split(' ')[0]
+    #sswath = subswath.strip('\'').split(' ')[0]
+    #print('sswath: ', subswath)
+
     xml_file = glob.glob('master/*.xml')[0]
 
     command = 'prep4timeseries.py -i merged/interferograms/ -x ' + xml_file + ' -b baselines/ -g merged/geom_master/ '
@@ -1012,5 +1007,5 @@ def log_end_message():
     logger.debug('\n###############################################')
     logger.info('End of process_rsmas')
     logger.debug('#################################################')
-    
-    
+
+##########################################################################
