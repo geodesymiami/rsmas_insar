@@ -25,6 +25,8 @@ streamHandler.setFormatter(std_formatter)
 logger.addHandler(fileHandler)
 logger.addHandler(streamHandler)
 
+##############################################################################
+
 
 def create_parser():
     """ Creates command line argument parser object. """
@@ -35,6 +37,8 @@ def create_parser():
     parser.add_argument('stop', type=int, help='Stopping Run File to execute.')
     return parser
 
+##############################################################################
+
 
 def command_line_parse(args):
     """ Parses command line agurments into inps variable. """
@@ -43,6 +47,8 @@ def command_line_parse(args):
 
     parser = create_parser();
     inps = parser.parse_args(args)
+
+##############################################################################
 
 
 def get_run_files():
@@ -56,6 +62,8 @@ def get_run_files():
             if '/run_files/' in line:
                  run_file_list.append('run_files/'+line.split('/')[-1][:-1])
     return run_file_list[inps.start - 1:inps.stop]
+
+##############################################################################
 
 
 def get_template_values(inps):
@@ -75,6 +83,32 @@ def get_template_values(inps):
 
     putils.set_default_options(inps)
 
+##############################################################################
+
+
+def submit_isce_jobs(run_file_list, cwd, memoryuse):
+    for item in run_file_list:
+        memorymax = str(memoryuse[int(item.split('_')[2]) - 1])
+        if os.getenv('QUEUENAME') == 'debug':
+            walltimelimit = '0:30'
+        else:
+            walltimelimit = '4:00'  # run_1 (master) for 2 subswaths took 2:20 minutes
+
+        if len(memoryuse) == 13:
+            if item.split('_')[2] == '10':
+                walltimelimit = '60:00'
+        cmd = 'createBatch.pl ' + cwd + '/' + item + ' memory=' + memorymax + ' walltime=' + walltimelimit
+        # FA 7/18: need more memory for run_7 (resample) only
+        # FA 7/18: Should hardwire the memory requirements for the different workflows into a function and use those
+
+        # TODO: Change subprocess call to get back error code and send error code to logger
+
+        status = subprocess.Popen(cmd, shell=True).wait()
+        if status is not 0:
+            logger.error('ERROR submitting jobs using createBatch.pl')
+            raise Exception('ERROR submitting jobs using createBatch.pl')
+
+##############################################################################
 
 
 if __name__ == "__main__":
@@ -85,7 +119,5 @@ if __name__ == "__main__":
     logger.info("Executing Runfiles %s", str(inps.start) + ' to ' + str(inps.stop))
     run_file_list = get_run_files()
     memoryuse = putils.get_memory_defaults(inps.workflow)
-    putils.submit_isce_jobs(run_file_list, inps.work_dir, memoryuse)
+    submit_isce_jobs(run_file_list, inps.work_dir, memoryuse)
     logger.info("-----------------Done Executing Run files-------------------")
-    
-    
