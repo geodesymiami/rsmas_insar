@@ -7,6 +7,8 @@ import subprocess
 import logging
 import datetime
 import argparse
+import messageRsmas
+import _process_utilities as putils
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
@@ -45,7 +47,6 @@ def command_line_parse(args):
 	
 	parser = create_parser();
 	inps = parser.parse_args(args)
-
 
 def check_downloads(run_number, args):
 	""" Checks if all of the ssara files to be dwonloaded actually exist.
@@ -88,7 +89,6 @@ def run_ssara(run_number=1):
 		Returns: status_cod: int, the status of the donwload (0 for failed, 1 for success)
 
 	"""	
-
 
 	logger.info("RUN NUMBER: %s", str(run_number))	
 	if run_number > 10:
@@ -148,6 +148,14 @@ def run_ssara(run_number=1):
 
 if __name__ == "__main__":
 	command_line_parse(sys.argv[1:])
+
+	inps.project_name = putils.get_project_name(custom_template_file=inps.template)
+	inps.work_dir = putils.get_work_directory(None, inps.project_name)
+	inps.slcDir = putils.get_slc_directory(inps.work_dir)
+	os.chdir(inps.work_dir)
+	messageRsmas.log(os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1::]))
+	os.chdir(inps.slcDir)
+
 	logger.info("DATASET: %s", str(inps.template.split('/')[-1].split(".")[0]))
 	logger.info("DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
 	succesful = run_ssara()
