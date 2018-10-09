@@ -4,6 +4,7 @@ import os
 import sys
 import logging
 import argparse
+import subprocess
 import _process_utilities as putils
 sys.path.insert(0, os.getenv('SSARAHOME'))
 from pysar.utils import readfile
@@ -28,29 +29,6 @@ logger.addHandler(streamHandler)
 ##############################################################################
 
 
-def create_parser():
-    """ Creates command line argument parser object. """
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('custom_template_file', type=str, metavar="FILE", help='template file to use.')
-    parser.add_argument('start', type=int,  help='Starting Run File to execute.')
-    parser.add_argument('stop', type=int, help='Stopping Run File to execute.')
-    return parser
-
-##############################################################################
-
-
-def command_line_parse(args):
-    """ Parses command line agurments into inps variable. """
-
-    global inps;
-
-    parser = create_parser();
-    inps = parser.parse_args(args)
-
-##############################################################################
-
-
 def get_run_files():
 
     logfile = os.path.join(inps.work_dir, 'out_stackSentinel.log')
@@ -61,7 +39,7 @@ def get_run_files():
         for line in new_f:
             if '/run_files/' in line:
                  run_file_list.append('run_files/'+line.split('/')[-1][:-1])
-    return run_file_list[inps.start - 1:inps.stop]
+    return run_file_list
 
 ##############################################################################
 
@@ -110,14 +88,42 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
 
 ##############################################################################
 
+class inpsvar:
+    pass
+
+##############################################################################
+
 
 if __name__ == "__main__":
-    command_line_parse(sys.argv[1:])
+
+
+    inps = inpsvar()
+
+    try:
+        inps.custom_template_file = sys.argv[1]
+        inps.start = int(sys.argv[2])
+        inps.stop = int(sys.argv[3])
+    except:
+        print('')
+
     inps.projName = putils.get_project_name(inps.custom_template_file)
     inps.work_dir = os.getenv('SCRATCHDIR') + '/' + inps.projName
+    run_file_list = get_run_files()
+
+    try:
+        inps.start
+    except:
+        inps.start = 1
+    try:
+        inps.stop
+    except:
+        inps.stop = len(run_file_list)
+
+
     get_template_values(inps)
     logger.info("Executing Runfiles %s", str(inps.start) + ' to ' + str(inps.stop))
-    run_file_list = get_run_files()
+
+
     memoryuse = putils.get_memory_defaults(inps.workflow)
-    submit_isce_jobs(run_file_list, inps.work_dir, memoryuse)
+    submit_isce_jobs(run_file_list[inps.start - 1:inps.stop], inps.work_dir, memoryuse)
     logger.info("-----------------Done Executing Run files-------------------")
