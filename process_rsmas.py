@@ -45,10 +45,20 @@ def main(argv):
     putils.step_ssara(inps)
 
     #########################################
-    # startprocess: create run files and process
+    # startprocess: create run files
+    #########################################
+
+    putils.step_runfiles(inps)
+
+    #########################################
+    # startprocess: Execute run files
     #########################################
 
     putils.step_process(inps)
+    # You can separately run this step and execute run files by:
+    # "execute_rsmas_run_files.py templatefile starting_run stopping_run"
+    # Example for running run 1 2o 4:
+    # execute_rsmas_run_files.py $TE/template 1 4
 
     #########################################
     # running pysar
