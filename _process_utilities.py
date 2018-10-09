@@ -755,8 +755,6 @@ def get_project_name(custom_template_file):
     return project_name
 
 ##########################################################################
-
-
 def get_work_directory(work_dir, project_name):
     if not work_dir:
         if autoPath and 'SCRATCHDIR' in os.environ and project_name:
@@ -765,6 +763,10 @@ def get_work_directory(work_dir, project_name):
             work_dir = os.getcwd()
     work_dir = os.path.abspath(work_dir)
     return work_dir
+##########################################################################
+def get_slc_directory(work_dir):
+    slc_dir = work_dir + '/SLC'
+    return slc_dir
 
 ##########################################################################
 
