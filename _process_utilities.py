@@ -24,7 +24,24 @@ import password_config as password
 from pysar.defaults.auto_path import autoPath
 import messageRsmas
 
-logger = logging.getLogger("process_sentinel")
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+std_formatter = logging.Formatter("%(levelname)s - %(message)s")
+
+# process_rsmas.log File Logging
+fileHandler = logging.FileHandler(os.getenv('SCRATCHDIR')+'/process_rsmas.log', 'a+', encoding=None)
+fileHandler.setLevel(logging.INFO)
+fileHandler.setFormatter(std_formatter)
+
+# command line logging
+streamHandler = logging.StreamHandler()
+streamHandler.setLevel(logging.INFO)
+streamHandler.setFormatter(std_formatter)
+
+logger.addHandler(fileHandler)
+logger.addHandler(streamHandler)
+
+
 ###############################################################################
 
 TEMPLATE = '''# vim: set filetype=cfg:
@@ -40,7 +57,7 @@ sentinelStack.master                      = auto         # [Master acquisition]
 sentinelStack.numConnections              = auto         # [5] auto for 3
 sentinelStack.numOverlapConnections       = auto         # [N of overlap Ifgrams for NESD. Default : 3]
 sentinelStack.swathNum                    = None         # [List of swaths. Default : '1 2 3']
-sentinelStack.bbox                        = None         # [ '-1 0.15 -91.7 -90.9'] required
+sentinelStack.boundingBox                 = None         # [ '-1 0.15 -91.7 -90.9'] required
 sentinelStack.textCmd                     = auto         # [eg: source ~/.bashrc]
 sentinelStack.excludeDates                = auto         # [20080520,20090817 / no], auto for no
 sentinelStack.includeDates                = auto         # [20080520,20090817 / no], auto for all
@@ -68,11 +85,13 @@ EXAMPLE = '''example:
   Process directory is /projects/scratch/insarlab/$USER. Can be adjusted e.g. with TESTBENCH1,2,3 alias
   options given on command line overrides the templatefile (not verified)
 
-  --startprocess       skips data downloading using SSARA
+  --startmakerun       skips data downloading using SSARA
+  --startprocess       skips data downloading and making run files
   --startpysar         skips InSAR processing (needs a 'merged' directory)
   --startinsarmaps     skips pysar  processing (needs a PYSAR directory)
   --startjobstats      skips insarmaps processing (summarizes job statistics)
   --stopsara           stops after ssara
+  --stopmakerun        stops after making run files
   --stopprocess        stops after process
   --stoppysar          stops after time series analysis
   --stopinsarmaps      stops after insarmaps upload
@@ -87,12 +106,20 @@ EXAMPLE = '''example:
   e.g.:  process_rsmas.py  $SAMPLESDIR/GalapagosT128SenVVD.template
          process_rsmas.py  $SAMPLESDIR/GalapagosT128SenVVD.template --startssara
          process_rsmas.py  $SAMPLESDIR/GalapagosT128SenVVD.template --stopssara
+         process_rsmas.py  $SAMPLESDIR/GalapagosT128SenVVD.template --startmakerun
+         process_rsmas.py  $SAMPLESDIR/GalapagosT128SenVVD.template --stopmakerun
          process_rsmas.py  $SAMPLESDIR/GalapagosT128SenVVD.template --startprocess
          process_rsmas.py  $SAMPLESDIR/GalapagosT128SenVVD.template --stopprocess
          process_rsmas.py  $SAMPLESDIR/GalapagosT128SenVVD.template --startpysar
          process_rsmas.py  $SAMPLESDIR/GalapagosT128SenVVD.template --stoppysar
          process_rsmas.py  $SAMPLESDIR/GalapagosT128SenVVD.template --startinsarmaps  : for ingestion into insarmaps
          process_rsmas.py  $SAMPLESDIR/GalapagosT128SenVVD.template --stopinsarmaps
+         
+         
+  # You can separately run processing step and execute run files by:
+    "execute_rsmas_run_files.py templatefile starting_run stopping_run"
+    Example for running run 1 2o 4:
+    execute_rsmas_run_files.py $TE/template 1 4
 
   # Generate template file:
          process_rsmas.py -g
@@ -185,40 +212,46 @@ def step_ssara(inps):
     return inps
 
 ###############################################################################
-
-
-def step_process(inps):
-    if inps.flag_process:
-
+def step_runfiles(inps):
+    if inps.flag_makerun:
         os.chdir(inps.work_dir)
-
-        cleanlist = clean_list()
-
-        print(inps.template)
+        temp_list = ['run_files', 'configs']
+        _remove_directories(temp_list)
 
         dem_file = create_or_copy_dem(work_dir=inps.work_dir,
                                       template=inps.template,
                                       custom_template_file=inps.custom_template_file)
 
-        temp_list = ['run_files', 'configs']
-        _remove_directories(temp_list)
+        inps.run_file_list = create_stack_sentinel_run_files(inps, dem_file)
 
-        run_file_list = create_stack_sentinel_run_files(inps, dem_file)
+    if inps.stopmakerun:
+        logger.info('Exit as planned after making sentinel run files ')
+        sys.exit(0)
+
+    return inps
+
+################################################################################
+
+
+def step_process(inps):
+    if inps.flag_process:
+
         inps.cwd = os.getcwd()
 
-        # submit jobs
-        #########################################
-        memory_use = get_memory_defaults(inps)
+        memory_use = get_memory_defaults(inps.workflow)
+
         submit_isce_jobs(run_file_list,
-                         inps.cwd, inps.subswath,
-                         memory_use)
+                         inps.cwd, memory_use)
 
         if int(inps.custom_template['cleanopt']) >= 1:
             _remove_directories(cleanlist[1])
 
     if inps.stopprocess:
         logger.info('Exit as planned after processing')
-        return
+        sys.exit(0)
+
+    return inps
+
 ###############################################################################
 
 
@@ -240,7 +273,10 @@ def step_pysar(inps, start_time):
 
     if inps.stoppysar:
         logger.debug('Exit as planned after pysar')
-        return
+        sys.exit(0)
+
+    return
+
 
 ###############################################################################
 
@@ -260,88 +296,6 @@ def step_insarmaps(inps):
         return
 
 ###############################################################################
-
-
-def email_pysar_results(textStr, custom_template):
-    """
-       email results
-    """
-    if 'email_pysar' not in custom_template:
-        return
-
-    cwd = os.getcwd()
-
-    fileList1 = ['velocity.png',\
-                 'avgSpatialCoherence.png',\
-                 'temporalCoherence.png',\
-                 'maskTempCoh.png',\
-                 'mask.png',\
-                 'demRadar_error.png',\
-                 'velocityStd.png',\
-                 'geo_velocity.png',\
-                 'coherence*.png',\
-                 'unwrapPhase*.png',\
-                 'rms_timeseriesResidual_quadratic.pdf',\
-                 'CoherenceHistory.pdf',\
-                 'CoherenceMatrix.pdf',\
-                 'bl_list.txt',\
-                 'Network.pdf',\
-                 'geo_velocity_masked.kmz']
-
-    fileList2 = ['timeseries*.png',\
-                 'geo_timeseries*.png']
-
-    if os.path.isdir('PYSAR/PIC'):
-       prefix='PYSAR/PIC'
-
-    template_file = glob.glob('PYSAR/*.template')[0]
-
-    i = 0
-    for fileList in [fileList1, fileList2]:
-       attachmentStr = ''
-       i = i + 1
-       for fname in fileList:
-           fList = glob.glob(prefix+'/'+fname)
-           for fileName in fList:
-               attachmentStr = attachmentStr+' -a '+fileName
-
-       if i==1 and len(template_file)>0:
-          attachmentStr = attachmentStr+' -a '+template_file
-
-       mailCmd = 'echo \"'+textStr+'\" | mail -s '+cwd+' '+attachmentStr+' '+custom_template['email_pysar']
-       command = 'ssh pegasus.ccs.miami.edu \"cd '+cwd+'; '+mailCmd+'\"'
-       print(command)
-       status = subprocess.Popen(command, shell=True).wait()
-       if status is not 0:
-          sys.exit('Error in email_pysar_results')
-
-###############################################################################
-
-
-def email_insarmaps_results(custom_template):
-    """
-       email link to insarmaps.miami.edu
-    """
-    if 'email_insarmaps' not in custom_template:
-      return
-
-    cwd = os.getcwd()
-
-    hdfeos_file = glob.glob('./PYSAR/S1*.he5')
-    hdfeos_file = hdfeos_file[0]
-    hdfeos_name = os.path.splitext(os.path.basename(hdfeos_file))[0]
-
-    textStr = 'http://insarmaps.miami.edu/start/-0.008/-78.0/8"\?"startDataset='+hdfeos_name
-
-    mailCmd = 'echo \"'+textStr+'\" | mail -s Miami_InSAR_results:_'+os.path.basename(cwd)+' '+custom_template['email_insarmaps']
-    command = 'ssh pegasus.ccs.miami.edu \" '+mailCmd+'\"'
-
-    print(command)
-    status = subprocess.Popen(command, shell=True).wait()
-    if status is not 0:
-       sys.exit('Error in email_insarmaps_results')
-
-##########################################################################
 
 
 def submit_job(argv, inps):
@@ -412,42 +366,6 @@ def submit_insarmaps_job(command_list, inps):
 ##########################################################################
 
 
-def file_len(fname):
-    p = subprocess.Popen(['wc', '-l', fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    result, err = p.communicate()
-    if p.returncode != 0:
-        raise IOError(err)
-    return int(result.strip().split()[0])
-
-##########################################################################
-
-
-def check_error_files_sentinelstack(pattern):
-    errorFiles  = glob.glob(pattern)
-
-    elist = []
-    for item in errorFiles:
-        if os.path.getsize(item) == 0:       # remove zero-size error files
-            os.remove(item)
-        elif file_len(item) == 0:
-            os.remove(item)                  # remove zero-lines files
-        else:
-            elist.append(item)
-
-    # skip non-fatal errors
-    error_skip_dict = {'FileExistsError: [Errno 17] File exists:': 'merged/geom_master',
-                       'RuntimeWarning: Mean of empty slice': 'warnings.warn'}
-    for efile in elist:
-        with open(efile) as efr:
-            for item in error_skip_dict:
-                if item in efr.read() and error_skip_dict[item] in efr.read():
-                    sys.stderr.write('Skipped error in: '+efile+'\n')
-                else:
-                    sys.exit('Error file found: '+efile)
-
-##########################################################################
-
-
 def create_processRsmas_parser(EXAMPLE):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawTextHelpFormatter,
@@ -480,15 +398,25 @@ def create_processRsmas_parser(EXAMPLE):
         action='store_true',
         help='exit after running ssara_federated_query in SLC directory')
     parser.add_argument(
+        '--startmakerun',
+        dest='startmakerun',
+        action='store_true',
+        help='make sentinel run files using topsStack package')
+    parser.add_argument(
+        '--stopmakerun',
+        dest='stopmakerun',
+        action='store_true',
+        help='exit after making sentinel run files')
+    parser.add_argument(
         '--startprocess',
         dest='startprocess',
         action='store_true',
-        help='process using sentinelstack package')
+        help='process using sentinel topsStack package')
     parser.add_argument(
         '--stopprocess',
         dest='stopprocess',
         action='store_true',
-        help='exit after running sentineStack')
+        help='exit after running sentinel topsStack')
     parser.add_argument(
         '--startpysar',
         dest='startpysar',
@@ -551,43 +479,51 @@ def command_line_parse():
     # need --insarmaps option so that it is run
     inps.startssara = True
     inps.flag_ssara = False
+    inps.flag_makerun = False
     inps.flag_process = False
     inps.flag_pysar = False  # inps.flag_insarmaps is True only if --insarmaps
+
+    if inps.startmakerun:
+        inps.flag_makerun = True
+        inps.flag_process = True
+        inps.flag_pysar = True
+        inps.startssara = False
 
     if inps.startprocess:
         inps.flag_process = True
         inps.flag_pysar = True
+        inps.flag_makerun = False
         inps.startssara = False
     if inps.startpysar:
         inps.flag_pysar = True
+        inps.flag_process = False
+        inps.flag_makerun = False
         inps.startssara = False
     if inps.startinsarmaps:
         inps.startssara = False
+        inps.flag_process = False
+        inps.flag_makerun = False
         inps.flag_insarmaps = True
     if inps.startssara:
         inps.flag_ssara = True
+        inps.flag_makerun = True
         inps.flag_process = True
         inps.flag_pysar = True
 
     logger.debug('flag_ssara:     %s', inps.flag_ssara)
+    logger.debug('flag_makerun:   %s', inps.flag_makerun)
     logger.debug('flag_process:   %s', inps.flag_process)
     logger.debug('flag_pysar:     %s', inps.flag_pysar)
     logger.debug('flag_insarmaps: %s', inps.flag_insarmaps)
     logger.debug('flag_mail:      %s', inps.flag_mail)
     logger.debug('flag_latest_version:   %s', inps.flag_latest_version)
     logger.debug('stopssara:      %s', inps.stopssara)
+    logger.debug('stopmakerun:    %s', inps.stopmakerun)
     logger.debug('stopprocess:    %s', inps.stopprocess)
     logger.debug('stoppysar:      %s', inps.stoppysar)
 
     return inps
 
-##########################################################################
-
-
-def _remove_directories(directories_to_delete):
-    for directory in directories_to_delete:
-        if os.path.isdir(directory):
-            shutil.rmtree(directory)
 
 ##########################################################################
 
@@ -599,7 +535,6 @@ def set_inps_value_from_template(inps, template_key,
     Processes a template parameter and adds it to the inps namespace.
     Options for setting both default values and required parameters
     :param inps: The parsed input namespace
-    :param template: The parsed dictionary (namespace)
     :param template_key: The desired key in `template`
     :param inps_name: The parameter name to assign in `inps`
     :param default_name: 'auto' is the normal placeholder
@@ -653,7 +588,7 @@ def set_default_options(inps):
     # implemented yet
     required_template_vals = \
         [TemplateTuple('sentinelStack.swathNum', 'subswath', None),
-         TemplateTuple('sentinelStack.bbox', 'boundingBox', None),
+         TemplateTuple('sentinelStack.boundingBox', 'boundingBox', None),
          ]
     optional_template_vals = \
         [TemplateTuple('sentinelStack.slcDir', 'slcDir', inps.work_dir + '/SLC'),
@@ -893,10 +828,10 @@ def create_default_template():
 ##########################################################################
 
 
-def get_memory_defaults(inps):
-    if inps.workflow == 'interferogram':
+def get_memory_defaults(work_flow):
+    if work_flow == 'interferogram':
         memoryuse = ['3700', '3700', '3700', '4000', '3700', '3700', '5000', '3700', '3700', '3700', '6000', '3700']
-    elif inps.workflow == 'slc':
+    elif work_flow == 'slc':
         memoryuse = ['3700', '3700', '3700', '4000', '3700', '3700', '5000', '3700', '3700', '5000', '3700', '3700',
                      '3700']
     return memoryuse
@@ -904,7 +839,7 @@ def get_memory_defaults(inps):
 ##########################################################################
 
 
-def submit_isce_jobs(run_file_list, cwd, subswath, memoryuse):
+def submit_isce_jobs(run_file_list, cwd, memoryuse):
     for item in run_file_list:
         memorymax = str(memoryuse[int(item.split('_')[2]) - 1])
         if os.getenv('QUEUENAME') == 'debug':
@@ -993,3 +928,126 @@ def log_end_message():
     logger.debug('#################################################')
 
 ##########################################################################
+
+def email_pysar_results(textStr, custom_template):
+    """
+       email results
+    """
+    if 'email_pysar' not in custom_template:
+        return
+
+    cwd = os.getcwd()
+
+    fileList1 = ['velocity.png',\
+                 'avgSpatialCoherence.png',\
+                 'temporalCoherence.png',\
+                 'maskTempCoh.png',\
+                 'mask.png',\
+                 'demRadar_error.png',\
+                 'velocityStd.png',\
+                 'geo_velocity.png',\
+                 'coherence*.png',\
+                 'unwrapPhase*.png',\
+                 'rms_timeseriesResidual_quadratic.pdf',\
+                 'CoherenceHistory.pdf',\
+                 'CoherenceMatrix.pdf',\
+                 'bl_list.txt',\
+                 'Network.pdf',\
+                 'geo_velocity_masked.kmz']
+
+    fileList2 = ['timeseries*.png',\
+                 'geo_timeseries*.png']
+
+    if os.path.isdir('PYSAR/PIC'):
+       prefix='PYSAR/PIC'
+
+    template_file = glob.glob('PYSAR/*.template')[0]
+
+    i = 0
+    for fileList in [fileList1, fileList2]:
+       attachmentStr = ''
+       i = i + 1
+       for fname in fileList:
+           fList = glob.glob(prefix+'/'+fname)
+           for fileName in fList:
+               attachmentStr = attachmentStr+' -a '+fileName
+
+       if i==1 and len(template_file)>0:
+          attachmentStr = attachmentStr+' -a '+template_file
+
+       mailCmd = 'echo \"'+textStr+'\" | mail -s '+cwd+' '+attachmentStr+' '+custom_template['email_pysar']
+       command = 'ssh pegasus.ccs.miami.edu \"cd '+cwd+'; '+mailCmd+'\"'
+       print(command)
+       status = subprocess.Popen(command, shell=True).wait()
+       if status is not 0:
+          sys.exit('Error in email_pysar_results')
+
+###############################################################################
+
+
+def email_insarmaps_results(custom_template):
+    """
+       email link to insarmaps.miami.edu
+    """
+    if 'email_insarmaps' not in custom_template:
+      return
+
+    cwd = os.getcwd()
+
+    hdfeos_file = glob.glob('./PYSAR/S1*.he5')
+    hdfeos_file = hdfeos_file[0]
+    hdfeos_name = os.path.splitext(os.path.basename(hdfeos_file))[0]
+
+    textStr = 'http://insarmaps.miami.edu/start/-0.008/-78.0/8"\?"startDataset='+hdfeos_name
+
+    mailCmd = 'echo \"'+textStr+'\" | mail -s Miami_InSAR_results:_'+os.path.basename(cwd)+' '+custom_template['email_insarmaps']
+    command = 'ssh pegasus.ccs.miami.edu \" '+mailCmd+'\"'
+
+    print(command)
+    status = subprocess.Popen(command, shell=True).wait()
+    if status is not 0:
+       sys.exit('Error in email_insarmaps_results')
+
+##########################################################################
+
+
+def _remove_directories(directories_to_delete):
+    for directory in directories_to_delete:
+        if os.path.isdir(directory):
+            shutil.rmtree(directory)
+
+###############################################################################
+
+
+def file_len(fname):
+    p = subprocess.Popen(['wc', '-l', fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    result, err = p.communicate()
+    if p.returncode != 0:
+        raise IOError(err)
+    return int(result.strip().split()[0])
+
+##########################################################################
+
+
+def check_error_files_sentinelstack(pattern):
+    errorFiles = glob.glob(pattern)
+
+    elist = []
+    for item in errorFiles:
+        if os.path.getsize(item) == 0:  # remove zero-size error files
+            os.remove(item)
+        elif file_len(item) == 0:
+            os.remove(item)  # remove zero-lines files
+        else:
+            elist.append(item)
+
+    # skip non-fatal errors
+    error_skip_dict = {'FileExistsError: [Errno 17] File exists:': 'merged/geom_master',
+                       'RuntimeWarning: Mean of empty slice': 'warnings.warn'}
+    for efile in elist:
+        with open(efile) as efr:
+            for item in error_skip_dict:
+                if item in efr.read() and error_skip_dict[item] in efr.read():
+                    sys.stderr.write('Skipped error in: ' + efile + '\n')
+                else:
+                    sys.exit('Error file found: ' + efile)
