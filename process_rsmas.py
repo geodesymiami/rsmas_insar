@@ -12,49 +12,49 @@ from __future__ import print_function
 import os
 import sys
 import time
-import _process_utilities as putils
+import _processSteps as prs
 
 ###############################################################################
 
 
 def main(argv):
     start_time = time.time()
-    inps = putils.command_line_parse()
+    inps = prs.command_line_parse()
 
     #########################################
     # Initiation
     #########################################
 
-    putils.step_dir(inps, argv)
+    prs.step_dir(inps, argv)
 
     #########################################
     # Submit job
     #########################################
-    putils.submit_job(sys.argv[:], inps)
+    prs.submit_job(sys.argv[:], inps)
 
     #########################################
     # Read Template Options
     #########################################
 
-    putils.step_template(inps)
+    prs.step_template(inps)
 
     #########################################
     # startssara: Getting Data
     #########################################
 
-    putils.step_ssara(inps)
+    prs.step_ssara(inps)
 
     #########################################
     # startprocess: create run files
     #########################################
 
-    putils.step_runfiles(inps)
+    prs.step_runfiles(inps)
 
     #########################################
     # startprocess: Execute run files
     #########################################
 
-    putils.step_process(inps)
+    prs.step_process(inps)
     # You can separately run this step and execute run files by:
     # "execute_rsmas_run_files.py templatefile starting_run stopping_run"
     # Example for running run 1 2o 4:
@@ -64,15 +64,15 @@ def main(argv):
     # running pysar
     #########################################
 
-    putils.step_pysar(inps, start_time)
+    prs.step_pysar(inps, start_time)
 
     #########################################
     # ingesting into insarmaps
     #########################################
 
-    putils.step_insarmaps(inps)
+    prs.step_insarmaps(inps)
 
-    putils.log_end_message()
+    prs.log_end_message()
 
 if __name__ == '__main__':
     main(sys.argv[:])
