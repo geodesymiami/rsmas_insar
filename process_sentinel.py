@@ -40,9 +40,9 @@ from pysar.defaults.auto_path import autoPath
 import messageRsmas
 from _process_utilities import email_pysar_results
 from _process_utilities import email_insarmaps_results
-from _process_utilities import submit_job
 from _process_utilities import submit_insarmaps_job
 from _process_utilities import check_error_files_sentinelstack
+from _processSteps import submit_job
 
 logger = logging.getLogger("process_sentinel")
 
