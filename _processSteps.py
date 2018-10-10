@@ -69,7 +69,7 @@ EXAMPLE = '''example:
 
   # You can separately run processing step and execute run files by:
     "execute_rsmas_run_files.py templatefile starting_run stopping_run"
-    Example for running run 1 2o 4:
+    Example for running run 1 to 4:
     execute_rsmas_run_files.py $TE/template 1 4
 
   # Generate template file:
