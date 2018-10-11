@@ -40,9 +40,9 @@ from pysar.defaults.auto_path import autoPath
 import messageRsmas
 from _process_utilities import email_pysar_results
 from _process_utilities import email_insarmaps_results
-from _process_utilities import submit_job
 from _process_utilities import submit_insarmaps_job
 from _process_utilities import check_error_files_sentinelstack
+from _processSteps import submit_job
 
 logger = logging.getLogger("process_sentinel")
 
@@ -362,18 +362,12 @@ def call_ssara(custom_template_file, slcDir):
         download_command = 'download_ssara_rsmas.py ' + custom_template_file + ' |& tee ' + out_file
         command = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' + os.getenv('PARENTDIR') + '/sources/rsmas_isce/' + download_command + '\"'
         messageRsmas.log(command)
-        messageRsmas.log(download_command)
-        os.chdir(slcDir) 
         status = subprocess.Popen(command, shell=True).wait()
-        os.chdir('..')
 
         download_command = 'download_asfserial_rsmas.py ' + custom_template_file + ' |& tee ' + out_file
         command = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' + os.getenv('PARENTDIR') + '/sources/rsmas_isce/' + download_command + '\"'
         messageRsmas.log(command)
-        messageRsmas.log(download_command)
-        os.chdir(slcDir) 
-        #status = subprocess.Popen(command, shell=True).wait()
-        os.chdir('..')
+        status = subprocess.Popen(command, shell=True).wait()
 
 def call_pysar(custom_template, custom_template_file):
 
@@ -571,17 +565,13 @@ def submit_isce_jobs(run_file_list, cwd, subswath, custom_template_file, memoryu
     sswath = subswath.strip('\'').split(' ')[0]
     xml_file = glob.glob('master/*.xml')[0]
 
-    command = 'prep4timeseries.py -i merged/interferograms/ -x ' + xml_file + ' -b baselines/ -g merged/geom_master/ '
-    messageRsmas.log(command)
-    # TODO: Change subprocess call to get back error code and send error code to logger
-    status = subprocess.Popen(command, shell=True).wait()
-    if status is not 0:
-        logger.error('ERROR in prep4timeseries.py')
-        raise Exception('ERROR in prep4timeseries.py')
-
-        # FA 3/2018 check_error_files_sentinelstack('run_files/run_*.e')      # exit if
-        # non-zero-size or non-zero-lines run*e files are found
-
+    #command = 'prep4timeseries.py -i merged/interferograms/ -x ' + xml_file + ' -b baselines/ -g merged/geom_master/ '
+    #messageRsmas.log(command)
+    ## TODO: Change subprocess call to get back error code and send error code to logger
+    #status = subprocess.Popen(command, shell=True).wait()
+    #if status is not 0:
+    #    logger.error('ERROR in prep4timeseries.py')
+    #    raise Exception('ERROR in prep4timeseries.py')
 
 def run_insar_maps(work_dir):
     hdfeos_file = glob.glob(work_dir + '/PYSAR/S1*.he5')
@@ -632,8 +622,7 @@ def main(argv):
     # Initiation
     #########################################
 
-    inps.project_name = get_project_name(
-        custom_template_file=inps.custom_template_file)
+    inps.project_name = get_project_name(custom_template_file=inps.custom_template_file)
 
     inps.work_dir = get_work_directory(inps.work_dir, inps.project_name)
 

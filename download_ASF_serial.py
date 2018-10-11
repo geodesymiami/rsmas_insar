@@ -408,7 +408,8 @@ class bulk_downloader:
              print (" > You MAY need to log in this app and agree to a EULA. ")
 
           return False,None
-
+       except Exception as e:
+          return False, None
        except URLError as e:
           print ("URL Error (from GET): {0}, {1}, {2}".format(e, e.reason, url))
           if "ssl.c" in "{0}".format(e.reason):

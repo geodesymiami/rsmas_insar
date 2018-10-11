@@ -7,6 +7,11 @@ import subprocess
 import datetime
 import argparse
 from rsmas_logging import rsmas_logger, loglevel
+import messageRsmas
+import _process_utilities as putils
+
+sys.path.insert(0, os.getenv('SSARAHOME'))
+import password_config as password
 
 inps = None
 
@@ -22,7 +27,6 @@ def create_parser():
 
     return parser
 
-
 def command_line_parse(args):
     """ Parses command line agurments into inps variable. """
 
@@ -30,7 +34,6 @@ def command_line_parse(args):
 
     parser = create_parser()
     inps = parser.parse_args(args)
-
 
 def check_downloads(run_number, args):
     """ Checks if all of the ssara files to be dwonloaded actually exist.
@@ -129,11 +132,18 @@ def run_ssara(run_number=1):
 
     return 1
 
-
 if __name__ == "__main__":
-    command_line_parse(sys.argv[1:])
+	  command_line_parse(sys.argv[1:])
+
+    inps.project_name = putils.get_project_name(custom_template_file=inps.template)
+    inps.work_dir = putils.get_work_directory(None, inps.project_name)
+    inps.slcDir = putils.get_slc_directory(inps.work_dir)
+    os.chdir(inps.work_dir)
+    messageRsmas.log(os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1::]))
+    os.chdir(inps.slcDir)
+
     logger.log(loglevel.INFO, "DATASET: %s", str(inps.template.split('/')[-1].split(".")[0]))
     logger.log(loglevel.INFO, "DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
     succesful = run_ssara()
     logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
-    logger.log(loglevel.INFO, "------------------------------------")
+    logger.log(loglevel.INFO, "------------------------------------")				
