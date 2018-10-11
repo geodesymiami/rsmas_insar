@@ -133,7 +133,7 @@ def run_ssara(run_number=1):
     return 1
 
 if __name__ == "__main__":
-	  command_line_parse(sys.argv[1:])
+    command_line_parse(sys.argv[1:])
 
     inps.project_name = putils.get_project_name(custom_template_file=inps.template)
     inps.work_dir = putils.get_work_directory(None, inps.project_name)
