@@ -56,7 +56,7 @@ def main(argv):
     if 'sentinelStack.demMethod' not in custom_template.keys():
        custom_template['sentinelStack.demMethod']='bbox'
 
-    if custom_template['sentinelStack.demMethod']=='bbox':
+    if custom_template['sentinelStack.demMethod']=='bbox' or custom_template['sentinelStack.demMethod']=='auto':
        bbox=custom_template['sentinelStack.boundingBox']
        south=bbox.split(' ')[0].split('\'')[1]   # assumes quotes '-1 0.15 -91.3 -91.0'
        north=bbox.split(' ')[1]
@@ -79,7 +79,7 @@ def main(argv):
               if "west" in item:
                  west=item.split("=")[1]
     else:
-       sys.ext('Error unspported demMethod option: '+custom_template['sentinelStack.demMethod'])
+       sys.exit('Error unspported demMethod option: '+custom_template['sentinelStack.demMethod'])
  
     south=round(float(south)-0.5)
     north=round(float(north)+0.5)

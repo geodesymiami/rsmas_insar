@@ -1,15 +1,21 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 import os
 import sys
 import subprocess
 import argparse
 from dataset_template import Template
+import datetime
+from rsmas_logging import rsmas_logger, loglevel
+import messageRsmas
+import _process_utilities as putils
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
 
-inps = None
+logfile_name = os.getenv('OPERATIONS') + '/LOGS/asfserial_rsmas.log'
+logger = rsmas_logger(file_name=logfile_name)
 
+inps = None
 
 def create_parser():
 	parser = argparse.ArgumentParser()
@@ -37,11 +43,12 @@ def generate_files_csv():
 	
 	filecsv_options = ['ssara_federated_query.py']+options+['--print', '|', 'awk', "'BEGIN{FS=\",\"; ORS=\",\"}{ print $14}'", '>', 'files.csv']
 	csv_command = ' '.join(filecsv_options)
-	filescsv_status = subprocess.Popen(csv_command, shell=True).wait()
-	sed_command = "sed 's/^.\{5\}//' files.csv > new_files.csv";
+	subprocess.Popen(csv_command, shell=True).wait()
+	sed_command = "sed 's/^.\{5\}//' files.csv > new_files.csv"
 	
 	subprocess.Popen(sed_command, shell=True).wait()
 	
+
 def run_download_asf_serial():
 	""" Runs download_ASF_serial.py with proper files.
 	
@@ -51,13 +58,21 @@ def run_download_asf_serial():
 	"""
 	
 	status = subprocess.Popen(['download_ASF_serial.py', '-username', password.asfuser, '-password', password.asfpass, 'new_files.csv']).wait()
-	
+	logger.log(loglevel.INFO, status)
 	return status
 
 if __name__ == "__main__":
-	
+        
+	command_line_parse(sys.argv[1:])
+	inps.project_name = putils.get_project_name(custom_template_file=inps.template)
+	inps.work_dir = putils.get_work_directory(None, inps.project_name)
+	inps.slcDir = putils.get_slc_directory(inps.work_dir)
+	os.chdir(inps.work_dir)
+	messageRsmas.log(os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1::]))
+	os.chdir(inps.slcDir)
+
 	generate_files_csv()
-	run_download_asf_serial()
-	
-	
-	
+	succesful = run_download_asf_serial()
+	logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
+	logger.log(loglevel.INFO, "------------------------------------")
+
