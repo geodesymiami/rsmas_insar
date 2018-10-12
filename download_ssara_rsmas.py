@@ -83,9 +83,9 @@ def run_ssara(run_number=1):
     if run_number > 10:
         return 0
 
-    # Compute SSARA options to use 
-	  options = Template(inps.template).get_options()['ssaraopt']
-	  options = options.split(' ')
+    # Compute SSARA options to use
+    options = Template(inps.template).get_options()['ssaraopt']
+    options = options.split(' ')
 
     # Runs ssara_federated_query-cj.py with proper options
     ssara_options = ['ssara_federated_query-cj.py'] + options + ['--parallel', '10', '--print', '--download']
