@@ -6,6 +6,7 @@ import time
 import subprocess
 import datetime
 import argparse
+from dataset_template import Template
 from rsmas_logging import rsmas_logger, loglevel
 import messageRsmas
 import _process_utilities as putils
@@ -81,13 +82,8 @@ def run_ssara(run_number=1):
         return 0
 
     # Compute SSARA options to use 
-    with open(inps.template, 'r') as template_file:
-        options = ''
-        for line in template_file:
-            if 'ssaraopt' in line:
-                options = line.strip('\n').rstrip().split("= ")[1]
-                break;
-    options = options.split(' ')
+	  options = Template(inps.template).get_options()['ssaraopt']
+	  options = options.split(' ')
 
     # Runs ssara_federated_query-cj.py with proper options
     ssara_options = ['ssara_federated_query-cj.py'] + options + ['--parallel', '10', '--print', '--download']

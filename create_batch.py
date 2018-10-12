@@ -37,7 +37,7 @@ def read_input_file_to_array():
 	
 	print(files_array)
 	
-	return files_array;
+	return files_array
 	
 def write_job_files():
 	
