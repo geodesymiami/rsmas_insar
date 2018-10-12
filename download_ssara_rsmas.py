@@ -27,6 +27,7 @@ def create_parser():
 
     return parser
 
+
 def command_line_parse(args):
     """ Parses command line agurments into inps variable. """
 
@@ -34,6 +35,7 @@ def command_line_parse(args):
 
     parser = create_parser()
     inps = parser.parse_args(args)
+
 
 def check_downloads(run_number, args):
     """ Checks if all of the ssara files to be dwonloaded actually exist.
@@ -57,7 +59,7 @@ def check_downloads(run_number, args):
 
     for f in files_to_check:
         if not os.path.isfile(str(os.getcwd()) + "/" + str(f)):
-            logger.log(logging.WARNING, "The file, %s, didn't download correctly. Running ssara again.")
+            logger.log(loglevel.WARNING, "The file, %s, didn't download correctly. Running ssara again.")
             run_ssara(run_number + 1)
             return
 
@@ -95,7 +97,7 @@ def run_ssara(run_number=1):
 
     completion_status = ssara_process.poll()  # the completion status of the process
     hang_status = False  # whether or not the download has hung
-    wait_time = 10  # wait time in 'minutes' to determine hang status
+    wait_time = 6  # wait time in 'minutes' to determine hang status
     prev_size = -1  # initial download directory size
     i = 0  # the iteration number (for logging only)
 
@@ -112,7 +114,7 @@ def run_ssara(run_number=1):
             hang_status = True
             logger.log(loglevel.WARNING, "SSARA Hung")
             ssara_process.terminate()  # teminate the process beacause download hung
-            break;  # break the completion loop 
+            break  # break the completion loop
 
         time.sleep(60 * wait_time)  # wait 'wait_time' minutes before continuing
         prev_size = curr_size
