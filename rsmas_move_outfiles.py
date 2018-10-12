@@ -1,3 +1,5 @@
+#!/usr/bin/env python3 
+
 import shutil
 import glob
 import os
@@ -29,4 +31,4 @@ if __name__ == "__main__":
 
         dest = base + filename
 
-        shutil.copy(os.getcwd()+"/"+filename, dest)
+        shutil.move(os.getcwd()+"/"+filename, dest)
