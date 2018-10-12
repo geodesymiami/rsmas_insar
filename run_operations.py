@@ -271,8 +271,8 @@ def post_processing(files_to_move):
 
 	setup_logging_handlers(job_to_dset[job], "a+")
 
-	for file in files_to_move:
-		if os.path.exists(file) and os.path.isfile(file):
+	for filename in files_to_move:
+		if os.path.exists(filename) and os.path.isfile(filename):
 
 			base = os.getenv('OPERATIONS') + '/ERRORS/' + dataset + '/'
 
@@ -280,12 +280,12 @@ def post_processing(files_to_move):
 				os.makedirs(base)
 
 			dest = base + str(most_recent)[0:10]
-			if file[-1] is 'o':
+			if filename[-1] is 'o':
 				dest += '.o'
-			elif file[-1] is 'e':
+			elif filename[-1] is 'e':
 				dest += '.e'
 
-			shutil.copy(file, dest)
+			shutil.copy(filename, dest)
 
 		else:
 			raise IOError
