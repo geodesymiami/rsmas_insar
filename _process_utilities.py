@@ -559,7 +559,7 @@ def email_pysar_results(textStr, custom_template):
     if os.path.isdir('PYSAR/PIC'):
        prefix='PYSAR/PIC'
 
-    template_file = glob.glob('PYSAR/*.template')[0]
+    template_file = glob.glob('PYSAR/INPUTS/*.template')[0]
 
     i = 0
     for fileList in [fileList1, fileList2]:
