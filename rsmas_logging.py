@@ -1,3 +1,4 @@
+import os
 import logging
 from enum import Enum
 
@@ -23,6 +24,9 @@ class rsmas_logger():
         self.set_format(self.format)
 
     def setup_filehandler(self, formatter):
+
+        os.makedirs(os.path.dirname(self.logfile_name), exist_ok=True)
+
         file_handler = logging.FileHandler(self.logfile_name, 'a+', encoding=None)
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(formatter)

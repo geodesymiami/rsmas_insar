@@ -169,9 +169,10 @@ def set_dates(ssara_output):
 
 	# Checks if the stored_date.date file exists and created the file+directories if it doesn't
 	filename = os.getenv('OPERATIONS') + '/stored_date.date'
-	if not os.path.exists(os.path.dirname(filename)):
-		os.makedirs(os.path.dirname(filename))
-		open(filename, 'a').close()
+	if not os.path.exists(filename):
+		if not os.path.exists(os.path.dirname(filename)):
+			os.makedirs(os.path.dirname(filename))
+		subprocess.Popen("touch "+filename, shell=True).wait()
 
 	# Write Most Recent Date to File
 	with open(filename, 'rb') as stored_date_file:

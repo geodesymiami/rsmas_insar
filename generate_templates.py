@@ -175,6 +175,8 @@ def main(args):
     if inps.output:
         output_location = inps.output
 
+    os.makedirs(os.path.dirname(output_location), exist_ok=True)
+
     df = get_spreadsheet_as_dataframe(csv_file, output_location)
     generate_and_save_template_files_from_dataframe(df, output_location)
 
