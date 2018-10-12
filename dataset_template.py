@@ -13,8 +13,6 @@ class Template:
 
     """
 
-    options = {} # The options dictionary
-
     def __init__(self, template_file):
         """ Initializes Template object with a template file.
 
@@ -23,8 +21,9 @@ class Template:
             :param template_file: file, the template file to be accessed
         """
 
-        # Adds the dataset name as parsed from the filename to the dictionary for easy lookup
-        self.options['dataset'] = template_file.split('/')[-1].split(".")[0]
+        # Crates the options dictionary and adds the dataset name as parsed from the filename
+        # to the dictionary for easy lookup
+        self.options = {'dataset': template_file.split('/')[-1].split(".")[0]}
 
         # Open files for reading
         with open(template_file) as template:
@@ -40,7 +39,7 @@ class Template:
                     # The key should be the first portion of the split (stripped to remove whitespace padding)
                     key = parts[0].rstrip()
 
-                    # The value should be the second poriont (stripped to remove whitespace and ending comments)
+                    # The value should be the second portion (stripped to remove whitespace and ending comments)
                     value = parts[1].rstrip().split("#")[0].strip(" ")
 
                     # Add key and value to the dictionary
