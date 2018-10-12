@@ -20,7 +20,9 @@ logger.setLevel(logging.DEBUG)
 
 std_formatter = logging.Formatter("%(message)s")
 
-general = logging.FileHandler(os.getenv('OPERATIONS') + '/LOGS/run_operations.log', 'a+', encoding=None)
+logfilename = os.getenv('OPERATIONS') + '/LOGS/run_operations.log'
+os.makedirs(os.path.dirname(logfilename), exist_ok=True)
+general = logging.FileHandler(logfilename, 'a+', encoding=None)
 general.setLevel(logging.INFO)
 general.setFormatter(std_formatter)
 logger.addHandler(general)
@@ -60,6 +62,7 @@ def setup_logging_handlers(dset, mode):
 
 	# create a file handler for INFO level logging
 	info_log_file = os.getenv('OPERATIONS') + '/LOGS/' + dset + '_info.log'
+	os.makedirs(os.path.dirname(info_log_file), exist_ok=True)
 	info_handler = logging.FileHandler(info_log_file, mode, encoding=None)
 	info_formatter = logging.Formatter("%(levelname)s - %(message)s")
 	info_handler.setLevel(logging.INFO)
@@ -68,6 +71,7 @@ def setup_logging_handlers(dset, mode):
 
 	# create a file handler for ERROR level logging
 	error_log_file = os.getenv('OPERATIONS') + '/LOGS/' + dset + '_error.log'
+	os.makedirs(os.path.dirname(error_log_file), exist_ok=True)
 	error_handler = logging.FileHandler(error_log_file, mode, encoding=None)
 	err_formatter = logging.Formatter("%(levelname)s - %(message)s")
 	error_handler.setLevel(logging.ERROR)
@@ -163,8 +167,14 @@ def set_dates(ssara_output):
 	most_recent_data = ssara_output.split("\n")[-2]
 	most_recent = datetime.strptime(most_recent_data.split(",")[3], date_format)
 
+	# Checks if the stored_date.date file exists and created the file+directories if it doesn't
+	filename = os.getenv('OPERATIONS') + '/stored_date.date'
+	if not os.path.exists(os.path.dirname(filename)):
+		os.makedirs(os.path.dirname(filename))
+		open(filename, 'a').close()
+
 	# Write Most Recent Date to File
-	with open(os.getenv('OPERATIONS') + '/stored_date.date', 'rb') as stored_date_file:
+	with open(filename, 'rb') as stored_date_file:
 
 		try:
 			date_line = subprocess.check_output(
