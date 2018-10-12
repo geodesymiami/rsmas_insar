@@ -7,17 +7,10 @@ import requests
 import argparse
 import time
 import logging
+from rsmas_logging import rsmas_logger, loglevel
 from datetime import datetime
 
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-
-std_formatter = logging.Formatter("%(levelname)s - %(message)s")
-
-general = logging.FileHandler(os.getenv('OPERATIONS')+'/LOGS/generate_templates.log', 'a+', encoding=None)
-general.setLevel(logging.INFO)
-general.setFormatter(std_formatter)
-logger.addHandler(general)
+logger = rsmas_logger(os.getenv('OPERATIONS')+'/LOGS/generate_templates.log')
 
 
 inps = None
@@ -146,7 +139,7 @@ def generate_and_save_template_files(df, output_location):
 
     files_to_save = generate_template_files(df)
     
-    logging.info("Template files being generated for: %s", str(files_to_save))
+    logger.log(loglevel.INFO, "Template files being generated for: %s", str(files_to_save))
 
     for key, value in files_to_save.items():
         # Print contents for debugging purposes
@@ -168,7 +161,7 @@ def generate_and_save_template_files_from_dataframe(df, output_location):
 
 def main(args):
     
-    logger.info("GENERATING TEMPLATES ON %s\n", datetime.fromtimestamp(time.time()).strftime(date_format))
+    logger.log(loglevel.INFO, "GENERATING TEMPLATES ON %s\n", datetime.fromtimestamp(time.time()).strftime(date_format))
     
     inps = cmdLineParse(args)
 
