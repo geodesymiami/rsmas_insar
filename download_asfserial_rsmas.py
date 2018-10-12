@@ -3,6 +3,7 @@ import os
 import sys
 import subprocess
 import argparse
+from dataset_template import Template
 import datetime
 from rsmas_logging import rsmas_logger, loglevel
 import messageRsmas
@@ -37,12 +38,8 @@ def generate_files_csv():
 		empty values to eliminate errors in download_ASF_serial.py.
 	
 	"""
-	with open(inps.template, 'r') as template_file:
-		options = ''
-		for line in template_file:
-			if 'ssaraopt' in line:
-				options = line.strip('\n').rstrip().split("= ")[1].split(' ')
-				break
+	options = Template(inps.template).get_options()['ssaraopt']
+	options = options.split(' ')
 	
 	filecsv_options = ['ssara_federated_query.py']+options+['--print', '|', 'awk', "'BEGIN{FS=\",\"; ORS=\",\"}{ print $14}'", '>', 'files.csv']
 	csv_command = ' '.join(filecsv_options)
@@ -51,21 +48,6 @@ def generate_files_csv():
 	
 	subprocess.Popen(sed_command, shell=True).wait()
 	
-def create_parser():
-	""" Creates command line argument parser object. """
-	
-	parser = argparse.ArgumentParser()
-	parser.add_argument('template', type=str,  metavar="FILE", help='template file to use.')
-	
-	return parser
-	
-def command_line_parse(args):
-	""" Parses command line agurments into inps variable. """
-	
-	global inps;
-	
-	parser = create_parser();
-	inps = parser.parse_args(args)
 
 def run_download_asf_serial():
 	""" Runs download_ASF_serial.py with proper files.
