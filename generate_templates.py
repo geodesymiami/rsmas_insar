@@ -6,7 +6,6 @@ import sys
 import requests
 import argparse
 import time
-import logging
 from rsmas_logging import rsmas_logger, loglevel
 from datetime import datetime
 
@@ -65,10 +64,6 @@ def get_spreadsheet_as_dataframe(file, output_file_location, output_type = "csv"
     else:
         df = get_google_spreadsheet_as_dataframe(file, output_file_location, output_type)
     return df
-
-
-
-##########################################################
 
 
 def generate_template_file(names, subnames, column_vals, comments):
@@ -146,7 +141,9 @@ def generate_and_save_template_files(df, output_location):
         if value == None:
             continue;
 
-        with open(os.path.join(output_location, key + ".template"), "w") as f:
+        filename = os.path.join(output_location, key + ".template")
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        with open(filename, "w") as f:
             f.write(value)
 
 
