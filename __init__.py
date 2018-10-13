@@ -4,7 +4,6 @@ logging.basicConfig(filename="example.log",
                             format='%(asctime)s | %(name)-25s | [ %(levelname)s ]'
                                                        ' | %(filename)s:%(lineno)d | %(message)s',
                                                                            level=logging.DEBUG)
-# asdfasdfasdf
 ch = logging.StreamHandler()
 verbose = False
 if verbose:
