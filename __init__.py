@@ -1,4 +1,4 @@
-# LOGGING
+# LOING
 import logging
 logging.basicConfig(filename="example.log",
                             format='%(asctime)s | %(name)-25s | [ %(levelname)s ]'
