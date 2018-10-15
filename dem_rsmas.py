@@ -4,8 +4,6 @@
 # Project: dem_ssara.py
 # Author: Falk Amelung
 # Created: 3/2018
-# Something else. We are going to have a conflict!
-# Hi Falk!
 ###############################################################################
 
 import os
@@ -18,6 +16,7 @@ import shutil
 import subprocess
 import messageRsmas
 from pysar.utils import readfile
+
 
 EXAMPLE='''example:
   dem_rsmas.py  $SAMPLES/GalapagosT128SenVVD.template
