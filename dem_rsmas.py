@@ -4,9 +4,7 @@
 # Project: dem_ssara.py
 # Author: Falk Amelung
 # Created: 3/2018
-# Last Updated: 10/2018
 ###############################################################################
-
 
 import os
 import sys
@@ -18,6 +16,7 @@ import shutil
 import subprocess
 import messageRsmas
 from pysar.utils import readfile
+
 
 EXAMPLE='''example:
   dem_rsmas.py  $SAMPLES/GalapagosT128SenVVD.template
