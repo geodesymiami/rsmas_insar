@@ -361,11 +361,13 @@ def call_ssara(custom_template_file, slcDir):
         out_file = os.getcwd() + '/' + 'out_download.log' 
         download_command = 'download_ssara_rsmas.py ' + custom_template_file + ' |& tee ' + out_file
         command = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' + os.getenv('PARENTDIR') + '/sources/rsmas_isce/' + download_command + '\"'
+        messageRsmas.log(download_command)
         messageRsmas.log(command)
         status = subprocess.Popen(command, shell=True).wait()
 
         download_command = 'download_asfserial_rsmas.py ' + custom_template_file + ' |& tee ' + out_file
         command = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' + os.getenv('PARENTDIR') + '/sources/rsmas_isce/' + download_command + '\"'
+        messageRsmas.log(download_command)
         messageRsmas.log(command)
         status = subprocess.Popen(command, shell=True).wait()
 
