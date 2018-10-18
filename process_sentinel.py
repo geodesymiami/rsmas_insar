@@ -495,10 +495,12 @@ def create_stack_sentinel_run_files(inps, dem_file):
               ' -f ' + str(inps.filtStrength) + ' -W ' + inps.workflow + \
               ' -u ' + inps.unwMethod + ' -C ' + inps.coregistration + \
               ' -s ' + inps.slcDir + ' -d ' + dem_file + extraOptions + \
-              ' -o ' + inps.orbitDir + ' -a ' + inps.auxDir +' -t \'\' |& tee out_stackSentinel.log '
+              ' -o ' + inps.orbitDir + ' -a ' + inps.auxDir +' -t \'\' '
 
     if inps.excludeDate is not None:
         command = command + ' -x ' + inps.excludeDate
+
+    command = command + ' |& tee out_stackSentinel.log'
 
     # TODO: Change subprocess call to get back error code and send error code to logger
     logger.info(command)
