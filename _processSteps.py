@@ -276,6 +276,9 @@ def submit_job(argv, inps):
        if projectID:
           f.write('#BSUB -P '+projectID+'\n')
        f.write('#BSUB -q '+os.getenv('QUEUENAME')+'\n')
+       if inps.wall_time:
+          f.write('#BSUB -W ' + inps.wall_time + '\n')
+
        #f.write('#BSUB -W 2:00\n')
        #f.write('#BSUB -R rusage[mem=3700]\n')
        #f.write('#BSUB -R span[hosts=1]\n')

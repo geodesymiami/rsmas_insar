@@ -466,9 +466,10 @@ def submit_insarmaps_job(command_list, inps):
    f.write('#BSUB -o z_insarmaps_%J.o\n')
    f.write('#BSUB -e z_insarmaps_%J.e\n')
    f.write('#BSUB -n 1\n' )
-
    if projectID:
       f.write('#BSUB -P '+projectID+'\n')
+   if inps.wall_time:
+      f.write('#BSUB -W inps.wall_time\n')
    f.write('#BSUB -q general\n')
 
    f.write('cd '+inps.work_dir+'/PYSAR\n')

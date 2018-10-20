@@ -645,6 +645,7 @@ def main(argv):
     # Submit job
     #########################################
     if inps.bsub_flag:
+        inps.wall_time='48:00'
         submit_job(sys.argv[:], inps)
 
     #########################################
