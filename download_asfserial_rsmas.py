@@ -19,7 +19,7 @@ inps = None
 
 def create_parser():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('template', dest='template', metavar="FILE", help='template file to use.')
+	parser.add_argument('template', metavar="FILE", help='template file to use.')
 
 	return parser
 
