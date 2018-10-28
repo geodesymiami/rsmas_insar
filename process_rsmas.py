@@ -20,7 +20,8 @@ import _processSteps as prs
 def main(argv):
     start_time = time.time()
     inps = prs.command_line_parse()
-
+    if inps.bsub_flag:
+        inps.wall_time='48:00'
     #########################################
     # Initiation
     #########################################
