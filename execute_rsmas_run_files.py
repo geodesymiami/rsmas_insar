@@ -124,6 +124,9 @@ if __name__ == "__main__":
     logger.info("Executing Runfiles %s", str(inps.start) + ' to ' + str(inps.stop))
 
 
-    memoryuse = putils.get_memory_defaults(inps.workflow)
+    memoryuse = putils.get_memory_defaults(inps)
     submit_isce_jobs(run_file_list[inps.start - 1:inps.stop], inps.work_dir, memoryuse)
     logger.info("-----------------Done Executing Run files-------------------")
+
+    
+    
