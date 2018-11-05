@@ -191,8 +191,8 @@ def call_ssara(custom_template_file, slcDir):
               os.getenv('PARENTDIR') + \
               '/sources/rsmas_isce/' + download_command + '\"'
 
-    os.chdir(slcDir)
     # Run download script on both scripts
+    os.chdir(slcDir)
     for download_file in ['download_ssara_rsmas.py', 'download_asfserial_rsmas.py']:
         messageRsmas.log(command.format(python_download_script = download_file))
         messageRsmas.log(download_command)
@@ -251,13 +251,6 @@ def get_work_directory(work_dir, project_name):
             work_dir = os.getcwd()
     work_dir = os.path.abspath(work_dir)
     return work_dir
-  
-##########################################################################
-
-
-def get_slc_directory(work_dir):
-    slc_dir = work_dir + '/SLC'
-    return slc_dir
 
 ##########################################################################
 
@@ -336,9 +329,7 @@ def create_stack_sentinel_run_files(inps, dem_file):
                  'esdCoherenceThreshold', 'snrThreshold', 'unwMethod','polarization',
                  'coregistration', 'workflow', 'startDate', 'stopDate', 'textCmd']
 
-
     command = 'stackSentinel_rsmas.py' + suffix + extraOptions
-
     for value, pref in zip(inpsvalue, prefixletters):
         keyvalue = eval('inps.' + value)
         if keyvalue is not None:
