@@ -184,23 +184,21 @@ def set_default_options(inps):
 
 def call_ssara(custom_template_file, slcDir):
     out_file = os.getcwd() + '/' + 'out_download.log'
-    download_command = 'download_ssara_rsmas.py ' + custom_template_file + ' |& tee ' + out_file
-    command = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' + os.getenv(
-        'PARENTDIR') + '/sources/rsmas_isce/' + download_command + '\"'
-    messageRsmas.log(command)
-    messageRsmas.log(download_command)
+    download_command = '{python_download_script} ' + custom_template_file + ' |& tee ' + out_file
+    command = 'ssh pegasus.ccs.miami.edu ' \
+              '\"s.cgood;' \
+              'cd ' + slcDir + '; ' + \
+              os.getenv('PARENTDIR') + \
+              '/sources/rsmas_isce/' + download_command + '\"'
+
     os.chdir(slcDir)
-    status = subprocess.Popen(command, shell=True).wait()
+    # Run download script on both scripts
+    for download_file in ['download_ssara_rsmas.py', 'download_asfserial_rsmas.py']:
+        messageRsmas.log(command.format(python_download_script = download_file))
+        messageRsmas.log(download_command)
+        subprocess.Popen(command, shell=True).wait()
     os.chdir('..')
 
-    download_command = 'download_asfserial_rsmas.py ' + custom_template_file + ' |& tee ' + out_file
-    command = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' + os.getenv(
-        'PARENTDIR') + '/sources/rsmas_isce/' + download_command + '\"'
-    messageRsmas.log(command)
-    messageRsmas.log(download_command)
-    os.chdir(slcDir)
-    status = subprocess.Popen(command, shell=True).wait()
-    os.chdir('..')
 
 ##########################################################################
 
