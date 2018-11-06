@@ -7,7 +7,6 @@
 check for existence of directories and empty files for run_operations.py,
 create them as needed
 """
-
 import os
 
 def main():
@@ -29,8 +28,6 @@ def main():
         os.mkdir(errors_directory)
     if not os.path.exists(os.getenv('OPERATIONS')+'/stored_date.date'):
         open(os.getenv('OPERATIONS')+'/stored_date.date', 'a').close()  # create empty file
-
-    print('End of check_for_directories_and_initiate.py')
 
 ###########################################################################################
 if __name__ == '__main__':
