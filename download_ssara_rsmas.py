@@ -65,38 +65,38 @@ def check_downloads(run_number, args):
     logger.log(loglevel.INFO, "Everything is there!")
 
 
-def generate_ssaraopt_string(inps):
+def generate_ssaraopt_string(templatefile):
     """ generates ssaraopt string from ssaraopt.* in templatefile. If not given returns ssaraopt proper
         Parameters: run_number: int, the current iteration the wrapper is on (maxiumum 10 before quitting)
         Returns: ssaraopt: str, the string with the options to call ssara_federated_query.py
     """
     # use ssaraopt.platform, relativeOrbit and frame if given, else use ssaraopt
     try:
-       platform = Template(inps.template).get_options()['ssaraopt.platform']
-       relativeOrbit = Template(inps.template).get_options()['ssaraopt.relativeOrbit']
-       frame = Template(inps.template).get_options()['ssaraopt.frame']
+       platform = Template(templatefile).get_options()['ssaraopt.platform']
+       relativeOrbit = Template(templatefile).get_options()['ssaraopt.relativeOrbit']
+       frame = Template(templatefile).get_options()['ssaraopt.frame']
        ssaraopt='--platform='+platform+' --relativeOrbit='+relativeOrbit+' --frame='+frame
 
        try:
-          startDate = Template(inps.template).get_options()['ssaraopt.startDate']
+          startDate = Template(templatefile).get_options()['ssaraopt.startDate']
           ssaraopt=ssaraopt+' -s='+startDate
        except:
           pass
        try:
-          endDate = Template(inps.template).get_options()['ssaraopt.endDate']
+          endDate = Template(templatefile).get_options()['ssaraopt.endDate']
           ssaraopt=ssaraopt+' -e='+endDate
        except:
           pass
 
     except:
        try: 
-         ssaraopt = Template(inps.template).get_options()['ssaraopt']
+         ssaraopt = Template(templatefile).get_options()['ssaraopt']
        except:
          raise Exception('no ssaraopt or ssaraopt.platform, relativeOrbit, frame found')
 
     # add parallel doenload option. If ssaraopt.parallelDownload not given use default value
     try:
-       parallelDownload = Template(inps.template).get_options()['ssaraopt.parallelDownload']
+       parallelDownload = Template(templatefile).get_options()['ssaraopt.parallelDownload']
     except:
        parallelDownload = '30'     # default
     ssaraopt=ssaraopt+' --parallel='+parallelDownload
@@ -121,7 +121,7 @@ def run_ssara(run_number=1):
 
     # Compute SSARA options to use 
 
-    ssaraopt =  generate_ssaraopt_string(inps)
+    ssaraopt =  generate_ssaraopt_string(templatefile=inps.template)
 
     ssaraopt = ssaraopt.split(' ')
 
