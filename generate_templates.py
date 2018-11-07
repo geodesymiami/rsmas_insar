@@ -173,7 +173,8 @@ def main(args):
     inps = cmdLineParse(args)
 
     csv_file         = "1zAsa5cykv-WS39ufkCZdvFvaOem3Akol8aqzANnsdhE"
-    test_sheet       = "1Mvxf-O1NV-TJK9Ax7vWTvZ8q9jWx-GQD4y5WGgTOcMc"
+    test_sheet       = "1bDJQEfM_to-7-2N7_0PhKnD1ur484jkydcTFZGMdLcQ" #Old Original
+    test_sheet       = "1ILNfg9jJsebxSQUZF2ULCBgAnDJ41NRc1X8j6xsZUUI" #test_templateRSMAS.csv
     output_location  = os.getenv('OPERATIONS') + '/TEMPLATES/'
 
     if inps.csv:
