@@ -71,6 +71,11 @@ if __name__ == "__main__":
 	os.chdir(inps.work_dir)
 	messageRsmas.log(os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1::]))
 	os.chdir(inps.slcDir)
+	try:
+	    os.remove(os.path.expanduser('~')+'/.bulk_download_cookiejar.txt')
+	except OSError:
+	    pass
+	
 
 	generate_files_csv()
 	succesful = run_download_asf_serial()
