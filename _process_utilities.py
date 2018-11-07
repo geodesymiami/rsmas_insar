@@ -196,7 +196,7 @@ def call_ssara(custom_template_file, slcDir):
     for download_file in ['download_ssara_rsmas.py', 'download_asfserial_rsmas.py']:
         messageRsmas.log(command.format(python_download_script = download_file))
         messageRsmas.log(download_command)
-        subprocess.Popen(command, shell=True).wait()
+        subprocess.Popen(command.format(python_download_script = download_file), shell=True).wait()
     os.chdir('..')
 
 
