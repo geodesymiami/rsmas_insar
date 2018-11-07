@@ -65,6 +65,44 @@ def check_downloads(run_number, args):
     logger.log(loglevel.INFO, "Everything is there!")
 
 
+def generate_ssaraopt_string(templatefile):
+    """ generates ssaraopt string from ssaraopt.* in templatefile. If not given returns ssaraopt proper
+        Parameters: run_number: int, the current iteration the wrapper is on (maxiumum 10 before quitting)
+        Returns: ssaraopt: str, the string with the options to call ssara_federated_query.py
+    """
+    # use ssaraopt.platform, relativeOrbit and frame if given, else use ssaraopt
+    try:
+       platform = Template(templatefile).get_options()['ssaraopt.platform']
+       relativeOrbit = Template(templatefile).get_options()['ssaraopt.relativeOrbit']
+       frame = Template(templatefile).get_options()['ssaraopt.frame']
+       ssaraopt='--platform='+platform+' --relativeOrbit='+relativeOrbit+' --frame='+frame
+
+       try:
+          startDate = Template(templatefile).get_options()['ssaraopt.startDate']
+          ssaraopt=ssaraopt+' -s='+startDate
+       except:
+          pass
+       try:
+          endDate = Template(templatefile).get_options()['ssaraopt.endDate']
+          ssaraopt=ssaraopt+' -e='+endDate
+       except:
+          pass
+
+    except:
+       try: 
+         ssaraopt = Template(templatefile).get_options()['ssaraopt']
+       except:
+         raise Exception('no ssaraopt or ssaraopt.platform, relativeOrbit, frame found')
+
+    # add parallel doenload option. If ssaraopt.parallelDownload not given use default value
+    try:
+       parallelDownload = Template(templatefile).get_options()['ssaraopt.parallelDownload']
+    except:
+       parallelDownload = '30'     # default
+    ssaraopt=ssaraopt+' --parallel='+parallelDownload
+
+    return ssaraopt
+    
 def run_ssara(run_number=1):
     """ Runs ssara_federated_query-cj.py and checks for download issues.
 
@@ -82,16 +120,18 @@ def run_ssara(run_number=1):
         return 0
 
     # Compute SSARA options to use 
-	  options = Template(inps.template).get_options()['ssaraopt']
-	  options = options.split(' ')
+
+    ssaraopt =  generate_ssaraopt_string(templatefile=inps.template)
+
+    ssaraopt = ssaraopt.split(' ')
 
     # Runs ssara_federated_query-cj.py with proper options
-    ssara_options = ['ssara_federated_query-cj.py'] + options + ['--parallel', '10', '--print', '--download']
-    ssara_process = subprocess.Popen(ssara_options)
+    ssara_call    = ['ssara_federated_query-cj.py'] + ssaraopt + ['--print', '--download']
+    ssara_process = subprocess.Popen(ssara_call)
 
     completion_status = ssara_process.poll()  # the completion status of the process
     hang_status = False  # whether or not the download has hung
-    wait_time = 10  # wait time in 'minutes' to determine hang status
+    wait_time =  2  # 10 wait time in 'minutes' to determine hang status
     prev_size = -1  # initial download directory size
     i = 0  # the iteration number (for logging only)
 

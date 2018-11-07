@@ -89,7 +89,7 @@ EXAMPLE = '''example:
   --insarmaps          append after other options to upload to insarmaps.miami.edu
   --bsub               submits job using bsub (and send email when done)
   --nomail             suppress emailing imagefiles of results (default is emailing)
-  --restart            removes project directory before starting download
+  --remove_project_dir removes project directory before starting download
 
   --latest             use earthdef.caltech SVN version (3rdpary/sentinelstack) (default: source/sentinelStack)
 
@@ -129,7 +129,6 @@ UM_FILE_STRUCT = '''
 '''
 
 ##########################################################################
-
 
 def create_process_sentinel_parser():
     parser = argparse.ArgumentParser(
@@ -197,6 +196,11 @@ def create_process_sentinel_parser():
         dest='flag_insarmaps',
         action='store_true',
         help='ingest into insarmaps')
+    parser.add_argument(
+        '--remove_project_dir',
+        dest='remove_project_dir',
+        action='store_true',
+        help='remove directory before download starts')
     parser.add_argument(
         '--latest',
         dest='flag_latest_version',
@@ -358,18 +362,24 @@ def set_default_options(inps, template):
 
 def call_ssara(custom_template_file, slcDir):
 
-        out_file = os.getcwd() + '/' + 'out_download.log' 
-        download_command = 'download_ssara_rsmas.py ' + custom_template_file + ' |& tee ' + out_file
-        command = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' + os.getenv('PARENTDIR') + '/sources/rsmas_isce/' + download_command + '\"'
-        messageRsmas.log(download_command)
+        out_file = os.getcwd() + '/' + 'out_download_ssara' 
+        command = 'download_ssara_rsmas.py ' + custom_template_file 
+        #command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'  # not used because it only works in bash
+        command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e' 
         messageRsmas.log(command)
-        status = subprocess.Popen(command, shell=True).wait()
+        command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' +  command + '\"'
+        messageRsmas.log(command_ssh)
+        status = subprocess.Popen(command_ssh, shell=True).wait()
+        print('Exit status from download_ssara_rsmas.py:',status)
 
-        download_command = 'download_asfserial_rsmas.py ' + custom_template_file + ' |& tee ' + out_file
-        command = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' + os.getenv('PARENTDIR') + '/sources/rsmas_isce/' + download_command + '\"'
-        messageRsmas.log(download_command)
+        out_file = os.getcwd() + '/' + 'out_download_asfserial' 
+        command = 'download_asfserial_rsmas.py ' + custom_template_file 
+        command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e' 
         messageRsmas.log(command)
-        status = subprocess.Popen(command, shell=True).wait()
+        command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' +  command + '\"'
+        messageRsmas.log(command_ssh)
+        status = subprocess.Popen(command_ssh, shell=True).wait()
+        print('Exit status from download_asfserial_rsmas.py:',status)
 
 def call_pysar(custom_template, custom_template_file):
 
@@ -464,8 +474,10 @@ def create_or_copy_dem(work_dir, template, custom_template_file):
         else:
             # TODO: Change subprocess call to get back error code and send error code to logger
             command = 'dem_rsmas.py ' + custom_template_file
-            print (command)
+            out_file = 'out_dem_rsmas'
+            logger.info(command)
             messageRsmas.log(command)
+            command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
             status = subprocess.Popen(command, shell=True).wait()
             if status is not 0:
                 logger.error('ERROR while making DEM')
@@ -500,15 +512,15 @@ def create_stack_sentinel_run_files(inps, dem_file):
     if inps.excludeDate is not None:
         command = command + ' -x ' + inps.excludeDate
 
-    command = command + ' |& tee out_stackSentinel.log'
-
-    # TODO: Change subprocess call to get back error code and send error code to logger
+    out_file = 'out_create_stackSentinel_runfiles' 
     logger.info(command)
     messageRsmas.log(command)
-    process = subprocess.Popen(
-            command, shell=True, 
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (output, error) = process.communicate()
+
+    command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
+
+    # TODO: Change subprocess call to get back error code and send error code to logger
+    process = subprocess.Popen( command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (error, output) = process.communicate()    # FA 11/18: changed order (was output,error) because of stream redirecting
     if process.returncode is not 0 or error or 'Traceback' in output.decode("utf-8"):
         logger.error(
             'Problem with making run_files using stackSentinel.py')
@@ -629,6 +641,9 @@ def main(argv):
     inps.project_name = get_project_name(custom_template_file=inps.custom_template_file)
 
     inps.work_dir = get_work_directory(inps.work_dir, inps.project_name)
+    
+    if inps.remove_project_dir:
+        _remove_directories(directories_to_delete=[inps.work_dir])
 
     # Change directory to work directory
     if not os.path.isdir(inps.work_dir):

@@ -11,6 +11,7 @@ import _process_utilities as putils
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
+from download_ssara_rsmas import generate_ssaraopt_string
 
 logfile_name = os.getenv('OPERATIONS') + '/LOGS/asfserial_rsmas.log'
 logger = rsmas_logger(file_name=logfile_name)
@@ -38,10 +39,10 @@ def generate_files_csv():
 		empty values to eliminate errors in download_ASF_serial.py.
 	
 	"""
-	options = Template(inps.template).get_options()['ssaraopt']
-	options = options.split(' ')
+	ssaraopt = generate_ssaraopt_string(templatefile=inps.template)
+	ssaraopt = ssaraopt.split(' ')
 	
-	filecsv_options = ['ssara_federated_query.py']+options+['--print', '|', 'awk', "'BEGIN{FS=\",\"; ORS=\",\"}{ print $14}'", '>', 'files.csv']
+	filecsv_options = ['ssara_federated_query.py']+ssaraopt+['--print', '|', 'awk', "'BEGIN{FS=\",\"; ORS=\",\"}{ print $14}'", '>', 'files.csv']
 	csv_command = ' '.join(filecsv_options)
 	subprocess.Popen(csv_command, shell=True).wait()
 	sed_command = "sed 's/^.\{5\}//' files.csv > new_files.csv"
