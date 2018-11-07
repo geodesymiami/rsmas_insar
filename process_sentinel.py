@@ -474,8 +474,10 @@ def create_or_copy_dem(work_dir, template, custom_template_file):
         else:
             # TODO: Change subprocess call to get back error code and send error code to logger
             command = 'dem_rsmas.py ' + custom_template_file
-            print (command)
+            out_file = 'out_dem_rsmas'
+            logger.info(command)
             messageRsmas.log(command)
+            command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
             status = subprocess.Popen(command, shell=True).wait()
             if status is not 0:
                 logger.error('ERROR while making DEM')
@@ -510,15 +512,15 @@ def create_stack_sentinel_run_files(inps, dem_file):
     if inps.excludeDate is not None:
         command = command + ' -x ' + inps.excludeDate
 
-    command = command + ' |& tee out_stackSentinel.log'
-
-    # TODO: Change subprocess call to get back error code and send error code to logger
+    out_file = 'out_create_stackSentinel_runfiles' 
     logger.info(command)
     messageRsmas.log(command)
-    process = subprocess.Popen(
-            command, shell=True, 
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (output, error) = process.communicate()
+
+    command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
+
+    # TODO: Change subprocess call to get back error code and send error code to logger
+    process = subprocess.Popen( command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (error, output) = process.communicate()    # FA 11/18: changed order (was output,error) because of stream redirecting
     if process.returncode is not 0 or error or 'Traceback' in output.decode("utf-8"):
         logger.error(
             'Problem with making run_files using stackSentinel.py')
