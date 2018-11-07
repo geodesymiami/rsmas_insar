@@ -9,6 +9,13 @@ import shutil
 import time
 import glob
 
+import subprocess
+################### directory initiation for Josh to review (and remove comment)
+status = subprocess.Popen('check_for_operations_directories_and_initiate.py', shell=True).wait() 
+if status is not 0:
+   raise Exception('ERROR in check_for_operations_directories_and_initiate.py')
+##################
+from download_ssara_rsmas import generate_ssaraopt_string
 import generate_templates as gt
 
 import logging
@@ -92,9 +99,13 @@ def create_process_sentinel_parser():
 	parser.add_argument('--templatecsv', dest='template_csv', metavar='FILE', help='local csv file containing template info.')
 	parser.add_argument('--singletemplate', dest='single_template', metavar='FILE', help='singular template file to run on')
 	parser.add_argument('--startssara', dest='startssara', action='store_true', help='process_sentinel.py --startssara')
+	parser.add_argument('--stopssara', dest='stopssara', action='store_true', help='stop after downloading')
 	parser.add_argument('--startprocess', dest='startprocess', action='store_true', help='process using sentinelstack package')
+	parser.add_argument('--stopprocess', dest='stopprocess', action='store_true', help='stop after processing')
 	parser.add_argument('--startpysar', dest='startpysar', action='store_true', help='run pysar')
+	parser.add_argument('--stoppysar', dest='stoppysar', action='store_true', help='stop after pysar processing')
 	parser.add_argument('--startinsarmaps', dest='startinsarmaps', action='store_true', help='ingest into insarmaps')
+	parser.add_argument('--restart', dest='restart', action='store_true', help='remove $OPERATIONS directory before starting')
 	parser.add_argument("--testsheet", dest="test_sheet", action='store_true', help='whether or not to use the test sheet')
 
 	return parser
@@ -115,38 +126,16 @@ def command_line_parse(args):
 	logger.info("\t\t--templatecsv      : %s\n", inps.template_csv)
 	logger.info("\t\t--singletemplate   : %s\n", inps.single_template)
 	logger.info("\t\t--startssara       : %s\n", inps.startssara)
+	logger.info("\t\t--stopssara        : %s\n", inps.stopssara)
 	logger.info("\t\t--startprocess     : %s\n", inps.startprocess)
+	logger.info("\t\t--stopprocess      : %s\n", inps.stopprocess)
 	logger.info("\t\t--startpysar       : %s\n", inps.startpysar)
+	logger.info("\t\t--stoppysar        : %s\n", inps.stoppysar)
 	logger.info("\t\t--startinsarmaps   : %s\n", inps.startinsarmaps)
 	logger.info("\t\t--testsheet	    : %s\n", inps.test_sheet)
 	
-
-	
 ###################### Auxiliary Functions #####################
 
-
-"""
-    Reads template file for the current dataset and parses out the 'ssaraopt' option before creating command options line options 
-    array for ssara_federated_query.py
-    Parameters: none
-    Returns:    ssara_options: [str], array of command line options to run ssara_federated_query with
-"""
-def create_ssara_options():
-	
-	with open('/nethome/'+user+'/insarlab/OPERATIONS/TEMPLATES/'+dataset+'.template', 'r') as template_file:
-		options = ''
-		for line in template_file:
-			if 'ssaraopt' in line:
-				options = line.strip('\n').rstrip().split("= ")[1]
-				break;
-					
-	# Compute SSARA options to use
-	options = options.split(' ')
-
-	ssara_options = ['ssara_federated_query.py'] + options + ['--print']	
-		
-	return ssara_options
-		
 """
     Reads the most recently stored date for the given dataset from the stored_date.date file, and parses the newest data date from ssara_federated_query.
     Parameters: ssara_output: str, string output from ssara_federated_query.py ... --print
@@ -213,10 +202,16 @@ def run_process_sentinel():
 	
 	if inps.startssara:
 		psen_extra_options.append('--startssara')
+	if inps.stopssara:
+		psen_extra_options.append('--stopssara')
 	if inps.startprocess:
 		psen_extra_options.append('--startprocess') 
+	if inps.stopprocess:
+		psen_extra_options.append('--stopprocess') 
 	if inps.startpysar:
 		psen_extra_options.append('--startpysar')
+	if inps.stoppysar:
+		psen_extra_options.append('--stoppysar')
 	if inps.startinsarmaps:
 		psen_extra_options.append('--startinsarmaps')
 		
@@ -281,6 +276,14 @@ if __name__ == "__main__":
 	# Parse command line arguments
 	command_line_parse(sys.argv[1:])
 	
+	# delete OPERATIONS folder if --restart
+	import pdb; pdb.set_trace()
+	if inps.restart:
+	    shutil.rmtree(os.getenv('OPERATIONS'))
+	    status = subprocess.Popen('check_for_operations_directories_and_initiate.py', shell=True).wait()
+	    if status is not 0:
+	       raise Exception('ERROR in check_for_operations_directories_and_initiate.py')
+           
 	# Generate Template Files
 	template_options = []
 	if inps.template_csv:
@@ -306,10 +309,8 @@ if __name__ == "__main__":
 
 	all_output_files = []
 	
-	
 	logger.info("\tDATASETS: \n "+str(datasets))
 	
-
 	# Perform the processing routine for each dataset
 	for dset in datasets:
 		
@@ -317,11 +318,16 @@ if __name__ == "__main__":
 		
 		setup_logging_handlers(dataset, "a")
 		
+		templatefile = templates_directory+'/'+dataset+'.template'
 		# Generate SSARA Options to Use
-		ssara_options = create_ssara_options()
+		#ssara_options = create_ssara_options()
+		#ssara_options = generate_ssaraopt_string(templatefile=inps.template)
+		ssaraopt = generate_ssaraopt_string(templatefile=templatefile)
+		ssaraopt = 'ssara_federated_query.py ' + ssaraopt + ' --print'
+		ssaraopt=ssaraopt.split(' ')
 		
 		# Run SSARA and check output	
-		ssara_output = subprocess.check_output(ssara_options).decode('utf-8');
+		ssara_output = subprocess.check_output(ssaraopt).decode('utf-8');   #note to Josh: for easier debugging lets call using a string instead of a list
 		
 		# Sets date variables for stored and most recent dates
 		set_dates(ssara_output)
