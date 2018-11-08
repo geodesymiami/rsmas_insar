@@ -474,7 +474,7 @@ def submit_insarmaps_job(command_list, inps):
 ##########################################################################
 
 def file_has_zero_lines(fname):
-    """Calculate the number of lines in a file."""
+    """Returns True if a file is empty."""
     with open(fname) as f:
         for _ in f.readlines():
             return False
