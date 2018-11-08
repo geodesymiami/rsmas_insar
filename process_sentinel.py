@@ -41,7 +41,9 @@ import messageRsmas
 from _process_utilities import email_pysar_results
 from _process_utilities import email_insarmaps_results
 from _process_utilities import submit_insarmaps_job
+from _process_utilities import remove_zero_size_or_length_files
 from _process_utilities import check_error_files_sentinelstack
+from _process_utilities import concatenate_error_files
 from _processSteps import submit_job
 
 logger = logging.getLogger("process_sentinel")
@@ -365,19 +367,17 @@ def call_ssara(custom_template_file, slcDir):
         out_file = os.getcwd() + '/' + 'out_download_ssara' 
         command = 'download_ssara_rsmas.py ' + custom_template_file 
         #command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'  # not used because it only works in bash
-        command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e' 
         messageRsmas.log(command)
+        command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e' 
         command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' +  command + '\"'
-        messageRsmas.log(command_ssh)
         status = subprocess.Popen(command_ssh, shell=True).wait()
         print('Exit status from download_ssara_rsmas.py:',status)
 
         out_file = os.getcwd() + '/' + 'out_download_asfserial' 
         command = 'download_asfserial_rsmas.py ' + custom_template_file 
-        command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e' 
         messageRsmas.log(command)
+        command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e' 
         command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' +  command + '\"'
-        messageRsmas.log(command_ssh)
         status = subprocess.Popen(command_ssh, shell=True).wait()
         print('Exit status from download_asfserial_rsmas.py:',status)
 
@@ -386,7 +386,10 @@ def call_pysar(custom_template, custom_template_file):
     # TODO: Change subprocess call to get back error code and send error code to logger
     logger.debug('\n*************** running pysar ****************')
     command = 'pysarApp.py ' + custom_template_file + ' --load-data |& tee out_pysar.log'
+    out_file = 'out_pysar_load'
+    logger.info(command)
     messageRsmas.log(command)
+    command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
     status = subprocess.Popen(command, shell=True).wait()
     if status is not 0:
         logger.error('ERROR in pysarApp.py --load-data')
@@ -401,7 +404,11 @@ def call_pysar(custom_template, custom_template_file):
         if int(custom_template['cleanopt']) >= 3:
             _remove_directories(['SLC'])
 
-    command = 'pysarApp.py ' + custom_template_file+' |& tee -a out_pysar.log'
+    command = 'pysarApp.py ' + custom_template_file
+    out_file = 'out_pysar'
+    logger.info(command)
+    messageRsmas.log(command)
+    command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
     messageRsmas.log(command)
     status = subprocess.Popen(command, shell=True).wait()
     if status is not 0:
@@ -512,7 +519,7 @@ def create_stack_sentinel_run_files(inps, dem_file):
     if inps.excludeDate is not None:
         command = command + ' -x ' + inps.excludeDate
 
-    out_file = 'out_create_stackSentinel_runfiles' 
+    out_file = 'out_stack_Sentinel_create_runfiles' 
     logger.info(command)
     messageRsmas.log(command)
 
@@ -747,6 +754,8 @@ def main(argv):
                          inps.cwd, inps.subswath,
                          inps.custom_template_file,
                          memoryUse)
+        remove_zero_size_or_length_files(directory='run_files')
+        concatenate_error_files(directory='run_files',out_name='out_stack_sentinel_errorfiles.e')
 
         if int(custom_template['cleanopt']) >=1:
             _remove_directories(clean_list1)
