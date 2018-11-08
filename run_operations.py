@@ -268,9 +268,11 @@ def post_processing(files_to_move):
 
 def copy_error_files_to_logs(project_dir, destination_dir):
 	"""Copy out*.e files into LOGS/project_2017-03-20_out directory."""
-	error_files=glob.glob('out*.e')
-	if not os.path.isdir(destination_dir):
-	    os.makedirs(destination_dir)
+	error_files=glob.glob(project_dir+'/out*.e')
+	shutil.rmtree(destination_dir, ignore_errors=True)
+	os.makedirs(destination_dir)
+	#if not os.path.isdir(destination_dir):
+	#    os.makedirs(destination_dir)
 	for file in error_files:
 	    shutil.copy(file, destination_dir)
            
@@ -347,6 +349,7 @@ if __name__ == "__main__":
 			# Submit job via process_sentinel and store output
 			logger.info("%s: STARTING PROCESS SENTINEL JOB AT: %s (newest date: %s)\n", dataset, psen_time, most_recent)
 			files_to_move = run_process_sentinel()
+			files_to_move = 'file'
 			
 			all_output_files += files_to_move;
 			
@@ -367,8 +370,9 @@ if __name__ == "__main__":
 				
 			time.sleep(60)
 			
+		# copy out_*.e files into LOG directory
 		log_dir = os.getenv('OPERATIONS')+'/LOGS/'+dset+'_'+str(most_recent)[0:10]+'_out'
-		copy_error_files_to_logs( project_dir=os.getcwd(), destination_dir=log_dir)
+		copy_error_files_to_logs( project_dir=os.getenv('SCRATCHDIR')+'/'+dset, destination_dir=log_dir)
 
 		logger.info("\tCOMPLETED AT: %s", datetime.fromtimestamp(time.time()).strftime(date_format))
 		logger.info("----------------------------------\n")	
