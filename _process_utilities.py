@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 ###############################################################################
 #
-# Project: Utilitiels for process_rsmas.py
+# Project: Utilities for process_rsmas.py
 # Author: Falk Amelung and Sara Mirzaee
 # Created: 10/2018
 #
@@ -482,8 +482,8 @@ def submit_insarmaps_job(command_list, inps):
 
 ##########################################################################
 
-
 def file_len(fname):
+    """Calculate the number of lines in a file."""
     p = subprocess.Popen(['wc', '-l', fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     result, err = p.communicate()
     if p.returncode != 0:
@@ -492,8 +492,35 @@ def file_len(fname):
 
 ##########################################################################
 
+def remove_zero_size_or_length_files(directory):
+    """Removes files with zero size or zero length (*.e files in run_files)."""
+    error_files  = glob.glob(directory + '/*.e')
+    for item in error_files:
+        if os.path.getsize(item) == 0:       # remove zero-size files
+            os.remove(item)
+        elif file_len(item) == 0:
+            os.remove(item)                  # remove zero-line files
+
+##########################################################################
+
+def concatenate_error_files(directory,out_name):
+    """Concatenate error files to one file (*.e files in run_files)."""
+    """FA 11/2018"""
+    error_files  = glob.glob(directory + '/*.e')
+    with open(out_name, 'w') as outfile:
+        for fname in error_files:
+            outfile.write('#########################\n')
+            outfile.write('#### '+fname+' \n')
+            outfile.write('#########################\n')
+            with open(fname) as infile:
+                outfile.write(infile.read())
+
+##########################################################################
+
+##########################################################################
 
 def check_error_files_sentinelstack(pattern):
+
     errorFiles  = glob.glob(pattern)
 
     elist = []
@@ -581,7 +608,6 @@ def email_pysar_results(textStr, custom_template):
 
 ###############################################################################
 
-
 def email_insarmaps_results(custom_template):
     """
        email link to insarmaps.miami.edu
@@ -604,8 +630,4 @@ def email_insarmaps_results(custom_template):
     status = subprocess.Popen(command, shell=True).wait()
     if status is not 0:
        sys.exit('Error in email_insarmaps_results')
-
-
-
-
 
