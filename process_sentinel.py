@@ -362,24 +362,24 @@ def set_default_options(inps, template):
                                      inps_name = template_val.inps_name,
                                      default_value= template_val.default_value)
 
+
 def call_ssara(custom_template_file, slcDir):
-
-        out_file = os.getcwd() + '/' + 'out_download_ssara' 
-        command = 'download_ssara_rsmas.py ' + custom_template_file 
+        out_file = os.getcwd() + '/' + 'out_{script_name}'
+        command = '{script_name}.py ' + custom_template_file
         #command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'  # not used because it only works in bash
-        messageRsmas.log(command)
-        command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e' 
-        command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' +  command + '\"'
-        status = subprocess.Popen(command_ssh, shell=True).wait()
-        print('Exit status from download_ssara_rsmas.py:',status)
+        command_with_piping_output = '('+command+' > '+out_file+'.o) >& '+out_file+'.e'
+        command_ssh = 'ssh pegasus.ccs.miami.edu \"' \
+                      's.cgood;' \
+                      'cd ' + slcDir + '; ' + \
+                      command_with_piping_output + '\"'
 
-        out_file = os.getcwd() + '/' + 'out_download_asfserial' 
-        command = 'download_asfserial_rsmas.py ' + custom_template_file 
-        messageRsmas.log(command)
-        command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e' 
-        command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' +  command + '\"'
-        status = subprocess.Popen(command_ssh, shell=True).wait()
-        print('Exit status from download_asfserial_rsmas.py:',status)
+        for script_name in ['download_ssara_rsmas', 'download_asfserial_rsmas']:
+            messageRsmas.log(command.format(script_name= script_name))
+            status = subprocess.Popen(command_ssh.format(script_name= script_name), shell=True).wait()
+            print(
+                'Exit status from {script_name}.py:'.format(script_name= script_name),
+                status)
+
 
 def call_pysar(custom_template, custom_template_file):
 
