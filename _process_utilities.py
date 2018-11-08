@@ -473,13 +473,12 @@ def submit_insarmaps_job(command_list, inps):
 
 ##########################################################################
 
-def file_len(fname):
+def file_has_zero_lines(fname):
     """Calculate the number of lines in a file."""
-    p = subprocess.Popen(['wc', '-l', fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    result, err = p.communicate()
-    if p.returncode != 0:
-        raise IOError(err)
-    return int(result.strip().split()[0])
+    with open(fname) as f:
+        for _ in f.readlines():
+            return False
+    return True
 
 ##########################################################################
 
@@ -489,7 +488,7 @@ def remove_zero_size_or_length_files(directory):
     for item in error_files:
         if os.path.getsize(item) == 0:       # remove zero-size files
             os.remove(item)
-        elif file_len(item) == 0:
+        elif file_has_zero_lines(item):
             os.remove(item)                  # remove zero-line files
 
 ##########################################################################
@@ -518,7 +517,7 @@ def check_error_files_sentinelstack(pattern):
     for item in errorFiles:
         if os.path.getsize(item) == 0:       # remove zero-size error files
             os.remove(item)
-        elif file_len(item) == 0:
+        elif file_has_zero_lines(item):
             os.remove(item)                  # remove zero-lines files
         else:
             elist.append(item)
