@@ -266,6 +266,14 @@ def post_processing(files_to_move):
 	logger.removeHandler(info_handler)
 	logger.removeHandler(error_handler)
 
+def copy_error_files_to_logs(project_dir, destination_dir):
+	"""Copy out*.e files into LOGS/project_2017-03-20_out directory."""
+	error_files=glob.glob('out*.e')
+	if not os.path.isdir(destination_dir):
+	    os.makedirs(destination_dir)
+	for file in error_files:
+	    shutil.copy(file, destination_dir)
+           
 
 if __name__ == "__main__":
 
@@ -277,7 +285,6 @@ if __name__ == "__main__":
 	command_line_parse(sys.argv[1:])
 	
 	# delete OPERATIONS folder if --restart
-	import pdb; pdb.set_trace()
 	if inps.restart:
 	    shutil.rmtree(os.getenv('OPERATIONS'))
 	    status = subprocess.Popen('check_for_operations_directories_and_initiate.py', shell=True).wait()
@@ -320,8 +327,6 @@ if __name__ == "__main__":
 		
 		templatefile = templates_directory+'/'+dataset+'.template'
 		# Generate SSARA Options to Use
-		#ssara_options = create_ssara_options()
-		#ssara_options = generate_ssaraopt_string(templatefile=inps.template)
 		ssaraopt = generate_ssaraopt_string(templatefile=templatefile)
 		ssaraopt = 'ssara_federated_query.py ' + ssaraopt + ' --print'
 		ssaraopt=ssaraopt.split(' ')
@@ -362,6 +367,9 @@ if __name__ == "__main__":
 				
 			time.sleep(60)
 			
+		log_dir = os.getenv('OPERATIONS')+'/LOGS/'+dset+'_'+str(most_recent)[0:10]+'_out'
+		copy_error_files_to_logs( project_dir=os.getcwd(), destination_dir=log_dir)
+
 		logger.info("\tCOMPLETED AT: %s", datetime.fromtimestamp(time.time()).strftime(date_format))
 		logger.info("----------------------------------\n")	
 	
