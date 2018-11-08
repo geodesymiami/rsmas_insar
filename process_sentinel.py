@@ -416,23 +416,6 @@ def call_pysar(custom_template, custom_template_file):
         raise Exception('ERROR in pysarApp.py')
 
 
-def get_environment_from_source_file(source_file):
-
-    get_environment_command = 'source {source_file} ; ' 'python -c "import os, json; ' 'print(json.dumps(dict(os.environ)))"'.format(source_file= source_file)
-
-    shell_command = str('cd ' + os.getenv('PARENTDIR') + '; ' + get_environment_command)
-
-    process = subprocess.Popen(
-            shell_command, shell=True, executable='/bin/csh', 
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (output, error) = process.communicate()
-    if process.returncode != 0 or error:
-        print("ERROR: {0}".format(error))
-        raise Exception("sourcing {source_file} failed.".format(source_file=source_file))
-    return json.loads(output.decode('utf-8'))
-    #return json.loads(output)
-
-
 def get_project_name(custom_template_file):
     project_name = None
     if custom_template_file:
@@ -554,7 +537,6 @@ def create_default_template():
     template_file = os.path.abspath(template_file)
     return template_file
 
-
 def get_memory_defaults(inps):
     if inps.workflow == 'interferogram':
         memoryuse = ['3700', '3700', '3700', '4000', '3700', '3700', '5000', '3700', '3700', '3700', '3700', '3700']
@@ -562,7 +544,6 @@ def get_memory_defaults(inps):
         memoryuse = ['3700', '3700', '3700', '4000', '3700', '3700', '5000', '3700', '3700', '5000', '3700', '3700',
                      '3700']
     return memoryuse
-
 
 def submit_isce_jobs(run_file_list, cwd, subswath, custom_template_file, memoryuse):
     for item in run_file_list:
@@ -577,8 +558,6 @@ def submit_isce_jobs(run_file_list, cwd, subswath, custom_template_file, memoryu
                 walltimelimit = '60:00'
         cmd = 'createBatch.pl ' + cwd + '/' + item + ' memory=' + memorymax + ' walltime=' + walltimelimit
         # FA 7/18: need more memory for run_7 (resample) only
-        # FA 7/18: Should hardwire the memory requirements for the different workflows into a function and use those
-        # TODO: Change subprocess call to get back error code and send error code to logger
         status=0
         status = subprocess.Popen(cmd,  shell=True).wait()
         if status is not 0:
@@ -587,14 +566,6 @@ def submit_isce_jobs(run_file_list, cwd, subswath, custom_template_file, memoryu
 
     sswath = subswath.strip('\'').split(' ')[0]
     xml_file = glob.glob('master/*.xml')[0]
-
-    #command = 'prep4timeseries.py -i merged/interferograms/ -x ' + xml_file + ' -b baselines/ -g merged/geom_master/ '
-    #messageRsmas.log(command)
-    ## TODO: Change subprocess call to get back error code and send error code to logger
-    #status = subprocess.Popen(command, shell=True).wait()
-    #if status is not 0:
-    #    logger.error('ERROR in prep4timeseries.py')
-    #    raise Exception('ERROR in prep4timeseries.py')
 
 def run_insar_maps(work_dir):
     hdfeos_file = glob.glob(work_dir + '/PYSAR/S1*.he5')
@@ -611,26 +582,28 @@ def run_insar_maps(work_dir):
         logger.info('Removing directory: %s', json_folder)
         shutil.rmtree(json_folder)
 
-    command1 = 'hdfeos5_2json_mbtiles.py ' + hdfeos_file + ' ' + json_folder + ' |& tee out_insarmaps.log'
+    command1 = 'hdfeos5_2json_mbtiles.py ' + hdfeos_file + ' ' + json_folder
     command2 = 'json_mbtiles2insarmaps.py -u '+password.insaruser+' -p '+password.insarpass+' --host ' + \
                'insarmaps.miami.edu -P rsmastest -U rsmas\@gmail.com --json_folder ' + \
-               json_folder + ' --mbtiles_file ' + mbtiles_file + ' |& tee -a out_insarmaps.log'
+               json_folder + ' --mbtiles_file ' + mbtiles_file
 
     with open(work_dir + '/PYSAR/run_insarmaps', 'w') as f:
         f.write(command1 + '\n')
         f.write(command2 + '\n')
 
-    ######### submit job  ################### (FA 6/2018: the second call (json_mbtiles*) does not work yet)
-    #command_list=['module unload share-rpms65',command1,command2]
-    #submit_insarmaps_job(command_list,inps)
-
-    # TODO: Change subprocess call to get back error code and send error code to logger
+    out_file = 'out_insarmaps'
+    logger.info(command1)
+    messageRsmas.log(command1)
+    command1 = '('+command1+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
     status = subprocess.Popen(command1, shell=True).wait()
     if status is not 0:
         logger.error('ERROR in hdfeos5_2json_mbtiles.py')
         raise Exception('ERROR in hdfeos5_2json_mbtiles.py')
 
     # TODO: Change subprocess call to get back error code and send error code to logger
+    logger.info(command2)
+    messageRsmas.log(command2)
+    command2 = '('+command2+' | tee -a '+out_file+'.o) 3>&1 1>&2 2>&3 | tee -a '+out_file+'.e'
     status = subprocess.Popen(command2, shell=True).wait()
     if status is not 0:
         logger.error('ERROR in json_mbtiles2insarmaps.py')
