@@ -328,24 +328,21 @@ def call_ssara(flag_ssara, custom_template_file, slc_dir):
     """ Downloads data with ssara and asfserial scripts. """
 
     if flag_ssara:
-        download_script = ['download_ssara_rsmas.py', 'downlaod_asfserial_rsmas.py']
-        out_files = list(map(lambda x: os.getcwd() + '/out_' + x.split('.py')[0], download_script))
-        download_command = '{python_download_script} ' + custom_template_file + ' |& tee  {output_file}'
-        command = 'ssh pegasus.ccs.miami.edu ' \
-              '\"s.cgood;' \
-              'cd ' + slc_dir + '; ' + \
-              os.getenv('RSMAS_ISCE') + '/' +\
-              download_command + '\"'
+        command = 'download_ssara_rsmas.py ' + custom_template_file
+        messageRsmas.log(command)
+        command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e'
+        command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' +  command + '\"'
+        status = subprocess.Popen(command_ssh, shell=True).wait()
+        print('Exit status from download_ssara_rsmas.py:',status)
 
-        os.chdir(slc_dir)
-    # Run download script on both scripts
-        for download_file,outfile in zip(download_script,out_files):
-            messageRsmas.log(command.format(python_download_script = download_file, output_file=outfile))
-            messageRsmas.log(download_command)
-            status = subprocess.Popen(command.format(python_download_script = download_file, output_file=outfile), shell=True).wait()
-            logger.log(loglevel.INFO, 'Exit status from {}: {}'.format(download_file, status))
-        os.chdir('..')
-
+        out_file = os.getcwd() + '/' + 'out_download_asfserial'
+        command = 'download_asfserial_rsmas.py ' + custom_template_file
+        messageRsmas.log(command)
+        command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e'
+        command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' +  command + '\"'
+        status = subprocess.Popen(command_ssh, shell=True).wait()
+        print('Exit status from download_asfserial_rsmas.py:',status)
+    
     return None
 
 ###############################################################################
@@ -376,7 +373,7 @@ def create_or_copy_dem(work_dir, template, custom_template_file):
 #################################################################################
 
 
-def make_runfiles(inps):
+def create_runfiles(inps):
     """ Calls the script to create stackSentinel runfiles and configs."""
 
     if inps.flag_makerun:
