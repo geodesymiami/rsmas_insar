@@ -14,15 +14,15 @@ from rsmas_logging import rsmas_logger, loglevel
 import messageRsmas
 
 from _processSteps import create_or_update_template, create_or_copy_dem
-from _process_utilities  import get_work_directory, get_project_name
+from _process_utilities  import get_work_directory, get_project_name, send_logger
 from _process_utilities  import set_default_options, _remove_directories
 
 sys.path.insert(0, os.getenv('SENTINEL_STACK'))
 sys.path.insert(0, os.getenv('SQUEESAR'))
 
-logfile_name = os.getenv('OPERATIONS') + '/LOGS/create_stacksentinel_run_files.log'
-logger = rsmas_logger(file_name=logfile_name)
-
+#logfile_name = os.getenv('OPERATIONS') + '/LOGS/create_stacksentinel_run_files.log'
+#logger = rsmas_logger(file_name=logfile_name)
+logger  = send_logger()
 
 ##############################################################################
 EXAMPLE = """example:
