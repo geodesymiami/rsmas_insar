@@ -1,4 +1,4 @@
-##------------------------ TopsStack_template.txt ------------------------##
+##------------------------ stackSentinel_template.txt ------------------------##
 ## 1. topsStack options
 
 sentinelStack.slcDir                      = auto         # [SLCs dir]
