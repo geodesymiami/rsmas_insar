@@ -13,7 +13,7 @@ import os
 import sys
 import time
 
-from _process_utilities_pyversion  import get_work_directory, get_project_name
+from _process_utilities  import get_work_directory, get_project_name
 import _processSteps as prs
 from rsmas_logging import rsmas_logger, loglevel
 
