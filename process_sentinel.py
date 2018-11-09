@@ -38,9 +38,23 @@ from pysar.utils import readfile
 from pysar.defaults.auto_path import autoPath
 
 import messageRsmas
+from _process_utilities import set_default_options
+from _process_utilities import create_custom_template
+from _process_utilities import create_default_template
+from _process_utilities import _remove_directories
+
+from _process_utilities import create_or_copy_dem
+from _process_utilities import call_ssara
+from _process_utilities import call_pysar
+from _process_utilities import run_insar_maps
+from _process_utilities import get_project_name
+from _process_utilities import get_work_directory
+from _process_utilities import create_stack_sentinel_run_files
+
+from _process_utilities import get_memory_defaults
 from _process_utilities import email_pysar_results
 from _process_utilities import email_insarmaps_results
-from _process_utilities import submit_insarmaps_job
+
 from _process_utilities import remove_zero_size_or_length_files
 from _process_utilities import check_error_files_sentinelstack
 from _process_utilities import concatenate_error_files
@@ -67,7 +81,7 @@ sentinelStack.rangeLooks     = auto  #[1 / 2 / 3 / ...], auto for 15
 sentinelStack.filtStrength   = auto  #[0.0-0.8] auto for 0.3
 sentinelStack.excludeDate    = auto  #[20080520,20090817 / no], auto for no
 sentinelStack.unwMethod      = auto  #[snaphu ice], auto for snaphu
-sentinelStack.ProcessingMethod = auto #[sbas, squeesar, ps]
+sentinelStack.processingMethod = auto #[sbas, squeesar, ps]
 '''
 
 EXAMPLE = '''example:
@@ -85,6 +99,7 @@ EXAMPLE = '''example:
   --stopsara           stops after ssara
   --stopprocess        stops after process
   --stoppysar          stops after time series analysis
+  --stoppysarload      stops after time series analysis
   --stopinsarmaps      stops after insarmaps upload
   --startssara         [default]
 
@@ -104,6 +119,7 @@ EXAMPLE = '''example:
          process_sentinelStack.py  $SAMPLESDIR/GalapagosT128SenVVD.template --stopprocess
          process_sentinelStack.py  $SAMPLESDIR/GalapagosT128SenVVD.template --startpysar
          process_sentinelStack.py  $SAMPLESDIR/GalapagosT128SenVVD.template --stoppysar
+         process_sentinelStack.py  $SAMPLESDIR/GalapagosT128SenVVD.template --stoppysarload
          process_sentinelStack.py  $SAMPLESDIR/GalapagosT128SenVVD.template --startinsarmaps  : for ingestion into insarmaps
          process_sentinelStack.py  $SAMPLESDIR/GalapagosT128SenVVD.template --stopinsarmaps
 
@@ -184,6 +200,11 @@ def create_process_sentinel_parser():
         action='store_true',
         help='exit after running pysar')
     parser.add_argument(
+        '--stoppysarload',
+        dest='stoppysarload',
+        action='store_true',
+        help='exit after loading into pysar')
+    parser.add_argument(
         '--startinsarmaps',
         dest='startinsarmaps',
         action='store_true',
@@ -221,6 +242,7 @@ def create_process_sentinel_parser():
 
     return parser
 
+####################################################################################
 
 def command_line_parse():
     """
@@ -265,304 +287,11 @@ def command_line_parse():
     logger.debug('stopssara:      %s', inps.stopssara)
     logger.debug('stopprocess:    %s', inps.stopprocess)
     logger.debug('stoppysar:      %s', inps.stoppysar)
+    logger.debug('stoppysarload:  %s', inps.stoppysarload)
 
     return inps
 
-
-def _remove_directories(directories_to_delete):
-    for directory in directories_to_delete:
-        if os.path.isdir(directory):
-            shutil.rmtree(directory)
-
-
-def set_inps_value_from_template(inps, template, template_key,
-                                 inps_name, default_name = 'auto', 
-                                 default_value = None, REQUIRED = False):
-    """
-    Processes a template parameter and adds it to the inps namespace.
-    Options for setting both default values and required parameters
-    :param inps: The parsed input namespace
-    :param template: The parsed dictionary (namespace)
-    :param template_key: The desired key in `template`
-    :param inps_name: The parameter name to assign in `inps`
-    :param default_name: 'auto' is the normal placeholder
-    :param default_value: Default value to assign in `inps`
-    :param REQUIRED: Throws error if REQUIRED is True
-    :return: None
-    """
-
-    # Allows you to refer to and modify `inps` values
-    inps_dict = vars(inps)
-   
-    if not REQUIRED:
-        # Set default value
-        inps_dict[inps_name] = default_value
-        if template_key in template:
-            value = template[template_key]
-            if value == default_name:
-                # If default name is also set in `template`,
-                # set the default value.
-                inps_dict[inps_name] = default_value
-            else:
-                inps_dict[inps_name] = value
-    else:
-        if template_key in template:
-            inps_dict[inps_name] = template[template_key]
-        else:
-            logger.error('%s is required', template_key)
-            raise Exception('ERROR: {0} is required'.format(template_key))
-   
-
-def set_default_options(inps, template):
-
-    inps.orbitDir = '/nethome/swdowinski/S1orbits/'
-    inps.auxDir = '/nethome/swdowinski/S1aux/'
-
-    # FA: needs fix so that it fails if no subswath is given (None). Same for
-    # boundingBox
-
-    # TemplateTuple is a named tuple that takes in parameters to parse from
-    # the `template` dictionary
-    # 'key' refers to the value in `template`
-    # 'inps_name' refers to the name to assign in `inps`
-    # 'default_value': The value to assign in `inps` by default
-    TemplateTuple = namedtuple(typename='TemplateTuple',
-            field_names= ['key', 'inps_name', 'default_value'])
-
-    # Required values have no default value so the last slot is left empty
-    # Processing methods added by Sara 20/2018  (values can be: 'sbas', 'squeesar', 'ps'), ps is not
-    # implemented yet
-    required_template_vals = \
-        [ TemplateTuple('sentinelStack.subswath', 'subswath', None),
-          TemplateTuple('sentinelStack.boundingBox', 'boundingBox', None)
-        ]
-    optional_template_vals = \
-        [ TemplateTuple('sentinelStack.slcDir', 'slcDir', inps.work_dir + '/SLC'),
-          TemplateTuple('sentinelStack.workflow', 'workflow', 'interferogram'),
-          TemplateTuple('sentinelStack.azimuthLooks', 'azimuthLooks', 3),
-          TemplateTuple('sentinelStack.filtStrength', 'filtStrength', 0.5),
-          TemplateTuple('sentinelStack.rangeLooks', 'rangeLooks', 15),
-          TemplateTuple('sentinelStack.numConnections', 'numConnections', 3),
-          TemplateTuple('sentinelStack.excludeDate', 'excludeDate', None),
-          TemplateTuple('sentinelStack.unwMethod', 'unwMethod', 'icu'),
-          TemplateTuple('sentinelStack.coregistration', 'coregistration', 'NESD'),
-          TemplateTuple('sentinelStack.ProcessingMethod', 'ProcessingMethod', 'sbas')
-          # #FA 3/18: was not taken into account in DEM generation: may need to check wherther
-          # key = 'sentinelStack.dem_dir' # sentinelStack.dem_dir is False
-          # TemplateTuple('sentinelStack.dem_dir', 'dem_dir', 'False')
-        ]
-    print(template)
-    # Iterate over required and template values, adding them to `inps`
-    for template_val in required_template_vals:
-        set_inps_value_from_template(inps, template, template_key= template_val.key,
-                                     inps_name= template_val.inps_name, REQUIRED= True)
-
-    for template_val in optional_template_vals:
-        set_inps_value_from_template(inps, template, template_key=template_val.key,
-                                     inps_name = template_val.inps_name,
-                                     default_value= template_val.default_value)
-
-def call_ssara(custom_template_file, slcDir):
-
-        out_file = os.getcwd() + '/' + 'out_download_ssara' 
-        command = 'download_ssara_rsmas.py ' + custom_template_file 
-        #command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'  # not used because it only works in bash
-        messageRsmas.log(command)
-        command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e' 
-        command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' +  command + '\"'
-        status = subprocess.Popen(command_ssh, shell=True).wait()
-        print('Exit status from download_ssara_rsmas.py:',status)
-
-        out_file = os.getcwd() + '/' + 'out_download_asfserial' 
-        command = 'download_asfserial_rsmas.py ' + custom_template_file 
-        messageRsmas.log(command)
-        command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e' 
-        command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' +  command + '\"'
-        status = subprocess.Popen(command_ssh, shell=True).wait()
-        print('Exit status from download_asfserial_rsmas.py:',status)
-
-def call_pysar(custom_template, custom_template_file):
-
-    # TODO: Change subprocess call to get back error code and send error code to logger
-    logger.debug('\n*************** running pysar ****************')
-    command = 'pysarApp.py ' + custom_template_file + ' --load-data |& tee out_pysar.log'
-    out_file = 'out_pysar_load'
-    logger.info(command)
-    messageRsmas.log(command)
-    command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
-    status = subprocess.Popen(command, shell=True).wait()
-    if status is not 0:
-        logger.error('ERROR in pysarApp.py --load-data')
-        raise Exception('ERROR in pysarApp.py --load-data')
-
-    # clean after loading data for cleanopt >= 2
-    if 'All data needed found' in open('out_pysar.log').read():
-        print('Cleaning files:   cleanopt= ' +
-              str(custom_template['cleanopt']))
-        if int(custom_template['cleanopt']) >= 2:
-            _remove_directories(['merged'])
-        if int(custom_template['cleanopt']) >= 3:
-            _remove_directories(['SLC'])
-
-    command = 'pysarApp.py ' + custom_template_file
-    out_file = 'out_pysar'
-    logger.info(command)
-    messageRsmas.log(command)
-    command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
-    messageRsmas.log(command)
-    status = subprocess.Popen(command, shell=True).wait()
-    if status is not 0:
-        logger.error('ERROR in pysarApp.py')
-        raise Exception('ERROR in pysarApp.py')
-
-
-def get_environment_from_source_file(source_file):
-
-    get_environment_command = 'source {source_file} ; ' 'python -c "import os, json; ' 'print(json.dumps(dict(os.environ)))"'.format(source_file= source_file)
-
-    shell_command = str('cd ' + os.getenv('PARENTDIR') + '; ' + get_environment_command)
-
-    process = subprocess.Popen(
-            shell_command, shell=True, executable='/bin/csh', 
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (output, error) = process.communicate()
-    if process.returncode != 0 or error:
-        print("ERROR: {0}".format(error))
-        raise Exception("sourcing {source_file} failed.".format(source_file=source_file))
-    return json.loads(output.decode('utf-8'))
-    #return json.loads(output)
-
-
-def get_project_name(custom_template_file):
-    project_name = None
-    if custom_template_file:
-        custom_template_file = os.path.abspath(custom_template_file)
-        project_name = os.path.splitext(
-            os.path.basename(custom_template_file))[0]
-        logger.debug('Project name: ' + project_name)
-    return project_name
-
-
-def get_work_directory(work_dir, project_name):
-    if not work_dir:
-        if autoPath and 'SCRATCHDIR' in os.environ and project_name:
-            work_dir = os.getenv('SCRATCHDIR') + '/' + project_name
-        else:
-            work_dir = os.getcwd()
-    work_dir = os.path.abspath(work_dir)
-    return work_dir
-
-
-def create_custom_template(custom_template_file, work_dir):
-    if custom_template_file:
-        # Copy custom template file to work directory
-        if utils.run_or_skip(
-                os.path.basename(
-                    custom_template_file),
-                custom_template_file,
-                check_readable=False) == 'run':
-            shutil.copy2(custom_template_file, work_dir)
-
-        # Read custom template
-        logger.info('read custom template file: %s', custom_template_file) 
-        return readfile.read_template(custom_template_file)
-    else:
-        return dict()
-
-
-def create_or_copy_dem(work_dir, template, custom_template_file):
-    dem_dir = work_dir + '/DEM'
-    if os.path.isdir(dem_dir) and len(os.listdir(dem_dir)) == 0:
-        os.rmdir(dem_dir)
-
-    if not os.path.isdir(dem_dir):
-        if 'sentinelStack.demDir' in list(template.keys()) and template['sentinelStack.demDir'] != str('auto'):
-            shutil.copytree(template['sentinelStack.demDir'], dem_dir)
-        else:
-            # TODO: Change subprocess call to get back error code and send error code to logger
-            command = 'dem_rsmas.py ' + custom_template_file
-            out_file = 'out_dem_rsmas'
-            logger.info(command)
-            messageRsmas.log(command)
-            command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
-            status = subprocess.Popen(command, shell=True).wait()
-            if status is not 0:
-                logger.error('ERROR while making DEM')
-                raise Exception('ERROR while making DEM')
-
-    # select DEM file (with *.wgs84 or *.dem extension, in that order)
-    try:
-        files1 = glob.glob(work_dir + '/DEM/*.wgs84')[0]
-        files2 = glob.glob(work_dir + '/DEM/*.dem')[0]
-        dem_file = [files1, files2]
-        dem_file = dem_file[0]
-    except BaseException:
-        logger.error('No DEM file found (*.wgs84 or *.dem)')
-        raise Exception('No DEM file found (*.wgs84 or *.dem)')
-    return dem_file
-
-
-def create_stack_sentinel_run_files(inps, dem_file):
-    suffix  = ''
-    extraOptions = ''
-    if inps.ProcessingMethod == 'squeesar' or inps.ProcessingMethod == 'ps':
-       suffix       = '_squeesar'
-       extraOptions = ' -P ' + inps.ProcessingMethod
-    command = 'stackSentinel'+suffix+'.py -n ' + str(inps.subswath) + ' -b ' + inps.boundingBox + \
-              ' -c ' + str(inps.numConnections) + \
-              ' -z ' + str(inps.azimuthLooks) + ' -r ' + str(inps.rangeLooks) + \
-              ' -f ' + str(inps.filtStrength) + ' -W ' + inps.workflow + \
-              ' -u ' + inps.unwMethod + ' -C ' + inps.coregistration + \
-              ' -s ' + inps.slcDir + ' -d ' + dem_file + extraOptions + \
-              ' -o ' + inps.orbitDir + ' -a ' + inps.auxDir +' -t \'\' '
-
-    if inps.excludeDate is not None:
-        command = command + ' -x ' + inps.excludeDate
-
-    out_file = 'out_stack_Sentinel_create_runfiles' 
-    logger.info(command)
-    messageRsmas.log(command)
-
-    command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
-
-    # TODO: Change subprocess call to get back error code and send error code to logger
-    process = subprocess.Popen( command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (error, output) = process.communicate()    # FA 11/18: changed order (was output,error) because of stream redirecting
-    if process.returncode is not 0 or error or 'Traceback' in output.decode("utf-8"):
-        logger.error(
-            'Problem with making run_files using stackSentinel.py')
-        raise Exception('ERROR making run_files using stackSentinel.py')
-
-    temp_list = glob.glob('run_files/run_*job')
-    for item in temp_list:
-        os.remove(item)
-
-    run_file_list = glob.glob('run_files/run_*')
-    run_file_list.sort(key=lambda x: int(x.split('_')[2]))
-
-    return run_file_list
-
-
-def create_default_template():
-    template_file = 'sentinelStack_template.txt'
-    if not os.path.isfile(template_file):
-        logger.info('generate default template file: %s', template_file)
-        with open(template_file, 'w') as file:
-            file.write(TEMPLATE)
-    else:
-        logger.info('default template file exists: %s', template_file)
-    template_file = os.path.abspath(template_file)
-    return template_file
-
-
-def get_memory_defaults(inps):
-    if inps.workflow == 'interferogram':
-        memoryuse = ['3700', '3700', '3700', '4000', '3700', '3700', '5000', '3700', '3700', '3700', '3700', '3700']
-    elif inps.workflow == 'slc':
-        memoryuse = ['3700', '3700', '3700', '4000', '3700', '3700', '5000', '3700', '3700', '5000', '3700', '3700',
-                     '3700']
-    return memoryuse
-
+####################################################################################
 
 def submit_isce_jobs(run_file_list, cwd, subswath, custom_template_file, memoryuse):
     for item in run_file_list:
@@ -588,54 +317,7 @@ def submit_isce_jobs(run_file_list, cwd, subswath, custom_template_file, memoryu
     sswath = subswath.strip('\'').split(' ')[0]
     xml_file = glob.glob('master/*.xml')[0]
 
-    #command = 'prep4timeseries.py -i merged/interferograms/ -x ' + xml_file + ' -b baselines/ -g merged/geom_master/ '
-    #messageRsmas.log(command)
-    ## TODO: Change subprocess call to get back error code and send error code to logger
-    #status = subprocess.Popen(command, shell=True).wait()
-    #if status is not 0:
-    #    logger.error('ERROR in prep4timeseries.py')
-    #    raise Exception('ERROR in prep4timeseries.py')
-
-def run_insar_maps(work_dir):
-    hdfeos_file = glob.glob(work_dir + '/PYSAR/S1*.he5')
-    hdfeos_file.append(
-        glob.glob(
-            work_dir +
-            '/PYSAR/SUBSET_*/S1*.he5'))  # FA: we may need [0]
-    hdfeos_file = hdfeos_file[0]
-
-    json_folder = work_dir + '/PYSAR/JSON'
-    mbtiles_file = json_folder + '/' + os.path.splitext(os.path.basename(hdfeos_file))[0] + '.mbtiles'
-
-    if os.path.isdir(json_folder):
-        logger.info('Removing directory: %s', json_folder)
-        shutil.rmtree(json_folder)
-
-    command1 = 'hdfeos5_2json_mbtiles.py ' + hdfeos_file + ' ' + json_folder + ' |& tee out_insarmaps.log'
-    command2 = 'json_mbtiles2insarmaps.py -u '+password.insaruser+' -p '+password.insarpass+' --host ' + \
-               'insarmaps.miami.edu -P rsmastest -U rsmas\@gmail.com --json_folder ' + \
-               json_folder + ' --mbtiles_file ' + mbtiles_file + ' |& tee -a out_insarmaps.log'
-
-    with open(work_dir + '/PYSAR/run_insarmaps', 'w') as f:
-        f.write(command1 + '\n')
-        f.write(command2 + '\n')
-
-    ######### submit job  ################### (FA 6/2018: the second call (json_mbtiles*) does not work yet)
-    #command_list=['module unload share-rpms65',command1,command2]
-    #submit_insarmaps_job(command_list,inps)
-
-    # TODO: Change subprocess call to get back error code and send error code to logger
-    status = subprocess.Popen(command1, shell=True).wait()
-    if status is not 0:
-        logger.error('ERROR in hdfeos5_2json_mbtiles.py')
-        raise Exception('ERROR in hdfeos5_2json_mbtiles.py')
-
-    # TODO: Change subprocess call to get back error code and send error code to logger
-    status = subprocess.Popen(command2, shell=True).wait()
-    if status is not 0:
-        logger.error('ERROR in json_mbtiles2insarmaps.py')
-        raise Exception('ERROR in json_mbtiles2insarmaps.py')
-
+####################################################################################
 
 def main(argv):
     start_time = time.time()
@@ -696,12 +378,13 @@ def main(argv):
 
     logger.info('read default template file: ' + inps.template_file)
     template = readfile.read_template(inps.template_file)
+    inps.template = template
 
     #########################################
     # Default options
     #########################################
 
-    set_default_options(inps, template)
+    set_default_options(inps)
 
     ######  directories for cleaning ########
     # TODO: Idea: create a `inps.directories_to_delete` and delete at the end
@@ -770,7 +453,7 @@ def main(argv):
     if inps.flag_pysar:
         _remove_directories(['PYSAR'])       # remove once PYSAR properly recognizes new files
         call_pysar(custom_template=custom_template,
-                  custom_template_file=inps.custom_template_file)
+                  custom_template_file=inps.custom_template_file,flag_load_and_stop=inps.stoppysarload)
 
         # Record runtime and email results
         time_diff = time.time() - start_time

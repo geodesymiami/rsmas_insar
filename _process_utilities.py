@@ -260,7 +260,8 @@ def set_inps_value_from_template(inps, template_key,
 ##########################################################################
 
 
-def call_pysar(custom_template, custom_template_file,flag_load_and_stop):
+
+def call_pysar(custom_template, custom_template_file, flag_load_and_stop):
     """ Calls pysarAPP to load and process data. """
 
     # TODO: Change subprocess call to get back error code and send error code to logger
@@ -331,7 +332,7 @@ def clean_list():
   
 ##########################################################################
 
-    
+
 def email_pysar_results(textStr, custom_template):
     """ email pysar results """
     
