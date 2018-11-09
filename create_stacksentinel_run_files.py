@@ -3,7 +3,6 @@
 # Author: Sara Mirzaee
 #######################
 
-import logging
 import os
 import subprocess
 import sys
@@ -20,8 +19,6 @@ from _process_utilities  import set_default_options, _remove_directories
 sys.path.insert(0, os.getenv('SENTINEL_STACK'))
 sys.path.insert(0, os.getenv('SQUEESAR'))
 
-#logfile_name = os.getenv('OPERATIONS') + '/LOGS/create_stacksentinel_run_files.log'
-#logger = rsmas_logger(file_name=logfile_name)
 logger  = send_logger()
 
 ##############################################################################
