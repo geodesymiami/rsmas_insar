@@ -403,9 +403,25 @@ def email_insarmaps_results(custom_template):
 
 
         
-######### MOVE:     
+############################### NO USE:#############################################     
         
+def get_environment_from_source_file(source_file):
 
+    get_environment_command = 'source {source_file} ; ' 'python -c "import os, json; ' 'print(json.dumps(dict(os.environ)))"'.format(source_file= source_file)
+
+    shell_command = str('cd ' + os.getenv('PARENTDIR') + '; ' + get_environment_command)
+
+    process = subprocess.Popen(
+            shell_command, shell=True, executable='/bin/csh', 
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (output, error) = process.communicate()
+    if process.returncode != 0 or error:
+        print("ERROR: {0}".format(error))
+        raise Exception("sourcing {source_file} failed.".format(source_file=source_file))
+    return json.loads(output.decode('utf-8'))
+    #return json.loads(output)
+    
+    
 ##########################################################################
 
 def submit_insarmaps_job(command_list, inps):
