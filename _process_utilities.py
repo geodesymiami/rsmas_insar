@@ -73,6 +73,12 @@ sentinelStack.demMethod                   = auto         # [bbox, ssara]
 ##########################################################################
 
 
+def send_logger():
+    return logger
+
+##########################################################################
+
+
 def get_project_name(custom_template_file):
     """ Restores project name from custom template file. """
 
