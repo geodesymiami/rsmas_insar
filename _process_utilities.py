@@ -129,7 +129,7 @@ def create_default_template():
 
 
 def create_custom_template(custom_template_file, work_dir):
-  """ Creates or restores custom template file. """
+    """ Creates or restores custom template file. """
   
     if custom_template_file:
         # Copy custom template file to work directory
@@ -150,7 +150,7 @@ def create_custom_template(custom_template_file, work_dir):
 
 
 def set_default_options(inps):
-      """ Sets default values for template file. """
+    """ Sets default values for template file. """
     
     inps.orbitDir = '/nethome/swdowinski/S1orbits/'
     inps.auxDir = '/nethome/swdowinski/S1aux/'
@@ -254,7 +254,7 @@ def set_inps_value_from_template(inps, template_key,
 
 
 def call_pysar(custom_template, custom_template_file,flag_load_and_stop):
-  """ Calls pysarAPP to load and process data. """
+    """ Calls pysarAPP to load and process data. """
 
     # TODO: Change subprocess call to get back error code and send error code to logger
     logger.log(loglevel.DEBUG,'\n*************** running pysar ****************')
@@ -308,7 +308,7 @@ def run_or_skip(custom_template_file):
 ##########################################################################
 
 def clean_list():
-      """ Creates default directory clean list based on cleanopt in template file. """
+    """ Creates default directory clean list based on cleanopt in template file. """
     
     cleanlist = []
     cleanlist.append([''])
@@ -326,7 +326,7 @@ def clean_list():
 
     
 def email_pysar_results(textStr, custom_template):
-  """ email pysar results """
+    """ email pysar results """
     
     if 'email_pysar' not in custom_template:
         return
@@ -380,7 +380,7 @@ def email_pysar_results(textStr, custom_template):
 ###############################################################################
 
 def email_insarmaps_results(custom_template):
-  """ email link to insarmaps.miami.edu """
+    """ email link to insarmaps.miami.edu """
     
     if 'email_insarmaps' not in custom_template:
       return
