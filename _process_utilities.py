@@ -182,7 +182,6 @@ def set_default_options(inps):
 ##########################################################################
 
 def call_ssara(custom_template_file, slcDir):
-
    out_file = os.getcwd() + '/' + 'out_download_ssara'
    command = 'download_ssara_rsmas.py ' + custom_template_file
    #command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'  # not used because it only works in bash
@@ -258,12 +257,6 @@ def get_work_directory(work_dir, project_name):
             work_dir = os.getcwd()
     work_dir = os.path.abspath(work_dir)
     return work_dir
-  
-##########################################################################
-
-def get_slc_directory(work_dir):
-    slc_dir = work_dir + '/SLC'
-    return slc_dir
 
 ##########################################################################
 
@@ -333,24 +326,33 @@ def create_stack_sentinel_run_files(inps, dem_file):
     if inps.processingMethod == 'squeesar' or inps.processingMethod == 'ps':
        suffix       = '_squeesar'
        extraOptions = ' -P ' + inps.processingMethod
-    command = 'stackSentinel'+suffix+'.py -n ' + str(inps.subswath) + ' -b ' + inps.boundingBox + \
-              ' -c ' + str(inps.numConnections) + \
-              ' -z ' + str(inps.azimuthLooks) + ' -r ' + str(inps.rangeLooks) + \
-              ' -f ' + str(inps.filtStrength) + ' -W ' + inps.workflow + \
-              ' -u ' + inps.unwMethod + ' -C ' + inps.coregistration + \
-              ' -s ' + inps.slcDir + ' -d ' + dem_file + extraOptions + \
-              ' -o ' + inps.orbitDir + ' -a ' + inps.auxDir +' -t \'\' '
 
+
+    prefixletters = ['s', 'o', 'a', 'w', 'd', 'm', 'c', 'O', 'n', 'b', 'x', 'i', 'z',
+                     'r', 'f', 'e', '-snr_misreg_threshold', 'u', 'p', 'C', 'W',
+                     '-start_date', '-stop_date', 't']
+    inpsvalue = ['slcDir', 'orbitDir', 'auxDir', 'workingDir', 'demDir', 'masterDir',
+                 'numConnections', 'numOverlapConnections', 'subswath', 'boundingBox',
+                 'excludeDate', 'includeDate', 'azimuthLooks', 'rangeLooks','filtStrength',
+                 'esdCoherenceThreshold', 'snrThreshold', 'unwMethod','polarization',
+                 'coregistration', 'workflow', 'startDate', 'stopDate', 'textCmd']
+
+    command = 'stackSentinel_rsmas.py' + suffix + extraOptions
+    for value, pref in zip(inpsvalue, prefixletters):
+        keyvalue = eval('inps.' + value)
+        if keyvalue:
+            command = command + ' -' + str(pref) + ' ' + str(keyvalue)
+
+
+    # TODO: Change subprocess call to get back error code and send error code to logger
     if inps.excludeDate is not None:
         command = command + ' -x ' + inps.excludeDate
 
-    out_file = 'out_stack_Sentinel_create_runfiles'
+    out_file = 'out_stackSentinel_create_runfiles'
+    command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
+    
     logger.info(command)
     messageRsmas.log(command)
-
-    command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
-
-    # TODO: Change subprocess call to get back error code and send error code to logger
     process = subprocess.Popen( command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (error, output) = process.communicate()    # FA 11/18: changed order (was output,error) because of stream redirecting
     if process.returncode is not 0 or error or 'Traceback' in output.decode("utf-8"):
@@ -500,19 +502,21 @@ def remove_zero_size_or_length_files(directory):
 
 ##########################################################################
 
-def concatenate_error_files(directory,out_name):
-    """Concatenate error files to one file (*.e files in run_files)."""
-    """FA 11/2018"""
-    error_files  = glob.glob(directory + '/*.e')
+def concatenate_error_files(directory, out_name):
+    """
+    Concatenate error files to one file (*.e files in run_files).
+    :param directory: str
+    :param out_name: str
+    :return: None
+    """
+    error_files = glob.glob(directory + '/*.e')
     with open(out_name, 'w') as outfile:
         for fname in error_files:
             outfile.write('#########################\n')
-            outfile.write('#### '+fname+' \n')
+            outfile.write('#### ' + fname + ' \n')
             outfile.write('#########################\n')
             with open(fname) as infile:
                 outfile.write(infile.read())
-
-##########################################################################
 
 ##########################################################################
 
