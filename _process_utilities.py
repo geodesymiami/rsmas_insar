@@ -251,8 +251,6 @@ def set_inps_value_from_template(inps, template_key,
             logger.log(loglevel.ERROR, '{} is required'.format(template_key))
             raise Exception('ERROR: {0} is required'.format(template_key))
 
-
-
 ##########################################################################
 
 
@@ -454,7 +452,9 @@ def concatenate_error_files(directory, out_name):
                 
     return None           
                 
-                
+    
+    
+    
         
 ############################### NO USE:#############################################     
         
@@ -504,8 +504,6 @@ def submit_insarmaps_job(command_list, inps):
    sys.exit(0)
 
 
-
-
 ##########################################################################
 
 def check_error_files_sentinelstack(pattern):
@@ -531,8 +529,6 @@ def check_error_files_sentinelstack(pattern):
                     sys.stderr.write('Skipped error in: '+efile+'\n')
                 else:
                     sys.exit('Error file found: '+efile)
-
-
 
 ##########################################################################
 
