@@ -29,7 +29,7 @@ logger = rsmas_logger(file_name=logfile_name)
 ###############################################################################
 
 TEMPLATE = '''# vim: set filetype=cfg:
-##------------------------ TopsStack_template.txt ------------------------##
+##------------------------ stackSentinel_template.txt ------------------------##
 ## 1. topsStack options
 
 sentinelStack.slcDir                      = auto         # [SLCs dir]
