@@ -8,13 +8,12 @@ import sys
 from rsmas_logging import rsmas_logger, loglevel
 import argparse
 import subprocess
-from _process_utilities import get_project_name
+from _process_utilities import get_project_name, send_logger
 from _process_utilities import remove_zero_size_or_length_files, concatenate_error_files
 from _processSteps import create_or_update_template
 
 
-logfile_name = os.getenv('OPERATIONS') + '/LOGS/execute_stacksentinel_run_files.log'
-logger = rsmas_logger(file_name=logfile_name)
+logger  = send_logger()
 
 ##############################################################################
 EXAMPLE = """example:
