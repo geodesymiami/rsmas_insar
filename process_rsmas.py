@@ -13,9 +13,9 @@ import os
 import sys
 import time
 
-from _process_utilities  import get_work_directory, get_project_name, loglevel
+from _process_utilities  import get_work_directory, get_project_name, send_logger
 import _processSteps as prs
-from rsmas_logging import rsmas_logger, loglevel
+from rsmas_logging import loglevel
 
 logger  = send_logger()
 
