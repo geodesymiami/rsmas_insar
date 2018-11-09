@@ -194,7 +194,7 @@ def command_line_parse():
 
     inps = parser.parse_args()
     if inps.custom_template_file and os.path.basename(
-            inps.custom_template_file) == 'TopsStack_template.txt':
+            inps.custom_template_file) == 'stackSentinel_template.txt':
         inps.custom_template_file = None
 
 
@@ -203,7 +203,8 @@ def command_line_parse():
     inps.flag_makerun = False
     inps.flag_process = False
     inps.flag_pysar = False
-
+    inps.stoppysarload = False
+    
     if inps.startmakerun:
         inps.flag_makerun = True
         inps.flag_process = True
@@ -215,16 +216,19 @@ def command_line_parse():
         inps.flag_pysar = True
         inps.flag_makerun = False
         inps.startssara = False
+        
     if inps.startpysar:
         inps.flag_pysar = True
         inps.flag_process = False
         inps.flag_makerun = False
         inps.startssara = False
+        
     if inps.startinsarmaps:
         inps.startssara = False
         inps.flag_process = False
         inps.flag_makerun = False
         inps.flag_insarmaps = True
+        
     if inps.startssara:
         inps.flag_ssara = True
         inps.flag_makerun = True
@@ -242,6 +246,7 @@ def command_line_parse():
     logger.log(loglevel.DEBUG, 'stopmakerun:    {}'.format(inps.stopmakerun))
     logger.log(loglevel.DEBUG, 'stopprocess:    {}'.format(inps.stopprocess))
     logger.log(loglevel.DEBUG, 'stoppysar:      {}'.format(inps.stoppysar))
+    logger.log(loglevel.DEBUG, 'stoppysarload:  {}'.format(inps.stoppysarload))
 
     return inps
 
@@ -428,7 +433,8 @@ def run_pysar(inps, start_time):
             shutil.rmtree('PYSAR')
 
         putils.call_pysar(custom_template=inps.custom_template,
-                   custom_template_file=inps.custom_template_file)
+                   custom_template_file=inps.custom_template_file,
+                         flag_load_and_stop=inps.stoppysarload)
 
         # Record runtime and email results
         time_diff = time.time() - start_time
