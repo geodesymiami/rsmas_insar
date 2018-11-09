@@ -30,7 +30,7 @@ logger = rsmas_logger(file_name=logfile_name)
 
 TEMPLATE = '''# vim: set filetype=cfg:
 ##------------------------ stackSentinel_template.txt ------------------------##
-## 1. topsStack options
+## 1. stackSentinel options
 
 sentinelStack.slcDir                      = auto         # [SLCs dir]
 sentinelStack.orbitDir                    = auto         # [/nethome/swdowinski/S1orbits/]
@@ -122,7 +122,7 @@ def _remove_directories(directories_to_delete):
 def create_default_template():
     """ Creates default template file. """
 
-    template_file = 'TopsStack_template.txt'
+    template_file = 'stackSentinel_template.txt'
     if not os.path.isfile(template_file):
         logger.log(loglevel.INFO, 'generate default template file: {}'.format(template_file))
         with open(template_file, 'w') as file:
