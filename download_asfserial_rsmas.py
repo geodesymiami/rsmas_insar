@@ -39,7 +39,7 @@ def generate_files_csv():
 		empty values to eliminate errors in download_ASF_serial.py.
 	
 	"""
-	ssaraopt = generate_ssaraopt_string(templatefile=inps.template)
+	ssaraopt = generate_ssaraopt_string(template_file=inps.template)
 	ssaraopt = ssaraopt.split(' ')
 	
 	filecsv_options = ['ssara_federated_query.py']+ssaraopt+['--print', '|', 'awk', "'BEGIN{FS=\",\"; ORS=\",\"}{ print $14}'", '>', 'files.csv']

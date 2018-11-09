@@ -325,9 +325,9 @@ if __name__ == "__main__":
 		
 		setup_logging_handlers(dataset, "a")
 		
-		templatefile = templates_directory+'/'+dataset+'.template'
+		template_file = templates_directory+'/'+dataset+'.template'
 		# Generate SSARA Options to Use
-		ssaraopt = generate_ssaraopt_string(templatefile=templatefile)
+		ssaraopt = generate_ssaraopt_string(template_file=template_file)
 		ssaraopt = 'ssara_federated_query.py ' + ssaraopt + ' --print'
 		ssaraopt=ssaraopt.split(' ')
 		
