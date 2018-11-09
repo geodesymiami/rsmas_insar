@@ -17,11 +17,10 @@ sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
 
 from _processSteps import create_or_update_template
-from _process_utilities  import get_work_directory, get_project_name
+from _process_utilities  import get_work_directory, get_project_name, send_logger
 
 
-logfile_name = os.getenv('OPERATIONS') +'/LOGS/ingest_insarmaps.log'
-logger = rsmas_logger(file_name=logfile_name)
+logger  = send_logger()
 
 
 ##############################################################################
