@@ -76,28 +76,19 @@ if __name__ == "__main__":
         script = 'stackSentinel_squeesar.py'
         extraOptions = '--processingmethod' + inps.processingMethod
 
-    prefixletters = ['s', 'o', 'a', 'w', 'd', 'm', 'c', 'O', 'n', 'b', 'x', 'i', 'z',
-                     'r', 'f', 'e', '-snr_misreg_threshold', 'u', 'p', 'C', 'W',
-                     '-start_date', '-stop_date', 't']
+        
+    prefixletters = ['-slc_directory', '-orbit_directory', '-aux_directory', '-working_directory', 
+                    '-dem', '-master_date', '-num_connections', '-num_overlap_connections', 
+                     '-swath_num', '-bbox', '-exclude_dates', '-include_dates', '-azimuth_looks',
+                     '-range_looks', '-filter_strength', '-esd_coherence_threshold', '-snr_misreg_threshold', 
+                     '-unw_method', '-polarization', '-coregistration', '-workflow',
+                     '-start_date', '-stop_date', '-text_cmd']
     
     inpsvalue = ['slcDir', 'orbitDir', 'auxDir', 'workingDir', 'demDir', 'masterDir',
                  'numConnections', 'numOverlapConnections', 'subswath', 'boundingBox',
                  'excludeDate', 'includeDate', 'azimuthLooks', 'rangeLooks', 'filtStrength',
                  'esdCoherenceThreshold', 'snrThreshold', 'unwMethod', 'polarization',
-                 'coregistration', 'workflow', 'startDate', 'stopDate', 'textCmd']    
-        
-    #prefixletters = ['-slc_directory', '-orbit_directory', '-aux_directory', '-working_directory', 
-    #                '-dem', '-master_date', '-num_connections', '-num_overlap_connections', 
-    #                 '-swath_num', '-bbox', '-exclude_dates', '-include_dates', '-azimuth_looks',
-    #                 '-range_looks', '-filter_strength', '-esd_coherence_threshold', '-snr_misreg_threshold', 
-    #                 '-unw_method', '-polarization', '-coregistration', '-workflow',
-    #                 '-start_date', '-stop_date', '-text_cmd']
-    
-    #inpsvalue = ['slcDir', 'orbitDir', 'auxDir', 'workingDir', 'demDir', 'masterDir',
-    #             'numConnections', 'numOverlapConnections', 'subswath', 'boundingBox',
-    #             'excludeDate', 'includeDate', 'azimuthLooks', 'rangeLooks', 'filtStrength',
-    #             'esdCoherenceThreshold', 'snrThreshold', 'unwMethod', 'polarization',
-    #             'coregistration', 'workflow', 'startDate', 'stopDate', 'textCmd']
+                 'coregistration', 'workflow', 'startDate', 'stopDate', 'textCmd']
 
     command = script + extraOptions
 
