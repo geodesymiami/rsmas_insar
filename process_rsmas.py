@@ -81,18 +81,18 @@ if __name__ == "__main__":
 
     # Check for DEM and create sentinel run files
     # running the script:
-    #     make_run_files_rsmas.py $TE/template
+    #     create_stacksentinel_run_files.py $TE/template
 
-    prs.make_runfiles(inps)
+    prs.create_runfiles(inps)
 
     #########################################
     # startprocess: Execute run files
     #########################################
 
     # Running the script:
-    #    execute_rsmas_run_files.py $TE/template starting_run stopping_run
+    #    execute_stacksentinel_run_files.py $TE/template starting_run stopping_run
     #    Example for running run 1 to 4:
-    #    execute_rsmas_run_files.py $TE/template 1 4
+    #    execute_stacksentinel_run_files.py $TE/template 1 4
 
     prs.process_runfiles(inps)
 
