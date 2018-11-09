@@ -201,7 +201,7 @@ def call_ssara(custom_template_file, slcDir):
 
 ##########################################################################
 
-def call_pysar(custom_template, custom_template_file):
+def call_pysar(custom_template, custom_template_file,flag_load_and_stop):
 
     # TODO: Change subprocess call to get back error code and send error code to logger
     logger.debug('\n*************** running pysar ****************')
@@ -214,6 +214,10 @@ def call_pysar(custom_template, custom_template_file):
     if status is not 0:
         logger.error('ERROR in pysarApp.py --load-data')
         raise Exception('ERROR in pysarApp.py --load-data')
+
+    if flag_load_and_stop:
+        logger.debug('Exit as planned after loading into pysar')
+        return
 
     # clean after loading data for cleanopt >= 2
     if 'All data needed found' in open('out_pysar.log').read():
@@ -323,10 +327,10 @@ def create_or_copy_dem(work_dir, template, custom_template_file):
 def create_stack_sentinel_run_files(inps, dem_file):
     suffix  = ''
     extraOptions = ''
+    inps.demDir = dem_file
     if inps.processingMethod == 'squeesar' or inps.processingMethod == 'ps':
        suffix       = '_squeesar'
        extraOptions = ' -P ' + inps.processingMethod
-
 
     prefixletters = ['s', 'o', 'a', 'w', 'd', 'm', 'c', 'O', 'n', 'b', 'x', 'i', 'z',
                      'r', 'f', 'e', '-snr_misreg_threshold', 'u', 'p', 'C', 'W',
@@ -342,7 +346,6 @@ def create_stack_sentinel_run_files(inps, dem_file):
         keyvalue = eval('inps.' + value)
         if keyvalue:
             command = command + ' -' + str(pref) + ' ' + str(keyvalue)
-
 
     # TODO: Change subprocess call to get back error code and send error code to logger
     if inps.excludeDate is not None:
