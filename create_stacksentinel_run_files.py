@@ -106,11 +106,11 @@ if __name__ == "__main__":
     temp_list = ['run_files', 'configs', 'orbits']
     _remove_directories(temp_list)
 
-    #process = subprocess.Popen( command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    #(error, output) = process.communicate()    # FA 11/18: changed order (was output,error) because of stream redirecting
-    #if process.returncode is not 0 or error or 'Traceback' in output.decode("utf-8"):
-    status = subprocess.Popen( command, shell=True).wait()
-    if status is not 0: 
+    process = subprocess.Popen( command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (error, output) = process.communicate()    # FA 11/18: changed order (was output,error) because of stream redirecting
+    if process.returncode is not 0 or error or 'Traceback' in output.decode("utf-8"):
+    #status = subprocess.Popen( command, shell=True).wait()
+    #if status is not 0: 
         logger.log(loglevel.ERROR, 'ERROR making run_files using {}'.format(script))
         raise Exception('ERROR making run_files using {}'.format(script))
 
