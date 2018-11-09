@@ -103,6 +103,7 @@ def create_process_sentinel_parser():
 	parser.add_argument('--startprocess', dest='startprocess', action='store_true', help='process using sentinelstack package')
 	parser.add_argument('--stopprocess', dest='stopprocess', action='store_true', help='stop after processing')
 	parser.add_argument('--startpysar', dest='startpysar', action='store_true', help='run pysar')
+	parser.add_argument('--stoppysarload', dest='stoppysarload', action='store_true', help='stop after loading into pysar')
 	parser.add_argument('--stoppysar', dest='stoppysar', action='store_true', help='stop after pysar processing')
 	parser.add_argument('--startinsarmaps', dest='startinsarmaps', action='store_true', help='ingest into insarmaps')
 	parser.add_argument('--restart', dest='restart', action='store_true', help='remove $OPERATIONS directory before starting')
@@ -130,6 +131,7 @@ def command_line_parse(args):
 	logger.info("\t\t--startprocess     : %s\n", inps.startprocess)
 	logger.info("\t\t--stopprocess      : %s\n", inps.stopprocess)
 	logger.info("\t\t--startpysar       : %s\n", inps.startpysar)
+	logger.info("\t\t--stoppysarload    : %s\n", inps.stoppysarload)
 	logger.info("\t\t--stoppysar        : %s\n", inps.stoppysar)
 	logger.info("\t\t--startinsarmaps   : %s\n", inps.startinsarmaps)
 	logger.info("\t\t--testsheet	    : %s\n", inps.test_sheet)
@@ -210,6 +212,8 @@ def run_process_sentinel():
 		psen_extra_options.append('--stopprocess') 
 	if inps.startpysar:
 		psen_extra_options.append('--startpysar')
+	if inps.stoppysarload:
+		psen_extra_options.append('--stoppysarload')
 	if inps.stoppysar:
 		psen_extra_options.append('--stoppysar')
 	if inps.startinsarmaps:
@@ -368,7 +372,8 @@ if __name__ == "__main__":
 			time.sleep(60)
 			
 		log_dir = os.getenv('OPERATIONS')+'/LOGS/'+dset+'_'+str(most_recent)[0:10]+'_out'
-		copy_error_files_to_logs( project_dir=os.getcwd(), destination_dir=log_dir)
+		work_dir = os.getenv('SCRATCHDIR') + '/' + dset
+		copy_error_files_to_logs( project_dir=work_dir, destination_dir=log_dir)
 
 		logger.info("\tCOMPLETED AT: %s", datetime.fromtimestamp(time.time()).strftime(date_format))
 		logger.info("----------------------------------\n")	
