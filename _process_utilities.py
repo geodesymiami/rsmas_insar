@@ -18,7 +18,7 @@ from pysar.utils import readfile
 from rsmas_logging import rsmas_logger, loglevel
 import shutil
 from collections import namedtuple
-import password_config as password
+
 from pysar.defaults.auto_path import autoPath
 import messageRsmas
 ###############################################################################
