@@ -9,12 +9,12 @@ import sys
 import glob
 
 import argparse
-from rsmas_logging import rsmas_logger, loglevel
+from rsmas_logging import loglevel
 import messageRsmas
 
 from _processSteps import create_or_update_template, create_or_copy_dem
-from _process_utilities  import get_work_directory, get_project_name, send_logger
-from _process_utilities  import set_default_options, _remove_directories
+from _process_utilities  import get_work_directory, get_project_name
+from _process_utilities  import _remove_directories, send_logger
 
 sys.path.insert(0, os.getenv('SENTINEL_STACK'))
 sys.path.insert(0, os.getenv('SQUEESAR'))
