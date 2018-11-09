@@ -400,8 +400,58 @@ def email_insarmaps_results(custom_template):
     status = subprocess.Popen(command, shell=True).wait()
     if status is not 0:
        sys.exit('Error in email_insarmaps_results')
+    
+##########################################################################
 
 
+def file_len(fname):
+    """Calculate the number of lines in a file."""
+    
+    p = subprocess.Popen(['wc', '-l', fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    result, err = p.communicate()
+    if p.returncode != 0:
+        raise IOError(err)
+        
+    return int(result.strip().split()[0])    
+
+##########################################################################
+
+
+def remove_zero_size_or_length_files(directory):
+    """Removes files with zero size or zero length (*.e files in run_files)."""
+    
+    error_files  = glob.glob(directory + '/*.e')
+    for item in error_files:
+        if os.path.getsize(item) == 0:       # remove zero-size files
+            os.remove(item)
+        elif file_len(item) == 0:
+            os.remove(item)                  # remove zero-line files
+            
+    return None
+
+##########################################################################
+
+
+def concatenate_error_files(directory, out_name):
+    """
+    Concatenate error files to one file (*.e files in run_files).
+    :param directory: str
+    :param out_name: str
+    :return: None
+    """
+    
+    error_files = glob.glob(directory + '/*.e')
+    with open(out_name, 'w') as outfile:
+        for fname in error_files:
+            outfile.write('#########################\n')
+            outfile.write('#### ' + fname + ' \n')
+            outfile.write('#########################\n')
+            with open(fname) as infile:
+                outfile.write(infile.read())
+                
+    return None           
+                
+                
         
 ############################### NO USE:#############################################     
         
@@ -450,44 +500,8 @@ def submit_insarmaps_job(command_list, inps):
    os.system(job_cmd)
    sys.exit(0)
 
-##########################################################################
 
-def file_len(fname):
-    """Calculate the number of lines in a file."""
-    p = subprocess.Popen(['wc', '-l', fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    result, err = p.communicate()
-    if p.returncode != 0:
-        raise IOError(err)
-    return int(result.strip().split()[0])
 
-##########################################################################
-
-def remove_zero_size_or_length_files(directory):
-    """Removes files with zero size or zero length (*.e files in run_files)."""
-    error_files  = glob.glob(directory + '/*.e')
-    for item in error_files:
-        if os.path.getsize(item) == 0:       # remove zero-size files
-            os.remove(item)
-        elif file_len(item) == 0:
-            os.remove(item)                  # remove zero-line files
-
-##########################################################################
-
-def concatenate_error_files(directory, out_name):
-    """
-    Concatenate error files to one file (*.e files in run_files).
-    :param directory: str
-    :param out_name: str
-    :return: None
-    """
-    error_files = glob.glob(directory + '/*.e')
-    with open(out_name, 'w') as outfile:
-        for fname in error_files:
-            outfile.write('#########################\n')
-            outfile.write('#### ' + fname + ' \n')
-            outfile.write('#########################\n')
-            with open(fname) as infile:
-                outfile.write(infile.read())
 
 ##########################################################################
 
