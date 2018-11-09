@@ -10,7 +10,7 @@ import sys
 import glob
 import shutil
 import argparse
-from rsmas_logging import rsmas_logger, loglevel
+from rsmas_logging import loglevel
 import messageRsmas
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
