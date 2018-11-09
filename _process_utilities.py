@@ -494,19 +494,21 @@ def remove_zero_size_or_length_files(directory):
 
 ##########################################################################
 
-def concatenate_error_files(directory,out_name):
-    """Concatenate error files to one file (*.e files in run_files)."""
-    """FA 11/2018"""
-    error_files  = glob.glob(directory + '/*.e')
+def concatenate_error_files(directory, out_name):
+    """
+    Concatenate error files to one file (*.e files in run_files).
+    :param directory: str
+    :param out_name: str
+    :return: None
+    """
+    error_files = glob.glob(directory + '/*.e')
     with open(out_name, 'w') as outfile:
         for fname in error_files:
             outfile.write('#########################\n')
-            outfile.write('#### '+fname+' \n')
+            outfile.write('#### ' + fname + ' \n')
             outfile.write('#########################\n')
             with open(fname) as infile:
                 outfile.write(infile.read())
-
-##########################################################################
 
 ##########################################################################
 
