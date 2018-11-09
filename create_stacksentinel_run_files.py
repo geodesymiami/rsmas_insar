@@ -81,15 +81,13 @@ if __name__ == "__main__":
                      '-swath_num', '-bbox', '-exclude_dates', '-include_dates', '-azimuth_looks',
                      '-range_looks', '-filter_strength', '-esd_coherence_threshold', '-snr_misreg_threshold', 
                      '-unw_method', '-polarization', '-coregistration', '-workflow',
-                     '-start_date', '-stop_date', '-text_cmd', '-useGPU', '-use_virtual_files',
-                     'ilist', 'clean_up', 'layover_msk', 'water_msk']
+                     '-start_date', '-stop_date', '-text_cmd']
     
     inpsvalue = ['slcDir', 'orbitDir', 'auxDir', 'workingDir', 'demDir', 'masterDir',
                  'numConnections', 'numOverlapConnections', 'subswath', 'boundingBox',
                  'excludeDate', 'includeDate', 'azimuthLooks', 'rangeLooks', 'filtStrength',
                  'esdCoherenceThreshold', 'snrThreshold', 'unwMethod', 'polarization',
-                 'coregistration', 'workflow', 'startDate', 'stopDate', 'textCmd', 'useGPU',
-                 'useVirtualFiles', 'ilist', 'cleanup', 'layovermsk', 'watermsk']
+                 'coregistration', 'workflow', 'startDate', 'stopDate', 'textCmd']
 
     command = script + extraOptions
 
@@ -97,11 +95,6 @@ if __name__ == "__main__":
         keyvalue = eval('inps.' + value)
         if keyvalue is not None:
             command = command + ' -' + str(pref) + ' ' + str(keyvalue)
-            
-    if inps.ilistonly == 'yes': 
-        command = command + ' -ilistonly'
-    if inps.force == 'yes': 
-        command = command + ' --force'
     
     out_file = 'out_stackSentinel_create_runfiles'
     command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
