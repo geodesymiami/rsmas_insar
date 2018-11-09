@@ -11,6 +11,7 @@ import glob
 import shutil
 import argparse
 from rsmas_logging import rsmas_logger, loglevel
+import messageRsmas
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
@@ -65,7 +66,7 @@ if __name__ == "__main__":
     mbtiles_file = json_folder + '/' + os.path.splitext(os.path.basename(hdfeos_file))[0] + '.mbtiles'
 
     if os.path.isdir(json_folder):
-        logger.info('Removing directory: %s', json_folder)
+        logger.log(loglevel.INFO, 'Removing directory: {}'.format(json_folder))
         shutil.rmtree(json_folder)
 
     command1 = 'hdfeos5_2json_mbtiles.py ' + hdfeos_file + ' ' + json_folder + ' |& tee out_insarmaps.log'
@@ -78,12 +79,20 @@ if __name__ == "__main__":
         f.write(command2 + '\n')
 
 
+    out_file = 'out_insarmaps'
+    logger.log(loglevel.INFO, command1)
+    messageRsmas.log(command1)
+    command1 = '('+command1+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
     status = subprocess.Popen(command1, shell=True).wait()
     if status is not 0:
         logger.log(loglevel.ERROR, 'ERROR in hdfeos5_2json_mbtiles.py')
         raise Exception('ERROR in hdfeos5_2json_mbtiles.py')
 
 
+    # TODO: Change subprocess call to get back error code and send error code to logger
+    logger.log(loglevel.INFO, command2)
+    messageRsmas.log(command2)
+    command2 = '('+command2+' | tee -a '+out_file+'.o) 3>&1 1>&2 2>&3 | tee -a '+out_file+'.e'
     status = subprocess.Popen(command2, shell=True).wait()
     if status is not 0:
         logger.log(loglevel.ERROR, 'ERROR in json_mbtiles2insarmaps.py')
