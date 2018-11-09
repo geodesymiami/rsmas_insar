@@ -630,4 +630,4 @@ def email_insarmaps_results(custom_template):
     status = subprocess.Popen(command, shell=True).wait()
     if status is not 0:
        sys.exit('Error in email_insarmaps_results')
-
+ 
