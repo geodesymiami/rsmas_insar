@@ -13,13 +13,11 @@ import os
 import sys
 import time
 
-from _process_utilities  import get_work_directory, get_project_name
+from _process_utilities  import get_work_directory, get_project_name, loglevel
 import _processSteps as prs
 from rsmas_logging import rsmas_logger, loglevel
 
-
-logfile_name = os.getenv('OPERATIONS') + '/LOGS/process_rsmas.log'
-logger = rsmas_logger(file_name=logfile_name)
+logger  = send_logger()
 
 ###############################################################################
 
