@@ -59,14 +59,16 @@ sentinelStack.stopDate                    = auto         # [YYYY-MM-DD]. auto fo
 sentinelStack.useGPU                      = auto         # Allow App to use GPU when available [default: False]
 sentinelStack.processingMethod            = auto         # [sbas, squeesar, ps]
 sentinelStack.demMethod                   = auto         # [bbox, ssara]
-sentinelStack.pairList                    = auto         # [file] file containing pairs to process in each line. auto for None
-sentinelStack.overridePairs               = auto         # [yes, no] override program-generated pairs with the files on the list. auto for no
-sentinelStack.cleanUp                     = auto         # [False, True] Remove fine*int burst fines. auto for False
-sentinelStack.layoverMask                 = auto         # [False, True] Generate layover mask and remove from filtered phase. auto for False
-sentinelStack.waterMask                   = auto         # [False, True] Generate water mask and remove from filtered phase. auto for False
-sentinelStack.virtualFiles                = auto         # [False, True] writing only vrt of merged files (Default: True)
-sentinelStack.forceOverride               = auto         # Force new acquisition override. auto for no
 '''
+#### More options to be added if required:
+#sentinelStack.pairList                    = auto         # [file] file containing pairs to process in each line. auto for None
+#sentinelStack.overridePairs               = auto         # [yes, no] override program-generated pairs with the files on the list. auto for no
+#sentinelStack.cleanUp                     = auto         # [False, True] Remove fine*int burst fines. auto for False
+#sentinelStack.layoverMask                 = auto         # [False, True] Generate layover mask and remove from filtered phase. auto for False
+#sentinelStack.waterMask                   = auto         # [False, True] Generate water mask and remove from filtered phase. auto for False
+#sentinelStack.virtualFiles                = auto         # [False, True] writing only vrt of merged files (Default: True)
+#sentinelStack.forceOverride               = auto         # Force new acquisition override. auto for no
+
 
 ##########################################################################
 
@@ -188,14 +190,15 @@ def set_default_options(inps):
          TemplateTuple('sentinelStack.useGPU', 'useGPU', False),
          TemplateTuple('sentinelStack.processingMethod', 'processingMethod', 'sbas'),
          TemplateTuple('sentinelStack.demMethod', 'demMethod', 'bbox'),
-         TemplateTuple('sentinelStack.pairList', 'ilist', None),
-         TemplateTuple('sentinelStack.overridePairs', 'ilistonly', 'no'),
-         TemplateTuple('sentinelStack.cleanUp', 'cleanup', False),
-         TemplateTuple('sentinelStack.layoverMask', 'layovermsk', False),
-         TemplateTuple('sentinelStack.waterMask', 'watermsk', False),
-         TemplateTuple('sentinelStack.virtualFiles', 'useVirtualFiles', True),
-         TemplateTuple('sentinelStack.forceOverride', 'force', 'no')
          ]
+        
+        # TemplateTuple('sentinelStack.pairList', 'ilist', None),
+        # TemplateTuple('sentinelStack.overridePairs', 'ilistonly', 'no'),
+        # TemplateTuple('sentinelStack.cleanUp', 'cleanup', False),
+        # TemplateTuple('sentinelStack.layoverMask', 'layovermsk', False),
+        # TemplateTuple('sentinelStack.waterMask', 'watermsk', False),
+        # TemplateTuple('sentinelStack.virtualFiles', 'useVirtualFiles', True),
+        # TemplateTuple('sentinelStack.forceOverride', 'force', 'no')
           
     # Iterate over required and template values, adding them to `inps`
     for template_val in required_template_vals:
