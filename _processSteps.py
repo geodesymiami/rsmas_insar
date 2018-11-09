@@ -383,8 +383,8 @@ def create_runfiles(inps):
         # Check the performance, change in subprocess
         status = subprocess.Popen(command, shell=True).wait()
         if status is not 0:
-            logger.log(loglevel.ERROR, 'ERROR in make_run_files_rsmas.py')
-            raise Exception('ERROR in make_run_files_rsmas.py')
+            logger.log(loglevel.ERROR, 'ERROR in create_stacksentinel_run_files.py')
+            raise Exception('ERROR in create_stacksentinel_run_files.py')
         if inps.stopmakerun:
             logger.log(loglevel.INFO, 'Exit as planned after making sentinel run files ')
             sys.exit(0)
@@ -403,8 +403,8 @@ def process_runfiles(inps):
         # Check the performance, change in subprocess
         status = subprocess.Popen(command, shell=True).wait()
         if status is not 0:
-            logger.log(loglevel.ERROR, 'ERROR in execute_run_files_rsmas.py')
-            raise Exception('ERROR in execute_run_files_rsmas.py')
+            logger.log(loglevel.ERROR, 'ERROR in execute_stacksentinel_run_files.py')
+            raise Exception('ERROR in execute_stacksentinel_run_files.py')
 
 
         if int(inps.custom_template['cleanopt']) >= 1:
