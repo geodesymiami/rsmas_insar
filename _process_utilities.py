@@ -55,8 +55,8 @@ sentinelStack.demDir                      = auto         # [DEM file dir]
 sentinelStack.master                      = auto         # [Master acquisition]
 sentinelStack.numConnections              = auto         # [5] auto for 3
 sentinelStack.numOverlapConnections       = auto         # [N of overlap Ifgrams for NESD. Default : 3]
-sentinelStack.swathNum                    = None         # [List of swaths. Default : '1 2 3']
-sentinelStack.boundingBox                        = None         # [ '-1 0.15 -91.7 -90.9'] required
+sentinelStack.subswath                    = None         # [List of swaths. Default : '1 2 3']
+sentinelStack.boundingBox                 = None         # [ '-1 0.15 -91.7 -90.9'] required
 sentinelStack.textCmd                     = auto         # [eg: source ~/.bashrc]
 sentinelStack.excludeDates                = auto         # [20080520,20090817 / no], auto for no
 sentinelStack.includeDates                = auto         # [20080520,20090817 / no], auto for all
@@ -73,7 +73,7 @@ sentinelStack.startDate                   = auto         # [YYYY-MM-DD]. auto fo
 sentinelStack.stopDate                    = auto         # [YYYY-MM-DD]. auto for end date available
 sentinelStack.useGPU                      = auto         # Allow App to use GPU when available [default: False]
 sentinelStack.processingMethod            = auto         # [sbas, squeesar, ps]
-sentinelStack.demMethos                   = auto         # [bbox, ssara]
+sentinelStack.demMethod                   = auto         # [bbox, ssara]
 '''
 
 
@@ -140,7 +140,7 @@ def set_default_options(inps):
     # Processing methods added by Sara 2018  (values can be: 'sbas', 'squeesar', 'ps'), ps is not
     # implemented yet
     required_template_vals = \
-        [TemplateTuple('sentinelStack.swathNum', 'subswath', None),
+        [TemplateTuple('sentinelStack.subswath', 'subswath', None),
          TemplateTuple('sentinelStack.boundingBox', 'boundingBox', None),
          ]
     optional_template_vals = \
@@ -181,33 +181,36 @@ def set_default_options(inps):
 
 ##########################################################################
 
-
 def call_ssara(custom_template_file, slcDir):
-    out_file = os.getcwd() + '/' + 'out_download.log'
-    download_command = '{python_download_script} ' + custom_template_file + ' |& tee ' + out_file
-    command = 'ssh pegasus.ccs.miami.edu ' \
-              '\"s.cgood;' \
-              'cd ' + slcDir + '; ' + \
-              os.getenv('PARENTDIR') + \
-              '/sources/rsmas_isce/' + download_command + '\"'
 
-    os.chdir(slcDir)
-    # Run download script on both scripts
-    for download_file in ['download_ssara_rsmas.py', 'download_asfserial_rsmas.py']:
-        messageRsmas.log(command.format(python_download_script = download_file))
-        messageRsmas.log(download_command)
-        subprocess.Popen(command.format(python_download_script = download_file), shell=True).wait()
-    os.chdir('..')
+   out_file = os.getcwd() + '/' + 'out_download_ssara'
+   command = 'download_ssara_rsmas.py ' + custom_template_file
+   #command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'  # not used because it only works in bash
+   messageRsmas.log(command)
+   command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e'
+   command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' +  command + '\"'
+   status = subprocess.Popen(command_ssh, shell=True).wait()
+   print('Exit status from download_ssara_rsmas.py:',status)
 
+   out_file = os.getcwd() + '/' + 'out_download_asfserial'
+   command = 'download_asfserial_rsmas.py ' + custom_template_file
+   messageRsmas.log(command)
+   command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e'
+   command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' +  command + '\"'
+   status = subprocess.Popen(command_ssh, shell=True).wait()
+   print('Exit status from download_asfserial_rsmas.py:',status)
 
 ##########################################################################
 
-
 def call_pysar(custom_template, custom_template_file):
 
+    # TODO: Change subprocess call to get back error code and send error code to logger
     logger.debug('\n*************** running pysar ****************')
     command = 'pysarApp.py ' + custom_template_file + ' --load-data |& tee out_pysar.log'
+    out_file = 'out_pysar_load'
+    logger.info(command)
     messageRsmas.log(command)
+    command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
     status = subprocess.Popen(command, shell=True).wait()
     if status is not 0:
         logger.error('ERROR in pysarApp.py --load-data')
@@ -215,14 +218,19 @@ def call_pysar(custom_template, custom_template_file):
 
     # clean after loading data for cleanopt >= 2
     if 'All data needed found' in open('out_pysar.log').read():
-        cleanlist = clean_list()
-        print('Cleaning files:  ' + str(cleanlist[int(custom_template['cleanopt'])]))
+        print('Cleaning files:   cleanopt= ' +
+              str(custom_template['cleanopt']))
         if int(custom_template['cleanopt']) >= 2:
-            _remove_directories(cleanlist[int(custom_template['cleanopt'])])
+            _remove_directories(['merged'])
+        if int(custom_template['cleanopt']) >= 3:
+            _remove_directories(['SLC'])
 
-    command = 'pysarApp.py ' + custom_template_file + ' |& tee -a out_pysar.log'
+    command = 'pysarApp.py ' + custom_template_file
+    out_file = 'out_pysar'
+    logger.info(command)
     messageRsmas.log(command)
-    # Check the performance, change in subprocess
+    command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
+    messageRsmas.log(command)
     status = subprocess.Popen(command, shell=True).wait()
     if status is not 0:
         logger.error('ERROR in pysarApp.py')
@@ -242,7 +250,6 @@ def get_project_name(custom_template_file):
 
 ##########################################################################
 
-
 def get_work_directory(work_dir, project_name):
     if not work_dir:
         if autoPath and 'SCRATCHDIR' in os.environ and project_name:
@@ -254,13 +261,11 @@ def get_work_directory(work_dir, project_name):
   
 ##########################################################################
 
-
 def get_slc_directory(work_dir):
     slc_dir = work_dir + '/SLC'
     return slc_dir
 
 ##########################################################################
-
 
 def run_or_skip(custom_template_file):
     if os.path.isfile(custom_template_file):
@@ -271,11 +276,14 @@ def run_or_skip(custom_template_file):
 
 ##########################################################################
 
-
 def create_custom_template(custom_template_file, work_dir):
     if custom_template_file:
         # Copy custom template file to work directory
-        if run_or_skip(custom_template_file) == 'run':
+        if utils.run_or_skip(
+                os.path.basename(
+                    custom_template_file),
+                custom_template_file,
+                check_readable=False) == 'run':
             shutil.copy2(custom_template_file, work_dir)
 
         # Read custom template
@@ -285,7 +293,6 @@ def create_custom_template(custom_template_file, work_dir):
         return dict()
 
 ##########################################################################
-
 
 def create_or_copy_dem(work_dir, template, custom_template_file):
     dem_dir = work_dir + '/DEM'
@@ -298,8 +305,10 @@ def create_or_copy_dem(work_dir, template, custom_template_file):
         else:
             # TODO: Change subprocess call to get back error code and send error code to logger
             command = 'dem_rsmas.py ' + custom_template_file
-            print(command)
+            out_file = 'out_dem_rsmas'
+            logger.info(command)
             messageRsmas.log(command)
+            command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
             status = subprocess.Popen(command, shell=True).wait()
             if status is not 0:
                 logger.error('ERROR while making DEM')
@@ -318,43 +327,32 @@ def create_or_copy_dem(work_dir, template, custom_template_file):
 
 ##########################################################################
 
-
 def create_stack_sentinel_run_files(inps, dem_file):
-    inps.demDir = dem_file
-    suffix = ''
+    suffix  = ''
     extraOptions = ''
     if inps.processingMethod == 'squeesar' or inps.processingMethod == 'ps':
-        suffix = '-squeesar'
-        extraOptions = ' -P ' + inps.processingMethod
+       suffix       = '_squeesar'
+       extraOptions = ' -P ' + inps.processingMethod
+    command = 'stackSentinel'+suffix+'.py -n ' + str(inps.subswath) + ' -b ' + inps.boundingBox + \
+              ' -c ' + str(inps.numConnections) + \
+              ' -z ' + str(inps.azimuthLooks) + ' -r ' + str(inps.rangeLooks) + \
+              ' -f ' + str(inps.filtStrength) + ' -W ' + inps.workflow + \
+              ' -u ' + inps.unwMethod + ' -C ' + inps.coregistration + \
+              ' -s ' + inps.slcDir + ' -d ' + dem_file + extraOptions + \
+              ' -o ' + inps.orbitDir + ' -a ' + inps.auxDir +' -t \'\' '
 
-    prefixletters = ['s', 'o', 'a', 'w', 'd', 'm', 'c', 'O', 'n', 'b', 'x', 'i', 'z',
-                     'r', 'f', 'e', '-snr_misreg_threshold', 'u', 'p', 'C', 'W',
-                     '-start_date', '-stop_date', 't']
-    inpsvalue = ['slcDir', 'orbitDir', 'auxDir', 'workingDir', 'demDir', 'masterDir',
-                 'numConnections', 'numOverlapConnections', 'subswath', 'boundingBox',
-                 'excludeDate', 'includeDate', 'azimuthLooks', 'rangeLooks','filtStrength',
-                 'esdCoherenceThreshold', 'snrThreshold', 'unwMethod','polarization',
-                 'coregistration', 'workflow', 'startDate', 'stopDate', 'textCmd']
+    if inps.excludeDate is not None:
+        command = command + ' -x ' + inps.excludeDate
 
-
-    command = 'stackSentinel_rsmas.py' + suffix + extraOptions
-
-    for value, pref in zip(inpsvalue, prefixletters):
-        keyvalue = eval('inps.' + value)
-        if keyvalue is not None:
-            command = command + ' -' + str(pref) + ' ' + str(keyvalue)
-
-    if inps.useGPU == True:
-        command = command + ' -useGPU '
-
-    command = command + ' |& tee out_stackSentinel.log '
-    # TODO: Change subprocess call to get back error code and send error code to logger
+    out_file = 'out_stack_Sentinel_create_runfiles'
     logger.info(command)
     messageRsmas.log(command)
-    process = subprocess.Popen(
-        command, shell=True,
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (output, error) = process.communicate()
+
+    command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
+
+    # TODO: Change subprocess call to get back error code and send error code to logger
+    process = subprocess.Popen( command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (error, output) = process.communicate()    # FA 11/18: changed order (was output,error) because of stream redirecting
     if process.returncode is not 0 or error or 'Traceback' in output.decode("utf-8"):
         logger.error(
             'Problem with making run_files using stackSentinel.py')
@@ -371,9 +369,8 @@ def create_stack_sentinel_run_files(inps, dem_file):
 
 ##########################################################################
 
-
 def create_default_template():
-    template_file = 'TopsStack_template.txt'
+    template_file = 'sentinelStack_template.txt'
     if not os.path.isfile(template_file):
         logger.info('generate default template file: %s', template_file)
         with open(template_file, 'w') as file:
@@ -396,7 +393,6 @@ def get_memory_defaults(inps):
 
 ##########################################################################
 
-
 def run_insar_maps(work_dir):
     hdfeos_file = glob.glob(work_dir + '/PYSAR/S1*.he5')
     hdfeos_file.append(
@@ -412,26 +408,28 @@ def run_insar_maps(work_dir):
         logger.info('Removing directory: %s', json_folder)
         shutil.rmtree(json_folder)
 
-    command1 = 'hdfeos5_2json_mbtiles.py ' + hdfeos_file + ' ' + json_folder + ' |& tee out_insarmaps.log'
-    command2 = 'json_mbtiles2insarmaps.py -u ' + password.insaruser + ' -p ' + password.insarpass + ' --host ' + \
+    command1 = 'hdfeos5_2json_mbtiles.py ' + hdfeos_file + ' ' + json_folder
+    command2 = 'json_mbtiles2insarmaps.py -u '+password.insaruser+' -p '+password.insarpass+' --host ' + \
                'insarmaps.miami.edu -P rsmastest -U rsmas\@gmail.com --json_folder ' + \
-               json_folder + ' --mbtiles_file ' + mbtiles_file + ' |& tee -a out_insarmaps.log'
+               json_folder + ' --mbtiles_file ' + mbtiles_file
 
     with open(work_dir + '/PYSAR/run_insarmaps', 'w') as f:
         f.write(command1 + '\n')
         f.write(command2 + '\n')
 
-    ######### submit job  ################### (FA 6/2018: the second call (json_mbtiles*) does not work yet)
-    # command_list=['module unload share-rpms65',command1,command2]
-    # submit_insarmaps_job(command_list,inps)
-
-    # TODO: Change subprocess call to get back error code and send error code to logger
+    out_file = 'out_insarmaps'
+    logger.info(command1)
+    messageRsmas.log(command1)
+    command1 = '('+command1+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
     status = subprocess.Popen(command1, shell=True).wait()
     if status is not 0:
         logger.error('ERROR in hdfeos5_2json_mbtiles.py')
         raise Exception('ERROR in hdfeos5_2json_mbtiles.py')
 
     # TODO: Change subprocess call to get back error code and send error code to logger
+    logger.info(command2)
+    messageRsmas.log(command2)
+    command2 = '('+command2+' | tee -a '+out_file+'.o) 3>&1 1>&2 2>&3 | tee -a '+out_file+'.e'
     status = subprocess.Popen(command2, shell=True).wait()
     if status is not 0:
         logger.error('ERROR in json_mbtiles2insarmaps.py')
@@ -452,7 +450,6 @@ def clean_list():
     return cleanlist
 
 ##########################################################################
-
 
 def submit_insarmaps_job(command_list, inps):
 
@@ -545,7 +542,6 @@ def check_error_files_sentinelstack(pattern):
 
 ##########################################################################
 
-
 def _remove_directories(directories_to_delete):
     for directory in directories_to_delete:
         if os.path.isdir(directory):
@@ -621,7 +617,7 @@ def email_insarmaps_results(custom_template):
     hdfeos_file = hdfeos_file[0]
     hdfeos_name = os.path.splitext(os.path.basename(hdfeos_file))[0]
 
-    textStr = 'http://insarmaps.miami.edu/start/-0.008/-78.0/8"\?"startDataset='+hdfeos_name
+    textStr = 'http://insarmaps.miami.edu/start/-0.008/-78.0/7"\?"startDataset='+hdfeos_name
 
     mailCmd = 'echo \"'+textStr+'\" | mail -s Miami_InSAR_results:_'+os.path.basename(cwd)+' '+custom_template['email_insarmaps']
     command = 'ssh pegasus.ccs.miami.edu \" '+mailCmd+'\"'
