@@ -189,12 +189,12 @@ def set_default_options(inps):
          TemplateTuple('sentinelStack.processingMethod', 'processingMethod', 'sbas'),
          TemplateTuple('sentinelStack.demMethod', 'demMethod', 'bbox'),
          TemplateTuple('sentinelStack.pairList', 'ilist', None),
-         TemplateTuple('sentinelStack.overridePairs', 'ilistonly', None),
+         TemplateTuple('sentinelStack.overridePairs', 'ilistonly', 'no'),
          TemplateTuple('sentinelStack.cleanUp', 'cleanup', False),
          TemplateTuple('sentinelStack.layoverMask', 'layovermsk', False),
          TemplateTuple('sentinelStack.waterMask', 'watermsk', False),
          TemplateTuple('sentinelStack.virtualFiles', 'useVirtualFiles', True),
-         TemplateTuple('sentinelStack.forceOverride', 'force', None)
+         TemplateTuple('sentinelStack.forceOverride', 'force', 'no')
          ]
           
     # Iterate over required and template values, adding them to `inps`
