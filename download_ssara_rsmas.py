@@ -16,8 +16,7 @@ import password_config as password
 
 inps = None
 
-logfile_name = os.getenv('OPERATIONS') + '/LOGS/ssara_rsmas.log'
-logger = rsmas_logger(file_name=logfile_name)
+logger  = putils.send_logger()
 
 
 def create_parser():
