@@ -5,7 +5,7 @@
 
 import os
 import sys
-from rsmas_logging import rsmas_logger, loglevel
+from rsmas_logging import loglevel
 import argparse
 import subprocess
 from _process_utilities import get_project_name, send_logger
