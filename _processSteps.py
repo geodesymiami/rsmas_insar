@@ -20,8 +20,7 @@ sys.path.insert(0, os.getenv('SSARAHOME'))
 from pysar.utils import readfile, utils
 import messageRsmas
 
-logfile_name = os.getenv('OPERATIONS') + '/LOGS/process_rsmas.log'
-logger = rsmas_logger(file_name=logfile_name)
+logger  = putils.send_logger()
 
 ####################################################################
 
