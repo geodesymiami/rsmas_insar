@@ -71,7 +71,7 @@ if __name__ == "__main__":
     extraOptions = ''
     if inps.processingMethod == 'squeesar' or inps.processingMethod == 'ps':
         script = 'stackSentinel_squeesar.py'
-        extraOptions = '--processingmethod' + inps.processingMethod
+        extraOptions = ' --processingmethod ' + inps.processingMethod
 
         
     prefixletters = ['-slc_directory', '-orbit_directory', '-aux_directory', '-working_directory', 
