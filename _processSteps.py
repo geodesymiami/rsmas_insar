@@ -332,6 +332,7 @@ def call_ssara(flag_ssara, custom_template_file, slc_dir):
     """ Downloads data with ssara and asfserial scripts. """
 
     if flag_ssara:
+        out_file = os.getcwd() + '/' + 'out_download_ssara'
         command = 'download_ssara_rsmas.py ' + custom_template_file
         messageRsmas.log(command)
         command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e'
