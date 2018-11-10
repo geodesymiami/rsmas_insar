@@ -336,7 +336,7 @@ def call_ssara(flag_ssara, custom_template_file, slc_dir):
         command = 'download_ssara_rsmas.py ' + custom_template_file
         messageRsmas.log(command)
         command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e'
-        command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' +  command + '\"'
+        command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slc_dir + '; ' +  command + '\"'
         status = subprocess.Popen(command_ssh, shell=True).wait()
         print('Exit status from download_ssara_rsmas.py:',status)
 
@@ -344,7 +344,7 @@ def call_ssara(flag_ssara, custom_template_file, slc_dir):
         command = 'download_asfserial_rsmas.py ' + custom_template_file
         messageRsmas.log(command)
         command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e'
-        command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slcDir + '; ' +  command + '\"'
+        command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slc_dir + '; ' +  command + '\"'
         status = subprocess.Popen(command_ssh, shell=True).wait()
         print('Exit status from download_asfserial_rsmas.py:',status)
     
