@@ -49,6 +49,10 @@ if __name__ == "__main__":
     command_line = os.path.basename(inps.custom_template_file)
     logger.log(loglevel.INFO, '##### NEW RUN #####')
     logger.log(loglevel.INFO, 'process_rsmas.py ' + command_line)
+    
+    command_line = os.path.basename(argv[0]) + ' ' + ' '.join(argv[1:len(argv)])
+    messageRsmas.log('##### NEW RUN #####')
+    messageRsmas.log(command_line)
 
     #########################################
     # Submit job
@@ -94,7 +98,6 @@ if __name__ == "__main__":
 
     prs.process_runfiles(inps)
 
-
     #########################################
     # startpysar: running PySAR and email results
     #########################################
@@ -110,5 +113,3 @@ if __name__ == "__main__":
     prs.run_ingest_insarmaps(inps)
 
     logger.log(loglevel.INFO, 'End of process_rsmas')
-
-
