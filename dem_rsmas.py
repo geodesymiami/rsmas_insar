@@ -99,7 +99,7 @@ def main(argv):
        #print("Success.        StdOut \n{}\n".format(output))
        if 'Could not create a stitched DEM. Some tiles are missing' in output:
           os.chdir('..')
-          shutil.rmtree('DEM')
+          #shutil.rmtree('DEM')
           sys.exit('Error in dem.py: Tiles are missing. Ocean???')
 
     xmlFile = glob.glob('demLat_*.wgs84.xml')[0]

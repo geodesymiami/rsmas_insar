@@ -8,6 +8,8 @@ import datetime
 from rsmas_logging import rsmas_logger, loglevel
 import messageRsmas
 import _process_utilities as putils
+import stat
+import glob
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
@@ -62,6 +64,13 @@ def run_download_asf_serial():
 	logger.log(loglevel.INFO, status)
 	return status
 
+def change_file_permissions():
+	""" changes the permissions of downloaded files to 755 """
+	
+	zip_files = glob.glob('S1*.zip')
+	for file in zip_files:
+	    os.chmod(file,0o666)
+
 if __name__ == "__main__":
         
 	command_line_parse(sys.argv[1:])
@@ -79,6 +88,7 @@ if __name__ == "__main__":
 
 	generate_files_csv()
 	succesful = run_download_asf_serial()
+	change_file_permissions()
 	logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
 	logger.log(loglevel.INFO, "------------------------------------")
 
