@@ -50,10 +50,6 @@ if __name__ == "__main__":
     logger.log(loglevel.INFO, '##### NEW RUN #####')
     logger.log(loglevel.INFO, 'process_rsmas.py ' + command_line)
     
-    command_line = os.path.basename(argv[0]) + ' ' + ' '.join(argv[1:len(argv)])
-    messageRsmas.log('##### NEW RUN #####')
-    messageRsmas.log(command_line)
-
     #########################################
     # Submit job
     #########################################
