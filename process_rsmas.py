@@ -12,7 +12,7 @@ from __future__ import print_function
 import os
 import sys
 import time
-
+import messageRsmas
 from _process_utilities  import get_work_directory, get_project_name, send_logger
 import _processSteps as prs
 from rsmas_logging import loglevel
@@ -49,6 +49,8 @@ if __name__ == "__main__":
     command_line = os.path.basename(inps.custom_template_file)
     logger.log(loglevel.INFO, '##### NEW RUN #####')
     logger.log(loglevel.INFO, 'process_rsmas.py ' + command_line)
+    messageRsmas.log('##### NEW RUN #####')
+    messageRsmas.log(command_line)
     
     #########################################
     # Submit job
