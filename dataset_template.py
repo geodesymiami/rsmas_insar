@@ -61,14 +61,6 @@ class Template:
     
 
     def update_options(self, default_template_file):
-        update = False
-        default_options = self.read_options(default_template_file)
-        for key, value in self.options.items():
-            if key in self.options.keys() and self.options[key] != value:
-                update = True
-        if not update:
-            print('No new option value found, skip updating ' + default_template_file)
-            return default_template_file
         
         template_file = self.os.path.abspath(default_template_file)
         tmp_file = template_file+'.tmp'
