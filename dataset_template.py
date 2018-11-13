@@ -16,11 +16,11 @@ class Template:
     shutil = __import__('shutil')
     
     def __init__(self, custom_template_file):
-        """ Initializes Template object with a template file.
+        """ Initializes Template object with a custom template file.
 
             The provided template file is parsed line by line, and each option is added to the options dictionary.
 
-            :param template_file: file, the template file to be accessed
+            :param custom_template_file: file, the template file to be accessed
         """ 
         
         custom_template_file = self.os.path.abspath(custom_template_file)
@@ -36,8 +36,10 @@ class Template:
   
     def read_options(self,template_file):
         """ Read template options.
+        
+            :param template_file: file, the template file to be read and stored in a dictionary
         """
-        # Crates the options dictionary and adds the dataset name as parsed from the filename
+        # Creates the options dictionary and adds the dataset name as parsed from the filename
         # to the dictionary for easy lookup
         options = {'dataset': template_file.split('/')[-1].split(".")[0]}
         with open(template_file) as template:
@@ -61,6 +63,10 @@ class Template:
     
 
     def update_options(self, default_template_file):
+        """ Update default template file with the options from custom template file read initially.
+            
+            :param default_template_file: file, the template file to be updated
+        """
         
         template_file = self.os.path.abspath(default_template_file)
         default_options = self.read_options(template_file)
@@ -77,6 +83,8 @@ class Template:
                         default_options[key] = self.options[key]
                         print('    {}: {} --> {}'.format(key, value, self.options[key]))   
                 f_tmp.write(line)
+        mvCmd = 'mv {} {}'.format(tmp_file, template_file)
+        self.os.system(mvCmd)
         self.options = default_options
         return  self.options
       
