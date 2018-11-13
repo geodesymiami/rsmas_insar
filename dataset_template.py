@@ -28,7 +28,7 @@ class Template:
         self.work_dir =  self.os.getenv('SCRATCHDIR') + '/' + project_name
         template_file = self.os.path.join(self.work_dir, self.os.path.basename(custom_template_file))
         
-        if not os.path.isfile(template_file):
+        if not self.os.path.isfile(template_file):
             self.shutil.copy2(template_file, self.work_dir)
         self.options = self.read_options(template_file)
         
