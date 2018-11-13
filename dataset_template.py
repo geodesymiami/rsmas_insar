@@ -12,22 +12,36 @@ class Template:
             dataset = options['dataset']            # access a specific option
 
     """
-
-    def __init__(self, template_file):
+    
+    os = __import__('os')
+    shutil = __import__('shutil')
+    
+    
+    def __init__(self, custom_template_file):
         """ Initializes Template object with a template file.
 
             The provided template file is parsed line by line, and each option is added to the options dictionary.
 
             :param template_file: file, the template file to be accessed
+        """ 
+        custom_template_file = os.path.abspath(custom_template_file)
+        project_name = os.path.splitext(os.path.basename(custom_template_file))[0]
+        self.work_dir =  os.getenv('SCRATCHDIR') + '/' + project_name
+        template_file = os.path.join(self.work_dir, os.path.basename(custom_template_file))
+        
+        if not os.path.isfile(template_file):
+            shutil.copy2(template_file, self.work_dir)
+        self.options = self.read_options(template_file)
+        
+        
+  
+    def read_options(self,template_file):
+        """ Read template options.
         """
-
         # Crates the options dictionary and adds the dataset name as parsed from the filename
         # to the dictionary for easy lookup
-        self.options = {'dataset': template_file.split('/')[-1].split(".")[0]}
-
-        # Open files for reading
+        options = {'dataset': template_file.split('/')[-1].split(".")[0]}
         with open(template_file) as template:
-
             for line in template:
 
                 if  "=" in line:
@@ -42,8 +56,38 @@ class Template:
                     value = parts[1].rstrip().split("#")[0].strip(" ")
 
                     # Add key and value to the dictionary
-                    self.options[str(key)] = value
+                    options[str(key)] = value
+        return options  
+    
 
+    def update_options(self, default_template_file):
+        update = False
+        default_options = self.read_options(default_template_file)
+        for key, value in self.options.items():
+            if key in self.options.keys() and self.options[key] != value:
+                update = True
+        if not update:
+            print('No new option value found, skip updating ' + default_template_file)
+            return default_template_file
+        
+        template_file = os.path.abspath(default_template_file)
+        tmp_file = template_file+'.tmp'
+        with open(tmp_file, 'w') as f_tmp:
+            for line in open(template_file, 'r'):
+                c = [i.strip() for i in line.strip().split('=', 1)]
+                if not line.startswith(('%', '#')) and len(c) > 1:
+                    key = c[0]
+                    value = str.replace(c[1], '\n', '').split("#")[0].strip()
+                    if key in self.options.keys() and self.options[key] != value:
+                        line = line.replace(value, self.options[key], 1)
+                        default_options[key] = self.options[key]
+                        print('    {}: {} --> {}'.format(key, value, main_options[key]))   
+                f_tmp.write(line)
+        self.options = default_options
+        return  self.options
+      
+            
+    
     def get_options(self):
         """ Provides direct access to the options dictionary.
             This should be used in lieu of directly accessing the options dictionary via Template().options
