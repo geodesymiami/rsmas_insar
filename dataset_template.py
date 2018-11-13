@@ -13,9 +13,6 @@ class Template:
 
     """
     
-    os = __import__('os')
-    shutil = __import__('shutil')
-    
     
     def __init__(self, custom_template_file):
         """ Initializes Template object with a template file.
@@ -24,6 +21,8 @@ class Template:
 
             :param template_file: file, the template file to be accessed
         """ 
+        os = self.__import__('os')
+        shutil = self.__import__('shutil')
         custom_template_file = os.path.abspath(custom_template_file)
         project_name = os.path.splitext(os.path.basename(custom_template_file))[0]
         self.work_dir =  os.getenv('SCRATCHDIR') + '/' + project_name
