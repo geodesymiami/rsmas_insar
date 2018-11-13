@@ -12,7 +12,8 @@ class Template:
             dataset = options['dataset']            # access a specific option
 
     """
-    
+    os = __import__('os')
+    shutil = __import__('shutil')
     
     def __init__(self, custom_template_file):
         """ Initializes Template object with a template file.
@@ -21,15 +22,14 @@ class Template:
 
             :param template_file: file, the template file to be accessed
         """ 
-        os = self.__import__('os')
-        shutil = self.__import__('shutil')
-        custom_template_file = os.path.abspath(custom_template_file)
-        project_name = os.path.splitext(os.path.basename(custom_template_file))[0]
-        self.work_dir =  os.getenv('SCRATCHDIR') + '/' + project_name
-        template_file = os.path.join(self.work_dir, os.path.basename(custom_template_file))
+        
+        custom_template_file = self.os.path.abspath(custom_template_file)
+        project_name = self.os.path.splitext(self.os.path.basename(custom_template_file))[0]
+        self.work_dir =  self.os.getenv('SCRATCHDIR') + '/' + project_name
+        template_file = self.os.path.join(self.work_dir, self.os.path.basename(custom_template_file))
         
         if not os.path.isfile(template_file):
-            shutil.copy2(template_file, self.work_dir)
+            self.shutil.copy2(template_file, self.work_dir)
         self.options = self.read_options(template_file)
         
         
@@ -69,7 +69,7 @@ class Template:
             print('No new option value found, skip updating ' + default_template_file)
             return default_template_file
         
-        template_file = os.path.abspath(default_template_file)
+        template_file = self.os.path.abspath(default_template_file)
         tmp_file = template_file+'.tmp'
         with open(tmp_file, 'w') as f_tmp:
             for line in open(template_file, 'r'):
