@@ -75,7 +75,7 @@ class Template:
                     if key in self.options.keys() and self.options[key] != value:
                         line = line.replace(value, self.options[key], 1)
                         default_options[key] = self.options[key]
-                        print('    {}: {} --> {}'.format(key, value, main_options[key]))   
+                        print('    {}: {} --> {}'.format(key, value, self.options[key]))   
                 f_tmp.write(line)
         self.options = default_options
         return  self.options
