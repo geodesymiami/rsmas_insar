@@ -16,8 +16,8 @@ import shutil
 import subprocess
 from rsmas_logging import rsmas_logger, loglevel
 import _process_utilities as putils
-sys.path.insert(0, os.getenv('SSARAHOME'))
-from pysar.utils import readfile, utils
+from dataset_template import Template
+
 import messageRsmas
 
 logger  = putils.send_logger()
@@ -304,18 +304,12 @@ def create_or_update_template(inps):
     # write default template
     inps.template_file = putils.create_default_template()
 
-    inps.custom_template = putils.create_custom_template(
-        custom_template_file=inps.custom_template_file,
-        work_dir=inps.work_dir)
-
-    # Update default template with custom input template
-    logger.log(loglevel.INFO, 'update default template based on input custom template')
-    if not inps.template_file == inps.custom_template:
-        inps.template_file = utils.update_template_file(inps.template_file, inps.custom_template)
-
-
-    logger.log(loglevel.INFO, 'read default template file: ' + inps.template_file)
-    inps.template = readfile.read_template(inps.template_file)
+    inps.custom_template = Template(custom_template_file=inps.custom_template_file).get_options()
+    
+    # Read and update default template with custom input template 
+    logger.log(loglevel.INFO, 'read and update default template based on input custom template')
+    if not inps.template_file == inps.custom_template_file:
+        inps.template = Template(inps.custom_template_file).update_options(inps.template_file)
 
     putils.set_default_options(inps)
 
