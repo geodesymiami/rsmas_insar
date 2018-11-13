@@ -63,6 +63,8 @@ class Template:
     def update_options(self, default_template_file):
         
         template_file = self.os.path.abspath(default_template_file)
+        default_options = self.read_options(template_file)
+        
         tmp_file = template_file+'.tmp'
         with open(tmp_file, 'w') as f_tmp:
             for line in open(template_file, 'r'):
