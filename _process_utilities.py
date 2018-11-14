@@ -27,7 +27,6 @@ logfile_name = os.getenv('OPERATIONS') + '/LOGS/process_rsmas.log'
 logger = rsmas_logger(file_name=logfile_name)
 
 ###############################################################################
-
 TEMPLATE = '''
 ##------------------------ stackSentinel_template.txt ------------------------##
 ## 1. stackSentinel options

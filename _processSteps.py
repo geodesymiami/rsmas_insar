@@ -17,7 +17,6 @@ import subprocess
 from rsmas_logging import rsmas_logger, loglevel
 import _process_utilities as putils
 from dataset_template import Template
-
 import messageRsmas
 
 logger  = putils.send_logger()
@@ -471,5 +470,4 @@ def run_ingest_insarmaps(inps):
         ogger.log(loglevel.DEBUG, 'Exit as planned after insarmaps')
 
     return None
-
 
