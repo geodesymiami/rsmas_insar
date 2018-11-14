@@ -97,7 +97,8 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
         if item_memory == 'phase_linking':
             walltimelimit = '40:00'
 
-        cmd = 'createBatch.pl ' + cwd + '/' + item + ' memory=' + memorymax + ' walltime=' + walltimelimit
+        queuename = 'general'
+        cmd = 'createBatch.pl ' + cwd + '/' + item + ' memory=' + memorymax + ' walltime=' + walltimelimit + ' QUEUENAME=' + queuename
 
         status = subprocess.Popen(cmd, shell=True).wait()
         if status is not 0:
