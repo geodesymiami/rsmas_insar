@@ -47,7 +47,6 @@ def get_run_files():
     run_file_list = []
     with open(runfiles, 'r') as f:
         new_f = f.readlines()
-        f.seek(0)
         for line in new_f:
             run_file_list.append('run_files/'+line.split('/')[-1][:-1])
 
