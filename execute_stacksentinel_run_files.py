@@ -5,6 +5,7 @@
 
 import os
 import sys
+import glob
 from rsmas_logging import loglevel
 import argparse
 import subprocess
@@ -103,6 +104,16 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
         if status is not 0:
             logger.log(loglevel.ERROR, 'ERROR submitting {} using createBatch.pl'.format(item))
             raise Exception('ERROR submitting {} using createBatch.pl'.format(item))
+            
+        job_folder = cwd + '/out_jobs_' + item
+        list_error = glob.glob(cwd+'/*.e')
+        list_out = glob.glob(cwd+'/*.o')
+        list_job = glob.glob(cwd+'/*.job')
+        
+        if not os.path.isdir(job_folder):
+            os.makedirs(job_folder)
+        mvlist = [list_error, list_out, list_job]
+        
 
     return None
 
