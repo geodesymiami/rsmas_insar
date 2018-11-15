@@ -14,7 +14,7 @@ from _process_utilities import remove_zero_size_or_length_files, concatenate_err
 from _processSteps import create_or_update_template
 
 
-logger  = send_logger()
+logger_exec_run  = send_logger()
 
 ##############################################################################
 EXAMPLE = """example:
@@ -102,7 +102,7 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
 
         status = subprocess.Popen(cmd, shell=True).wait()
         if status is not 0:
-            logger.log(loglevel.ERROR, 'ERROR submitting {} using createBatch.pl'.format(item))
+            logger_exec_run.log(loglevel.ERROR, 'ERROR submitting {} using createBatch.pl'.format(item))
             raise Exception('ERROR submitting {} using createBatch.pl'.format(item))
             
         job_folder = cwd + '/' + item + '_out_jobs'
@@ -148,7 +148,7 @@ if __name__ == "__main__":
         inps.stop = len(run_file_list)
 
 
-    logger.log(loglevel.INFO, "Executing Runfiles {} to {}".format(inps.start,inps.stop))
+    logger_exec_run.log(loglevel.INFO, "Executing Runfiles {} to {}".format(inps.start,inps.stop))
 
 
     memoryuse = set_memory_defaults()
@@ -159,6 +159,6 @@ if __name__ == "__main__":
     
     concatenate_error_files(directory='run_files',out_name='out_stack_sentinel_errorfiles.e')
 
-    logger.log(loglevel.INFO, "-----------------Done Executing Run files-------------------")
+    logger_exec_run.log(loglevel.INFO, "-----------------Done Executing Run files-------------------")
     
     
