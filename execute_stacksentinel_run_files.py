@@ -105,15 +105,16 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
             logger.log(loglevel.ERROR, 'ERROR submitting {} using createBatch.pl'.format(item))
             raise Exception('ERROR submitting {} using createBatch.pl'.format(item))
             
-        job_folder = cwd + '/out_jobs_' + item
-        list_error = glob.glob(cwd+'/*.e')
-        list_out = glob.glob(cwd+'/*.o')
-        list_job = glob.glob(cwd+'/*.job')
+        job_folder = cwd + '/' + item + '_out_jobs'
+        print('jobfolder:',job_folder)
         
         if not os.path.isdir(job_folder):
             os.makedirs(job_folder)
-        mvlist = [list_error, list_out, list_job]
-        
+        mvlist = ['*.e ', '*.o ', '*.job ']
+        for mvitem in mvlist:
+            cmd = 'mv ' + cwd + '/run_files/' + mvitem + job_folder
+            print('move command:',cmd)
+            os.system(cmd) 
 
     return None
 
