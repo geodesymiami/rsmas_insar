@@ -36,13 +36,13 @@ if __name__ == "__main__":
     inps.work_dir = get_work_directory(None, inps.project_name)
     inps.slc_dir = os.path.join(inps.work_dir,'SLC')
 
-    #  Read and update template file:
-    inps = prs.create_or_update_template(inps)
-
     if not os.path.isdir(inps.work_dir):
         os.makedirs(inps.work_dir)
     os.chdir(inps.work_dir)
 
+    #  Read and update template file:
+    inps = prs.create_or_update_template(inps)
+    
     if not os.path.isdir(inps.slc_dir):
         os.makedirs(inps.slc_dir)
 
