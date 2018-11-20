@@ -5,6 +5,7 @@
 
 import os
 import sys
+import glob
 from rsmas_logging import loglevel
 import argparse
 import subprocess
@@ -13,7 +14,7 @@ from _process_utilities import remove_zero_size_or_length_files, concatenate_err
 from _processSteps import create_or_update_template
 
 
-logger  = send_logger()
+logger_exec_run  = send_logger()
 
 ##############################################################################
 EXAMPLE = """example:
@@ -47,7 +48,6 @@ def get_run_files():
     run_file_list = []
     with open(runfiles, 'r') as f:
         new_f = f.readlines()
-        f.seek(0)
         for line in new_f:
             run_file_list.append('run_files/'+line.split('/')[-1][:-1])
 
@@ -97,12 +97,24 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
         if item_memory == 'phase_linking':
             walltimelimit = '40:00'
 
-        cmd = 'createBatch.pl ' + cwd + '/' + item + ' memory=' + memorymax + ' walltime=' + walltimelimit
-
+        queuename = 'general'
+        cmd = 'createBatch.pl ' + cwd + '/' + item + ' memory=' + memorymax + ' walltime=' + walltimelimit + ' QUEUENAME=' + queuename
+        print('command:',cmd)
         status = subprocess.Popen(cmd, shell=True).wait()
         if status is not 0:
-            logger.log(loglevel.ERROR, 'ERROR submitting {} using createBatch.pl'.format(item))
+            logger_exec_run.log(loglevel.ERROR, 'ERROR submitting {} using createBatch.pl'.format(item))
             raise Exception('ERROR submitting {} using createBatch.pl'.format(item))
+            
+        job_folder = cwd + '/' + item + '_out_jobs'
+        print('jobfolder:',job_folder)
+        
+        if not os.path.isdir(job_folder):
+            os.makedirs(job_folder)
+        mvlist = ['*.e ', '*.o ', '*.job ']
+        for mvitem in mvlist:
+            cmd = 'mv ' + cwd + '/run_files/' + mvitem + job_folder
+            print('move command:',cmd)
+            os.system(cmd) 
 
     return None
 
@@ -136,7 +148,7 @@ if __name__ == "__main__":
         inps.stop = len(run_file_list)
 
 
-    logger.log(loglevel.INFO, "Executing Runfiles {} to {}".format(inps.start,inps.stop))
+    logger_exec_run.log(loglevel.INFO, "Executing Runfiles {} to {}".format(inps.start,inps.stop))
 
 
     memoryuse = set_memory_defaults()
@@ -147,6 +159,6 @@ if __name__ == "__main__":
     
     concatenate_error_files(directory='run_files',out_name='out_stack_sentinel_errorfiles.e')
 
-    logger.log(loglevel.INFO, "-----------------Done Executing Run files-------------------")
+    logger_exec_run.log(loglevel.INFO, "-----------------Done Executing Run files-------------------")
     
     

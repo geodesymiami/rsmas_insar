@@ -17,7 +17,7 @@ from _process_utilities  import get_work_directory, get_project_name, send_logge
 import _processSteps as prs
 from rsmas_logging import loglevel
 
-logger  = send_logger()
+logger_process_rsmas  = send_logger()
 
 ###############################################################################
 
@@ -47,8 +47,8 @@ if __name__ == "__main__":
         os.makedirs(inps.slc_dir)
 
     command_line = os.path.basename(inps.custom_template_file)
-    logger.log(loglevel.INFO, '##### NEW RUN #####')
-    logger.log(loglevel.INFO, 'process_rsmas.py ' + command_line)
+    logger_process_rsmas.log(loglevel.INFO, '##### NEW RUN #####')
+    logger_process_rsmas.log(loglevel.INFO, 'process_rsmas.py ' + command_line)
     messageRsmas.log('##### NEW RUN #####')
     messageRsmas.log(command_line)
     
@@ -110,4 +110,4 @@ if __name__ == "__main__":
 
     prs.run_ingest_insarmaps(inps)
 
-    logger.log(loglevel.INFO, 'End of process_rsmas')
+    logger_process_rsmas.log(loglevel.INFO, 'End of process_rsmas')
