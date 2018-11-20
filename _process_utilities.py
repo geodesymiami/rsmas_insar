@@ -427,7 +427,7 @@ def file_len(fname):
 def remove_zero_size_or_length_files(directory):
     """Removes files with zero size or zero length (*.e files in run_files)."""
     
-    error_files  = glob.glob(directory + '/*/*.e')
+    error_files  = glob.glob(directory + '/*.e')
     for item in error_files:
         if os.path.getsize(item) == 0:       # remove zero-size files
             os.remove(item)
