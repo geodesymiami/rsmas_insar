@@ -23,6 +23,7 @@ from collections import namedtuple
 import password_config as password
 from pysar.defaults.auto_path import autoPath
 import messageRsmas
+import re
 ###############################################################################
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -492,16 +493,50 @@ def file_len(fname):
         raise IOError(err)
     return int(result.strip().split()[0])
 
+
 ##########################################################################
+def tryint(s):
+    try:
+        return int(s)
+    except ValueError:
+        return s
+     
+def alphanum_key(s):
+    """ Turn a string into a list of string and number chunks.
+        "z23a" -> ["z", 23, "a"]
+    """
+    return [ tryint(c) for c in re.split('([0-9]+)', s) ]
+
+def sort_nicely(l):
+    """ Sort the given list in the way that humans expect.
+    """
+    l.sort(key=alphanum_key)
 
 def remove_zero_size_or_length_files(directory):
     """Removes files with zero size or zero length (*.e files in run_files)."""
     error_files  = glob.glob(directory + '/*.e')
+    sort_nicely(error_files)
     for item in error_files:
         if os.path.getsize(item) == 0:       # remove zero-size files
             os.remove(item)
+            os.remove(item.replace('.e','.o'))
         elif file_len(item) == 0:
             os.remove(item)                  # remove zero-line files
+            os.remove(item.replace('.e','.o'))
+    return None
+
+
+def remove_error_files_except_first(directory):
+    """remove the error file but keep the first"""
+    try:
+       error_files  = glob.glob(directory + '/*.e')
+       sort_nicely(error_files)
+       del error_files[0]
+       for item in error_files:
+           os.remove(item)
+           os.remove(item.replace('.e','.o'))
+    except:
+        pass
 
 ##########################################################################
 
@@ -513,6 +548,7 @@ def concatenate_error_files(directory, out_name):
     :return: None
     """
     error_files = glob.glob(directory + '/*.e')
+    sort_nicely(error_files)
     with open(out_name, 'w') as outfile:
         for fname in error_files:
             outfile.write('#########################\n')
@@ -566,23 +602,24 @@ def email_pysar_results(textStr, custom_template):
     cwd = os.getcwd()
 
     fileList1 = ['velocity.png',\
-                 'avgSpatialCoherence.png',\
-                 'temporalCoherence.png',\
-                 'maskTempCoh.png',\
-                 'mask.png',\
-                 'demRadar_error.png',\
                  'velocityStd.png',\
                  'geo_velocity.png',\
+                 'avgSpatialCoherence.png',\
+                 'temporalCoherence.png',\
                  'coherence*.png',\
-                 'unwrapPhase*.png',\
                  'rms_timeseriesResidual_quadratic.pdf',\
-                 'CoherenceHistory.pdf',\
                  'CoherenceMatrix.pdf',\
-                 'bl_list.txt',\
-                 'Network.pdf',\
                  'geo_velocity_masked.kmz']
 
-    fileList2 = ['timeseries*.png',\
+    fileList2 = ['maskTempCoh.png',\
+                 'mask.png',\
+                 'demRadar_error.png',\
+                 'unwrapPhase*.png',\
+                 'bl_list.txt',\
+                 'Network.pdf',\
+                 'CoherenceHistory.pdf']
+
+    fileList3 = ['timeseries*.png',\
                  'geo_timeseries*.png']
 
     if os.path.isdir('PYSAR/PIC'):
@@ -591,7 +628,7 @@ def email_pysar_results(textStr, custom_template):
     template_file = glob.glob('PYSAR/INPUTS/*.template')[0]
 
     i = 0
-    for fileList in [fileList1, fileList2]:
+    for fileList in [fileList1, fileList2, fileList3]:
        attachmentStr = ''
        i = i + 1
        for fname in fileList:
@@ -603,6 +640,7 @@ def email_pysar_results(textStr, custom_template):
           attachmentStr = attachmentStr+' -a '+template_file
 
        mailCmd = 'echo \"'+textStr+'\" | mail -s '+cwd+' '+attachmentStr+' '+custom_template['email_pysar']
+       messageRsmas.log(mailCmd)
        command = 'ssh pegasus.ccs.miami.edu \"cd '+cwd+'; '+mailCmd+'\"'
        print(command)
        status = subprocess.Popen(command, shell=True).wait()

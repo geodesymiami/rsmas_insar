@@ -57,6 +57,8 @@ from _process_utilities import email_insarmaps_results
 
 from _process_utilities import remove_zero_size_or_length_files
 from _process_utilities import check_error_files_sentinelstack
+from _process_utilities import remove_zero_size_or_length_files
+from _process_utilities import remove_error_files_except_first
 from _process_utilities import concatenate_error_files
 from _processSteps import submit_job
 
@@ -438,7 +440,8 @@ def main(argv):
                          inps.custom_template_file,
                          memoryUse)
         remove_zero_size_or_length_files(directory='run_files')
-        concatenate_error_files(directory='run_files',out_name='out_stack_sentinel_errorfiles.e')
+        concatenate_error_files(directory='run_files',out_name='out_stackSentinel_errorfiles.e')
+        remove_error_files_except_first(directory='run_files')
 
         if int(custom_template['cleanopt']) >=1:
             _remove_directories(clean_list1)

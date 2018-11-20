@@ -126,12 +126,14 @@ def run_ssara(run_number=1):
     ssaraopt = ssaraopt.split(' ')
 
     # Runs ssara_federated_query-cj.py with proper options
+    ssara_call    = ['ssara_federated_query.py'] + ssaraopt + ['--print', '--download']
     ssara_call    = ['ssara_federated_query-cj.py'] + ssaraopt + ['--print', '--download']
+    messageRsmas.log(' '.join(ssara_call))
     ssara_process = subprocess.Popen(ssara_call)
 
     completion_status = ssara_process.poll()  # the completion status of the process
     hang_status = False  # whether or not the download has hung
-    wait_time =  2  # 10 wait time in 'minutes' to determine hang status
+    wait_time =  1  # 10 wait time in 'minutes' to determine hang status
     prev_size = -1  # initial download directory size
     i = 0  # the iteration number (for logging only)
 
