@@ -427,7 +427,7 @@ def file_len(fname):
 def remove_zero_size_or_length_files(directory):
     """Removes files with zero size or zero length (*.e files in run_files)."""
     
-    error_files  = glob.glob(directory + '/*.e')
+    error_files  = glob.glob(directory + '/*/*.e')
     for item in error_files:
         if os.path.getsize(item) == 0:       # remove zero-size files
             os.remove(item)
@@ -461,53 +461,6 @@ def concatenate_error_files(directory, out_name):
     
     
     
-        
-############################### NO USE:#############################################     
-        
-def get_environment_from_source_file(source_file):
-
-    get_environment_command = 'source {source_file} ; ' 'python -c "import os, json; ' 'print(json.dumps(dict(os.environ)))"'.format(source_file= source_file)
-
-    shell_command = str('cd ' + os.getenv('PARENTDIR') + '; ' + get_environment_command)
-
-    process = subprocess.Popen(
-            shell_command, shell=True, executable='/bin/csh', 
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (output, error) = process.communicate()
-    if process.returncode != 0 or error:
-        print("ERROR: {0}".format(error))
-        raise Exception("sourcing {source_file} failed.".format(source_file=source_file))
-    return json.loads(output.decode('utf-8'))
-    #return json.loads(output)
-    
-    
-##########################################################################
-
-def submit_insarmaps_job(command_list, inps):
-
-   projectID = 'insarlab'
-
-   f = open(inps.work_dir+'/PYSAR/insarmaps.job', 'w')
-   f.write('#! /bin/tcsh\n')
-   f.write('#BSUB -J '+inps.project_name+' \n')
-   f.write('#BSUB -o z_insarmaps_%J.o\n')
-   f.write('#BSUB -e z_insarmaps_%J.e\n')
-   f.write('#BSUB -n 1\n' )
-   if projectID:
-      f.write('#BSUB -P '+projectID+'\n')
-   if inps.wall_time:
-      f.write('#BSUB -W inps.wall_time\n')
-   f.write('#BSUB -q general\n')
-
-   f.write('cd '+inps.work_dir+'/PYSAR\n')
-   for item in command_list:
-      f.write(item+'\n')
-   f.close()
-
-   job_cmd = 'bsub < insarmaps.job'
-   print('bsub job submission')
-   os.system(job_cmd)
-   sys.exit(0)
 
 
 ##########################################################################
