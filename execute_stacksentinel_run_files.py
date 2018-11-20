@@ -108,13 +108,13 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
         job_folder = cwd + '/' + item + '_out_jobs'
         print('jobfolder:',job_folder)
         
-        if not os.path.isdir(job_folder):
-            os.makedirs(job_folder)
-        mvlist = ['*.e ', '*.o ', '*.job ']
-        for mvitem in mvlist:
-            cmd = 'mv ' + cwd + '/run_files/' + mvitem + job_folder
-            print('move command:',cmd)
-            os.system(cmd) 
+        #if not os.path.isdir(job_folder):
+        #    os.makedirs(job_folder)
+        #mvlist = ['*.e ', '*.o ', '*.job ']
+        #for mvitem in mvlist:
+        #    cmd = 'mv ' + cwd + '/run_files/' + mvitem + job_folder
+        #    print('move command:',cmd)
+        #    os.system(cmd) 
 
     return None
 
