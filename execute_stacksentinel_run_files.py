@@ -99,7 +99,7 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
 
         queuename = 'general'
         cmd = 'createBatch.pl ' + cwd + '/' + item + ' memory=' + memorymax + ' walltime=' + walltimelimit + ' QUEUENAME=' + queuename
-
+        print('command:',cmd)
         status = subprocess.Popen(cmd, shell=True).wait()
         if status is not 0:
             logger_exec_run.log(loglevel.ERROR, 'ERROR submitting {} using createBatch.pl'.format(item))
