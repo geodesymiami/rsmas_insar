@@ -11,6 +11,7 @@ from __future__ import print_function
 import os
 import sys
 import glob
+import re
 import subprocess
 sys.path.insert(0, os.getenv('SSARAHOME'))
 from pysar.utils import utils
