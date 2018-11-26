@@ -431,8 +431,12 @@ def remove_zero_size_or_length_files(directory):
     for item in error_files:
         if os.path.getsize(item) == 0:       # remove zero-size files
             os.remove(item)
+            os.remove(item.replace('.e','.o'))
+
         elif file_len(item) == 0:
             os.remove(item)                  # remove zero-line files
+            os.remove(item.replace('.e','.o'))
+
             
     return None
 
