@@ -158,6 +158,8 @@ if __name__ == "__main__":
     remove_zero_size_or_length_files(directory='run_files')
     
     concatenate_error_files(directory='run_files',out_name='out_stack_sentinel_errorfiles.e')
+    
+    remove_error_files_except_first(directory='run_files')
 
     logger_exec_run.log(loglevel.INFO, "-----------------Done Executing Run files-------------------")
     
