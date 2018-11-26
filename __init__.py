@@ -15,4 +15,4 @@ warning_logger.addHandler(ch)
 logger = logging.getLogger("process_sentinel." + "__init__")
 
 logger.debug('Starting Logger')
-logger.error('YO WHATS GOOD??? GO RSMAS :D')
+logger.error('YO WHATS GOOD???')
