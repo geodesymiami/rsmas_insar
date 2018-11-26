@@ -410,7 +410,6 @@ def email_insarmaps_results(custom_template):
     
 ##########################################################################
 
-
 def file_len(fname):
     """Calculate the number of lines in a file."""
     
@@ -422,26 +421,55 @@ def file_len(fname):
     return int(result.strip().split()[0])    
 
 ##########################################################################
+def tryint(s):
+    try:
+        return int(s)
+    except ValueError:
+        return s
+     
+def alphanum_key(s):
+    """ Turn a string into a list of string and number chunks.
+        "z23a" -> ["z", 23, "a"]
+    """
+    return [ tryint(c) for c in re.split('([0-9]+)', s) ]
 
+def sort_nicely(l):
+    """ Sort the given list in the way that humans expect.
+    """
+    l.sort(key=alphanum_key)
+
+##########################################################################
 
 def remove_zero_size_or_length_files(directory):
     """Removes files with zero size or zero length (*.e files in run_files)."""
     
     error_files  = glob.glob(directory + '/*.e')
+    sort_nicely(error_files)
     for item in error_files:
         if os.path.getsize(item) == 0:       # remove zero-size files
             os.remove(item)
             os.remove(item.replace('.e','.o'))
-
         elif file_len(item) == 0:
             os.remove(item)                  # remove zero-line files
             os.remove(item.replace('.e','.o'))
-
-            
     return None
 
 ##########################################################################
 
+def remove_error_files_except_first(directory):
+    """remove the error file but keep the first"""
+    try:
+       error_files  = glob.glob(directory + '/*.e')
+       sort_nicely(error_files)
+       del error_files[0]
+       for item in error_files:
+           os.remove(item)
+           os.remove(item.replace('.e','.o'))
+    except:
+        pass            
+    return None
+
+##########################################################################
 
 def concatenate_error_files(directory, out_name):
     """
@@ -462,11 +490,7 @@ def concatenate_error_files(directory, out_name):
                 
     return None           
                 
-    
-    
-    
-
-
+  
 ##########################################################################
 
 def check_error_files_sentinelstack(pattern):
@@ -494,6 +518,3 @@ def check_error_files_sentinelstack(pattern):
                     sys.exit('Error file found: '+efile)
 
 ##########################################################################
-
-
-
