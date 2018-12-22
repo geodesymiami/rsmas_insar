@@ -328,9 +328,8 @@ def call_ssara(flag_ssara, custom_template_file, slc_dir):
     if flag_ssara:
         command = 'download_rsmas.py ' + custom_template_file
         messageRsmas.log(command)
-
+        
         import download_rsmas
-
         download_rsmas.main([custom_template_file])
     
     return None
