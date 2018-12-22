@@ -154,8 +154,9 @@ if __name__ == "__main__":
 
     memoryuse = set_memory_defaults()
 
-    submit_isce_jobs(run_file_list[inps.start - 1:inps.stop], inps.work_dir, memoryuse)
+    #submit_isce_jobs(run_file_list[inps.start - 1:inps.stop], inps.work_dir, memoryuse)
     
+    import pdb; pdb.set_trace()
     remove_zero_size_or_length_files(directory='run_files')
     
     concatenate_error_files(directory='run_files',out_name='out_stack_sentinel_errorfiles.e')
