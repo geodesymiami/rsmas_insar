@@ -323,36 +323,14 @@ def create_or_update_template(inps):
 
 
 def call_ssara(flag_ssara, custom_template_file, slc_dir):
-    """ Downloads data with ssara and asfserial scripts. """
+    """ Calls download_ssara.py for downloading """
 
     if flag_ssara:
-        # FA 12/2018: we should have one script download_rsmas.py that separates between Sentinel
-        # and the other sensors and for Sentinel runs the 3 scripts below (although it would be
-        # preferred to generate the out_* files here)
-        out_file = os.getcwd() + '/' + 'out_download_ssara'
-        command = 'download_ssara_rsmas.py ' + custom_template_file
+        command = 'download_rsmas.py ' + custom_template_file
         messageRsmas.log(command)
-        command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e'
-        command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slc_dir + '; ' +  command + '\"'
-        status = subprocess.Popen(command_ssh, shell=True).wait()
-        print('Exit status from download_ssara_rsmas.py:',status)
-
-        out_file = os.getcwd() + '/' + 'out_download_asfserial1'
-        command = 'download_asfserial_rsmas.py ' + custom_template_file
-        messageRsmas.log(command)
-        command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e'
-        command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slc_dir + '; ' +  command + '\"'
-        status = subprocess.Popen(command_ssh, shell=True).wait()
-        print('Exit status from download_asfserial_rsmas.py:',status)
-
-        out_file = os.getcwd() + '/' + 'out_download_asfserial2'
-        command = 'download_asfserial_rsmas.py ' + custom_template_file
-        messageRsmas.log(command)
-        command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e'
-        command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slc_dir + '; ' +  command + '\"'
-        status = subprocess.Popen(command_ssh, shell=True).wait()
-        print('Exit status from download_asfserial_rsmas.py:',status)
-    
+        
+        import download_rsmas
+        download_rsmas.main([custom_template_file])
     
     return None
 

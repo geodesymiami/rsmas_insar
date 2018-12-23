@@ -10,7 +10,7 @@ from rsmas_logging import loglevel
 import argparse
 import subprocess
 from _process_utilities import get_project_name, send_logger
-from _process_utilities import remove_zero_size_or_length_files, concatenate_error_files
+from _process_utilities import remove_zero_size_or_length_files, concatenate_error_files 
 from _process_utilities import remove_error_files_except_first
 from _processSteps import create_or_update_template
 
