@@ -127,6 +127,8 @@ def run_ssara(run_number=1):
 
     # Runs ssara_federated_query-cj.py with proper options
     ssara_call    = ['ssara_federated_query-cj.py'] + ssaraopt + ['--print', '--download']
+    print(' '.join(ssara_call))
+    messageRsmas.log(' '.join(ssara_call))
     ssara_process = subprocess.Popen(ssara_call)
 
     completion_status = ssara_process.poll()  # the completion status of the process
