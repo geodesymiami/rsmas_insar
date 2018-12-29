@@ -395,6 +395,8 @@ def process_runfiles(inps):
             logger.log(loglevel.ERROR, 'ERROR in execute_stacksentinel_run_files.py')
             raise Exception('ERROR in execute_stacksentinel_run_files.py')
 
+        if os.path.isdir('PYSAR'):
+            shutil.rmtree('PYSAR')
 
         if int(inps.custom_template['cleanopt']) >= 1:
             _remove_directories(cleanlist[1])
@@ -413,8 +415,8 @@ def run_pysar(inps, start_time):
 
     if inps.flag_pysar:
 
-        if os.path.isdir('PYSAR'):
-            shutil.rmtree('PYSAR')
+        #if os.path.isdir('PYSAR'):
+        #    shutil.rmtree('PYSAR')
 
         putils.call_pysar(custom_template=inps.custom_template,
                    custom_template_file=inps.custom_template_file,
