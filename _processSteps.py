@@ -323,24 +323,14 @@ def create_or_update_template(inps):
 
 
 def call_ssara(flag_ssara, custom_template_file, slc_dir):
-    """ Downloads data with ssara and asfserial scripts. """
+    """ Calls download_ssara.py for downloading """
 
     if flag_ssara:
-        out_file = os.getcwd() + '/' + 'out_download_ssara'
-        command = 'download_ssara_rsmas.py ' + custom_template_file
+        command = 'download_rsmas.py ' + custom_template_file
         messageRsmas.log(command)
-        command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e'
-        command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slc_dir + '; ' +  command + '\"'
-        status = subprocess.Popen(command_ssh, shell=True).wait()
-        print('Exit status from download_ssara_rsmas.py:',status)
-
-        out_file = os.getcwd() + '/' + 'out_download_asfserial'
-        command = 'download_asfserial_rsmas.py ' + custom_template_file
-        messageRsmas.log(command)
-        command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e'
-        command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slc_dir + '; ' +  command + '\"'
-        status = subprocess.Popen(command_ssh, shell=True).wait()
-        print('Exit status from download_asfserial_rsmas.py:',status)
+        
+        import download_rsmas
+        download_rsmas.main([custom_template_file])
     
     return None
 
@@ -405,6 +395,8 @@ def process_runfiles(inps):
             logger.log(loglevel.ERROR, 'ERROR in execute_stacksentinel_run_files.py')
             raise Exception('ERROR in execute_stacksentinel_run_files.py')
 
+        if os.path.isdir('PYSAR'):
+            shutil.rmtree('PYSAR')
 
         if int(inps.custom_template['cleanopt']) >= 1:
             _remove_directories(cleanlist[1])
@@ -423,8 +415,8 @@ def run_pysar(inps, start_time):
 
     if inps.flag_pysar:
 
-        if os.path.isdir('PYSAR'):
-            shutil.rmtree('PYSAR')
+        #if os.path.isdir('PYSAR'):
+        #    shutil.rmtree('PYSAR')
 
         putils.call_pysar(custom_template=inps.custom_template,
                    custom_template_file=inps.custom_template_file,

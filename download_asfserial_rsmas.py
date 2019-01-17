@@ -61,7 +61,8 @@ def run_download_asf_serial():
 	"""
 	
 	status = subprocess.Popen(['download_ASF_serial.py', '-username', password.asfuser, '-password', password.asfpass, 'new_files.csv']).wait()
-	logger.log(loglevel.INFO, status)
+	logger.log(loglevel.INFO, "EXIT CODE: %s", str(status))
+
 	return status
 
 def change_file_permissions():

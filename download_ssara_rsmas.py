@@ -127,13 +127,15 @@ def run_ssara(run_number=1):
 
     # Runs ssara_federated_query-cj.py with proper options
     ssara_call    = ['ssara_federated_query-cj.py'] + ssaraopt + ['--print', '--download']
+    print(' '.join(ssara_call))
+    messageRsmas.log(' '.join(ssara_call))
     ssara_process = subprocess.Popen(ssara_call)
 
     completion_status = ssara_process.poll()  # the completion status of the process
     hang_status = False  # whether or not the download has hung
     wait_time =  2  # 10 wait time in 'minutes' to determine hang status
     prev_size = -1  # initial download directory size
-    i = 0  # the iteration number (for logging only)
+    i = 0  # index for waiting periods (for calculation of total time only)
 
     # while the process has not completed
     while completion_status is None:
@@ -150,8 +152,9 @@ def run_ssara(run_number=1):
             ssara_process.terminate()  # teminate the process beacause download hung
             break;  # break the completion loop 
 
-        time.sleep(60 * wait_time)  # wait 'wait_time' minutes before continuing
-        prev_size = curr_size
+        prev_size = curr_size  # store current size for comparison after waiting
+
+        time.sleep(60 * wait_time)  # wait 'wait_time' minutes before continuing (checking for completion) 
         completion_status = ssara_process.poll()
         logger.log(loglevel.INFO, "{} minutes: {:.1f}GB, completion_status {}".format(i * wait_time, curr_size / 1024 / 1024,
                                                                         completion_status))
@@ -159,14 +162,18 @@ def run_ssara(run_number=1):
     exit_code = completion_status  # get the exit code of the command
     logger.log(loglevel.INFO, "EXIT CODE: %s", str(exit_code))
 
-    bad_codes = [137]
+    bad_codes = [137,-9]
 
     # If the exit code is one that signifies an error, rerun the entire command
     if exit_code in bad_codes or hang_status:
-        logger.log(loglevel.WARNING, "Something went wrong, running again")
+        if exit_code in bad_codes:
+           logger.log(loglevel.WARNING, "Exited with bad exit code, running again")
+        if hang_status:
+           logger.log(loglevel.WARNING, "Hanging, running again")
+
         run_ssara(run_number=run_number + 1)
 
-    return 1
+    return 0
 
 if __name__ == "__main__":
     command_line_parse(sys.argv[1:])
