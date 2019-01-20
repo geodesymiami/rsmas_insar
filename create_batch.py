@@ -11,6 +11,7 @@ import sys
 import subprocess
 import argparse
 import time
+import messageRsmas
 
 
 def create_argument_parser():
@@ -182,5 +183,6 @@ def submit_jobs_to_bsub(job_submission_params, job_files):
 
 if __name__ == "__main__":
     PARAMS = parse_arguments(sys.argv[1:])
+    messageRsmas.log(os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1::]))
     JOBS = write_job_files(PARAMS)
     submit_jobs_to_bsub(PARAMS, JOBS)
