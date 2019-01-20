@@ -99,7 +99,11 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
             walltimelimit = '40:00'
 
         queuename = 'general'
-        cmd = 'createBatch.pl ' + cwd + '/' + item + ' memory=' + memorymax + ' walltime=' + walltimelimit + ' QUEUENAME=' + queuename
+
+        #cmd = 'createBatch.pl ' + cwd + '/' + item + ' memory=' + memorymax + ' walltime=' + walltimelimit + ' QUEUENAME=' + queuename
+        #cmd = 'create_batch.py ' + cwd + '/' + item
+
+        cmd = 'create_batch.py ' + cwd + '/' + item + ' --memory=' + memorymax + ' --walltime=' + walltimelimit + ' --queuename ' + queuename
         print('command:',cmd)
         status = subprocess.Popen(cmd, shell=True).wait()
         if status is not 0:
