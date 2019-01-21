@@ -66,7 +66,8 @@ def read_input_file_to_list(input_file):
     return job_list
 
 
-def get_job_file_lines(job_submission_params, job_name, scheduler="LSF"):
+#def get_job_file_lines(job_submission_params, job_name, scheduler="LSF"):
+def get_job_file_lines(job_submission_params, job_name, scheduler=os.getenv('JOBSCHEDULER')):
     """
     Returns list of lines for a particular job based on the specified scheduler.
     :param job_submission_params: Namespace containing submission parameters
@@ -119,7 +120,7 @@ def get_job_file_lines(job_submission_params, job_name, scheduler="LSF"):
     return job_file_lines
 
 
-def write_job_files(job_submission_params, scheduler="LSF"):
+def write_job_files(job_submission_params, scheduler = os.getenv('JOBSCHEDULER')):
     """
     Iterates through jobs in input file and writes a job file for each job using the specified scheduler.
     :param job_submission_params: Namespace containing submission parameters
@@ -148,7 +149,7 @@ def write_job_files(job_submission_params, scheduler="LSF"):
     return job_files
 
 
-def submit_jobs_to_bsub(job_submission_params, job_files):
+def submit_jobs_to_bsub(job_submission_params, job_files, scheduler = os.getenv('JOBSCHEDULER')):
     """
     Submit jobs to bsub and wait for output files to exist before exiting.
     :param job_submission_params: Namespace containing submission parameters
@@ -160,7 +161,13 @@ def submit_jobs_to_bsub(job_submission_params, job_files):
     files = []
 
     for job in job_files:
-        command = "bsub < " + job
+        if scheduler == "LSF":
+            command = "bsub < " + job
+        elif scheduler == "PBS":
+            command = "qsub < " + job
+        else:
+            raise Exception('ERROR: scheduler {0} not supported'.format(scheduler))
+
         output = subprocess.check_output(command, shell=True)
         # output second line is in format "Job <job id> is submitted to queue <queue name>"
         job_number = output.decode("utf-8").split("\n")[0].split("<")[1].split(">")[0]
