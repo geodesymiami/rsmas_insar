@@ -100,8 +100,8 @@ def get_job_file_lines(job_submission_params, job_name, scheduler=os.getenv('JOB
         name_option = "-N {}"
         project_option = "-A {}"
         process_option = "-l nodes={}:ppn={}"
-        stdout_option = "-o {}_%J.o"
-        stderr_option = "-e {}_%J.e"
+        stdout_option = "-o {}_$PBS_JOBID.o"
+        stderr_option = "-e {}_$PBS_JOBID.e"
         queue_option = "-q {}"
         walltime_limit_option = "-l walltime={}"
         walltime = job_submission_params.wall + ":00"
@@ -180,7 +180,8 @@ def submit_jobs_to_bsub(job_submission_params, job_files, scheduler = os.getenv(
         if scheduler == "LSF":
             job_number = output.decode("utf-8").split("\n")[0].split("<")[1].split(">")[0]   # works for 'Job <19490923> is submitted to queue <general>.\n'
         elif scheduler == "PBS":
-            job_number = output.decode("utf-8").split("\n")[0].split(".")[0]   # works for '7319.eos\n'
+            job_number = output.decode("utf-8").split("\n")[0].split(".")[0]   # extracts number from '7319.eos\n'
+            job_number = output.decode("utf-8").split("\n")[0]   # uses '7319.eos\n'
         else:
             raise Exception('ERROR: scheduler {0} not supported'.format(scheduler))
 
