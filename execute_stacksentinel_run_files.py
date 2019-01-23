@@ -98,7 +98,7 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
         if item_memory == 'phase_linking':
             walltimelimit = '40:00'
 
-        queuename = 'general'
+        queuename = os.getenv('QUEUENAME')
 
         #cmd = 'createBatch.pl ' + cwd + '/' + item + ' memory=' + memorymax + ' walltime=' + walltimelimit + ' QUEUENAME=' + queuename
         #cmd = 'create_batch.py ' + cwd + '/' + item
