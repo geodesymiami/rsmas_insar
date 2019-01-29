@@ -310,7 +310,6 @@ def submit_job(argv, inps):
        os.system(job_cmd)
        sys.exit(0)
 
-    return None
 
 ###############################################################################
 
@@ -352,7 +351,6 @@ def call_ssara(flag_ssara, custom_template_file, slc_dir):
         import download_rsmas
         download_rsmas.main([custom_template_file])
     
-    return None
 
 ###############################################################################
 
@@ -377,7 +375,6 @@ def create_or_copy_dem(work_dir, template, custom_template_file):
                 logger.log(loglevel.ERROR, 'ERROR while making DEM')
                 raise Exception('ERROR while making DEM')
 
-    return None
 
 #################################################################################
 
@@ -455,8 +452,6 @@ def run_pysar(inps, start_time):
         logger.log(loglevel.DEBUG, 'Exit as planned after pysar')
         sys.exit(0)
 
-    return
-
 
 ###############################################################################
 
@@ -480,7 +475,4 @@ def run_ingest_insarmaps(inps):
         shutil.rmtree(cleanlist[4])
 
     if inps.stopinsarmaps:
-        ogger.log(loglevel.DEBUG, 'Exit as planned after insarmaps')
-
-    return None
-
+        logger.log(loglevel.DEBUG, 'Exit as planned after insarmaps')
