@@ -46,7 +46,7 @@ EXAMPLE = '''example:
   --insarmaps          append after other options to upload to insarmaps.miami.edu
   --bsub               submits job using bsub (and send email when done)
   --nomail             suppress emailing imagefiles of results (default is emailing)
-  --restart            removes project directory before starting download
+  --remove_project_dir removes project directory before starting download or processing
 
 
   e.g.:  process_rsmas.py  $SAMPLESDIR/GalapagosT128SenVVD.template
@@ -164,6 +164,11 @@ def create_process_rsmas_parser(EXAMPLE):
         dest='flag_insarmaps',
         action='store_true',
         help='ingest into insarmaps')
+    parser.add_argument(
+        '--remove_project_dir',
+        dest='remove_project_dir',
+        action='store_true',
+        help='remove directory before download starts')
     parser.add_argument(
         '--latest',
         dest='flag_latest_version',

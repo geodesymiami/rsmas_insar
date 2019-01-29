@@ -13,7 +13,7 @@ import os
 import sys
 import time
 import messageRsmas
-from _process_utilities  import get_work_directory, get_project_name, send_logger
+from _process_utilities  import get_work_directory, get_project_name, send_logger, _remove_directories
 import _processSteps as prs
 from rsmas_logging import loglevel
 
@@ -31,10 +31,12 @@ if __name__ == "__main__":
     start_time = time.time()
     inps = prs.command_line_parse()
 
-
     inps.project_name = get_project_name(inps.custom_template_file)
     inps.work_dir = get_work_directory(None, inps.project_name)
     inps.slc_dir = os.path.join(inps.work_dir,'SLC')
+
+    if inps.remove_project_dir:
+        _remove_directories(directories_to_delete=[inps.work_dir])
 
     if not os.path.isdir(inps.work_dir):
         os.makedirs(inps.work_dir)
@@ -67,7 +69,6 @@ if __name__ == "__main__":
     # running download scripts:
     #     download_ssara_rsmas.py $TE/template
     #     downlaod_asfserial_rsmas.py $TE/template
-
     prs.call_ssara(inps.flag_ssara, inps.custom_template_file, inps.slc_dir)
 
     #########################################
