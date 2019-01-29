@@ -48,8 +48,7 @@ if __name__ == "__main__":
     if not os.path.isdir(inps.slc_dir):
         os.makedirs(inps.slc_dir)
 
-    command_line = os.path.basename(
-                sys.argv[0]) + ' ' + ' '.join(sys.argv[1:len(sys.argv)])
+    command_line = os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1:])
     logger_process_rsmas.log(loglevel.INFO, '##### NEW RUN #####')
     logger_process_rsmas.log(loglevel.INFO, 'process_rsmas.py ' + command_line)
     messageRsmas.log('##### NEW RUN #####')
