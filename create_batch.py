@@ -191,15 +191,16 @@ def submit_jobs_to_bsub(job_submission_params, job_files, scheduler = os.getenv(
 
     # check if output files exist
     i = 0
-    min_waiting = 0
+    wait_time_sec = 60
+    total_wait_time_min = 0
     while i < len(files):
         if os.path.isfile(files[i]):
             print("Job #{} of {} complete (output file {})".format(i+1, len(files), files[i]))
             i += 1
         else:
-            print("Waiting for job #{} of {} (output file {}) after {} minutes".format(i+1, len(files), files[i], min_waiting))
-            min_waiting += 0.25
-            time.sleep(15)
+            print("Waiting for job #{} of {} (output file {}) after {} minutes".format(i+1, len(files), files[i], total_wait_time_min))
+            total_wait_time_min += wait_time_sec/60
+            time.sleep(wait_time_sec)
 
 
 if __name__ == "__main__":
