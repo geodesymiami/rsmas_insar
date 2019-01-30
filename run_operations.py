@@ -92,7 +92,7 @@ def setup_logging_handlers(dset, mode):
     Returns:    parser: argument parser object
 """
 def create_process_rsmas_parser():
-	parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+	parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description="Submits processing jobs for each datasest template present in the $OPERATIONS/TEMPLATES/ directory. run_operations.job file submits run_operations as a bsub job to run once daily at 12:00 PM.")
 
 	parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
 	parser.add_argument("--dataset", dest='dataset', metavar="DATASET", help='Particular dataset to run')
