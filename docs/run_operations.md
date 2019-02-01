@@ -1,9 +1,29 @@
-The accounts directory contains 
+# Workflow
 
-```
-model.cfg
-netrc
-password_config.py
-```
+* Grab template files
+The first step is to download the Google Sheet file as a *csv file into the $OPERATIONS/TEMPLATE and generate the *template files (done by `generate_templates.py`).
 
- `model.cfg` is required for downloading data from ECMWF, netrc (to be copied into your `~/.netrc`) allows DEM download from the USGS and `password_config.py` is used by `ssara_federated_query.py` and contains your credentials to download data from the ASF and WinSAR.  The ASF credentials are generic and are only used to track who downloaded granules from NASA servers (ASF data are open access).  You get your WinSAR credentials from Unavco.
+* Check for new SAR acquisitions
+The second step is to check whetehr there are new acquisitions available for a dataset. The `stored_date.date` file located in the `$OPERATIONS` directory contains the information on the last processed image for each dataset 
+
+'''
+GalapagosSenDT128: 2018-12-22T11:49:42.000000
+GalapagosSenAT106: 2018-11-27T00:26:02.000000
+KilaueaSenD87: 2018-12-01T16:16:11.000000
+KilaueaSenAT124: 2018-11-10T04:30:34.000000```
+'''
+
+# Logging
+The following information from each run is copied to the $OPERATIONS/LOGS directory:
+* Does not need 
+
+# How to monitor whether everything is working?
+You can check ...
+
+
+# Planned changes
+ 
+Several items of the workflow  work fine but are not very efficient. The following will be improved in the future:
+
+* Does not need to do every day....
+* Some data sets do need to be updated once a month...
