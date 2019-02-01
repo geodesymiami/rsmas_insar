@@ -1,9 +1,9 @@
 # Workflow
 
-* Grab template files
+* #### Download template files
 The first step is to download the Google Sheet file as a *csv file into the $OPERATIONS/TEMPLATE and generate the *template files (done by `generate_templates.py`).
 
-* Check for new SAR acquisitions
+* #### Check for new SAR acquisitions
 The second step is to check whetehr there are new acquisitions available for a dataset. The `stored_date.date` file located in the `$OPERATIONS` directory contains the information on the last processed image for each dataset 
 
 '''
