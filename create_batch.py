@@ -44,7 +44,7 @@ def parse_arguments(args):
     """
     parser = create_argument_parser()
     job_submission_params = parser.parse_args(args)
-    scheduler = os.getenv('JOBSCHEDULER')
+    scheduler = os.getenv("JOBSCHEDULER")
 
     # default memory, walltime, and queue name
     if not job_submission_params.memory:
@@ -60,89 +60,88 @@ def parse_arguments(args):
     return job_submission_params
 
 
-def read_input_file_to_list(input_file):
+def get_job_file_lines(job_name, scheduler=os.getenv("JOBSCHEDULER"), memory=3600, walltime="4:00", queue=None):
     """
-    Reads the input file of jobs we want to submit into a list.
-    :param input_file: Name of input file containing jobs
-    :return: List of jobs
-    """
-    with open(input_file) as my_file:
-        job_list = my_file.readlines()
-    return job_list
-
-
-#def get_job_file_lines(job_submission_params, job_name, scheduler="LSF"):
-def get_job_file_lines(job_submission_params, job_name, scheduler=os.getenv('JOBSCHEDULER')):
-    """
-    Returns list of lines for a particular job based on the specified scheduler.
-    :param job_submission_params: Namespace containing submission parameters
+    Generates the lines of a job submission file that are based on the specified scheduler.
     :param job_name: Name of job to write file for
-    :param scheduler: Job scheduler to use for running jobs. Currently supports option PBS and defaults to LSF
-    :return:
+    :param scheduler: Job scheduler to use for running jobs. Defaults based on environment variable $JOBSCHEDULER.
+    :param memory: Amount of memory to use. Defaults to 3600 KB.
+    :param walltime: Walltime for the job. Defaults to 4 hours.
+    :param queue: Name of the queue to which the job is to be submitted. Default is set based on the scheduler.
+    :return: List of lines for job submission file
     """
 
     # directives based on scheduler
     if scheduler == "LSF":
-        prefix = "#BSUB "
-        shebang = "/bin/tcsh"
+        prefix = "\n#BSUB "
+        shell = "/bin/tcsh"
         name_option = "-J {}"
         project_option = "-P {}"
         process_option = "-n {}\n" + prefix + "-R span[hosts={}]"
         stdout_option = "-o {}_%J.o"
         stderr_option = "-e {}_%J.e"
         queue_option = "-q {}"
+        if not queue:
+            queue = "general"
         walltime_limit_option = "-W {}"
-        walltime = job_submission_params.wall
         memory_option = "-R rusage[mem={}]"
-        # email_option = "-B -u {}"
+        email_option = "-B -u {}"
     if scheduler == "PBS":
-        prefix = "#PBS "
-        shebang = "/bin/bash"
+        prefix = "\n#PBS "
+        shell = "/bin/bash"
         name_option = "-N {}"
         project_option = "-A {}"
         process_option = "-l nodes={}:ppn={}"
         stdout_option = "-o {}_$PBS_JOBID.o"
         stderr_option = "-e {}_$PBS_JOBID.e"
         queue_option = "-q {}"
+        if not queue:
+            queue = "batch"
         walltime_limit_option = "-l walltime={}"
-        walltime = job_submission_params.wall + ":00"
+        walltime += ":00"
         memory_option = "-l mem={}"
-        # email_option = "-m bea\n" + prefix + "-M {}"
-
+        email_option = "-m bea\n" + prefix + "-M {}"
 
     job_file_lines = [
-        "#! " + shebang,
-        "\n" + prefix + name_option.format(job_name),
-        "\n" + prefix + project_option.format("insarlab"),
-        "\n" + prefix + process_option.format(1, 1),
-        "\n" + prefix + stdout_option.format(job_name),
-        "\n" + prefix + stderr_option.format(job_name),
-        "\n" + prefix + queue_option.format(job_submission_params.queue),
-        "\n" + prefix + walltime_limit_option.format(walltime),
-        "\n" + prefix + memory_option.format(job_submission_params.memory),
+        "#! " + shell,
+        prefix + name_option.format(job_name),
+        prefix + project_option.format("insarlab"),
+        prefix + email_option.format(os.getenv("NOTIFICATIONEMAIL")),
+        prefix + process_option.format(1, 1),
+        prefix + stdout_option.format(job_name),
+        prefix + stderr_option.format(job_name),
+        prefix + queue_option.format(queue),
+        prefix + walltime_limit_option.format(walltime),
+        prefix + memory_option.format(memory),
     ]
 
     if scheduler == "PBS":
-        job_file_lines.append("\n#PBS -V")
+        job_file_lines.append(prefix + "-V")
 
     return job_file_lines
 
-def write_job_files(job_submission_params, scheduler = os.getenv('JOBSCHEDULER')):
+
+def write_job_files(job_filename, scheduler=os.getenv("JOBSCHEDULER"), memory=3600, walltime="4:00", queue=None):
     """
     Iterates through jobs in input file and writes a job file for each job using the specified scheduler.
-    :param job_submission_params: Namespace containing submission parameters
-    :param scheduler: Job scheduler to use for running jobs (currently supports option PBS and defaults to LSF)
+    :param job_filename: Name of job file that we are creating.
+    :param scheduler: Job scheduler to use for running jobs. Defaults based on environment variable $JOBSCHEDULER.
+    :param memory: Amount of memory to use. Defaults to 3600 KB.
+    :param walltime: Walltime for the job. Defaults to 4 hours.
+    :param queue: Name of the queue to which the job is to be submitted. Default is set based on the scheduler.
     :return: List of job file names
     """
     job_files = []
 
     # work directory to write output files to
-    work_dir = os.path.join(os.environ["SCRATCHDIR"], job_submission_params.file.split("/")[-3], job_submission_params.outdir)
+    work_dir = os.path.join(os.environ["SCRATCHDIR"], job_filename.split("/")[-3], "run_files")
     os.chdir(work_dir)
 
-    for i, file_name in enumerate(read_input_file_to_list(job_submission_params.file)):
-        job_name = job_submission_params.file.split("/")[-1] + "_" + str(i)
-        job_file_lines = get_job_file_lines(job_submission_params, job_name, scheduler)
+    with open(job_filename) as input_file:
+        job_list = input_file.readlines()
+    for i, file_name in enumerate(job_list):
+        job_name = job_file.split("/")[-1] + "_" + str(i)
+        job_file_lines = get_job_file_lines(job_name, scheduler, memory, walltime, queue)
 
         # lines not based on scheduler
         job_file_lines.append("\nfree")
@@ -156,13 +155,14 @@ def write_job_files(job_submission_params, scheduler = os.getenv('JOBSCHEDULER')
     return job_files
 
 
-def submit_jobs_to_bsub(job_submission_params, job_files, scheduler = os.getenv('JOBSCHEDULER')):
+def submit_jobs_to_bsub(job_files, job_filename, scheduler=os.getenv("JOBSCHEDULER")):
     """
     Submit jobs to bsub and wait for output files to exist before exiting.
-    :param job_submission_params: Namespace containing submission parameters
     :param job_files: Names of job files to submit
+    :param job_filename: Name of job file that we are creating.
+    :param scheduler: Job scheduler to use for running jobs. Defaults based on environment variable $JOBSCHEDULER.
     """
-    work_dir = os.path.join(os.environ["SCRATCHDIR"], job_submission_params.file.split("/")[-3], job_submission_params.outdir)
+    work_dir = os.path.join(os.environ["SCRATCHDIR"], job_filename.split("/")[-3], "run_files")
     os.chdir(work_dir)
 
     files = []
@@ -173,7 +173,7 @@ def submit_jobs_to_bsub(job_submission_params, job_files, scheduler = os.getenv(
         elif scheduler == "PBS":
             command = "qsub < " + job
         else:
-            raise Exception('ERROR: scheduler {0} not supported'.format(scheduler))
+            raise Exception("ERROR: scheduler {0} not supported".format(scheduler))
 
         output = subprocess.check_output(command, shell=True)
         # output second line is in format "Job <job id> is submitted to queue <queue name>"
@@ -184,7 +184,7 @@ def submit_jobs_to_bsub(job_submission_params, job_files, scheduler = os.getenv(
             job_number = output.decode("utf-8").split("\n")[0].split(".")[0]   # extracts number from '7319.eos\n'
             job_number = output.decode("utf-8").split("\n")[0]   # uses '7319.eos\n'
         else:
-            raise Exception('ERROR: scheduler {0} not supported'.format(scheduler))
+            raise Exception("ERROR: scheduler {0} not supported".format(scheduler))
 
         job_name = job.split(".")[0]
         files.append("{}_{}.o".format(job_name, job_number))
@@ -205,7 +205,7 @@ def submit_jobs_to_bsub(job_submission_params, job_files, scheduler = os.getenv(
 
 
 if __name__ == "__main__":
-    PARAMS = parse_arguments(sys.argv[1:])
-    messageRsmas.log(os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1::]))
-    JOBS = write_job_files(PARAMS)
-    submit_jobs_to_bsub(PARAMS, JOBS)
+    PARAMS = parse_arguments(sys.argv[1::])
+    messageRsmas.log(os.path.basename(sys.argv[0]) + " " + " ".join(sys.argv[1::]))
+    JOBS = write_job_files(PARAMS.file, memory=PARAMS.memory, walltime=PARAMS.wall, queue=PARAMS.queue)
+    submit_jobs_to_bsub(JOBS, PARAMS.file)
