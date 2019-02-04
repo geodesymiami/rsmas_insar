@@ -78,7 +78,7 @@ if __name__ == "__main__":
     # running the script:
     #     dem_rsmas.py $TE/template
 
-    prs.create_or_copy_dem(inps.work_dir, inps.template, inps.custom_template_file)
+    prs.create_or_copy_dem(inps, inps.work_dir, inps.template, inps.custom_template_file)
 
     # Check for DEM and create sentinel run files
     # running the script:

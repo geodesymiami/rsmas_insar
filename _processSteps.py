@@ -204,17 +204,20 @@ def command_line_parse():
     inps.startssara = True
     inps.flag_ssara = False
     inps.flag_makerun = False
+    inps.flag_dem = False
     inps.flag_process = False
     inps.flag_pysar = False
     inps.stoppysarload = False
     
     if inps.startmakerun:
         inps.flag_makerun = True
+        inps.flag_dem = True
         inps.flag_process = True
         inps.flag_pysar = True
         inps.startssara = False
 
     if inps.startprocess:
+        inps.flag_dem = True
         inps.flag_process = True
         inps.flag_pysar = True
         inps.flag_makerun = False
@@ -240,6 +243,7 @@ def command_line_parse():
 
     logger.log(loglevel.DEBUG, 'flag_ssara:     {}'.format(inps.flag_ssara))
     logger.log(loglevel.DEBUG, 'flag_makerun:   {}'.format(inps.flag_makerun))
+    logger.log(loglevel.DEBUG, 'flag_dem:       {}'.format(inps.flag_dem))
     logger.log(loglevel.DEBUG, 'flag_process:   {}'.format(inps.flag_process))
     logger.log(loglevel.DEBUG, 'flag_pysar:     {}'.format(inps.flag_pysar))
     logger.log(loglevel.DEBUG, 'flag_insarmaps: {}'.format(inps.flag_insarmaps))
@@ -355,25 +359,26 @@ def call_ssara(flag_ssara, custom_template_file, slc_dir):
 ###############################################################################
 
 
-def create_or_copy_dem(work_dir, template, custom_template_file):
+def create_or_copy_dem(inps, work_dir, template, custom_template_file):
     """ Downloads a DEM file or copies an existing one."""
 
-    dem_dir = work_dir + '/DEM'
-    if os.path.isdir(dem_dir) and len(os.listdir(dem_dir)) == 0:
-        os.rmdir(dem_dir)
+    if inps.flag_dem:
+        dem_dir = work_dir + '/DEM'
+        if os.path.isdir(dem_dir) and len(os.listdir(dem_dir)) == 0:
+            os.rmdir(dem_dir)
 
-    if not os.path.isdir(dem_dir):
-        if 'sentinelStack.demDir' in list(template.keys()) and template['sentinelStack.demDir'] != str('auto'):
-            shutil.copytree(template['sentinelStack.demDir'], dem_dir)
-        else:
-            # TODO: Change subprocess call to get back error code and send error code to logger
-            command = 'dem_rsmas.py ' + custom_template_file
-            print(command)
-            messageRsmas.log(command)
-            status = subprocess.Popen(command, shell=True).wait()
-            if status is not 0:
-                logger.log(loglevel.ERROR, 'ERROR while making DEM')
-                raise Exception('ERROR while making DEM')
+        if not os.path.isdir(dem_dir):
+            if 'sentinelStack.demDir' in list(template.keys()) and template['sentinelStack.demDir'] != str('auto'):
+                shutil.copytree(template['sentinelStack.demDir'], dem_dir)
+            else:
+                # TODO: Change subprocess call to get back error code and send error code to logger
+                command = 'dem_rsmas.py ' + custom_template_file
+                print(command)
+                messageRsmas.log(command)
+                status = subprocess.Popen(command, shell=True).wait()
+                if status is not 0:
+                    logger.log(loglevel.ERROR, 'ERROR while making DEM')
+                    raise Exception('ERROR while making DEM')
 
 
 #################################################################################
