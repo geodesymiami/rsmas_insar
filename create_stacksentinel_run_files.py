@@ -16,8 +16,6 @@ from _processSteps import create_or_update_template, create_or_copy_dem
 from _process_utilities  import get_work_directory, get_project_name
 from _process_utilities  import _remove_directories, send_logger
 
-sys.path.insert(0, os.getenv('SENTINEL_STACK'))
-sys.path.insert(0, os.getenv('SQUEESAR'))
 
 logger  = send_logger()
 
@@ -56,6 +54,7 @@ if __name__ == "__main__":
     os.chdir(inps.work_dir)
 
 
+
     try:
         files1 = glob.glob(inps.work_dir + '/DEM/*.wgs84')[0]
         files2 = glob.glob(inps.work_dir + '/DEM/*.dem')[0]
@@ -67,11 +66,10 @@ if __name__ == "__main__":
                                              custom_template_file=inps.custom_template_file)
 
     inps.demDir = dem_file
-    script = 'stackSentinel.py'
-    extraOptions = ''
+    command = 'stackSentinel.py'
+
     if inps.processingMethod == 'squeesar' or inps.processingMethod == 'ps':
-        script = 'stackSentinel_squeesar.py'
-        extraOptions = ' --processingmethod ' + inps.processingMethod
+        inps.workflow = 'slc'
 
         
     prefixletters = ['-slc_directory', '-orbit_directory', '-aux_directory', '-working_directory', 
@@ -87,7 +85,6 @@ if __name__ == "__main__":
                  'esdCoherenceThreshold', 'snrThreshold', 'unwMethod', 'polarization',
                  'coregistration', 'workflow', 'startDate', 'stopDate', 'textCmd']
 
-    command = script + extraOptions
 
     for value, pref in zip(inpsvalue, prefixletters):
         keyvalue = eval('inps.' + value)
@@ -103,9 +100,7 @@ if __name__ == "__main__":
     temp_list = ['run_files', 'configs', 'orbits']
     _remove_directories(temp_list)
 
-    #process = subprocess.Popen( command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    #(error, output) = process.communicate()    # FA 11/18: changed order (was output,error) because of stream redirecting
-    #if process.returncode is not 0 or error or 'Traceback' in output.decode("utf-8"):
+
     status = subprocess.Popen( command, shell=True).wait()
     if status is not 0: 
         logger.log(loglevel.ERROR, 'ERROR making run_files using {}'.format(script))
