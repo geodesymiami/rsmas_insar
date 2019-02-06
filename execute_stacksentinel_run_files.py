@@ -69,8 +69,6 @@ def set_memory_defaults():
                  'merge':'3700',
                  'merge_burst_igram': '3700',
                  'grid_baseline':'3700',
-                 'crop_merged_slc':'3700',
-                 'phase_linking':'5000',
                  'generate_igram':'3700',
                  'filter_coherence':'6000',
                  'merge_master_slave_slc':'3700',
