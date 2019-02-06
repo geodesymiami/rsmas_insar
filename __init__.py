@@ -1,5 +1,14 @@
 # LOGGING
 import logging
+import sys
+import os
+
+
+rsmasisce_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(1, rsmasisce_path)
+
+
+
 logging.basicConfig(filename="example.log",
                             format='%(asctime)s | %(name)-25s | [ %(levelname)s ]'
                                                        ' | %(filename)s:%(lineno)d | %(message)s',
