@@ -399,6 +399,7 @@ def process_runfiles(inps):
         if int(inps.custom_template['cleanopt']) >= 1:
             _remove_directories(cleanlist[1])
 
+
     if inps.stopprocess:
         logger.log(loglevel.INFO, 'Exit as planned after processing')
         sys.exit(0)
@@ -435,6 +436,49 @@ def run_pysar(inps, start_time):
 
     return
 
+###############################################################################
+
+def create_squeesar_runfiles(inps):
+    os.chdir(inps.work_dir)
+    command = 'create_squeesar_run_files.py ' + inps.custom_template_file
+    messageRsmas.log(command)
+    # Check the performance, change in subprocess
+    status = subprocess.Popen(command, shell=True).wait()
+    if status is not 0:
+        logger.log(loglevel.ERROR, 'ERROR in create_squeesar_run_files.py')
+        raise Exception('ERROR in create_squeesar_run_files.py')
+    if inps.stopmakerun:
+        logger.log(loglevel.INFO, 'Exit as planned after making squeesar run files ')
+        sys.exit(0)
+    return
+
+###############################################################################
+
+
+def process_time_series(inps):
+    """ runs time series analysis based on squeesar."""
+
+    if inps.flag_pysar:
+
+        if not os.path.isdir(inps.workingDir+'/run_files_SQ'):
+            create_squeesar_runfiles(inps)
+
+        command = 'execute_squeesar_run_files.py ' + inps.custom_template_file
+        messageRsmas.log(command)
+        # Check the performance, change in subprocess
+        status = subprocess.Popen(command, shell=True).wait()
+        if status is not 0:
+            logger.log(loglevel.ERROR, 'ERROR in execute_squeesar_run_files.py')
+            raise Exception('ERROR in execute_squeesar_run_files.py')
+
+        if int(inps.custom_template['cleanopt']) >= 1:
+            _remove_directories(cleanlist[1])
+
+    if inps.stoppysar:
+        logger.log(loglevel.DEBUG, 'Exit as planned after time series analysis')
+        sys.exit(0)
+
+    return
 
 ###############################################################################
 
