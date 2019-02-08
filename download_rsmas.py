@@ -64,25 +64,37 @@ def main(iargs=None):
     command = 'download_ssara_rsmas.py ' + inps.template_file
     #messageRsmas.log(command)
     command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e'
-    command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slc_dir + '; ' +  command + '\"'
-    status = subprocess.Popen(command_ssh, shell=True).wait()
-    print('Exit status from download_ssara_rsmas.py:', status)
+    command_list = ['s.cgood', 'cd ' + slc_dir, command] 
+    ssh_proc = subprocess.Popen(['ssh', 'pegasus.ccs.miami.edu', 'bash -s -l'], stdin=subprocess.PIPE)
+    for cmd in command_list:
+        ssh_proc.stdin.write(cmd.encode('utf8'))
+        ssh_proc.stdin.write('\n'.encode('utf8'))
+    ssh_proc.communicate()
+    print('Exit status from download_ssara_rsmas.py:', ssh_proc.returncode)
 
     out_file = os.getcwd() + '/' + 'out_download_asfserial1'
     command = 'download_asfserial_rsmas.py ' + inps.template_file
     #messageRsmas.log(command)
     command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e'
-    command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slc_dir + '; ' +  command + '\"'
-    status = subprocess.Popen(command_ssh, shell=True).wait()
-    print('Exit status from download_asfserial_rsmas.py:', status)
+    command_list = ['s.cgood', 'cd ' + slc_dir, command]
+    ssh_proc = subprocess.Popen(['ssh', 'pegasus.ccs.miami.edu', 'bash -s -l'], stdin=subprocess.PIPE)
+    for cmd in command_list:
+        ssh_proc.stdin.write(cmd.encode('utf8'))
+        ssh_proc.stdin.write('\n'.encode('utf8'))
+    ssh_proc.communicate()
+    print('Exit status from download_asfserial_rsmas.py:', ssh_proc.returncode)
 
     out_file = os.getcwd() + '/' + 'out_download_asfserial2'
     command = 'download_asfserial_rsmas.py ' + inps.template_file
     #messageRsmas.log(command)
     command = '('+command+' > '+out_file+'.o) >& '+out_file+'.e'
-    command_ssh = 'ssh pegasus.ccs.miami.edu \"s.cgood;cd ' + slc_dir + '; ' +  command + '\"'
-    status = subprocess.Popen(command_ssh, shell=True).wait()
-    print('Exit status from download_asfserial_rsmas.py:', status)
+    command_list = ['s.cgood', 'cd ' + slc_dir, command]
+    ssh_proc = subprocess.Popen(['ssh', 'pegasus.ccs.miami.edu', 'bash -s -l'], stdin=subprocess.PIPE)
+    for cmd in command_list:
+        ssh_proc.stdin.write(cmd.encode('utf8'))
+        ssh_proc.stdin.write('\n'.encode('utf8'))
+    ssh_proc.communicate()
+    print('Exit status from download_asfserial_rsmas.py:', ssh_proc.returncode)
 
 ###########################################################################################
 if __name__ == '__main__':
