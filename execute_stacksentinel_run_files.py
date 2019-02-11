@@ -96,12 +96,16 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
         if item_memory == 'phase_linking':
             walltimelimit = '40:00'
 
-        queuename = 'general'
-        cmd = 'createBatch.pl ' + cwd + '/' + item + ' memory=' + memorymax + ' walltime=' + walltimelimit + ' QUEUENAME=' + queuename
+        queuename = os.getenv('QUEUENAME')
+
+        #cmd = 'createBatch.pl ' + cwd + '/' + item + ' memory=' + memorymax + ' walltime=' + walltimelimit + ' QUEUENAME=' + queuename
+        #cmd = 'create_batch.py ' + cwd + '/' + item
+
+        cmd = 'create_batch.py ' + cwd + '/' + item + ' --memory=' + memorymax + ' --walltime=' + walltimelimit + ' --queuename ' + queuename
         print('command:',cmd)
         status = subprocess.Popen(cmd, shell=True).wait()
         if status is not 0:
-            logger_exec_run.log(loglevel.ERROR, 'ERROR submitting {} using createBatch.pl'.format(item))
+            logger_exec_run.log(loglevel.ERROR, 'ERROR submitting {} using create_batch.py'.format(item))
             raise Exception('ERROR submitting {} using createBatch.pl'.format(item))
             
         job_folder = cwd + '/' + item + '_out_jobs'
