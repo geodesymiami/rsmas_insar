@@ -96,7 +96,7 @@ def run_download_asf_serial(run_number=1):
 	exit_code = completion_status  # get the exit code of the command
 	logger.log(loglevel.INFO, "EXIT CODE: %s", str(exit_code))
 
-	bad_codes = [137]
+	bad_codes = [137,-9]
 
 	# If the exit code is one that signifies an error, rerun the entire command
 	if exit_code in bad_codes or hang_status:
