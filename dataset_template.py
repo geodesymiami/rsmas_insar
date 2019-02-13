@@ -89,7 +89,9 @@ class Template:
         self.options = default_options
         return  self.options
       
-            
+    def update_option(self, key, value):
+        options = self.get_options()
+        options[key] = value
     
     def get_options(self):
         """ Provides direct access to the options dictionary.
