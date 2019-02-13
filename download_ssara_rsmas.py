@@ -168,6 +168,7 @@ def run_ssara(run_number=1):
                                                                         completion_status))
 
     exit_code = completion_status  # get the exit code of the command
+    ssara_process.terminate()
     logger.log(loglevel.INFO, "EXIT CODE: %s", str(exit_code))
 
     bad_codes = [137,-9]
