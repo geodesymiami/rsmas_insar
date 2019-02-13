@@ -119,11 +119,15 @@ def run_ssara(run_number=1):
     if run_number > 10:
         return 0
 
+    logger.log(loglevel.INFO, "PASSED RUN NUMBER > 10")
+
     # Compute SSARA options to use 
 
     ssaraopt =  generate_ssaraopt_string(template_file=inps.template)
 
     ssaraopt = ssaraopt.split(' ')
+
+    logger.log(loglevel.INFO, "GENERATED SSARAOPT STRING")
 
     # Runs ssara_federated_query-cj.py with proper options
     ssara_call    = ['ssara_federated_query-cj.py'] + ssaraopt + ['--print', '--download']
@@ -131,11 +135,15 @@ def run_ssara(run_number=1):
     messageRsmas.log(' '.join(ssara_call))
     ssara_process = subprocess.Popen(ssara_call)
 
+    logger.log(loglevel.INFO, "STARTED PROCESS")
+   
     completion_status = ssara_process.poll()  # the completion status of the process
     hang_status = False  # whether or not the download has hung
     wait_time =  2  # 10 wait time in 'minutes' to determine hang status
     prev_size = -1  # initial download directory size
     i = 0  # index for waiting periods (for calculation of total time only)
+
+    logger.log(loglevel.INFO, "INITIAL COMPLETION STATUS: %s", str(completion_status))
 
     # while the process has not completed
     while completion_status is None:
