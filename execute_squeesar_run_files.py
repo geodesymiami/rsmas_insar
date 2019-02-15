@@ -86,7 +86,7 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
 
         queuename = os.getenv('QUEUENAME')
 
-         cmd = 'create_batch.py ' + cwd + '/' + item + ' --memory=' + memorymax + ' --walltime=' + walltimelimit + \
+        cmd = 'create_batch.py ' + cwd + '/' + item + ' --memory=' + memorymax + ' --walltime=' + walltimelimit + \
                ' --queuename ' + queuename + ' --outdir "run_files_SQ"'
         print('command:', cmd)
         status = subprocess.Popen(cmd, shell=True).wait()
