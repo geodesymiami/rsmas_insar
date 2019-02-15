@@ -25,7 +25,6 @@ def command_line_parse(iargs=None):
     inps = parser.parse_args(args=iargs)
     return inps
 
-
 def create_parser():
     """ Creates command line argument parser object. """
     parser = argparse.ArgumentParser(description='Downloads SAR data using a variety of scripts',
@@ -33,7 +32,6 @@ def create_parser():
     parser.add_argument('template_file', help='template file containing ssaraopt field')
     # parser.add_argument('template_file', help='template file containing ssaraopt field', nargs='?')
     return parser
-
 
 def ssh_with_commands(hostname, command_list):
     """
@@ -49,27 +47,31 @@ def ssh_with_commands(hostname, command_list):
     ssh_proc.communicate()
     return ssh_proc.returncode
 
-
 def download(script_name, template_file, slc_dir):
     """
     Runs download script with given script name.
-    :param script_name: Name of download script to run (ssara, asfserial1, or asfserial2)
+    :param script_name: Name of download script to run (ssara, asfserial)
     :param template_file: Template file to download data from.
     :param slc_dir: SLC directory inside work directory.
     """
-    if script_name not in {'ssara', 'asfserial1', 'asfserial2'}:
+    if script_name not in {'ssara', 'asfserial'}:
         print('{} download not supported'.format(script_name))
     out_file = os.path.join(os.getcwd(), 'out_download_{0}'.format(script_name))
-    if script_name in {'asfserial1', 'asfserial2'}:
-        script_name = 'asfserial'
     command = 'download_{0}_rsmas.py {1}'.format(script_name, template_file)
-    # messageRsmas.log(command)
     command = '({0} > {1}.o) >& {1}.e'.format(command, out_file)
-    ssh_command_list = ['s.cgood', 'cd {0}'.format(slc_dir), command]
-    host = 'pegasus.ccs.miami.edu'
-    status = ssh_with_commands(host, ssh_command_list)
-    print('Exit status from download_{0}_rsmas.py: {1}'.format(script_name, status))
 
+    if os.getenv('DOWNLOADHOST') == 'local':
+        print('Command: ' + command )
+        proc = subprocess.Popen(command,  stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+        output, error = proc.communicate()
+        if proc.returncode is not 0:
+            raise Exception('ERROR downloading using: download_{0}_rsmas.py'.format(script_name))
+    else:
+        ssh_command_list = ['s.bgood', 'cd {0}'.format(slc_dir), command]
+        host = os.getenv('DOWNLOADHOST')
+        status = ssh_with_commands(host, ssh_command_list)
+
+    print('Exit status from download_{0}_rsmas.py: {1}'.format(script_name, status))
 
 ###############################################################################
 
@@ -101,8 +103,7 @@ def main(iargs=None):
         return
 
     download('ssara', inps.template_file, slc_dir)
-    download('asfserial1', inps.template_file, slc_dir)
-    download('asfserial2', inps.template_file, slc_dir)
+    download('asfserial', inps.template_file, slc_dir)
 
 ###########################################################################################
 
