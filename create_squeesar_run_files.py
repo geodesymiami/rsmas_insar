@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
 
     prefixletters = ['-customTemplateFile', '-slc_directory', '-working_directory',
-                     '-patchsize', '-plmethod', '-rangewindow', '-azimuthwindow', '-cropbox',
+                     '-patchsize', '-plmethod', '-range_window', '-azimuth_window', '-cropbox',
                      '-exclude_dates', '-azimuth_looks', '-range_looks', '-unw_method',
                      '-text_cmd']
     
