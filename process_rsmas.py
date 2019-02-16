@@ -101,10 +101,16 @@ if __name__ == "__main__":
     # startpysar: running PySAR and email results
     #########################################
 
-    # Run PySAR script:
-    #    pysarApp.py $TE/template
 
-    prs.run_pysar(inps, start_time)
+    if inps.custom_template['sentinelStack.processingMethod'] == 'squeesar' :
+        # Run squeesar script:
+        #    create_squeesar_run_files.py $TE/template
+        #    execute_squeesar_run_files.py $TE/template
+        prs.process_time_series(inps)
+    else:
+        # Run PySAR script:
+        #    pysarApp.py $TE/template
+        prs.run_pysar(inps, start_time)
 
     # Run ingest insarmaps script and email results
     #    ingest_insarmaps.py $TE/template
