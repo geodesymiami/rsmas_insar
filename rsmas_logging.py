@@ -20,7 +20,9 @@ class rsmas_logger():
         self.logfile_name = file_name
 
         self.logger.setLevel(logging.DEBUG)
-        self.set_format(self.format)
+        
+        if len(self.logger.handlers) >= 0:
+            self.set_format(self.format)
 
     def setup_filehandler(self, formatter):
         file_handler = logging.FileHandler(self.logfile_name, 'a+', encoding=None)
@@ -42,9 +44,15 @@ class rsmas_logger():
         formatter = logging.Formatter(self.format)
 
         self.file_handler = self.setup_filehandler(formatter)
-        self.console_handler = self.setup_consolehandler(formatter)
-
         self.logger.addHandler(self.file_handler)
+        
+        streamHandlers = [h for h in self.logger.handlers if not isinstance(h, logging.FileHandler)]
+
+        if len(streamHandlers) == 0:
+            self.console_handler = self.setup_consolehandler(formatter)
+        else:
+            self.console_handler = streamHandlers[0]
+
         self.logger.addHandler(self.console_handler)
 
     def log(self, level=loglevel.INFO, message="", *args, **kwargs):

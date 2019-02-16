@@ -114,7 +114,7 @@ def run_ssara(run_number=1):
         Returns: status_cod: int, the status of the donwload (0 for failed, 1 for success)
 
     """
-    
+
     logger.log(loglevel.INFO, "RUN NUMBER: %s", str(run_number))
     if run_number > 10:
         return 0
@@ -146,6 +146,7 @@ def run_ssara(run_number=1):
     logger.log(loglevel.INFO, "INITIAL COMPLETION STATUS: %s", str(completion_status))
 
     # while the process has not completed
+    #import pdb; pdb.set_trace()
     while completion_status is None:
 
         i = i + 1
