@@ -1,0 +1,17 @@
+#! /bin/tcsh
+#BSUB -J run_operations
+#BSUB -N -u jaz101@rsmas.miami.edu
+#BSUB -o /nethome/dwg11/insarlab/OPERATIONS/LOGS/JOB_SUBMISSION_LOGS/z_autorun_%J.o
+#BSUB -e /nethome/dwg11/insarlab/OPERATIONS/LOGS/JOB_SUBMISSION_LOGS/z_autorun_%J.e
+#BSUB -n 1
+#BSUB -P insarlab
+#BSUB -q general
+#BSUB -b 12:00
+
+s.cgood
+nohup run_operations.py &
+
+sleep 120
+
+bsub < $OPERATIONS/run_operations.job
+

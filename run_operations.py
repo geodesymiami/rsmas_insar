@@ -91,14 +91,16 @@ def setup_logging_handlers(dset, mode):
     Parameters: none
     Returns:    parser: argument parser object
 """
-def create_process_sentinel_parser():
-	parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+def create_process_rsmas_parser():
+	parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description="Submits processing jobs\
+ for each datasest template present in the $OPERATIONS/TEMPLATES/ directory.  \nPlace run_operation_LSF.job file\
+ into $OPERATIONS directory and submit with bsub < run_operation_LSF.job. \nIt runs run_operations once daily at 12:00 PM.")
 
 	parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
 	parser.add_argument("--dataset", dest='dataset', metavar="DATASET", help='Particular dataset to run')
 	parser.add_argument('--templatecsv', dest='template_csv', metavar='FILE', help='local csv file containing template info.')
 	parser.add_argument('--singletemplate', dest='single_template', metavar='FILE', help='singular template file to run on')
-	parser.add_argument('--startssara', dest='startssara', action='store_true', help='process_sentinel.py --startssara')
+	parser.add_argument('--startssara', dest='startssara', action='store_true', help='process_rsmas.py --startssara')
 	parser.add_argument('--stopssara', dest='stopssara', action='store_true', help='stop after downloading')
 	parser.add_argument('--startprocess', dest='startprocess', action='store_true', help='process using sentinelstack package')
 	parser.add_argument('--stopprocess', dest='stopprocess', action='store_true', help='stop after processing')
@@ -119,7 +121,7 @@ def create_process_sentinel_parser():
 def command_line_parse(args):
 	global inps;
 
-	parser = create_process_sentinel_parser()
+	parser = create_process_rsmas_parser()
 	inps = parser.parse_args(args)
 	
 	logger.info("\tCOMMAND LINE VARIABLES:")
@@ -197,7 +199,7 @@ def overwrite_stored_date():
     Parameters: none
     Returns:    [files], [str] an array of file paths to the processSentinel output and error files
 """
-def run_process_sentinel():
+def run_process_rsmas():
 	global user, dataset
 	
 	psen_extra_options = []
@@ -222,7 +224,7 @@ def run_process_sentinel():
 	if len(psen_extra_options) == 0:
 		psen_extra_options.append('--insarmaps')
 		
-	psen_options = ['process_sentinel.py', os.getenv('OPERATIONS')+'/TEMPLATES/'+dataset+'.template'] + psen_extra_options + ['--bsub']
+	psen_options = ['process_rsmas.py', os.getenv('OPERATIONS')+'/TEMPLATES/'+dataset+'.template'] + psen_extra_options + ['--bsub']
 	
 	psen_output = subprocess.check_output(psen_options).decode('utf-8')
 	
