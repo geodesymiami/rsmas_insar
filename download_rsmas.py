@@ -9,6 +9,7 @@ import os
 import sys
 import argparse
 import subprocess
+import glob
 
 import messageRsmas
 import _process_utilities as putils
@@ -47,7 +48,7 @@ def ssh_with_commands(hostname, command_list):
     ssh_proc.communicate()
     return ssh_proc.returncode
 
-def download(script_name, template_file, slc_dir):
+def download(script_name, template_file, slc_dir, outnum):
     """
     Runs download script with given script name.
     :param script_name: Name of download script to run (ssara, asfserial)
@@ -56,7 +57,8 @@ def download(script_name, template_file, slc_dir):
     """
     if script_name not in {'ssara', 'asfserial'}:
         print('{} download not supported'.format(script_name))
-    out_file = os.path.join(os.getcwd(), 'out_download_{0}'.format(script_name))
+
+    out_file = os.path.join(os.getcwd(), 'out_download_{0}{1}'.format(script_name,outnum))
     command = 'download_{0}_rsmas.py {1}'.format(script_name, template_file)
     command = '({0} > {1}.o) >& {1}.e'.format(command, out_file)
 
@@ -102,8 +104,18 @@ def main(iargs=None):
 
         return
 
-    download('ssara', inps.template_file, slc_dir)
-    download('asfserial', inps.template_file, slc_dir)
+    download('ssara', inps.template_file, slc_dir, outnum = 1)
+    download('ssara', inps.template_file, slc_dir, outnum = 2)
+    download('ssara', inps.template_file, slc_dir, outnum = 3)
+    download('ssara', inps.template_file, slc_dir, outnum = 4)
+    download('ssara', inps.template_file, slc_dir, outnum = 5)
+    download('ssara', inps.template_file, slc_dir, outnum = 6)
+    download('ssara', inps.template_file, slc_dir, outnum = 7)
+    download('ssara', inps.template_file, slc_dir, outnum = 8)
+    download('ssara', inps.template_file, slc_dir, outnum = 9)
+    download('asfserial', inps.template_file, slc_dir,outnum = 1)
+    download('asfserial', inps.template_file, slc_dir,outnum = 2)
+    download('asfserial', inps.template_file, slc_dir,outnum = 3)
 
 ###########################################################################################
 
