@@ -10,17 +10,17 @@ from rsmas_logging import loglevel
 import argparse
 import subprocess
 from _process_utilities import get_project_name, send_logger
-from _process_utilities import remove_zero_size_or_length_files, concatenate_error_files 
+from _process_utilities import remove_zero_size_or_length_files, concatenate_error_files
 from _process_utilities import remove_error_files_except_first
 from _processSteps import create_or_update_template
 
-
-logger_exec_run  = send_logger()
+logger_exec_run = send_logger()
 
 ##############################################################################
 EXAMPLE = """example:
-  execute_stacksentinel_run_files.py LombokSenAT156VV.template 
+  execute_squeesar_run_files.py LombokSenAT156VV.template 
 """
+
 
 def create_parser():
     """ Creates command line argument parser object. """
@@ -43,14 +43,14 @@ def command_line_parse(args):
 
 
 def get_run_files():
-    """ Reads stackSentinel runfiles to a list. """
+    """ Reads squeesar runfiles to a list. """
 
-    runfiles = os.path.join(inps.work_dir, 'run_files_list')
+    runfiles = os.path.join(inps.work_dir, 'run_files_list_sq')
     run_file_list = []
     with open(runfiles, 'r') as f:
         new_f = f.readlines()
         for line in new_f:
-            run_file_list.append('run_files/'+line.split('/')[-1][:-1])
+            run_file_list.append('run_files_SQ/' + line.split('/')[-1][:-1])
 
     return run_file_list
 
@@ -58,21 +58,12 @@ def get_run_files():
 def set_memory_defaults():
     """ Sets an optimized memory value for each job. """
 
-    memoryuse = {'unpack_slc_topo_master':'3700',
-                 'average_baseline':'3700',
-                 'extract_burst_overlaps':'3700',
-                 'overlap_geo2rdr_resample':'4000',
-                 'pairs_misreg':'3700',
-                 'timeseries_misreg':'3700',
-                 'geo2rdr_resample':'5000',
-                 'extract_stack_valid_region':'3700',
-                 'merge':'3700',
-                 'merge_burst_igram': '3700',
-                 'grid_baseline':'3700',
-                 'generate_igram':'3700',
-                 'filter_coherence':'6000',
-                 'merge_master_slave_slc':'3700',
-                 'unwrap':'3700'}
+    memoryuse = {'crop_merged_slc': '3700',
+                 'create_patch': '3700',
+                 'phase_linking': '3700',
+                 'generate_interferogram_and_coherence': '3700',
+                 'unwrap': '3700',
+                 'corrections_and_velocity"': '3700'}
 
     return memoryuse
 
@@ -93,37 +84,27 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
         else:
             walltimelimit = '4:00'
 
-        if item_memory == 'phase_linking':
-            walltimelimit = '40:00'
-
         queuename = os.getenv('QUEUENAME')
 
-        #cmd = 'createBatch.pl ' + cwd + '/' + item + ' memory=' + memorymax + ' walltime=' + walltimelimit + ' QUEUENAME=' + queuename
-        #cmd = 'create_batch.py ' + cwd + '/' + item
-
-        cmd = 'create_batch.py ' + cwd + '/' + item + ' --memory=' + memorymax + ' --walltime=' + walltimelimit + ' --queuename ' + queuename
-        print('command:',cmd)
+        cmd = 'create_batch.py ' + cwd + '/' + item + ' --memory=' + memorymax + ' --walltime=' + walltimelimit + \
+               ' --queuename ' + queuename + ' --outdir "run_files_SQ"'
+        print('command:', cmd)
         status = subprocess.Popen(cmd, shell=True).wait()
         if status is not 0:
-            logger_exec_run.log(loglevel.ERROR, 'ERROR submitting {} using create_batch.py'.format(item))
+            logger_exec_run.log(loglevel.ERROR, 'ERROR submitting {} using createBatch.pl'.format(item))
             raise Exception('ERROR submitting {} using createBatch.pl'.format(item))
-            
+
         job_folder = cwd + '/' + item + '_out_jobs'
-        print('jobfolder:',job_folder)
-        
-        #if not os.path.isdir(job_folder):
-        #    os.makedirs(job_folder)
-        #mvlist = ['*.e ', '*.o ', '*.job ']
-        #for mvitem in mvlist:
-        #    cmd = 'mv ' + cwd + '/run_files/' + mvitem + job_folder
-        #    print('move command:',cmd)
-        #    os.system(cmd) 
+        print('jobfolder:', job_folder)
+
 
     return None
+
 
 ##############################################################################
 class inpsvar:
     pass
+
 
 if __name__ == "__main__":
 
@@ -150,20 +131,18 @@ if __name__ == "__main__":
     except:
         inps.stop = len(run_file_list)
 
-
-    logger_exec_run.log(loglevel.INFO, "Executing Runfiles {} to {}".format(inps.start,inps.stop))
-
+    logger_exec_run.log(loglevel.INFO, "Executing Runfiles {} to {}".format(inps.start, inps.stop))
 
     memoryuse = set_memory_defaults()
 
     submit_isce_jobs(run_file_list[inps.start - 1:inps.stop], inps.work_dir, memoryuse)
-    
+
     remove_zero_size_or_length_files(directory='run_files')
-    
-    concatenate_error_files(directory='run_files',out_name='out_stack_sentinel_errorfiles.e')
-    
+
+    concatenate_error_files(directory='run_files', out_name='out_stack_sentinel_errorfiles.e')
+
     remove_error_files_except_first(directory='run_files')
 
     logger_exec_run.log(loglevel.INFO, "-----------------Done Executing Run files-------------------")
-    
-    
+
+

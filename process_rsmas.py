@@ -44,7 +44,10 @@ if __name__ == "__main__":
 
     #  Read and update template file:
     inps = prs.create_or_update_template(inps)
-    
+    print(inps)
+    if not inps.processingMethod or inps.workflow=='interferogram':
+        inps.processingMethod='squeesar'
+
     if not os.path.isdir(inps.slc_dir):
         os.makedirs(inps.slc_dir)
 
@@ -101,10 +104,16 @@ if __name__ == "__main__":
     # startpysar: running PySAR and email results
     #########################################
 
-    # Run PySAR script:
-    #    pysarApp.py $TE/template
 
-    prs.run_pysar(inps, start_time)
+    if inps.processingMethod == 'squeesar' :
+        # Run squeesar script:
+        #    create_squeesar_run_files.py $TE/template
+        #    execute_squeesar_run_files.py $TE/template
+        prs.process_time_series(inps)
+    else:
+        # Run PySAR script:
+        #    pysarApp.py $TE/template
+        prs.run_pysar(inps, start_time)
 
     # Run ingest insarmaps script and email results
     #    ingest_insarmaps.py $TE/template
