@@ -46,7 +46,7 @@ EXAMPLE = '''example:
   --insarmaps          append after other options to upload to insarmaps.miami.edu
   --bsub               submits job using bsub (and send email when done)
   --nomail             suppress emailing imagefiles of results (default is emailing)
-  --restart            removes project directory before starting download
+  --remove_project_dir removes project directory before starting download or processing
 
 
   e.g.:  process_rsmas.py  $SAMPLESDIR/GalapagosT128SenVVD.template
@@ -165,6 +165,11 @@ def create_process_rsmas_parser(EXAMPLE):
         action='store_true',
         help='ingest into insarmaps')
     parser.add_argument(
+        '--remove_project_dir',
+        dest='remove_project_dir',
+        action='store_true',
+        help='remove directory before download starts')
+    parser.add_argument(
         '--latest',
         dest='flag_latest_version',
         action='store_true',
@@ -199,17 +204,20 @@ def command_line_parse():
     inps.startssara = True
     inps.flag_ssara = False
     inps.flag_makerun = False
+    inps.flag_dem = False
     inps.flag_process = False
     inps.flag_pysar = False
     inps.stoppysarload = False
     
     if inps.startmakerun:
         inps.flag_makerun = True
+        inps.flag_dem = True
         inps.flag_process = True
         inps.flag_pysar = True
         inps.startssara = False
 
     if inps.startprocess:
+        inps.flag_dem = True
         inps.flag_process = True
         inps.flag_pysar = True
         inps.flag_makerun = False
@@ -235,6 +243,7 @@ def command_line_parse():
 
     logger.log(loglevel.DEBUG, 'flag_ssara:     {}'.format(inps.flag_ssara))
     logger.log(loglevel.DEBUG, 'flag_makerun:   {}'.format(inps.flag_makerun))
+    logger.log(loglevel.DEBUG, 'flag_dem:       {}'.format(inps.flag_dem))
     logger.log(loglevel.DEBUG, 'flag_process:   {}'.format(inps.flag_process))
     logger.log(loglevel.DEBUG, 'flag_pysar:     {}'.format(inps.flag_pysar))
     logger.log(loglevel.DEBUG, 'flag_insarmaps: {}'.format(inps.flag_insarmaps))
@@ -255,7 +264,7 @@ def submit_job(argv, inps):
     """ Submits process_rsmas.py as a job. """
 
     if inps.bsub_flag:
-
+       scheduler = os.getenv('JOBSCHEDULER')
        command_line = os.path.basename(argv[0])
        i = 1
        while i < len(argv):
@@ -263,34 +272,48 @@ def submit_job(argv, inps):
                 command_line = command_line + ' ' + sys.argv[i]
              i = i + 1
        command_line = command_line + '\n'
-
        projectID = 'insarlab'
 
        f = open(inps.work_dir+'/process.job', 'w')
        f.write('#! /bin/tcsh\n')
-       f.write('#BSUB -J '+inps.project_name+' \n')
-       f.write('#BSUB -B -u '+os.getenv('NOTIFICATIONEMAIL')+'\n')
-       f.write('#BSUB -o z_processSentinel_%J.o\n')
-       f.write('#BSUB -e z_processSentinel_%J.e\n')
-       f.write('#BSUB -n 1\n' )
-       if projectID:
-          f.write('#BSUB -P '+projectID+'\n')
-       #f.write('#BSUB -q '+os.getenv('QUEUENAME')+'\n')
-       f.write('#BSUB -q '+'general'+'\n')
-       if inps.wall_time:
-          f.write('#BSUB -W ' + inps.wall_time + '\n')
+
+       if scheduler == "LSF":
+           f.write('#BSUB -J '+inps.project_name+' \n')
+           f.write('#BSUB -B -u '+os.getenv('NOTIFICATIONEMAIL')+'\n')
+           f.write('#BSUB -o z_processRsmas_%J.o\n')
+           f.write('#BSUB -e z_processRsmas_%J.e\n')
+           f.write('#BSUB -n 1\n' )
+           if projectID:
+              f.write('#BSUB -P '+projectID+'\n')
+           #f.write('#BSUB -q '+os.getenv('QUEUENAME')+'\n')
+           f.write('#BSUB -q '+'general'+'\n')
+           if inps.wall_time:
+              f.write('#BSUB -W ' + inps.wall_time + '\n')
+       if scheduler == "PBS":
+           f.write('#PBS -N '+inps.project_name+' \n')
+           f.write('#PBS -M '+os.getenv('NOTIFICATIONEMAIL')+'\n')
+           f.write('#PBS -o z_processRsmas_%J.o\n')
+           f.write('#PBS -e z_processRsmas_%J.e\n')
+           f.write('#PBS -l nodes=1:ppn=1\n' )
+           if projectID:
+              f.write('#PBS -A '+projectID+'\n')
+           f.write('#BSUB -q '+os.getenv('QUEUENAME')+'\n')
+           if inps.wall_time:
+              f.write('#PBS -l walltime=' + inps.wall_time + ':00\n')
+           f.write("#PBS -V\n")
 
        f.write('cd '+inps.work_dir+'\n')
        f.write(command_line)
        f.close()
 
-       if inps.bsub_flag:
+       if scheduler == "LSF":
           job_cmd = 'bsub -P insarlab < process.job'
-          logger.log(loglevel.INFO, 'bsub job submission')
-          os.system(job_cmd)
-          sys.exit(0)
+       if scheduler == "PBS":
+          job_cmd = 'qsub < process.job'
+       logger.log(loglevel.INFO, 'bsub job submission')
+       os.system(job_cmd)
+       sys.exit(0)
 
-    return None
 
 ###############################################################################
 
@@ -332,32 +355,31 @@ def call_ssara(flag_ssara, custom_template_file, slc_dir):
         import download_rsmas
         download_rsmas.main([custom_template_file])
     
-    return None
 
 ###############################################################################
 
 
-def create_or_copy_dem(work_dir, template, custom_template_file):
+def create_or_copy_dem(inps, work_dir, template, custom_template_file):
     """ Downloads a DEM file or copies an existing one."""
 
-    dem_dir = work_dir + '/DEM'
-    if os.path.isdir(dem_dir) and len(os.listdir(dem_dir)) == 0:
-        os.rmdir(dem_dir)
+    if inps.flag_dem:
+        dem_dir = work_dir + '/DEM'
+        if os.path.isdir(dem_dir) and len(os.listdir(dem_dir)) == 0:
+            os.rmdir(dem_dir)
 
-    if not os.path.isdir(dem_dir):
-        if 'sentinelStack.demDir' in list(template.keys()) and template['sentinelStack.demDir'] != str('auto'):
-            shutil.copytree(template['sentinelStack.demDir'], dem_dir)
-        else:
-            # TODO: Change subprocess call to get back error code and send error code to logger
-            command = 'dem_rsmas.py ' + custom_template_file
-            print(command)
-            messageRsmas.log(command)
-            status = subprocess.Popen(command, shell=True).wait()
-            if status is not 0:
-                logger.log(loglevel.ERROR, 'ERROR while making DEM')
-                raise Exception('ERROR while making DEM')
+        if not os.path.isdir(dem_dir):
+            if 'sentinelStack.demDir' in list(template.keys()) and template['sentinelStack.demDir'] != str('auto'):
+                shutil.copytree(template['sentinelStack.demDir'], dem_dir)
+            else:
+                # TODO: Change subprocess call to get back error code and send error code to logger
+                command = 'dem_rsmas.py ' + custom_template_file
+                print(command)
+                messageRsmas.log(command)
+                status = subprocess.Popen(command, shell=True).wait()
+                if status is not 0:
+                    logger.log(loglevel.ERROR, 'ERROR while making DEM')
+                    raise Exception('ERROR while making DEM')
 
-    return None
 
 #################################################################################
 
@@ -395,6 +417,8 @@ def process_runfiles(inps):
             logger.log(loglevel.ERROR, 'ERROR in execute_stacksentinel_run_files.py')
             raise Exception('ERROR in execute_stacksentinel_run_files.py')
 
+        if os.path.isdir('PYSAR'):
+            shutil.rmtree('PYSAR')
 
         if int(inps.custom_template['cleanopt']) >= 1:
             _remove_directories(cleanlist[1])
@@ -414,8 +438,8 @@ def run_pysar(inps, start_time):
 
     if inps.flag_pysar:
 
-        if os.path.isdir('PYSAR'):
-            shutil.rmtree('PYSAR')
+        #if os.path.isdir('PYSAR'):
+        #    shutil.rmtree('PYSAR')
 
         putils.call_pysar(custom_template=inps.custom_template,
                    custom_template_file=inps.custom_template_file,
@@ -480,6 +504,7 @@ def process_time_series(inps):
 
     return
 
+
 ###############################################################################
 
 
@@ -502,7 +527,4 @@ def run_ingest_insarmaps(inps):
         shutil.rmtree(cleanlist[4])
 
     if inps.stopinsarmaps:
-        ogger.log(loglevel.DEBUG, 'Exit as planned after insarmaps')
-
-    return None
-
+        logger.log(loglevel.DEBUG, 'Exit as planned after insarmaps')

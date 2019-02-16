@@ -33,8 +33,8 @@ TEMPLATE = '''
 ## 1. stackSentinel options
 
 sentinelStack.slcDir                      = auto         # [SLCs dir]
-sentinelStack.orbitDir                    = auto         # [/nethome/swdowinski/S1orbits/]
-sentinelStack.auxDir                      = auto         # [/nethome/swdowinski/S1aux/]
+sentinelStack.orbitDir                    = auto         # [$SENTINEL_ORBITS]
+sentinelStack.auxDir                      = auto         # [$SENTINEL_AUX]
 sentinelStack.workingDir                  = auto         # [/projects/scratch/insarlab/$USER/projname]
 sentinelStack.demDir                      = auto         # [DEM file dir]
 sentinelStack.master                      = auto         # [Master acquisition]
@@ -160,9 +160,8 @@ def create_custom_template(custom_template_file, work_dir):
 def set_default_options(inps):
     """ Sets default values for template file. """
     
-    inps.orbitDir = '/nethome/swdowinski/S1orbits/'
-    inps.auxDir = '/nethome/swdowinski/S1aux/'
-
+    inps.orbitDir = '$SENTINEL_ORBITS'
+    inps.auxDir = '$SENTINEL_AUX'
     
     TemplateTuple = namedtuple(typename='TemplateTuple',
                                field_names=['key', 'inps_name', 'default_value'])

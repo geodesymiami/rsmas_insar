@@ -138,6 +138,7 @@ def write_job_files(job_submission_params, scheduler = os.getenv('JOBSCHEDULER')
 
     # work directory to write output files to
     work_dir = os.path.join(os.environ["SCRATCHDIR"], job_submission_params.file.split("/")[-3], job_submission_params.outdir)
+
     os.chdir(work_dir)
 
     for i, file_name in enumerate(read_input_file_to_list(job_submission_params.file)):
@@ -162,6 +163,7 @@ def submit_jobs_to_bsub(job_submission_params, job_files, scheduler = os.getenv(
     :param job_submission_params: Namespace containing submission parameters
     :param job_files: Names of job files to submit
     """
+
     work_dir = os.path.join(os.environ["SCRATCHDIR"], job_submission_params.file.split("/")[-3], job_submission_params.outdir)
     os.chdir(work_dir)
 
