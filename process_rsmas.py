@@ -44,7 +44,10 @@ if __name__ == "__main__":
 
     #  Read and update template file:
     inps = prs.create_or_update_template(inps)
-    
+    print(inps)
+    if not inps.processingMethod or inps.workflow=='interferogram':
+        inps.processingMethod='squeesar'
+
     if not os.path.isdir(inps.slc_dir):
         os.makedirs(inps.slc_dir)
 
@@ -102,7 +105,7 @@ if __name__ == "__main__":
     #########################################
 
 
-    if inps.custom_template['sentinelStack.processingMethod'] == 'squeesar' :
+    if inps.processingMethod == 'squeesar' :
         # Run squeesar script:
         #    create_squeesar_run_files.py $TE/template
         #    execute_squeesar_run_files.py $TE/template
