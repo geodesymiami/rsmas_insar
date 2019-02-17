@@ -46,7 +46,7 @@ if __name__ == "__main__":
     inps = prs.create_or_update_template(inps)
     print(inps)
     if not inps.processingMethod or inps.workflow=='interferogram':
-        inps.processingMethod='squeesar'
+        inps.processingMethod='sbas'
 
     if not os.path.isdir(inps.slc_dir):
         os.makedirs(inps.slc_dir)
