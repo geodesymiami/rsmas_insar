@@ -71,32 +71,33 @@ def generate_ssaraopt_string(template_file):
         Returns: ssaraopt: str, the string with the options to call ssara_federated_query.py
     """
     # use ssaraopt.platform, relativeOrbit and frame if given, else use ssaraopt
+    template_options = Template(template_file).get_options()
     try:
-       platform = Template(template_file).get_options()['ssaraopt.platform']
-       relativeOrbit = Template(template_file).get_options()['ssaraopt.relativeOrbit']
-       frame = Template(template_file).get_options()['ssaraopt.frame']
+       platform = template_options['ssaraopt.platform']
+       relativeOrbit = template_options['ssaraopt.relativeOrbit']
+       frame = template_options['ssaraopt.frame']
        ssaraopt='--platform='+platform+' --relativeOrbit='+relativeOrbit+' --frame='+frame
 
        try:
-          startDate = Template(template_file).get_options()['ssaraopt.startDate']
+          startDate = template_options['ssaraopt.startDate']
           ssaraopt=ssaraopt+' -s='+startDate
        except:
           pass
        try:
-          endDate = Template(template_file).get_options()['ssaraopt.endDate']
+          endDate = template_options['ssaraopt.endDate']
           ssaraopt=ssaraopt+' -e='+endDate
        except:
           pass
 
     except:
        try: 
-         ssaraopt = Template(template_file).get_options()['ssaraopt']
+         ssaraopt = template_options['ssaraopt']
        except:
          raise Exception('no ssaraopt or ssaraopt.platform, relativeOrbit, frame found')
 
     # add parallel doenload option. If ssaraopt.parallelDownload not given use default value
     try:
-       parallelDownload = Template(template_file).get_options()['ssaraopt.parallelDownload']
+       parallelDownload = template_options['ssaraopt.parallelDownload']
     except:
        parallelDownload = '30'     # default
     ssaraopt=ssaraopt+' --parallel='+parallelDownload
