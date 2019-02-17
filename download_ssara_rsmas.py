@@ -24,10 +24,9 @@ def create_parser():
     """ Creates command line argument parser object. """
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('template', dest='template', metavar="FILE", help='template file to use.')
+    parser.add_argument('template', metavar="FILE", help='template file to use.')
 
     return parser
-
 
 def command_line_parse(args):
     """ Parses command line agurments into inps variable. """
@@ -36,7 +35,6 @@ def command_line_parse(args):
 
     parser = create_parser()
     inps = parser.parse_args(args)
-
 
 def check_downloads(run_number, args):
     """ Checks if all of the ssara files to be dwonloaded actually exist.
@@ -60,13 +58,51 @@ def check_downloads(run_number, args):
 
     for f in files_to_check:
         if not os.path.isfile(str(os.getcwd()) + "/" + str(f)):
-            logger.log(loglevel.WARNING, "The file, %s, didn't download correctly. Running ssara again.")
+            logger.log(logging.WARNING, "The file, %s, didn't download correctly. Running ssara again.")
             run_ssara(run_number + 1)
             return
 
     logger.log(loglevel.INFO, "Everything is there!")
 
 
+def generate_ssaraopt_string(template_file):
+    """ generates ssaraopt string from ssaraopt.* in template_file. If not given returns ssaraopt proper
+        Parameters: run_number: int, the current iteration the wrapper is on (maxiumum 10 before quitting)
+        Returns: ssaraopt: str, the string with the options to call ssara_federated_query.py
+    """
+    # use ssaraopt.platform, relativeOrbit and frame if given, else use ssaraopt
+    try:
+       platform = Template(template_file).get_options()['ssaraopt.platform']
+       relativeOrbit = Template(template_file).get_options()['ssaraopt.relativeOrbit']
+       frame = Template(template_file).get_options()['ssaraopt.frame']
+       ssaraopt='--platform='+platform+' --relativeOrbit='+relativeOrbit+' --frame='+frame
+
+       try:
+          startDate = Template(template_file).get_options()['ssaraopt.startDate']
+          ssaraopt=ssaraopt+' -s='+startDate
+       except:
+          pass
+       try:
+          endDate = Template(template_file).get_options()['ssaraopt.endDate']
+          ssaraopt=ssaraopt+' -e='+endDate
+       except:
+          pass
+
+    except:
+       try: 
+         ssaraopt = Template(template_file).get_options()['ssaraopt']
+       except:
+         raise Exception('no ssaraopt or ssaraopt.platform, relativeOrbit, frame found')
+
+    # add parallel doenload option. If ssaraopt.parallelDownload not given use default value
+    try:
+       parallelDownload = Template(template_file).get_options()['ssaraopt.parallelDownload']
+    except:
+       parallelDownload = '30'     # default
+    ssaraopt=ssaraopt+' --parallel='+parallelDownload
+
+    return ssaraopt
+    
 def run_ssara(run_number=1):
     """ Runs ssara_federated_query-cj.py and checks for download issues.
 
@@ -78,26 +114,39 @@ def run_ssara(run_number=1):
         Returns: status_cod: int, the status of the donwload (0 for failed, 1 for success)
 
     """
-    
+
     logger.log(loglevel.INFO, "RUN NUMBER: %s", str(run_number))
     if run_number > 10:
         return 0
 
+    logger.log(loglevel.INFO, "PASSED RUN NUMBER > 10")
+
     # Compute SSARA options to use 
-	  options = Template(inps.template).get_options()['ssaraopt']
-	  options = options.split(' ')
+
+    ssaraopt =  generate_ssaraopt_string(template_file=inps.template)
+
+    ssaraopt = ssaraopt.split(' ')
+
+    logger.log(loglevel.INFO, "GENERATED SSARAOPT STRING")
 
     # Runs ssara_federated_query-cj.py with proper options
-    ssara_options = ['ssara_federated_query-cj.py'] + options + ['--parallel', '10', '--print', '--download']
-    ssara_process = subprocess.Popen(ssara_options)
+    ssara_call    = ['ssara_federated_query-cj.py'] + ssaraopt + ['--print', '--download']
+    print(' '.join(ssara_call))
+    messageRsmas.log(' '.join(ssara_call))
+    ssara_process = subprocess.Popen(ssara_call)
 
+    logger.log(loglevel.INFO, "STARTED PROCESS")
+   
     completion_status = ssara_process.poll()  # the completion status of the process
     hang_status = False  # whether or not the download has hung
-    wait_time = 6  # wait time in 'minutes' to determine hang status
+    wait_time =  2  # 10 wait time in 'minutes' to determine hang status
     prev_size = -1  # initial download directory size
-    i = 0  # the iteration number (for logging only)
+    i = 0  # index for waiting periods (for calculation of total time only)
+
+    logger.log(loglevel.INFO, "INITIAL COMPLETION STATUS: %s", str(completion_status))
 
     # while the process has not completed
+    #import pdb; pdb.set_trace()
     while completion_status is None:
 
         i = i + 1
@@ -110,32 +159,38 @@ def run_ssara(run_number=1):
             hang_status = True
             logger.log(loglevel.WARNING, "SSARA Hung")
             ssara_process.terminate()  # teminate the process beacause download hung
-            break  # break the completion loop
+            break;  # break the completion loop 
 
-        time.sleep(60 * wait_time)  # wait 'wait_time' minutes before continuing
-        prev_size = curr_size
+        prev_size = curr_size  # store current size for comparison after waiting
+
+        time.sleep(60 * wait_time)  # wait 'wait_time' minutes before continuing (checking for completion) 
         completion_status = ssara_process.poll()
         logger.log(loglevel.INFO, "{} minutes: {:.1f}GB, completion_status {}".format(i * wait_time, curr_size / 1024 / 1024,
                                                                         completion_status))
 
     exit_code = completion_status  # get the exit code of the command
+    ssara_process.terminate()
     logger.log(loglevel.INFO, "EXIT CODE: %s", str(exit_code))
 
-    bad_codes = [137]
+    bad_codes = [137,-9]
 
     # If the exit code is one that signifies an error, rerun the entire command
     if exit_code in bad_codes or hang_status:
-        logger.log(loglevel.WARNING, "Something went wrong, running again")
+        if exit_code in bad_codes:
+           logger.log(loglevel.WARNING, "Exited with bad exit code, running again")
+        if hang_status:
+           logger.log(loglevel.WARNING, "Hanging, running again")
+
         run_ssara(run_number=run_number + 1)
 
-    return 1
+    return 0
 
 if __name__ == "__main__":
     command_line_parse(sys.argv[1:])
 
     inps.project_name = putils.get_project_name(custom_template_file=inps.template)
     inps.work_dir = putils.get_work_directory(None, inps.project_name)
-    inps.slcDir = putils.get_slc_directory(inps.work_dir)
+    inps.slcDir = inps.work_dir + "/SLC"
     os.chdir(inps.work_dir)
     messageRsmas.log(os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1::]))
     os.chdir(inps.slcDir)

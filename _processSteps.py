@@ -1,30 +1,25 @@
+#! /usr/bin/env python3
+###############################################################################
+#
+# Project: process_rsmas.py
+# Author: Sara Mirzaee
+# Created: 10/2018
+#
+###############################################################################
+
 import os
 import sys
-import logging
+
 import argparse
 import time
+import shutil
 import subprocess
+from rsmas_logging import rsmas_logger, loglevel
 import _process_utilities as putils
-sys.path.insert(0, os.getenv('SSARAHOME'))
-from pysar.utils import readfile
-from pysar.utils import utils
+from dataset_template import Template
 import messageRsmas
 
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-std_formatter = logging.Formatter("%(levelname)s - %(message)s")
-# process_rsmas.log File Logging
-fileHandler = logging.FileHandler(os.getenv('SCRATCHDIR')+'/process_rsmas.log', 'a+', encoding=None)
-fileHandler.setLevel(logging.INFO)
-fileHandler.setFormatter(std_formatter)
-
-# command line logging
-streamHandler = logging.StreamHandler()
-streamHandler.setLevel(logging.INFO)
-streamHandler.setFormatter(std_formatter)
-
-logger.addHandler(fileHandler)
-logger.addHandler(streamHandler)
+logger  = putils.send_logger()
 
 ####################################################################
 
@@ -51,7 +46,7 @@ EXAMPLE = '''example:
   --insarmaps          append after other options to upload to insarmaps.miami.edu
   --bsub               submits job using bsub (and send email when done)
   --nomail             suppress emailing imagefiles of results (default is emailing)
-  --restart            removes project directory before starting download
+  --remove_project_dir removes project directory before starting download or processing
 
 
   e.g.:  process_rsmas.py  $SAMPLESDIR/GalapagosT128SenVVD.template
@@ -91,7 +86,9 @@ EXAMPLE = '''example:
 ###############################################################################
 
 
-def create_processRsmas_parser(EXAMPLE):
+def create_process_rsmas_parser(EXAMPLE):
+    """ Creates command line argument parser object. """
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawTextHelpFormatter,
         epilog=EXAMPLE)
@@ -168,6 +165,11 @@ def create_processRsmas_parser(EXAMPLE):
         action='store_true',
         help='ingest into insarmaps')
     parser.add_argument(
+        '--remove_project_dir',
+        dest='remove_project_dir',
+        action='store_true',
+        help='remove directory before download starts')
+    parser.add_argument(
         '--latest',
         dest='flag_latest_version',
         action='store_true',
@@ -189,63 +191,69 @@ def create_processRsmas_parser(EXAMPLE):
 
 
 def command_line_parse():
-    """
+    """ Parses command line agurments into inps variable. """
 
-    :return: returns inputs from the command line as a parsed object
-    """
-    parser = create_processRsmas_parser(EXAMPLE)
+    parser = create_process_rsmas_parser(EXAMPLE)
 
     inps = parser.parse_args()
     if inps.custom_template_file and os.path.basename(
-            inps.custom_template_file) == 'TopsStack_template.txt':
+            inps.custom_template_file) == 'stackSentinel_template.txt':
         inps.custom_template_file = None
 
-    # option processing. Same as in process_sentinelStack.pl. Can run every portion individually
-    # need --insarmaps option so that it is run
+
     inps.startssara = True
     inps.flag_ssara = False
     inps.flag_makerun = False
+    inps.flag_dem = False
     inps.flag_process = False
-    inps.flag_pysar = False  # inps.flag_insarmaps is True only if --insarmaps
-
+    inps.flag_pysar = False
+    inps.stoppysarload = False
+    
     if inps.startmakerun:
         inps.flag_makerun = True
+        inps.flag_dem = True
         inps.flag_process = True
         inps.flag_pysar = True
         inps.startssara = False
 
     if inps.startprocess:
+        inps.flag_dem = True
         inps.flag_process = True
         inps.flag_pysar = True
         inps.flag_makerun = False
         inps.startssara = False
+        
     if inps.startpysar:
         inps.flag_pysar = True
         inps.flag_process = False
         inps.flag_makerun = False
         inps.startssara = False
+        
     if inps.startinsarmaps:
         inps.startssara = False
         inps.flag_process = False
         inps.flag_makerun = False
         inps.flag_insarmaps = True
+        
     if inps.startssara:
         inps.flag_ssara = True
         inps.flag_makerun = True
         inps.flag_process = True
         inps.flag_pysar = True
 
-    logger.debug('flag_ssara:     %s', inps.flag_ssara)
-    logger.debug('flag_makerun:   %s', inps.flag_makerun)
-    logger.debug('flag_process:   %s', inps.flag_process)
-    logger.debug('flag_pysar:     %s', inps.flag_pysar)
-    logger.debug('flag_insarmaps: %s', inps.flag_insarmaps)
-    logger.debug('flag_mail:      %s', inps.flag_mail)
-    logger.debug('flag_latest_version:   %s', inps.flag_latest_version)
-    logger.debug('stopssara:      %s', inps.stopssara)
-    logger.debug('stopmakerun:    %s', inps.stopmakerun)
-    logger.debug('stopprocess:    %s', inps.stopprocess)
-    logger.debug('stoppysar:      %s', inps.stoppysar)
+    logger.log(loglevel.DEBUG, 'flag_ssara:     {}'.format(inps.flag_ssara))
+    logger.log(loglevel.DEBUG, 'flag_makerun:   {}'.format(inps.flag_makerun))
+    logger.log(loglevel.DEBUG, 'flag_dem:       {}'.format(inps.flag_dem))
+    logger.log(loglevel.DEBUG, 'flag_process:   {}'.format(inps.flag_process))
+    logger.log(loglevel.DEBUG, 'flag_pysar:     {}'.format(inps.flag_pysar))
+    logger.log(loglevel.DEBUG, 'flag_insarmaps: {}'.format(inps.flag_insarmaps))
+    logger.log(loglevel.DEBUG, 'flag_mail:      {}'.format(inps.flag_mail))
+    logger.log(loglevel.DEBUG, 'flag_latest_version:   {}'.format(inps.flag_latest_version))
+    logger.log(loglevel.DEBUG, 'stopssara:      {}'.format(inps.stopssara))
+    logger.log(loglevel.DEBUG, 'stopmakerun:    {}'.format(inps.stopmakerun))
+    logger.log(loglevel.DEBUG, 'stopprocess:    {}'.format(inps.stopprocess))
+    logger.log(loglevel.DEBUG, 'stoppysar:      {}'.format(inps.stoppysar))
+    logger.log(loglevel.DEBUG, 'stoppysarload:  {}'.format(inps.stoppysarload))
 
     return inps
 
@@ -253,9 +261,10 @@ def command_line_parse():
 
 
 def submit_job(argv, inps):
+    """ Submits process_rsmas.py as a job. """
 
     if inps.bsub_flag:
-
+       scheduler = os.getenv('JOBSCHEDULER')
        command_line = os.path.basename(argv[0])
        i = 1
        while i < len(argv):
@@ -263,80 +272,67 @@ def submit_job(argv, inps):
                 command_line = command_line + ' ' + sys.argv[i]
              i = i + 1
        command_line = command_line + '\n'
-
        projectID = 'insarlab'
 
        f = open(inps.work_dir+'/process.job', 'w')
        f.write('#! /bin/tcsh\n')
-       f.write('#BSUB -J '+inps.project_name+' \n')
-       f.write('#BSUB -B -u '+os.getenv('NOTIFICATIONEMAIL')+'\n')
-       f.write('#BSUB -o z_processSentinel_%J.o\n')
-       f.write('#BSUB -e z_processSentinel_%J.e\n')
-       f.write('#BSUB -n 1\n' )
-       if projectID:
-          f.write('#BSUB -P '+projectID+'\n')
-       f.write('#BSUB -q '+os.getenv('QUEUENAME')+'\n')
-       #f.write('#BSUB -W 2:00\n')
-       #f.write('#BSUB -R rusage[mem=3700]\n')
-       #f.write('#BSUB -R span[hosts=1]\n')
+
+       if scheduler == "LSF":
+           f.write('#BSUB -J '+inps.project_name+' \n')
+           f.write('#BSUB -B -u '+os.getenv('NOTIFICATIONEMAIL')+'\n')
+           f.write('#BSUB -o z_processRsmas_%J.o\n')
+           f.write('#BSUB -e z_processRsmas_%J.e\n')
+           f.write('#BSUB -n 1\n' )
+           if projectID:
+              f.write('#BSUB -P '+projectID+'\n')
+           #f.write('#BSUB -q '+os.getenv('QUEUENAME')+'\n')
+           f.write('#BSUB -q '+'general'+'\n')
+           if inps.wall_time:
+              f.write('#BSUB -W ' + inps.wall_time + '\n')
+       if scheduler == "PBS":
+           f.write('#PBS -N '+inps.project_name+' \n')
+           f.write('#PBS -M '+os.getenv('NOTIFICATIONEMAIL')+'\n')
+           f.write('#PBS -o z_processRsmas_%J.o\n')
+           f.write('#PBS -e z_processRsmas_%J.e\n')
+           f.write('#PBS -l nodes=1:ppn=1\n' )
+           if projectID:
+              f.write('#PBS -A '+projectID+'\n')
+           f.write('#BSUB -q '+os.getenv('QUEUENAME')+'\n')
+           if inps.wall_time:
+              f.write('#PBS -l walltime=' + inps.wall_time + ':00\n')
+           f.write("#PBS -V\n")
+
        f.write('cd '+inps.work_dir+'\n')
        f.write(command_line)
        f.close()
 
-       if inps.bsub_flag:
+       if scheduler == "LSF":
           job_cmd = 'bsub -P insarlab < process.job'
-          print('bsub job submission')
-          os.system(job_cmd)
-          sys.exit(0)
+       if scheduler == "PBS":
+          job_cmd = 'qsub < process.job'
+       logger.log(loglevel.INFO, 'bsub job submission')
+       os.system(job_cmd)
+       sys.exit(0)
 
-##########################################################################
-
-
-def step_dir(inps, argv):
-    inps.project_name = putils.get_project_name(
-        custom_template_file=inps.custom_template_file)
-
-    inps.work_dir = putils.get_work_directory(inps.work_dir, inps.project_name)
-
-    # Change directory to work directory
-    if not os.path.isdir(inps.work_dir):
-        os.makedirs(inps.work_dir)
-    os.chdir(inps.work_dir)
-    logger.debug("Go to work directory: " + inps.work_dir)
-
-    command_line = os.path.basename(
-        argv[0]) + ' ' + ' '.join(argv[1:len(argv)])
-    messageRsmas.log('##### NEW RUN #####')
-    messageRsmas.log(command_line)
-
-    return inps
 
 ###############################################################################
 
 
-def step_template(inps):
+def create_or_update_template(inps):
+    """ Creates a default template file and/or updates it.
+        returns the values in 'inps'
+    """
 
     print('\n*************** Template Options ****************')
     # write default template
     inps.template_file = putils.create_default_template()
 
-    inps.custom_template = putils.create_custom_template(
-        custom_template_file=inps.custom_template_file,
-        work_dir=inps.work_dir)
-
-    # Update default template with custom input template
-    logger.info('update default template based on input custom template')
-    if not inps.template_file == inps.custom_template:
-        inps.template_file = utils.update_template_file(
-            inps.template_file, inps.custom_template)
-
-    if inps.generate_template:
-        logger.info('Exit as planned after template file generation.')
-        print('Exit as planned after template file generation.')
-        return
-
-        logger.info('read default template file: ' + inps.template_file)
-    inps.template = readfile.read_template(inps.template_file)
+    inps.custom_template = Template(custom_template_file=inps.custom_template_file).get_options()
+    
+    # Read and update default template with custom input template 
+    logger.log(loglevel.INFO, 'read and update default template based on input custom template')
+    if not inps.template_file == inps.custom_template_file:
+        inps.template = Template(inps.custom_template_file).update_options(inps.template_file)
 
     putils.set_default_options(inps)
 
@@ -345,62 +341,91 @@ def step_template(inps):
 
     return inps
 
+
+###############################################################################
+
+
+def call_ssara(flag_ssara, custom_template_file, slc_dir):
+    """ Calls download_ssara.py for downloading """
+
+    if flag_ssara:
+        command = 'download_rsmas.py ' + custom_template_file
+        messageRsmas.log(command)
+        
+        import download_rsmas
+        download_rsmas.main([custom_template_file])
+    
+
 ###############################################################################
 
 
-def step_ssara(inps):
-    if inps.flag_ssara:
-        if not os.path.isdir(inps.slcDir):
-            os.mkdir(inps.slcDir)
-        if inps.slcDir is not inps.work_dir + '/SLC' and not os.path.isdir(inps.work_dir + '/SLC'):
-            os.symlink(inps.slcDir, inps.work_dir + '/SLC')
+def create_or_copy_dem(inps, work_dir, template, custom_template_file):
+    """ Downloads a DEM file or copies an existing one."""
 
-        putils.call_ssara(inps.custom_template_file, inps.slcDir)
+    if inps.flag_dem:
+        dem_dir = work_dir + '/DEM'
+        if os.path.isdir(dem_dir) and len(os.listdir(dem_dir)) == 0:
+            os.rmdir(dem_dir)
 
-    if inps.stopssara:
-        logger.debug('Exit as planned after ssara')
-        sys.exit(0)
+        if not os.path.isdir(dem_dir):
+            if 'sentinelStack.demDir' in list(template.keys()) and template['sentinelStack.demDir'] != str('auto'):
+                shutil.copytree(template['sentinelStack.demDir'], dem_dir)
+            else:
+                # TODO: Change subprocess call to get back error code and send error code to logger
+                command = 'dem_rsmas.py ' + custom_template_file
+                print(command)
+                messageRsmas.log(command)
+                status = subprocess.Popen(command, shell=True).wait()
+                if status is not 0:
+                    logger.log(loglevel.ERROR, 'ERROR while making DEM')
+                    raise Exception('ERROR while making DEM')
 
-    return inps
 
-###############################################################################
-def step_runfiles(inps):
+#################################################################################
+
+
+def create_runfiles(inps):
+    """ Calls the script to create stackSentinel runfiles and configs."""
+
     if inps.flag_makerun:
         os.chdir(inps.work_dir)
-        temp_list = ['run_files', 'configs']
-        putils._remove_directories(temp_list)
-
-        dem_file = putils.create_or_copy_dem(work_dir=inps.work_dir,
-                                      template=inps.template,
-                                      custom_template_file=inps.custom_template_file)
-
-        inps.run_file_list = putils.create_stack_sentinel_run_files(inps, dem_file)
-
-    if inps.stopmakerun:
-        logger.info('Exit as planned after making sentinel run files ')
-        sys.exit(0)
+        command = 'create_stacksentinel_run_files.py ' + inps.custom_template_file
+        messageRsmas.log(command)
+        # Check the performance, change in subprocess
+        status = subprocess.Popen(command, shell=True).wait()
+        if status is not 0:
+            logger.log(loglevel.ERROR, 'ERROR in create_stacksentinel_run_files.py')
+            raise Exception('ERROR in create_stacksentinel_run_files.py')
+        if inps.stopmakerun:
+            logger.log(loglevel.INFO, 'Exit as planned after making sentinel run files ')
+            sys.exit(0)
 
     return inps
 
 #################################################################################
 
 
-def step_process(inps):
+def process_runfiles(inps):
+    """ Calls the script to execute stackSentinel runfiles."""
+
     if inps.flag_process:
-        command = 'execute_rsmas_run_files.py ' + inps.custom_template_file
+        command = 'execute_stacksentinel_run_files.py ' + inps.custom_template_file
         messageRsmas.log(command)
         # Check the performance, change in subprocess
         status = subprocess.Popen(command, shell=True).wait()
         if status is not 0:
-            logger.error('ERROR in execute_rsmas_run_files.py')
-            raise Exception('ERROR in execute_rsmas_run_files.py')
+            logger.log(loglevel.ERROR, 'ERROR in execute_stacksentinel_run_files.py')
+            raise Exception('ERROR in execute_stacksentinel_run_files.py')
 
+        if os.path.isdir('PYSAR'):
+            shutil.rmtree('PYSAR')
 
         if int(inps.custom_template['cleanopt']) >= 1:
             _remove_directories(cleanlist[1])
 
+
     if inps.stopprocess:
-        logger.info('Exit as planned after processing')
+        logger.log(loglevel.INFO, 'Exit as planned after processing')
         sys.exit(0)
 
     return inps
@@ -408,12 +433,17 @@ def step_process(inps):
 ###############################################################################
 
 
-def step_pysar(inps, start_time):
+def run_pysar(inps, start_time):
+    """ Calls the pysarAPP to load data and run time series analysis."""
 
     if inps.flag_pysar:
-        putils._remove_directories(['PYSAR'])  # remove once PYSAR properly recognizes new files
+
+        #if os.path.isdir('PYSAR'):
+        #    shutil.rmtree('PYSAR')
+
         putils.call_pysar(custom_template=inps.custom_template,
-                   custom_template_file=inps.custom_template_file)
+                   custom_template_file=inps.custom_template_file,
+                         flag_load_and_stop=inps.stoppysarload)
 
         # Record runtime and email results
         time_diff = time.time() - start_time
@@ -425,18 +455,69 @@ def step_pysar(inps, start_time):
         putils.email_pysar_results(time_str, inps.custom_template)
 
     if inps.stoppysar:
-        logger.debug('Exit as planned after pysar')
+        logger.log(loglevel.DEBUG, 'Exit as planned after pysar')
         sys.exit(0)
 
     return
 
+###############################################################################
+
+def create_squeesar_runfiles(inps):
+    os.chdir(inps.work_dir)
+    command = 'create_squeesar_run_files.py ' + inps.custom_template_file
+    messageRsmas.log(command)
+    # Check the performance, change in subprocess
+    status = subprocess.Popen(command, shell=True).wait()
+    if status is not 0:
+        logger.log(loglevel.ERROR, 'ERROR in create_squeesar_run_files.py')
+        raise Exception('ERROR in create_squeesar_run_files.py')
+    if inps.stopmakerun:
+        logger.log(loglevel.INFO, 'Exit as planned after making squeesar run files ')
+        sys.exit(0)
+    return
 
 ###############################################################################
 
 
-def step_insarmaps(inps):
+def process_time_series(inps):
+    """ runs time series analysis based on squeesar."""
+
+    if inps.flag_pysar:
+
+        if not os.path.isdir(inps.workingDir+'/run_files_SQ'):
+            create_squeesar_runfiles(inps)
+
+        command = 'execute_squeesar_run_files.py ' + inps.custom_template_file
+        messageRsmas.log(command)
+        # Check the performance, change in subprocess
+        status = subprocess.Popen(command, shell=True).wait()
+        if status is not 0:
+            logger.log(loglevel.ERROR, 'ERROR in execute_squeesar_run_files.py')
+            raise Exception('ERROR in execute_squeesar_run_files.py')
+
+        if int(inps.custom_template['cleanopt']) >= 1:
+            _remove_directories(cleanlist[1])
+
+    if inps.stoppysar:
+        logger.log(loglevel.DEBUG, 'Exit as planned after time series analysis')
+        sys.exit(0)
+
+    return
+
+###############################################################################
+
+
+def run_ingest_insarmaps(inps):
+    """ Calls the script of ingest insarmaps and emails the results."""
+
     if inps.flag_insarmaps:
-        putils.run_insar_maps(inps.work_dir)
+
+        command = 'ingest_insarmaps.py ' + inps.custom_template_file
+        messageRsmas.log(command)
+        status = subprocess.Popen(command, shell=True).wait()
+        if status is not 0:
+            logger.log(loglevel.ERROR, 'ERROR in ingest_insarmaps.py')
+            raise Exception('ERROR in ingest_insarmaps.py')
 
         putils.email_insarmaps_results(inps.custom_template)
 
@@ -445,17 +526,4 @@ def step_insarmaps(inps):
         shutil.rmtree(cleanlist[4])
 
     if inps.stopinsarmaps:
-        logger.debug('Exit as planned after insarmaps')
-        return
-
-##########################################################################
-
-
-def log_end_message():
-    logger.debug('\n###############################################')
-    logger.info('End of process_rsmas')
-    logger.debug('#################################################')
-
-###############################################################################
-
-#test change
+        logger.log(loglevel.DEBUG, 'Exit as planned after insarmaps')

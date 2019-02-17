@@ -12,68 +12,112 @@ from __future__ import print_function
 import os
 import sys
 import time
+import messageRsmas
+from _process_utilities  import get_work_directory, get_project_name, send_logger, _remove_directories
 import _processSteps as prs
+from rsmas_logging import loglevel
+
+logger_process_rsmas  = send_logger()
 
 ###############################################################################
 
 
-def main(argv):
-    start_time = time.time()
-    inps = prs.command_line_parse()
+if __name__ == "__main__":
 
     #########################################
     # Initiation
     #########################################
 
-    prs.step_dir(inps, argv)
+    start_time = time.time()
+    inps = prs.command_line_parse()
 
+    inps.project_name = get_project_name(inps.custom_template_file)
+    inps.work_dir = get_work_directory(None, inps.project_name)
+    inps.slc_dir = os.path.join(inps.work_dir,'SLC')
+
+    if inps.remove_project_dir:
+        _remove_directories(directories_to_delete=[inps.work_dir])
+
+    if not os.path.isdir(inps.work_dir):
+        os.makedirs(inps.work_dir)
+    os.chdir(inps.work_dir)
+
+    #  Read and update template file:
+    inps = prs.create_or_update_template(inps)
+    print(inps)
+    if not inps.processingMethod or inps.workflow=='interferogram':
+        inps.processingMethod='squeesar'
+
+    if not os.path.isdir(inps.slc_dir):
+        os.makedirs(inps.slc_dir)
+
+    command_line = os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1:])
+    logger_process_rsmas.log(loglevel.INFO, '##### NEW RUN #####')
+    logger_process_rsmas.log(loglevel.INFO, 'process_rsmas.py ' + command_line)
+    messageRsmas.log('##### NEW RUN #####')
+    messageRsmas.log(command_line)
+    
     #########################################
     # Submit job
     #########################################
+    if inps.bsub_flag:
+        inps.wall_time='48:00'
     prs.submit_job(sys.argv[:], inps)
-
-    #########################################
-    # Read Template Options
-    #########################################
-
-    prs.step_template(inps)
 
     #########################################
     # startssara: Getting Data
     #########################################
 
-    prs.step_ssara(inps)
+    # running download scripts:
+    #     download_ssara_rsmas.py $TE/template
+    #     downlaod_asfserial_rsmas.py $TE/template
+    prs.call_ssara(inps.flag_ssara, inps.custom_template_file, inps.slc_dir)
 
     #########################################
-    # startprocess: create run files
+    # startmakerun: create run files
     #########################################
 
-    prs.step_runfiles(inps)
+    # create or copy DEM
+    # running the script:
+    #     dem_rsmas.py $TE/template
+
+    prs.create_or_copy_dem(inps, inps.work_dir, inps.template, inps.custom_template_file)
+
+    # Check for DEM and create sentinel run files
+    # running the script:
+    #     create_stacksentinel_run_files.py $TE/template
+
+    prs.create_runfiles(inps)
 
     #########################################
     # startprocess: Execute run files
     #########################################
 
-    prs.step_process(inps)
-    # You can separately run this step and execute run files by:
-    # "execute_rsmas_run_files.py templatefile starting_run stopping_run"
-    # Example for running run 1 2o 4:
-    # execute_rsmas_run_files.py $TE/template 1 4
+    # Running the script:
+    #    execute_stacksentinel_run_files.py $TE/template starting_run stopping_run
+    #    Example for running run 1 to 4:
+    #    execute_stacksentinel_run_files.py $TE/template 1 4
+
+    prs.process_runfiles(inps)
 
     #########################################
-    # running pysar
+    # startpysar: running PySAR and email results
     #########################################
 
-    prs.step_pysar(inps, start_time)
 
-    #########################################
-    # ingesting into insarmaps
-    #########################################
+    if inps.processingMethod == 'squeesar' :
+        # Run squeesar script:
+        #    create_squeesar_run_files.py $TE/template
+        #    execute_squeesar_run_files.py $TE/template
+        prs.process_time_series(inps)
+    else:
+        # Run PySAR script:
+        #    pysarApp.py $TE/template
+        prs.run_pysar(inps, start_time)
 
-    prs.step_insarmaps(inps)
+    # Run ingest insarmaps script and email results
+    #    ingest_insarmaps.py $TE/template
 
-    prs.log_end_message()
+    prs.run_ingest_insarmaps(inps)
 
-if __name__ == '__main__':
-    main(sys.argv[:])
-
+    logger_process_rsmas.log(loglevel.INFO, 'End of process_rsmas')

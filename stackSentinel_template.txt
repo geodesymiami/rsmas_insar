@@ -1,4 +1,4 @@
-##------------------------ TopsStack_template.txt ------------------------##
+##------------------------ stackSentinel_template.txt ------------------------##
 ## 1. topsStack options
 
 sentinelStack.slcDir                      = auto         # [SLCs dir]
@@ -9,7 +9,7 @@ sentinelStack.demDir                      = auto         # [DEM file dir]
 sentinelStack.master                      = auto         # [Master acquisition]
 sentinelStack.numConnections              = auto         # [5] auto for 3
 sentinelStack.numOverlapConnections       = auto         # [N of overlap Ifgrams for NESD. Default : 3]
-sentinelStack.swathNum                    = None         # [List of swaths. Default : '1 2 3']
+sentinelStack.subswath                    = None         # [List of swaths. Default : '1 2 3']
 sentinelStack.boundingBox                 = None         # [ '-1 0.15 -91.7 -90.9'] required
 sentinelStack.textCmd                     = auto         # [eg: source ~/.bashrc]
 sentinelStack.excludeDates                = auto         # [20080520,20090817 / no], auto for no
