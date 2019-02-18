@@ -26,12 +26,13 @@ def create_argument_parser():
     group = parser.add_argument_group("Input File", "File/Dataset to display")
     group.add_argument("file", type=str, help="The file to batch create")
     group.add_argument("--template", dest="template", metavar="TEMPLATE FILE", help="The template file with options")
-    group.add_argument("--memory", dest="memory", metavar="MEMORY (KB)",
+    group.add_argument("--memory", dest="memory", default=3600, metavar="MEMORY (KB)",
                        help="Amount of memory to allocate, specified in kilobytes")
-    group.add_argument("--walltime", dest="wall", metavar="WALLTIME (HH:MM)",
+    group.add_argument("--walltime", dest="wall", default="4:00", metavar="WALLTIME (HH:MM)",
                        help="Amount of wall time to use, in HH:MM format")
     group.add_argument("--queuename", dest="queue", metavar="QUEUE", help="Name of queue to submit job to")
-    group.add_argument("--outdir", dest="outdir", default='run_files', metavar="OUTDIR", help="output directory for run files")
+    group.add_argument("--outdir", dest="outdir", default='run_files', metavar="OUTDIR",
+                       help="output directory for run files")
 
     return parser
 
@@ -46,11 +47,7 @@ def parse_arguments(args):
     job_submission_params = parser.parse_args(args)
     scheduler = os.getenv("JOBSCHEDULER")
 
-    # default memory, walltime, and queue name
-    if not job_submission_params.memory:
-        job_submission_params.memory = 3600
-    if not job_submission_params.wall:
-        job_submission_params.wall = "4:00"
+    # default queue name is based on scheduler
     if not job_submission_params.queue:
         if scheduler == "LSF":
             job_submission_params.queue = "general"
@@ -77,32 +74,32 @@ def get_job_file_lines(job_name, project_name, scheduler=os.getenv("JOBSCHEDULER
     if scheduler == "LSF":
         prefix = "\n#BSUB "
         shell = "/bin/tcsh"
-        name_option = "-J {}"
-        project_option = "-P {}"
-        process_option = "-n {}" + prefix + "-R span[hosts={}]"
-        stdout_option = "-o {}_%J.o"
-        stderr_option = "-e {}_%J.e"
-        queue_option = "-q {}"
+        name_option = "-J {0}"
+        project_option = "-P {0}"
+        process_option = "-n {0}" + prefix + "-R span[hosts={1}]"
+        stdout_option = "-o {0}_%J.o"
+        stderr_option = "-e {0}_%J.e"
+        queue_option = "-q {0}"
         if not queue:
             queue = "general"
-        walltime_limit_option = "-W {}"
-        memory_option = "-R rusage[mem={}]"
-        email_option = "-B -u {}"
+        walltime_limit_option = "-W {0}"
+        memory_option = "-R rusage[mem={0}]"
+        email_option = "-B -u {0}"
     elif scheduler == "PBS":
         prefix = "\n#PBS "
         shell = "/bin/bash"
-        name_option = "-N {}"
-        project_option = "-A {}"
-        process_option = "-l nodes={}:ppn={}"
-        stdout_option = "-o {}_$PBS_JOBID.o"
-        stderr_option = "-e {}_$PBS_JOBID.e"
-        queue_option = "-q {}"
+        name_option = "-N {0}"
+        project_option = "-A {0}"
+        process_option = "-l nodes={0}:ppn={1}"
+        stdout_option = "-o {0}_$PBS_JOBID.o"
+        stderr_option = "-e {0}_$PBS_JOBID.e"
+        queue_option = "-q {0}"
         if not queue:
             queue = "batch"
-        walltime_limit_option = "-l walltime={}"
+        walltime_limit_option = "-l walltime={0}"
         walltime += ":00"
-        memory_option = "-l mem={}"
-        email_option = "-m bea" + prefix + "-M {}"
+        memory_option = "-l mem={0}"
+        email_option = "-m bea" + prefix + "-M {0}"
     else:
         raise Exception("ERROR: scheduler {0} not supported".format(scheduler))
 
@@ -154,10 +151,11 @@ def write_single_job_file(job_name, command_line, work_dir, project_name, schedu
         raise Exception("ERROR: Unable to write job file {0}: {1}".format(job_file_name, repr(e)))
 
 
-def write_batch_job_files(batch_file, scheduler=os.getenv("JOBSCHEDULER"), memory=3600, walltime="4:00", queue=None):
+def write_batch_job_files(batch_file, out_dir, scheduler=os.getenv("JOBSCHEDULER"), memory=3600, walltime="4:00", queue=None):
     """
     Iterates through jobs in input file and writes a job file for each job using the specified scheduler.
     :param batch_file: File containing batch of jobs for which we are creating job files.
+    :param out_dir: Output directory for run files.
     :param scheduler: Job scheduler to use for running jobs. Defaults based on environment variable JOBSCHEDULER.
     :param memory: Amount of memory to use. Defaults to 3600 KB.
     :param walltime: Walltime for the job. Defaults to 4 hours.
@@ -165,7 +163,7 @@ def write_batch_job_files(batch_file, scheduler=os.getenv("JOBSCHEDULER"), memor
     :return: List of job file names.
     """
     job_files = []
-    work_dir = os.path.join(os.environ["SCRATCHDIR"], batch_file.split(os.sep)[-3], "run_files")
+    work_dir = os.path.join(os.environ["SCRATCHDIR"], batch_file.split(os.sep)[-3], out_dir)
 
     with open(batch_file) as input_file:
         job_list = input_file.readlines()
@@ -209,14 +207,15 @@ def submit_single_job(job_file_name, scheduler=os.getenv("JOBSCHEDULER")):
     return job_number
 
 
-def submit_batch_jobs(job_files, batch_file, scheduler=os.getenv("JOBSCHEDULER")):
+def submit_batch_jobs(job_files, batch_file, out_dir, scheduler=os.getenv("JOBSCHEDULER")):
     """
     Submit a batch of jobs to bsub (or qsub) and wait for output files to exist before exiting.
     :param job_files: Names of job files to submit.
     :param batch_file: File containing jobs that we are submitting.
+    :param out_dir: Output directory for run files.
     :param scheduler: Job scheduler to use for running jobs. Defaults based on environment variable JOBSCHEDULER.
     """
-    work_dir = os.path.join(os.environ["SCRATCHDIR"], batch_file.split("/")[-3], "run_files")
+    work_dir = os.path.join(os.environ["SCRATCHDIR"], batch_file.split(os.sep)[-3], out_dir)
     os.chdir(work_dir)
 
     files = []
@@ -260,5 +259,5 @@ def submit_process(argv, work_dir, project_name, walltime):
 if __name__ == "__main__":
     PARAMS = parse_arguments(sys.argv[1::])
     messageRsmas.log(os.path.basename(sys.argv[0]) + " " + " ".join(sys.argv[1::]))
-    JOBS = write_batch_job_files(PARAMS.file, memory=PARAMS.memory, walltime=PARAMS.wall, queue=PARAMS.queue)
-    submit_batch_jobs(JOBS, PARAMS.file)
+    JOBS = write_batch_job_files(PARAMS.file, PARAMS.outdir, memory=PARAMS.memory, walltime=PARAMS.wall, queue=PARAMS.queue)
+    submit_batch_jobs(JOBS, PARAMS.file, PARAMS.outdir)
