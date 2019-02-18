@@ -15,6 +15,7 @@ import time
 import messageRsmas
 from _process_utilities  import get_work_directory, get_project_name, send_logger, _remove_directories
 import _processSteps as prs
+import create_batch as cb
 from rsmas_logging import loglevel
 
 logger_process_rsmas  = send_logger()
@@ -59,7 +60,8 @@ if __name__ == "__main__":
     #########################################
     if inps.bsub_flag:
         inps.wall_time='48:00'
-    prs.submit_job(sys.argv[:], inps)
+        cb.submit_process(sys.argv[:], inps.work_dir, inps.project_name, inps.wall_time)
+    # prs.submit_job(sys.argv[:], inps)
 
     #########################################
     # startssara: Getting Data
