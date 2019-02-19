@@ -64,7 +64,6 @@ if __name__ == "__main__":
     if inps.bsub_flag:
         inps.wall_time='48:00'
         cb.submit_process(sys.argv[:], inps.work_dir, inps.project_name, inps.wall_time)
-    # prs.submit_job(sys.argv[:], inps)
 
     #########################################
     # startssara: Getting Data
