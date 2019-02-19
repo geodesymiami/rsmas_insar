@@ -260,64 +260,6 @@ def command_line_parse():
 ###############################################################################
 
 
-def submit_job(argv, inps):
-    """ Submits process_rsmas.py as a job. """
-
-    if inps.bsub_flag:
-       scheduler = os.getenv('JOBSCHEDULER')
-       command_line = os.path.basename(argv[0])
-       i = 1
-       while i < len(argv):
-             if argv[i] != '--bsub':
-                command_line = command_line + ' ' + sys.argv[i]
-             i = i + 1
-       command_line = command_line + '\n'
-       projectID = 'insarlab'
-
-       f = open(inps.work_dir+'/process.job', 'w')
-       f.write('#! /bin/tcsh\n')
-
-       if scheduler == "LSF":
-           f.write('#BSUB -J '+inps.project_name+' \n')
-           f.write('#BSUB -B -u '+os.getenv('NOTIFICATIONEMAIL')+'\n')
-           f.write('#BSUB -o z_processRsmas_%J.o\n')
-           f.write('#BSUB -e z_processRsmas_%J.e\n')
-           f.write('#BSUB -n 1\n' )
-           if projectID:
-              f.write('#BSUB -P '+projectID+'\n')
-           #f.write('#BSUB -q '+os.getenv('QUEUENAME')+'\n')
-           f.write('#BSUB -q '+'general'+'\n')
-           if inps.wall_time:
-              f.write('#BSUB -W ' + inps.wall_time + '\n')
-       if scheduler == "PBS":
-           f.write('#PBS -N '+inps.project_name+' \n')
-           f.write('#PBS -M '+os.getenv('NOTIFICATIONEMAIL')+'\n')
-           f.write('#PBS -o z_processRsmas_%J.o\n')
-           f.write('#PBS -e z_processRsmas_%J.e\n')
-           f.write('#PBS -l nodes=1:ppn=1\n' )
-           if projectID:
-              f.write('#PBS -A '+projectID+'\n')
-           f.write('#BSUB -q '+os.getenv('QUEUENAME')+'\n')
-           if inps.wall_time:
-              f.write('#PBS -l walltime=' + inps.wall_time + ':00\n')
-           f.write("#PBS -V\n")
-
-       f.write('cd '+inps.work_dir+'\n')
-       f.write(command_line)
-       f.close()
-
-       if scheduler == "LSF":
-          job_cmd = 'bsub -P insarlab < process.job'
-       if scheduler == "PBS":
-          job_cmd = 'qsub < process.job'
-       logger.log(loglevel.INFO, 'bsub job submission')
-       os.system(job_cmd)
-       sys.exit(0)
-
-
-###############################################################################
-
-
 def create_or_update_template(inps):
     """ Creates a default template file and/or updates it.
         returns the values in 'inps'
