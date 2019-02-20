@@ -75,35 +75,6 @@ def generate_ssaraopt_string(template_file):
 
     ssaraopt_keys = ['ssaraopt.platform', 'ssaraopt.relativeOrbit', 'ssaraopt.frame', 'ssaraopt']
 
-    # try:
-    #    platform = template_options['ssaraopt.platform']
-    #    relativeOrbit = template_options['ssaraopt.relativeOrbit']
-    #    frame = template_options[]
-    #    ssaraopt='--platform='+platform+' --relativeOrbit='+relativeOrbit+' --frame='+frame
-    #
-    #    try:
-    #       startDate = template_options['ssaraopt.startDate']
-    #       ssaraopt=ssaraopt+' -s='+startDate
-    #    except:
-    #       pass
-    #    try:
-    #       endDate = template_options['ssaraopt.endDate']
-    #       ssaraopt=ssaraopt+' -e='+endDate
-    #    except:
-    #       pass
-    #
-    # except:
-    #    try:
-    #      ssaraopt = template_options['ssaraopt']
-    #    except:
-    #      raise Exception('no ssaraopt or ssaraopt.platform, relativeOrbit, frame found')
-    #
-    # # add parallel doenload option. If ssaraopt.parallelDownload not given use default value
-    # try:
-    #    parallelDownload = template_options['ssaraopt.parallelDownload']
-    # except:
-    #    parallelDownload = '30'     # default
-
     bad_key=False
     for key in ssaraopt_keys:
         if key not in template_options:
@@ -132,6 +103,8 @@ def generate_ssaraopt_string(template_file):
         parallelDownload = '30'
 
     ssaraopt += ' --parallel={}'.format(parallelDownload)
+
+    print(ssaraopt)
 
     return ssaraopt
     
