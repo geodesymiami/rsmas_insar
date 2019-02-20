@@ -72,35 +72,66 @@ def generate_ssaraopt_string(template_file):
     """
     # use ssaraopt.platform, relativeOrbit and frame if given, else use ssaraopt
     template_options = Template(template_file).get_options()
-    try:
-       platform = template_options['ssaraopt.platform']
-       relativeOrbit = template_options['ssaraopt.relativeOrbit']
-       frame = template_options['ssaraopt.frame']
-       ssaraopt='--platform='+platform+' --relativeOrbit='+relativeOrbit+' --frame='+frame
 
-       try:
-          startDate = template_options['ssaraopt.startDate']
-          ssaraopt=ssaraopt+' -s='+startDate
-       except:
-          pass
-       try:
-          endDate = template_options['ssaraopt.endDate']
-          ssaraopt=ssaraopt+' -e='+endDate
-       except:
-          pass
+    ssaraopt_keys = ['ssaraopt.platform', 'ssaraopt.relativeOrbit', 'ssaraopt.frame', 'ssaraopt']
 
-    except:
-       try: 
-         ssaraopt = template_options['ssaraopt']
-       except:
-         raise Exception('no ssaraopt or ssaraopt.platform, relativeOrbit, frame found')
+    # try:
+    #    platform = template_options['ssaraopt.platform']
+    #    relativeOrbit = template_options['ssaraopt.relativeOrbit']
+    #    frame = template_options[]
+    #    ssaraopt='--platform='+platform+' --relativeOrbit='+relativeOrbit+' --frame='+frame
+    #
+    #    try:
+    #       startDate = template_options['ssaraopt.startDate']
+    #       ssaraopt=ssaraopt+' -s='+startDate
+    #    except:
+    #       pass
+    #    try:
+    #       endDate = template_options['ssaraopt.endDate']
+    #       ssaraopt=ssaraopt+' -e='+endDate
+    #    except:
+    #       pass
+    #
+    # except:
+    #    try:
+    #      ssaraopt = template_options['ssaraopt']
+    #    except:
+    #      raise Exception('no ssaraopt or ssaraopt.platform, relativeOrbit, frame found')
+    #
+    # # add parallel doenload option. If ssaraopt.parallelDownload not given use default value
+    # try:
+    #    parallelDownload = template_options['ssaraopt.parallelDownload']
+    # except:
+    #    parallelDownload = '30'     # default
 
-    # add parallel doenload option. If ssaraopt.parallelDownload not given use default value
-    try:
-       parallelDownload = template_options['ssaraopt.parallelDownload']
-    except:
-       parallelDownload = '30'     # default
-    ssaraopt=ssaraopt+' --parallel='+parallelDownload
+    bad_key=False
+    for key in ssaraopt_keys:
+        if key not in template_options:
+            if key is not 'ssaraopt':
+                bad_key = True
+            else:
+                raise Exception('no ssaraopt or ssaraopt.platform, relativeOrbit, frame found')
+
+    if bad_key:
+        ssaraopt = template_options['ssaraopt']
+    else:
+        platform = template_options['ssaraopt.platform']
+        relativeOrbit = template_options['ssaraopt.relativeOrbit']
+        frame = template_options['ssaraopt.frame']
+        ssaraopt='--platform={} --relativeOrbit={} --frame={}'.format(platform, relativeOrbit, frame)
+        if 'ssaraopt.startDate' in template_options:
+            startDate = template_options['ssaraopt.startDate']
+            ssaraopt += ' -s={}'.format(startDate)
+        if 'ssaraopt.endDate' in template_options:
+            endDate = template_options['ssaraopt.endDate']
+            ssaraopt += ' -e={}'.format(endDate)
+
+    if 'ssaraopt.parallelDownload' in template_options:
+        parallelDownload = template_options['ssaraopt.parallelDownload']
+    else:
+        parallelDownload = '30'
+
+    ssaraopt += ' --parallel={}'.format(parallelDownload)
 
     return ssaraopt
     
