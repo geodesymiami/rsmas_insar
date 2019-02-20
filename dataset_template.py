@@ -33,9 +33,9 @@ class Template:
         self.work_dir = os.getenv('SCRATCHDIR') + '/' + project_name
         template_file = os.path.join(self.work_dir, os.path.basename(custom_template_file))
         
-        #if not self.os.path.isfile(template_file):       # FA 12/18: It should use custom_template_file as this is what will be updated
-        #    self.shutil.copy2(custom_template_file, self.work_dir)
-        shutil.copy2(custom_template_file, self.work_dir)
+        if not self.os.path.isfile(template_file):       # FA 12/18: It should use custom_template_file as this is what will be updated
+           self.shutil.copy2(custom_template_file, self.work_dir)
+        #shutil.copy2(custom_template_file, self.work_dir)
         self.options = self.read_options(template_file)
         
   
