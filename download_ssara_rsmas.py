@@ -70,22 +70,25 @@ def generate_ssaraopt_string(template_file):
         Parameters: run_number: int, the current iteration the wrapper is on (maxiumum 10 before quitting)
         Returns: ssaraopt: str, the string with the options to call ssara_federated_query.py
     """
-    # use ssaraopt.platform, relativeOrbit and frame if given, else use ssaraopt
+
     template_options = Template(template_file).get_options()
 
-    ssaraopt_keys = ['ssaraopt.platform', 'ssaraopt.relativeOrbit', 'ssaraopt.frame', 'ssaraopt']
+    ssaraopt_keys = ['ssaraopt.platform', 'ssaraopt.relativeOrbit', 'ssaraopt.frame']
 
-    bad_key=False
+    # Determines if any of the ssaraopt keys are not present in the template files and either
+    # utilizes the general ssaraopt option or throws an exception if that is also not present
+    # (likely an invalid template file in that case).
+    bad_key = False
     for key in ssaraopt_keys:
         if key not in template_options:
-            if key is not 'ssaraopt':
-                bad_key = True
+            bad_key = True
+            if 'ssaraopt' in template_options:
+                ssaraopt = template_options['ssaraopt']
             else:
                 raise Exception('no ssaraopt or ssaraopt.platform, relativeOrbit, frame found')
 
-    if bad_key:
-        ssaraopt = template_options['ssaraopt']
-    else:
+    # If all of the keys are present go ahead and generate the ssaraopt string as normal.
+    if not bad_key:
         platform = template_options['ssaraopt.platform']
         relativeOrbit = template_options['ssaraopt.relativeOrbit']
         frame = template_options['ssaraopt.frame']
@@ -107,7 +110,8 @@ def generate_ssaraopt_string(template_file):
     print(ssaraopt)
 
     return ssaraopt
-    
+
+
 def run_ssara(run_number=1):
     """ Runs ssara_federated_query-cj.py and checks for download issues.
 
