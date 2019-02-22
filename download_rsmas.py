@@ -105,17 +105,9 @@ def main(iargs=None):
         return
 
     download('ssara', inps.template_file, slc_dir, outnum = 1)
-    download('ssara', inps.template_file, slc_dir, outnum = 2)
-    download('ssara', inps.template_file, slc_dir, outnum = 3)
-    download('ssara', inps.template_file, slc_dir, outnum = 4)
-    download('ssara', inps.template_file, slc_dir, outnum = 5)
-    download('ssara', inps.template_file, slc_dir, outnum = 6)
-    download('ssara', inps.template_file, slc_dir, outnum = 7)
-    download('ssara', inps.template_file, slc_dir, outnum = 8)
-    download('ssara', inps.template_file, slc_dir, outnum = 9)
-    download('asfserial', inps.template_file, slc_dir,outnum = 1)
-    download('asfserial', inps.template_file, slc_dir,outnum = 2)
-    download('asfserial', inps.template_file, slc_dir,outnum = 3)
+    #download('ssara', inps.template_file, slc_dir, outnum = 2)
+    download('asfserial', inps.template_file, slc_dir, outnum = 1)
+    #download('asfserial', inps.template_file, slc_dir, outnum = 1)
 
 ###########################################################################################
 
