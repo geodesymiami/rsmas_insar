@@ -57,7 +57,7 @@ def parse_arguments(args):
     return job_submission_params
 
 
-def get_job_file_lines(job_name, project_name, scheduler=os.getenv("JOBSCHEDULER"),
+def get_job_file_lines(job_name, project_name, scheduler=None,
                        memory=3600, walltime="4:00", queue=None):
     """
     Generates the lines of a job submission file that are based on the specified scheduler.
@@ -69,6 +69,8 @@ def get_job_file_lines(job_name, project_name, scheduler=os.getenv("JOBSCHEDULER
     :param queue: Name of the queue to which the job is to be submitted. Default is set based on the scheduler.
     :return: List of lines for job submission file
     """
+    if not scheduler:
+        scheduler=os.getenv("JOBSCHEDULER")
 
     # directives based on scheduler
     if scheduler == "LSF":
@@ -122,7 +124,7 @@ def get_job_file_lines(job_name, project_name, scheduler=os.getenv("JOBSCHEDULER
     return job_file_lines
 
 
-def write_single_job_file(job_name, command_line, work_dir, project_name, scheduler=os.getenv("JOBSCHEDULER"),
+def write_single_job_file(job_name, command_line, work_dir, project_name, scheduler=None,
                           memory=3600, walltime="4:00", queue=None):
     """
     Writes a job file for a single job.
@@ -135,6 +137,9 @@ def write_single_job_file(job_name, command_line, work_dir, project_name, schedu
     :param walltime: Walltime for the job. Defaults to 4 hours.
     :param queue: Name of the queue to which the job is to be submitted. Default is set based on the scheduler.
     """
+    if not scheduler:
+        scheduler=os.getenv("JOBSCHEDULER")
+
     # get lines to write in job file
     job_file_lines = get_job_file_lines(job_name, project_name, scheduler, memory, walltime, queue)
     job_file_lines.append("\nfree")
@@ -151,7 +156,7 @@ def write_single_job_file(job_name, command_line, work_dir, project_name, schedu
         raise Exception("ERROR: Unable to write job file {0}: {1}".format(job_file_name, repr(e)))
 
 
-def write_batch_job_files(batch_file, out_dir, scheduler=os.getenv("JOBSCHEDULER"), memory=3600, walltime="4:00", queue=None):
+def write_batch_job_files(batch_file, out_dir, scheduler=None, memory=3600, walltime="4:00", queue=None):
     """
     Iterates through jobs in input file and writes a job file for each job using the specified scheduler.
     :param batch_file: File containing batch of jobs for which we are creating job files.
@@ -162,11 +167,14 @@ def write_batch_job_files(batch_file, out_dir, scheduler=os.getenv("JOBSCHEDULER
     :param queue: Name of the queue to which the job is to be submitted. Default is set based on the scheduler.
     :return: List of job file names.
     """
-    job_files = []
+    if not scheduler:
+        scheduler=os.getenv("JOBSCHEDULER")
+
     work_dir = os.path.join(os.environ["SCRATCHDIR"], batch_file.split(os.sep)[-3], out_dir)
 
     with open(batch_file) as input_file:
         job_list = input_file.readlines()
+    job_files = []
     for i, command_line in enumerate(job_list):
         job_name = batch_file.split(os.sep)[-1] + "_" + str(i)
         write_single_job_file(job_name, command_line, work_dir, job_name, scheduler, memory, walltime, queue)
@@ -175,13 +183,16 @@ def write_batch_job_files(batch_file, out_dir, scheduler=os.getenv("JOBSCHEDULER
     return job_files
 
 
-def submit_single_job(job_file_name, scheduler=os.getenv("JOBSCHEDULER")):
+def submit_single_job(job_file_name, scheduler=None):
     """
     Submit a single job to bsub (or qsub).
     :param job_file_name: Name of job file to .
     :param scheduler: Job scheduler to use for running jobs. Defaults based on environment variable JOBSCHEDULER.
     :return: Job number of submission
     """
+    if not scheduler:
+        scheduler=os.getenv("JOBSCHEDULER")
+    
     # use bsub or qsub to submit based on scheduler
     if scheduler == "LSF":
         command = "bsub < " + job_file_name
@@ -207,7 +218,7 @@ def submit_single_job(job_file_name, scheduler=os.getenv("JOBSCHEDULER")):
     return job_number
 
 
-def submit_batch_jobs(job_files, batch_file, out_dir, scheduler=os.getenv("JOBSCHEDULER")):
+def submit_batch_jobs(job_files, batch_file, out_dir, scheduler=None):
     """
     Submit a batch of jobs to bsub (or qsub) and wait for output files to exist before exiting.
     :param job_files: Names of job files to submit.
@@ -215,6 +226,9 @@ def submit_batch_jobs(job_files, batch_file, out_dir, scheduler=os.getenv("JOBSC
     :param out_dir: Output directory for run files.
     :param scheduler: Job scheduler to use for running jobs. Defaults based on environment variable JOBSCHEDULER.
     """
+    if not scheduler:
+        scheduler=os.getenv("JOBSCHEDULER")
+
     work_dir = os.path.join(os.environ["SCRATCHDIR"], batch_file.split(os.sep)[-3], out_dir)
     os.chdir(work_dir)
 
