@@ -58,7 +58,7 @@ def check_downloads(run_number, args):
 
     for f in files_to_check:
         if not os.path.isfile(str(os.getcwd()) + "/" + str(f)):
-            logger.log(logging.WARNING, "The file, %s, didn't download correctly. Running ssara again.")
+            logger.log(loglevel.WARNING, "The file, %s, didn't download correctly. Running ssara again.")
             run_ssara(run_number + 1)
             return
 
