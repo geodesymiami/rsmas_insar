@@ -238,6 +238,7 @@ def command_line_parse():
     if inps.startssara:
         inps.flag_ssara = True
         inps.flag_makerun = True
+        inps.flag_dem = True
         inps.flag_process = True
         inps.flag_pysar = True
 
@@ -304,6 +305,7 @@ def call_ssara(flag_ssara, custom_template_file, slc_dir):
 def create_or_copy_dem(inps, work_dir, template, custom_template_file):
     """ Downloads a DEM file or copies an existing one."""
 
+    import pdb; pdb.set_trace()
     if inps.flag_dem:
         dem_dir = work_dir + '/DEM'
         if os.path.isdir(dem_dir) and len(os.listdir(dem_dir)) == 0:
