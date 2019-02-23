@@ -80,14 +80,14 @@ def run_download_asf_serial(run_number=1):
 		
 		i = i + 1
 
-	        # Computer the current download directory size
+		# Computer the current download directory size
 		curr_size = int(subprocess.check_output(['du', '-s', os.getcwd()]).split()[0].decode('utf-8'))
 		
 		# Compare the current and previous directory sizes to determine determine hang status
 		if prev_size == curr_size:
 			hang_status = True
 			logger.log(loglevel.WARNING, "SSARA Hung")
-			ssara_process.terminate()  # teminate the process beacause download hung
+			asfserial_process.terminate()  # teminate the process beacause download hung
 			break  # break the completion loop
 
 		time.sleep(60 * wait_time)  # wait 'wait_time' minutes before continuing
@@ -112,7 +112,7 @@ def change_file_permissions():
 	
 	zip_files = glob.glob('S1*.zip')
 	for file in zip_files:
-	    os.chmod(file,0o666)
+		os.chmod(file,0o666)
 
 if __name__ == "__main__":
         
@@ -124,9 +124,9 @@ if __name__ == "__main__":
 	messageRsmas.log(os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1::]))
 	os.chdir(inps.slcDir)
 	try:
-	    os.remove(os.path.expanduser('~')+'/.bulk_download_cookiejar.txt')
+		os.remove(os.path.expanduser('~')+'/.bulk_download_cookiejar.txt')
 	except OSError:
-	    pass
+		pass
 	
 
 	generate_files_csv()
