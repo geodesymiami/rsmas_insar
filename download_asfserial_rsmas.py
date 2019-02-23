@@ -14,7 +14,6 @@ import glob
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
-from download_ssara_rsmas import generate_ssaraopt_string
 
 logfile_name = os.getenv('OPERATIONS') + '/LOGS/asfserial_rsmas.log'
 logger = rsmas_logger(file_name=logfile_name)
@@ -42,7 +41,10 @@ def generate_files_csv():
 	    empty values to eliminate errors in download_ASF_serial.py.
 	
 	"""
-	ssaraopt = generate_ssaraopt_string(template_file=inps.template)
+
+	dataset_template = Template(inps.template)
+
+	ssaraopt = dataset_template.generate_ssaraopt_string()
 	ssaraopt = ssaraopt.split(' ')
 	
 	filecsv_options = ['ssara_federated_query.py']+ssaraopt+['--print', '|', 'awk', "'BEGIN{FS=\",\"; ORS=\",\"}{ print $14}'", '>', 'files.csv']
