@@ -58,7 +58,7 @@ def check_downloads(run_number, args):
 
     for f in files_to_check:
         if not os.path.isfile(str(os.getcwd()) + "/" + str(f)):
-            logger.log(logging.WARNING, "The file, %s, didn't download correctly. Running ssara again.")
+            logger.log(loglevel.WARNING, "The file, %s, didn't download correctly. Running ssara again.")
             run_ssara(run_number + 1)
             return
 
@@ -70,40 +70,46 @@ def generate_ssaraopt_string(template_file):
         Parameters: run_number: int, the current iteration the wrapper is on (maxiumum 10 before quitting)
         Returns: ssaraopt: str, the string with the options to call ssara_federated_query.py
     """
-    # use ssaraopt.platform, relativeOrbit and frame if given, else use ssaraopt
+
     template_options = Template(template_file).get_options()
-    try:
-       platform = template_options['ssaraopt.platform']
-       relativeOrbit = template_options['ssaraopt.relativeOrbit']
-       frame = template_options['ssaraopt.frame']
-       ssaraopt='--platform='+platform+' --relativeOrbit='+relativeOrbit+' --frame='+frame
 
-       try:
-          startDate = template_options['ssaraopt.startDate']
-          ssaraopt=ssaraopt+' -s='+startDate
-       except:
-          pass
-       try:
-          endDate = template_options['ssaraopt.endDate']
-          ssaraopt=ssaraopt+' -e='+endDate
-       except:
-          pass
+    # Determines if any of the ssaraopt keys are not present in the template files and either
+    # utilizes the general ssaraopt option or throws an exception if that is also not present
+    # (likely an invalid template file in that case).
 
-    except:
-       try: 
-         ssaraopt = template_options['ssaraopt']
-       except:
-         raise Exception('no ssaraopt or ssaraopt.platform, relativeOrbit, frame found')
+    ssaraopt_keys = ['ssaraopt.platform', 'ssaraopt.relativeOrbit', 'ssaraopt.frame']
 
-    # add parallel doenload option. If ssaraopt.parallelDownload not given use default value
-    try:
-       parallelDownload = template_options['ssaraopt.parallelDownload']
-    except:
-       parallelDownload = '30'     # default
-    ssaraopt=ssaraopt+' --parallel='+parallelDownload
+    bad_key = False
+    for key in ssaraopt_keys:
+        if key not in template_options:
+            bad_key = True
+            if 'ssaraopt' in template_options:
+                ssaraopt = template_options['ssaraopt']
+            else:
+                raise Exception('no ssaraopt or ssaraopt.platform, relativeOrbit, frame found')
+
+    # If all of the keys are present go ahead and generate the ssaraopt string as normal.
+    if not bad_key:
+        platform = template_options['ssaraopt.platform']
+        relativeOrbit = template_options['ssaraopt.relativeOrbit']
+        frame = template_options['ssaraopt.frame']
+        ssaraopt='--platform={} --relativeOrbit={} --frame={}'.format(platform, relativeOrbit, frame)
+        if 'ssaraopt.startDate' in template_options:
+            startDate = template_options['ssaraopt.startDate']
+            ssaraopt += ' -s={}'.format(startDate)
+        if 'ssaraopt.endDate' in template_options:
+            endDate = template_options['ssaraopt.endDate']
+            ssaraopt += ' -e={}'.format(endDate)
+
+    parallel_download = template_options.get("ssaraopt.parallelDownload", '30')
+
+    ssaraopt += ' --parallel={}'.format(parallel_download)
+
+    print(ssaraopt)
 
     return ssaraopt
-    
+
+
 def run_ssara(run_number=1):
     """ Runs ssara_federated_query-cj.py and checks for download issues.
 

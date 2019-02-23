@@ -1,3 +1,6 @@
+import os
+import shutil
+
 class Template:
     """ Template object encapsulates a dictionary of template options.
 
@@ -13,8 +16,6 @@ class Template:
             options = template.update_options(default_template_file)        # access a specific option
 
     """
-    os = __import__('os')
-    shutil = __import__('shutil')
     
     def __init__(self, custom_template_file):
         """ Initializes Template object with a custom template file.
@@ -22,16 +23,18 @@ class Template:
             The provided template file is parsed line by line, and each option is added to the options dictionary.
 
             :param custom_template_file: file, the template file to be accessed
-        """ 
-        
-        custom_template_file = self.os.path.abspath(custom_template_file)
-        project_name = self.os.path.splitext(self.os.path.basename(custom_template_file))[0]
-        self.work_dir =  self.os.getenv('SCRATCHDIR') + '/' + project_name
-        template_file = self.os.path.join(self.work_dir, self.os.path.basename(custom_template_file))
+        """
+        # Joshua Zahner - 02/2019
+        # What the hell are the following 6 lines even doing? This object should only be responsible for creating a
+        # dictionary of options from a template not working with any types of file or moving files around.
+        custom_template_file = os.path.abspath(custom_template_file)
+        project_name = os.path.splitext(os.path.basename(custom_template_file))[0] # see `get_dataset_name`
+        self.work_dir = os.getenv('SCRATCHDIR') + '/' + project_name
+        template_file = os.path.join(self.work_dir, os.path.basename(custom_template_file))
         
         #if not self.os.path.isfile(template_file):       # FA 12/18: It should use custom_template_file as this is what will be updated
         #    self.shutil.copy2(custom_template_file, self.work_dir)
-        self.shutil.copy2(custom_template_file, self.work_dir)
+        shutil.copy2(custom_template_file, self.work_dir)
         self.options = self.read_options(template_file)
         
   
@@ -45,9 +48,7 @@ class Template:
         options = {'dataset': template_file.split('/')[-1].split(".")[0]}
         with open(template_file) as template:
             for line in template:
-
-                if  "=" in line:
-
+                if "=" in line:
                     # Splits each line on the ' = ' character string
                     # Note that the padding spaces are necessary in case of values having = in them
                     parts = line.split(" = ")
@@ -61,7 +62,6 @@ class Template:
                     # Add key and value to the dictionary
                     options[str(key)] = value
         return options  
-    
 
     def update_options(self, default_template_file):
         """ Update default template file with the options from custom template file read initially.
@@ -69,7 +69,7 @@ class Template:
             :param default_template_file: file, the template file to be updated
         """
         
-        template_file = self.os.path.abspath(default_template_file)
+        template_file = os.path.abspath(default_template_file)
         default_options = self.read_options(template_file)
         
         tmp_file = template_file+'.tmp'
@@ -85,9 +85,9 @@ class Template:
                         print('    {}: {} --> {}'.format(key, value, self.options[key]))   
                 f_tmp.write(line)
         mvCmd = 'mv {} {}'.format(tmp_file, template_file)
-        self.os.system(mvCmd)
+        os.system(mvCmd)
         self.options = default_options
-        return  self.options
+        return self.options
       
     def update_option(self, key, value):
         options = self.get_options()
