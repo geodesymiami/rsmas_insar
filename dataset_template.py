@@ -90,6 +90,11 @@ class Template:
         return self.options
       
     def update_option(self, key, value):
+        """ Updates the options dictionary key with the specified value.
+
+            :param key   : the dictionary key to update
+            :param value : the value to replace the key with
+        """
         options = self.get_options()
         options[key] = value
     
