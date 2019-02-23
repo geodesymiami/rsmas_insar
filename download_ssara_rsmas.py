@@ -73,11 +73,12 @@ def generate_ssaraopt_string(template_file):
 
     template_options = Template(template_file).get_options()
 
-    ssaraopt_keys = ['ssaraopt.platform', 'ssaraopt.relativeOrbit', 'ssaraopt.frame']
-
     # Determines if any of the ssaraopt keys are not present in the template files and either
     # utilizes the general ssaraopt option or throws an exception if that is also not present
     # (likely an invalid template file in that case).
+
+    ssaraopt_keys = ['ssaraopt.platform', 'ssaraopt.relativeOrbit', 'ssaraopt.frame']
+
     bad_key = False
     for key in ssaraopt_keys:
         if key not in template_options:
@@ -100,12 +101,9 @@ def generate_ssaraopt_string(template_file):
             endDate = template_options['ssaraopt.endDate']
             ssaraopt += ' -e={}'.format(endDate)
 
-    if 'ssaraopt.parallelDownload' in template_options:
-        parallelDownload = template_options['ssaraopt.parallelDownload']
-    else:
-        parallelDownload = '30'
+    parallel_download = template_options.get("ssaraopt.parallelDownload", '30')
 
-    ssaraopt += ' --parallel={}'.format(parallelDownload)
+    ssaraopt += ' --parallel={}'.format(parallel_download)
 
     print(ssaraopt)
 
