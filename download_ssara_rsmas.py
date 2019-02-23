@@ -7,7 +7,7 @@ import subprocess
 import datetime
 import argparse
 from dataset_template import Template
-from rsmas_logging import rsmas_logger, loglevel
+from rsmas_logging import RsmasLogger, loglevel
 import messageRsmas
 import _process_utilities as putils
 
@@ -17,7 +17,7 @@ import password_config as password
 inps = None
 
 logfile_name = os.getenv('OPERATIONS') + '/LOGS/ssara_rsmas.log'
-logger = rsmas_logger(file_name=logfile_name)
+logger = RsmasLogger(file_name=logfile_name)
 
 
 def create_parser():

@@ -3,14 +3,14 @@ from enum import Enum
 
 
 class loglevel(Enum):
-    DEBUG       = 0
-    INFO        = 1
-    WARNING     = 2
-    ERROR       = 3
-    CRITICAL    = 4
+    DEBUG = 0
+    INFO = 1
+    WARNING = 2
+    ERROR = 3
+    CRITICAL = 4
 
 
-class rsmas_logger():
+class RsmasLogger():
 
     def __init__(self, file_name=None):
         self.format = "%(levelname)s - %(message)s"
