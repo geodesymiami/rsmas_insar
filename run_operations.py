@@ -350,9 +350,9 @@ if __name__ == "__main__":
 			# Write that stored date was overwritten
 			overwrite_stored_date()
 			
-			# Submit job via process_sentinel and store output
+			# Submit job via process_rsmas and store output
 			logger.info("%s: STARTING PROCESS SENTINEL JOB AT: %s (newest date: %s)\n", dataset, psen_time, most_recent)
-			files_to_move = run_process_sentinel()
+			files_to_move = run_process_rsmas()
 			
 			all_output_files += files_to_move;
 			
