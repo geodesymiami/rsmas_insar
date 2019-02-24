@@ -58,7 +58,7 @@ def get_run_files():
 def set_memory_defaults():
     """ Sets an optimized memory value for each job. """
 
-    memoryuse = {'crop_merged_slc': '3700',
+    memoryuse = {'crop_merged_slc': '6000',
                  'create_patch': '3700',
                  'phase_linking': '3700',
                  'generate_interferogram_and_coherence': '3700',
