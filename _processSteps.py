@@ -14,7 +14,7 @@ import argparse
 import time
 import shutil
 import subprocess
-from rsmas_logging import rsmas_logger, loglevel
+from rsmas_logging import RsmasLogger, loglevel
 import _process_utilities as putils
 from dataset_template import Template
 import messageRsmas
