@@ -92,7 +92,7 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
         status = subprocess.Popen(cmd, shell=True).wait()
         if status is not 0:
             logger_exec_run.log(loglevel.ERROR, 'ERROR submitting {} using createBatch.pl'.format(item))
-            raise Exception('ERROR submitting {} using createBatch.pl'.format(item))
+            raise Exception('ERROR submitting {} using create_batch.py'.format(item))
 
         job_folder = cwd + '/' + item + '_out_jobs'
         print('jobfolder:', job_folder)
