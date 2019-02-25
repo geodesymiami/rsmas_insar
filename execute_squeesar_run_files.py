@@ -73,7 +73,8 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
 
     for item in run_file_list:
         item_memory = '_'
-        item_memory = item_memory.join(item.split('_')[3::])
+        item_memory = item_memory.join(item.split('_')[4::])
+
         try:
             memorymax = str(memoryuse[item_memory])
         except:
@@ -92,7 +93,7 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
         status = subprocess.Popen(cmd, shell=True).wait()
         if status is not 0:
             logger_exec_run.log(loglevel.ERROR, 'ERROR submitting {} using createBatch.pl'.format(item))
-            raise Exception('ERROR submitting {} using createBatch.pl'.format(item))
+            raise Exception('ERROR submitting {} using create_batch.py'.format(item))
 
         job_folder = cwd + '/' + item + '_out_jobs'
         print('jobfolder:', job_folder)
