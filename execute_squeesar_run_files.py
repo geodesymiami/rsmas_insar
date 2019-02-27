@@ -63,7 +63,7 @@ def set_memory_defaults():
                  'phase_linking': '3700',
                  'generate_interferogram_and_coherence': '3700',
                  'unwrap': '3700',
-                 'corrections_and_velocity"': '3700'}
+                 'corrections_and_velocity"': '8000'}
 
     return memoryuse
 
