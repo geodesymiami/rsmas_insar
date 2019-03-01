@@ -42,6 +42,7 @@ class Template:
         """ Read template options.
         
             :param template_file: file, the template file to be read and stored in a dictionary
+            :return options     : dict, a dictionary of options as read from the template file
         """
         # Creates the options dictionary and adds the dataset name as parsed from the filename
         # to the dictionary for easy lookup
@@ -66,8 +67,8 @@ class Template:
     def update_options_from_file(self, template_file):
         """ Updates the options dictionary with the contents of a new template file.
 
-            :param template_file : the new template file to update self.options with
-            :return options : updated options dictionary
+            :param template_file: file, the new template file to update self.options with
+            :return options     : dict, updated options dictionary
         """
         with open(template_file) as template:
             for line in template:
@@ -87,8 +88,16 @@ class Template:
         return self.options
 
     def update_option(self, key, value):
+        """ Updates a single option in the options dictionary.
+
+            :param key      : string, the key to update
+            :param value    : string, the value to update the key to
+            :return options : dict, the updated options dictionary
+        """
         options = self.get_options()
         options[key] = value
+
+        return options
     
     def get_options(self):
         """ Provides direct access to the options dictionary.
