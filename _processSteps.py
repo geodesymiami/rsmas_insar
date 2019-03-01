@@ -25,7 +25,7 @@ logger  = putils.send_logger()
 ####################################################################
 
 EXAMPLE = '''example:
-  process_rsmas.py  DIR/TEMPLATEFILE [options] [--bsub]
+  process_rsmas.py  DIR/TEMPLATEFILE [options] [--submit]
 
   InSAR processing using ISCE Stack and RSMAS processing scripts
 
@@ -45,7 +45,7 @@ EXAMPLE = '''example:
   --startssara         [default]
 
   --insarmaps          append after other options to upload to insarmaps.miami.edu
-  --bsub               submits job using bsub (and send email when done)
+  --submit             submits job (and send email when done)
   --nomail             suppress emailing imagefiles of results (default is emailing)
   --remove_project_dir removes project directory before starting download or processing
 
@@ -181,10 +181,10 @@ def create_process_rsmas_parser(EXAMPLE):
         action='store_false',
         help='mail results')
     parser.add_argument(
-        '--bsub',
-        dest='bsub_flag',
+        '--submit',
+        dest='submit_flag',
         action='store_true',
-        help='submits job using bsub')
+        help='submits job')
 
     return parser
 

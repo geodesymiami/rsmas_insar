@@ -224,7 +224,7 @@ def run_process_rsmas():
 	if len(psen_extra_options) == 0:
 		psen_extra_options.append('--insarmaps')
 		
-	psen_options = ['process_rsmas.py', os.getenv('OPERATIONS')+'/TEMPLATES/'+dataset+'.template'] + psen_extra_options + ['--bsub']
+	psen_options = ['process_rsmas.py', os.getenv('OPERATIONS')+'/TEMPLATES/'+dataset+'.template'] + psen_extra_options + ['--submit']
 	
 	psen_output = subprocess.check_output(psen_options).decode('utf-8')
 	
