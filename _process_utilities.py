@@ -265,15 +265,15 @@ def call_pysar(custom_template, custom_template_file, flag_load_and_stop):
 
     # TODO: Change subprocess call to get back error code and send error code to logger
     logger.log(loglevel.DEBUG,'\n*************** running pysar ****************')
-    command = 'pysarApp.py ' + custom_template_file + ' --load-data |& tee out_pysar.log'
+    command = 'pysarApp.py ' + custom_template_file + ' --end load_data |& tee out_pysar.log'
     out_file = 'out_pysar_load'
     logger.log(loglevel.INFO, command)
     messageRsmas.log(command)
     command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
     status = subprocess.Popen(command, shell=True).wait()
     if status is not 0:
-        logger.log(loglevel.ERROR,'ERROR in pysarApp.py --load-data')
-        raise Exception('ERROR in pysarApp.py --load-data')
+        logger.log(loglevel.ERROR,'ERROR in pysarApp.py --end load_data')
+        raise Exception('ERROR in pysarApp.py --end load_data')
 
     if flag_load_and_stop:
         logger.log(loglevel.DEBUG,'Exit as planned after loading into pysar')
