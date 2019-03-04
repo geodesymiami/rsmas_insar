@@ -149,11 +149,8 @@ def write_single_job_file(job_name, command_line, work_dir, project_name, schedu
     # write lines to .job file
     os.chdir(work_dir)
     job_file_name = "{0}.job".format(job_name)
-    try:
-        with open(job_file_name, "w+") as job_file:
-            job_file.writelines(job_file_lines)
-    except Exception as e:
-        raise Exception("ERROR: Unable to write job file {0}: {1}".format(job_file_name, repr(e)))
+    with open(job_file_name, "w+") as job_file:
+        job_file.writelines(job_file_lines)
 
 
 def write_batch_job_files(batch_file, out_dir, scheduler=None, memory=3600, walltime="4:00", queue=None):
