@@ -16,6 +16,7 @@ import shutil
 import subprocess
 from rsmas_logging import RsmasLogger, loglevel
 import _process_utilities as putils
+from _process_utilities  import _remove_directories, clean_list
 from dataset_template import Template
 import messageRsmas
 
@@ -33,7 +34,7 @@ EXAMPLE = '''example:
 
   --startmakerun       skips data downloading using SSARA
   --startprocess       skips data downloading and making run files
-  --startpysar         skips InSAR processing (needs a 'merged' directory)
+  --startpysar         skips InSAR processing (needs a 'merged','baselines', 'master' directories)
   --startinsarmaps     skips pysar  processing (needs a PYSAR directory)
   --startjobstats      skips insarmaps processing (summarizes job statistics)
   --stopsara           stops after ssara
@@ -73,9 +74,9 @@ EXAMPLE = '''example:
 
          cleanopt in TEMPLATEFILE controls file removal [default=0]
              cleanopt = 0 :  none
-             cleanopt = 1 :  after sentinelStack: configs, baselines, stack, coreg_slaves, misreg, orbits, coarse_interferograms, ESD, interferograms
-             cleanopt = 2 :  after pysarApp.py --load_data: 'merged'
-             cleanopt = 3 :  after pysarApp.py --load_data: 'SLC'
+             cleanopt = 1 :  after sentinelStack: configs, stack, coreg_slaves, misreg, orbits, coarse_interferograms, ESD, interferograms
+             cleanopt = 2 :  after pysarApp.py --end load_data: merged, master, baselines
+             cleanopt = 3 :  after pysarApp.py --end load_data: SLC
              cleanopt = 4 :  everything including PYSAR 
 
   --------------------------------------------
@@ -351,7 +352,7 @@ def process_runfiles(inps):
     if inps.flag_process:
         command = 'execute_stacksentinel_run_files.py ' + inps.custom_template_file
         messageRsmas.log(command)
-        # Check the performance, change in subprocess
+        #Check the performance, change in subprocess
         status = subprocess.Popen(command, shell=True).wait()
         if status is not 0:
             logger.log(loglevel.ERROR, 'ERROR in execute_stacksentinel_run_files.py')
@@ -361,8 +362,8 @@ def process_runfiles(inps):
             shutil.rmtree('PYSAR')
 
         if int(inps.custom_template['cleanopt']) >= 1:
+            cleanlist = clean_list()
             _remove_directories(cleanlist[1])
-
 
     if inps.stopprocess:
         logger.log(loglevel.INFO, 'Exit as planned after processing')
@@ -436,6 +437,7 @@ def process_time_series(inps):
             raise Exception('ERROR in execute_squeesar_run_files.py')
 
         if int(inps.custom_template['cleanopt']) >= 1:
+            cleanlist = clean_list()
             _remove_directories(cleanlist[1])
 
     if inps.stoppysar:
@@ -463,7 +465,8 @@ def run_ingest_insarmaps(inps):
 
     # clean
     if int(inps.custom_template['cleanopt']) == 4:
-        shutil.rmtree(cleanlist[4])
+        cleanlist = clean_list()
+        _remove_directories(cleanlist[4])
 
     if inps.stopinsarmaps:
         logger.log(loglevel.DEBUG, 'Exit as planned after insarmaps')

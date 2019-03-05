@@ -281,12 +281,12 @@ def call_pysar(custom_template, custom_template_file, flag_load_and_stop):
 
     # clean after loading data for cleanopt >= 2
     if 'All data needed found' in open('out_pysar.log').read():
-        print('Cleaning files:   cleanopt= ' +
-              str(custom_template['cleanopt']))
         if int(custom_template['cleanopt']) >= 2:
-            _remove_directories(['merged'])
+            print('Cleaning files:   cleanopt= ' + str(custom_template['cleanopt']))
+            cleanlist=clean_list()
+            _remove_directories(cleanlist[2])
         if int(custom_template['cleanopt']) >= 3:
-            _remove_directories(['SLC'])
+            _remove_directories(cleanlist[3])
 
     command = 'pysarApp.py ' + custom_template_file
     out_file = 'out_pysar'
@@ -316,16 +316,16 @@ def run_or_skip(custom_template_file):
 
 def clean_list():
     """ Creates default directory clean list based on cleanopt in template file. """
+    """FA 3/19: add workflow as argument, convert to module located in defaults directory """
     
     cleanlist = []
     cleanlist.append([''])
-    cleanlist.append(['baselines', 'stack',
-                   'coreg_slaves', 'misreg', 'orbits',
+    cleanlist.append(['stack', 'coreg_slaves', 'misreg', 'orbits',
                    'coarse_interferograms', 'ESD', 'interferograms',
-                   'slaves', 'master', 'geom_master'])
-    cleanlist.append(['merged'])
+                   'slaves', 'geom_master'])
+    cleanlist.append(['merged', 'master', 'baselines', 'configs'])
     cleanlist.append(['SLC'])
-    cleanlist.append(['PYSAR'])
+    cleanlist.append(['PYSAR', 'run_files'])
     
     return cleanlist
   
