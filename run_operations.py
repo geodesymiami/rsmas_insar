@@ -13,8 +13,10 @@ from dataset_template import Template
 import download_ssara_rsmas as ssara_rsmas
 import _process_utilities as putils
 
-TEMPLATE_DIRECTORY = os.getenv('OPERATIONS') + "/TEMPLATES"
-
+OPERATIONS_DIRECTORY = os.getenv('OPERATIONS')
+STORED_DATE_FILE = OPERATIONS_DIRECTORY + "/stored_date.date"
+TEMPLATE_DIRECTORY = OPERATIONS_DIRECTORY + "/TEMPLATES"
+DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
 
 def create_process_rsmas_parser():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
@@ -100,6 +102,34 @@ def get_datasets_to_process(dataset=None):
 
     return datasets
 
+def get_newest_data_date(dset):
+
+    template_file = "{}/{}.template".format(TEMPLATE_DIRECTORY, dset)
+
+    dset_template = Template(template_file)
+    ssaraopt_string = dset_template.generate_ssaraopt_string()
+
+    ssaraopt_cmd = 'ssara_federated_query.py {} --print'.format(ssaraopt_string)
+
+    ssara_output = subprocess.check_output(ssaraopt_cmd)
+
+    newest_data = ssara_output.split("\n")[-2]
+    date = datetime.strptime(newest_data.split(",")[3], DATE_FORMAT)
+
+    return date
+
+def get_last_downloaded_date(dset):
+
+    dataset_line = ""
+    with open(STORED_DATE_FILE) as date_file:
+        for line in date_file.readlines():
+            if dset in line:
+                dataset_line = line
+                break
+
+    last_date = dataset_line.split(": ")[1]
+
+    return datetime.strptime(last_date, DATE_FORMAT)
 
 def run_operations(args):
 
@@ -115,9 +145,9 @@ def run_operations(args):
 
     for dset in datasets:
 
-        template_file = "{}/{}.template".format(TEMPLATE_DIRECTORY, dset)
+        newest_date = get_newest_data_date(dset)
+        last_date = get_last_downloaded_date(dset)
 
-        ssara_rsmas.run_ssara(template_file)
 
 
 
