@@ -37,9 +37,12 @@ def get_google_spreadsheet_as_string(url_id, output_type="csv"):
     """ Gets the contents of a google spreadsheet as a single, long string.
 
         :param url_id : string,  the url_id of the spreadsheet
-        :param output_type: string, the type of file to download
+        :param output_type: string, the type of file to download. Supported types: "csv"
         :return content: string, the spreadsheet as a string
     """
+    if output_type != "csv":
+        raise Exception("Unsupported output_type: " + str(output_type))
+
     url = "https://docs.google.com/spreadsheets/d/{}/export?format={}".format(url_id, output_type)
     
     response = requests.get(url)
