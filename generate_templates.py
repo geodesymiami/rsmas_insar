@@ -6,20 +6,13 @@ import sys
 import requests
 import argparse
 import time
-import logging
 from datetime import datetime
+from rsmas_logging import RsmasLogger, loglevel
 
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logfile = os.getenv('OPERATIONS')+'/LOGS/generate_templates.log'
+logger = RsmasLogger(logfile)
 
-std_formatter = logging.Formatter("%(levelname)s - %(message)s")
-
-general = logging.FileHandler(os.getenv('OPERATIONS')+'/LOGS/generate_templates.log', 'a+', encoding=None)
-general.setLevel(logging.INFO)
-general.setFormatter(std_formatter)
-logger.addHandler(general)
-
-date_format = "%Y-%m-%dT%H:%M:%S.%f"
+DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
 
 def cmdLineParse(argv):
 
@@ -144,7 +137,7 @@ def generate_and_save_template_files(df, output_location, inps):
 
     files_to_save = generate_template_files(df, inps)
     
-    logging.info("Template files being generated for: %s", str(files_to_save))
+    logger.log(loglevel.INFO, "Template files being generated for: %s", str(files_to_save))
 
     for key, value in files_to_save.items():
         # Print contents for debugging purposes
@@ -166,7 +159,7 @@ def generate_and_save_template_files_from_dataframe(df, output_location, inps):
 
 def main(args):
     
-    logger.info("GENERATING TEMPLATES ON %s\n", datetime.fromtimestamp(time.time()).strftime(date_format))
+    logger.log(loglevel.INFO, "Generating template files on %s\n", datetime.fromtimestamp(time.time()).strftime(DATE_FORMAT))
     
     inps = cmdLineParse(args)
 
@@ -185,6 +178,8 @@ def main(args):
 
     df = get_spreadsheet_as_dataframe(csv_file, output_location)
     generate_and_save_template_files_from_dataframe(df, output_location, inps)
+
+    logger.log(loglevel.INFO, "Finished generating temaplte files")
 
 # TODO: Properly name variables
 # If output and input directories are declared, use them
