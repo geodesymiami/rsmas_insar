@@ -34,7 +34,7 @@ def cmdLineParse(argv):
     infile.add_argument("--dataset", dest='dataset', metavar="DATASET", help='Particular dataset to generate template for')
     infile.add_argument('--csv', dest='csv', metavar='FILE', help='CSV file containing template data')
     infile.add_argument('--output-dir', dest='output', metavar='FILE', help='directory to output template files to')
-    infile.add_argument('--testsheet', dest='test_sheet', action='store_true',  help='use test sheet or not')
+    infile.add_argument('--sheet_id', dest='sheet_id', metavar='SHEET ID',  help='sheet id to use')
 
     inps = parser.parse_args(argv)
     return inps
@@ -181,8 +181,8 @@ def main(args):
     if inps.csv:
         csv_file = inps.csv
         
-    if inps.test_sheet:
-        csv_file = test_sheet
+    if inps.sheet_id:
+        csv_file = inps.sheet_id
 
     if inps.output:
         output_location = inps.output
