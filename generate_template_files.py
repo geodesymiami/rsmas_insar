@@ -77,7 +77,7 @@ def get_spreadsheet_as_dataframe(file, output_file_location, output_type="csv"):
         :return dataframe: pandas.DataFrame, a dataframe object representation of the file
 
     """
-    file_end = file[len(file)-4:len(file)]
+    file_end = file[-4:]
     if file_end in ['.csv']:
         df = pd.read_csv(file)
     else:
@@ -143,11 +143,11 @@ def generate_template_file(names, subnames, column_vals, comments):
     return output_file
 
 
-def generate_template_files(df, inps):
+def generate_template_files(df, dataset):
     """ Generate template files for each dataset included in the spreadsheet.
 
         :param df: pandas.DataFrame, the DataFrame object representation of the CSV file
-        :param inps: dict, command line arguments dictionary
+        :param dataset: str, The dataset name
         :return: output_files, List(string), list of string representations of the template files
 
     """
@@ -157,9 +157,9 @@ def generate_template_files(df, inps):
     columns = list(df.columns)
     output_files = {}
 
-    if inps.dataset is not None:
-        file_base = inps.dataset
-        output_files[file_base] = generate_template_file(names, subnames, list(df[inps.dataset]), list(df['Comments']))
+    if dataset is not None:
+        file_base = dataset
+        output_files[file_base] = generate_template_file(names, subnames, list(df[dataset]), list(df['Comments']))
     else:
         for i, col_name in enumerate(columns[2:]):
             if "Unnamed" in col_name or "Comments" in col_name:
@@ -169,12 +169,12 @@ def generate_template_files(df, inps):
     return output_files
 
 
-def generate_and_save_template_files(df, output_location, inps):
+def generate_and_save_template_files(df, output_location, dataset):
     """ Writes template files to disk locations
 
         :param df: pandas.DataFrame, the DataFrame object representation of the CSV file
         :param output_location: string, the file location of the output files
-        :param inps: dict, command line argument list
+        :param dataset: str, The dataset name
 
     """
 
@@ -182,7 +182,7 @@ def generate_and_save_template_files(df, output_location, inps):
     if not os.path.isdir(output_location):
         os.mkdir(output_location)
 
-    files_to_save = generate_template_files(df, inps)
+    files_to_save = generate_template_files(df, dataset)
     
     logger.log(loglevel.INFO, "Template files being generated for: %s", str(files_to_save))
 
@@ -209,14 +209,15 @@ def generate_and_save_template_files_from_file(csv_file, output_location, inps):
 
 
 def generate_and_save_template_files_from_dataframe(df, output_location, inps):
+def generate_and_save_template_files_from_dataframe(df, output_location, dataset):
     """ Generate and saves template files from a local dataframe object
 
         :param df: pandas.DataFrame, DataFrame object representation of the CSV file
         :param output_location: string, the location to write the output template files to
-        :param inps: dict, command line arguments dictionary
+        :param dataset: str, The dataset name
 
     """
-    generate_and_save_template_files(df, output_location, inps)
+    generate_and_save_template_files(df, output_location, dataset)
 
 
 def main(args):
@@ -239,7 +240,7 @@ def main(args):
         output_location = inps.output
 
     df = get_spreadsheet_as_dataframe(csv_file, output_location)
-    generate_and_save_template_files_from_dataframe(df, output_location, inps)
+    generate_and_save_template_files_from_dataframe(df, output_location, inps.dataset)
 
     logger.log(loglevel.INFO, "Finished generating template files")
 
