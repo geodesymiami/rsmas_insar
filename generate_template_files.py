@@ -33,23 +33,6 @@ def cmd_line_parse(argv):
     return inps
 
 
-def get_google_spreadsheet_as_string(url_id, output_type="csv"):
-    """ Gets the contents of a google spreadsheet as a single, long string.
-
-        :param url_id : string,  the url_id of the spreadsheet
-        :param output_type: string, the type of file to download. Supported types: "csv"
-        :return content: string, the spreadsheet as a string
-    """
-    if output_type != "csv":
-        raise Exception("Unsupported output_type: " + str(output_type))
-
-    url = "https://docs.google.com/spreadsheets/d/{}/export?format={}".format(url_id, output_type)
-    
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.content
-
-
 def get_google_spreadsheet_as_dataframe(url_id, output_file_location, output_type="csv"):
     """ Writes a google spreadsheet to a local csv file and loads it back as a pandas DataFrame object.
 
@@ -60,11 +43,16 @@ def get_google_spreadsheet_as_dataframe(url_id, output_file_location, output_typ
         :return dataframe : pandas.DataFrame, a dataframe object representation of the file
 
     """
-    content = get_google_spreadsheet_as_string(url_id, output_type)
 
-    df = pd.read_csv(StringIO(content))
+    if output_type != "csv":
+        raise Exception("Unsupported output_type: " + str(output_type))
 
-    return df
+    url = "https://docs.google.com/spreadsheets/d/{}/export?format={}".format(url_id, output_type)
+
+    response = requests.get(url)
+    response.raise_for_status()
+
+    return pd.read_csv(StringIO(response.content))
 
 
 def get_spreadsheet_as_dataframe(file, output_file_location, output_type="csv"):
@@ -196,19 +184,6 @@ def generate_and_save_template_files(df, output_location, dataset):
             template_file.write(value)
 
 
-def generate_and_save_template_files_from_file(csv_file, output_location, inps):
-    """ Generate and saves template files from a local csv file
-
-        :param csv_file: string, path to local csv file to load from
-        :param output_location: string, the location to write the output template files to
-        :param inps: dict, command line arguments dictionary
-
-    """
-    df = pd.read_csv(csv_file)
-    generate_and_save_template_files(df, output_location, inps)
-
-
-def generate_and_save_template_files_from_dataframe(df, output_location, inps):
 def generate_and_save_template_files_from_dataframe(df, output_location, dataset):
     """ Generate and saves template files from a local dataframe object
 
