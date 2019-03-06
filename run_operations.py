@@ -10,7 +10,10 @@ import glob
 import generate_templates as gt
 from rsmas_logging import RsmasLogger, loglevel
 from dataset_template import Template
+import download_ssara_rsmas as ssara_rsmas
 import _process_utilities as putils
+
+TEMPLATE_DIRECTORY = os.getenv('OPERATIONS') + "/TEMPLATES"
 
 
 def create_process_rsmas_parser():
@@ -86,15 +89,13 @@ def generate_templates_with_options(inps):
     gt.main(template_options)
 
 
-def get_datasets_to_process(inps):
-
-    templates_directory = os.getenv('OPERATIONS') + "/TEMPLATES/"
+def get_datasets_to_process(dataset=None):
 
     # Obtains list of datasets to run processSentinel on
-    if inps.dataset:
-        datasets = [inps.dataset]
+    if dataset:
+        datasets = [dataset]
     else:
-        template_files = glob.glob(templates_directory + "*.template")
+        template_files = glob.glob("{}/*.template".format(TEMPLATE_DIRECTORY))
         datasets = [putils.get_project_name(template) for template in template_files]
 
     return datasets
@@ -110,7 +111,14 @@ def run_operations(args):
         initiate_operations()
 
     generate_templates_with_options(inps)
-    get_datasets_to_process(inps)
+    datasets = get_datasets_to_process(inps.dataset)
+
+    for dset in datasets:
+
+        template_file = "{}/{}.template".format(TEMPLATE_DIRECTORY, dset)
+
+        ssara_rsmas.run_ssara(template_file)
+
 
 
 

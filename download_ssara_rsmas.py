@@ -63,7 +63,7 @@ def check_downloads(run_number, args):
 
     logger.log(loglevel.INFO, "Everything is there!")
 
-def run_ssara(inps, run_number=1):
+def run_ssara(template, run_number=1):
     """ Runs ssara_federated_query-cj.py and checks for download issues.
 
         Runs ssara_federated_query-cj.py and checks continuously for whether the data download has hung without
@@ -83,9 +83,9 @@ def run_ssara(inps, run_number=1):
 
     # Compute SSARA options to use
 
-    dataset_template = Template(inps.template)
+    dataset_template = Template(template)
 
-    ssaraopt =  dataset_template.generate_ssaraopt_string()
+    ssaraopt = dataset_template.generate_ssaraopt_string()
 
     ssaraopt = ssaraopt.split(' ')
 
@@ -159,6 +159,6 @@ if __name__ == "__main__":
 
     logger.log(loglevel.INFO, "DATASET: %s", str(inps.template.split('/')[-1].split(".")[0]))
     logger.log(loglevel.INFO, "DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
-    succesful = run_ssara(inps)
+    succesful = run_ssara(inps.template)
     logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
     logger.log(loglevel.INFO, "------------------------------------")				
