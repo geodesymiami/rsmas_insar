@@ -14,6 +14,7 @@ logger = RsmasLogger(logfile)
 
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
 
+
 def cmdLineParse(argv):
 
     parser = argparse.ArgumentParser(description='Generate Processing Template Files', 
@@ -31,32 +32,53 @@ def cmdLineParse(argv):
     return inps
 
 
-#########################################################
-
 def get_google_spreadsheet_as_string(url_id, output_type="csv"):
+    """ Gets the contents of a google spreadsheet as a single, long string.
+
+        :param url_id : string,  the url_id of the spreadsheet
+        :param output_type: string, the type of file to download
+        :return content: string, the spreadsheet as a string
+    """
+    url = "https://docs.google.com/spreadsheets/d/{}/export?format={}".format(url_id, output_type)
     
-    response = requests.get('https://docs.google.com/spreadsheets/d/' + url_id + '/export?format=' + output_type)
+    response = requests.get(url)
     response.raise_for_status()
     return response.content
 
 
-def write_file(content, output_file_location = None):
-    name = "templateRSMAS.csv"
-    if output_file_location is not None:
-        name = os.path.join(output_file_location, name)
-    with open(name, 'wb') as f:
-        f.write(content)
-    return name
+def get_google_spreadsheet_as_dataframe(url_id, output_file_location, output_type="csv"):
+    """ Writes a google spreadsheet to a local csv file and loads it back as a pandas DataFrame object.
 
+        :param url_id : string, the url ID of the spreadsheet to download
+        :param output_file_location : string, the location to store the local file
+        :param output_type : string, the type of file to download
 
-def get_google_spreadsheet_as_dataframe(url_id, output_file_location, output_type = "csv"):
+        :return dataframe : pandas.DataFrame, a dataframe object representation of the file
+
+    """
     content = get_google_spreadsheet_as_string(url_id, output_type)
-    loc = write_file(content, output_file_location)
-    df = pd.read_csv(loc)
+
+    filename = "templateRSMAS.csv"
+    if output_file_location is not None:
+        filename = os.path.join(output_file_location, filename)
+    with open(filename, 'wb') as f:
+        f.write(content)
+
+    df = pd.read_csv(filename)
+
     return df
 
 
-def get_spreadsheet_as_dataframe(file, output_file_location, output_type = "csv"):
+def get_spreadsheet_as_dataframe(file, output_file_location, output_type="csv"):
+    """ Loads a local csv file as a pandas DataFrame object.
+
+        :param file : string, the filename of the file to load
+        :param output_file_location : string, location to store the output file
+        :param output_type : string, the type of file `file` is
+
+        :return dataframe: pandas.DataFrame, a dataframe object representation of the file
+
+    """
     file_end = file[len(file)-4:len(file)]
     if file_end in ['.csv']:
         df = pd.read_csv(file)
@@ -65,22 +87,30 @@ def get_spreadsheet_as_dataframe(file, output_file_location, output_type = "csv"
     return df
 
 
-
-##########################################################
-
-
 def generate_template_file(names, subnames, column_vals, comments):
-    line_breaker = "#"*20 + "\n"
+    """ Generate a single template file from data in the DataFrame object.
+
+        :param names: List(string), list of primary key names provided in the file
+        :param subnames: List(string), list of secondary key names provided in the file
+        :param column_vals: List(string), list of data for each key for a given dataset
+        :param comments: List(string), list of comments to include in the generated template file
+
+        :return: output_file: string, the contentes of the template file as a string
+
+    """
+
+    line_breaker = "#"*20 + "\n"    # Formatted line break. Appears as ==> '####################' in file
     output_file = ""
     last_named_column = ""
     base = ""
 
+    # If process_flag is FALSE, don't generate a template file for that dataset
     if column_vals[0] == "FALSE":
-        return None;
+        return None
 
     for i in range(len(names)):
 
-        # Get set base name.
+        # Get/set base name.
         if type(names[i]) != str:
             base = last_named_column
             if type(subnames[i]) != str:
@@ -97,22 +127,33 @@ def generate_template_file(names, subnames, column_vals, comments):
             subname = ""
 
         # Get Value
-        if type(column_vals[i]) ==  str:
+        if type(column_vals[i]) == str:
             value = column_vals[i]
         else:
             continue
 
+        # Add comments to line if any exist
         comments_string = ""
-        # Need to create name in order to format string properly so that the "=" symbol is at the same location
         if type(comments[i]) == str:
             comments_string = comments[i]
+
+        # Generate line
         name = base + subname
         output_line = "{0:35} = {1:50}{2:50}\n".format(name, value, comments_string)
         output_file += output_line
+
     return output_file
 
 
 def generate_template_files(df, inps):
+    """ Generate template files for each dataset included in the spreadsheet.
+
+        :param df: pandas.DataFrame, the DataFrame object representation of the CSV file
+        :param inps: dict, command line arguments dictionary
+        :return: output_files, List(string), list of string representations of the template files
+
+    """
+
     names = list(df["Name"])
     subnames = list(df["Subname"])
     columns = list(df.columns)
@@ -131,6 +172,14 @@ def generate_template_files(df, inps):
 
 
 def generate_and_save_template_files(df, output_location, inps):
+    """ Writes template files to disk locations
+
+        :param df: pandas.DataFrame, the DataFrame object representation of the CSV file
+        :param output_location: string, the file location of the output files
+        :param inps: dict, command line argument list
+
+    """
+
     # Create output directory if it doesn't exist
     if not os.path.isdir(output_location):
         os.mkdir(output_location)
@@ -144,42 +193,57 @@ def generate_and_save_template_files(df, output_location, inps):
         if value is None:
             continue
 
-        with open(os.path.join(output_location, key + ".template"), "w") as f:
-            f.write(value)
+        filename = os.path.join(output_location, "{}.template".format(key))
+        with open(filename, "w") as template_file:
+            template_file.write(value)
 
 
 def generate_and_save_template_files_from_file(csv_file, output_location, inps):
+    """ Generate and saves template files from a local csv file
+
+        :param csv_file: string, path to local csv file to load from
+        :param output_location: string, the location to write the output template files to
+        :param inps: dict, command line arguments dictionary
+
+    """
     df = pd.read_csv(csv_file)
     generate_and_save_template_files(df, output_location, inps)
 
 
 def generate_and_save_template_files_from_dataframe(df, output_location, inps):
+    """ Generate and saves template files from a local dataframe object
+
+        :param df: pandas.DataFrame, DataFrame object representation of the CSV file
+        :param output_location: string, the location to write the output template files to
+        :param inps: dict, command line arguments dictionary
+
+    """
     generate_and_save_template_files(df, output_location, inps)
 
 
 def main(args):
     
-    logger.log(loglevel.INFO, "Generating template files on %s\n", datetime.fromtimestamp(time.time()).strftime(DATE_FORMAT))
+    logger.log(loglevel.INFO, "Generating template files on {}\n".format(datetime.fromtimestamp(time.time()).strftime(DATE_FORMAT)))
     
     inps = cmdLineParse(args)
 
-    csv_file = "1zAsa5cykv-WS39ufkCZdvFvaOem3Akol8aqzANnsdhE"
-    test_sheet = "1Q8isYbGtGLGBoeqIQffg-587K13MtrDoQTYnx_59fFE" #test1_templateRSMAS.csv (test1 4 datasets)
+    default_sheet = "1zAsa5cykv-WS39ufkCZdvFvaOem3Akol8aqzANnsdhE"
+    test_sheet = "1Q8isYbGtGLGBoeqIQffg-587K13MtrDoQTYnx_59fFE"     #test1_templateRSMAS.csv (test1 4 datasets)
     output_location = os.getenv('OPERATIONS') + '/TEMPLATES/'
+
+    csv_file = default_sheet
 
     if inps.csv:
         csv_file = inps.csv
-        
     if inps.sheet_id:
         csv_file = inps.sheet_id
-
     if inps.output:
         output_location = inps.output
 
     df = get_spreadsheet_as_dataframe(csv_file, output_location)
     generate_and_save_template_files_from_dataframe(df, output_location, inps)
 
-    logger.log(loglevel.INFO, "Finished generating temaplte files")
+    logger.log(loglevel.INFO, "Finished generating template files")
 
 # TODO: Properly name variables
 # If output and input directories are declared, use them
