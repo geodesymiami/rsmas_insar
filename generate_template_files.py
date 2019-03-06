@@ -62,13 +62,7 @@ def get_google_spreadsheet_as_dataframe(url_id, output_file_location, output_typ
     """
     content = get_google_spreadsheet_as_string(url_id, output_type)
 
-    filename = "templateRSMAS.csv"
-    if output_file_location is not None:
-        filename = os.path.join(output_file_location, filename)
-    with open(filename, 'wb') as f:
-        f.write(content)
-
-    df = pd.read_csv(filename)
+    df = pd.read_csv(StringIO(content))
 
     return df
 
