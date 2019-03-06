@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import os
 import pandas as pd
@@ -19,12 +19,10 @@ general.setLevel(logging.INFO)
 general.setFormatter(std_formatter)
 logger.addHandler(general)
 
-
-inps = None
 date_format = "%Y-%m-%dT%H:%M:%S.%f"
 
 def cmdLineParse(argv):
-    global inps
+
     parser = argparse.ArgumentParser(description='Generate Processing Template Files', 
                                      formatter_class=argparse.RawTextHelpFormatter, 
                                      epilog=None)
@@ -111,7 +109,7 @@ def generate_template_file(names, subnames, column_vals, comments):
         else:
             continue
 
-        comments_string = "";
+        comments_string = ""
         # Need to create name in order to format string properly so that the "=" symbol is at the same location
         if type(comments[i]) == str:
             comments_string = comments[i]
@@ -121,7 +119,7 @@ def generate_template_file(names, subnames, column_vals, comments):
     return output_file
 
 
-def generate_template_files(df):
+def generate_template_files(df, inps):
     names = list(df["Name"])
     subnames = list(df["Subname"])
     columns = list(df.columns)
@@ -133,37 +131,37 @@ def generate_template_files(df):
     else:
         for i, col_name in enumerate(columns[2:]):
             if "Unnamed" in col_name or "Comments" in col_name:
-                continue;
+                continue
             file_base = col_name
             output_files[file_base] = generate_template_file(names, subnames, list(df[col_name]), list(df['Comments']))
     return output_files
 
 
-def generate_and_save_template_files(df, output_location):
+def generate_and_save_template_files(df, output_location, inps):
     # Create output directory if it doesn't exist
     if not os.path.isdir(output_location):
         os.mkdir(output_location)
 
-    files_to_save = generate_template_files(df)
+    files_to_save = generate_template_files(df, inps)
     
     logging.info("Template files being generated for: %s", str(files_to_save))
 
     for key, value in files_to_save.items():
         # Print contents for debugging purposes
-        if value == None:
-            continue;
+        if value is None:
+            continue
 
         with open(os.path.join(output_location, key + ".template"), "w") as f:
             f.write(value)
 
 
-def generate_and_save_template_files_from_file(csv_file, output_location):
+def generate_and_save_template_files_from_file(csv_file, output_location, inps):
     df = pd.read_csv(csv_file)
-    generate_and_save_template_files(df, output_location)
+    generate_and_save_template_files(df, output_location, inps)
 
 
-def generate_and_save_template_files_from_dataframe(df, output_location):
-    generate_and_save_template_files(df, output_location)
+def generate_and_save_template_files_from_dataframe(df, output_location, inps):
+    generate_and_save_template_files(df, output_location, inps)
 
 
 def main(args):
@@ -172,11 +170,9 @@ def main(args):
     
     inps = cmdLineParse(args)
 
-    csv_file         = "1zAsa5cykv-WS39ufkCZdvFvaOem3Akol8aqzANnsdhE"
-    test_sheet       = "1bDJQEfM_to-7-2N7_0PhKnD1ur484jkydcTFZGMdLcQ" #Old Original
-    test_sheet       = "1ILNfg9jJsebxSQUZF2ULCBgAnDJ41NRc1X8j6xsZUUI" #test_templateRSMAS.csv
-    test_sheet       = "1Q8isYbGtGLGBoeqIQffg-587K13MtrDoQTYnx_59fFE" #test1_templateRSMAS.csv (test1 4 datasets)
-    output_location  = os.getenv('OPERATIONS') + '/TEMPLATES/'
+    csv_file = "1zAsa5cykv-WS39ufkCZdvFvaOem3Akol8aqzANnsdhE"
+    test_sheet = "1Q8isYbGtGLGBoeqIQffg-587K13MtrDoQTYnx_59fFE" #test1_templateRSMAS.csv (test1 4 datasets)
+    output_location = os.getenv('OPERATIONS') + '/TEMPLATES/'
 
     if inps.csv:
         csv_file = inps.csv
@@ -188,9 +184,9 @@ def main(args):
         output_location = inps.output
 
     df = get_spreadsheet_as_dataframe(csv_file, output_location)
-    generate_and_save_template_files_from_dataframe(df, output_location)
+    generate_and_save_template_files_from_dataframe(df, output_location, inps)
 
 # TODO: Properly name variables
 # If output and input directories are declared, use them
 if __name__ == "__main__":
-    main(sys.argv[1:]);
+    main(sys.argv[1:])
