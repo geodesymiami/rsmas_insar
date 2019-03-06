@@ -16,7 +16,7 @@ if status is not 0:
    raise Exception('ERROR in check_for_operations_directories_and_initiate.py')
 ##################
 from download_ssara_rsmas import generate_ssaraopt_string
-import generate_templates as gt
+import generate_template_files as gt
 
 import logging
 
