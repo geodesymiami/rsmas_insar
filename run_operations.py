@@ -25,7 +25,7 @@ def create_process_rsmas_parser():
     data_args.add_argument('-dataset', dest='dataset', metavar="DATASET", help='Particular dataset to run')
     data_args.add_argument('-templatecsv', dest='template_csv', metavar='FILE', help='local csv file containing template info.')
     data_args.add_argument('-singletemplate', dest='single_template', metavar='FILE', help='singular template file to run on')
-    data_args.add_argument('--testsheet', dest="test_sheet", action='store_true', help='whether or not to use the test sheet')
+    data_args.add_argument('--sheet_id', dest="sheet_id", metavar='SHEET ID', help='sheet id to use')
     data_args.add_argument('--restart', dest='restart', action='store_true', help='remove $OPERATIONS directory before starting')
 
     process_args = parser.add_argument_group("Processing steps", "processing Steps")
@@ -69,13 +69,33 @@ def initiate_operations():
         open(os.getenv('OPERATIONS') + '/stored_date.date', 'a').close()  # create empty file
 
 
+def generate_templates_with_options(inps):
+
+    template_options = []
+    if inps.template_csv:
+        template_options.append('--csv')
+        template_options.append(inps.template_csv)
+    if inps.dataset:
+        template_options.append('--dataset')
+        template_options.append(inps.dataset)
+    if inps.sheet_id:
+        template_options.append('--sheet_id')
+        template_options.append(inps.sheet_id)
+
+    gt.main(template_options);
+
 def run_operations(args):
 
     inps = command_line_parse(args)
 
+    # Remove and reinitiate $OPERATIONS directory
     if inps.restart:
         shutil.rmtree(os.getenv('OPERATIONS'))
-        initiate_operations();
+        initiate_operations()
+
+    generate_templates_with_options(inps)
+
+
 
 if __name__ == "__main__":
 
