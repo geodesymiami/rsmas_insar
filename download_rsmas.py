@@ -13,6 +13,7 @@ import glob
 
 import messageRsmas
 import _process_utilities as putils
+from dataset_template import Template
 import create_batch as cb
 
 ###############################################################################
@@ -112,9 +113,9 @@ def main(iargs=None):
     # if satellite is not Sentinel (not tried yet)
     if 'SenDT' not in project_name and 'SenAT' not in project_name:
 
-        from download_ssara_rsmas import generate_ssaraopt_string
+        dataset_template = Template(inps.template_file)
 
-        ssaraopt = generate_ssaraopt_string(template_file=inps.template)
+        ssaraopt = dataset_template.generate_ssaraopt_string()
         ssara_call = ['ssara_federated_query.py'] + ssaraopt + ['--print', '--download']
         ssara_process = subprocess.Popen(ssara_call, shell=True).wait()
         completion_status = ssara_process.poll()

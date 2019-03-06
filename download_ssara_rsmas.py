@@ -31,10 +31,9 @@ def create_parser():
 def command_line_parse(args):
     """ Parses command line agurments into inps variable. """
 
-    global inps
-
     parser = create_parser()
-    inps = parser.parse_args(args)
+    return parser.parse_args(args)
+
 
 def check_downloads(run_number, args):
     """ Checks if all of the ssara files to be dwonloaded actually exist.
@@ -64,53 +63,7 @@ def check_downloads(run_number, args):
 
     logger.log(loglevel.INFO, "Everything is there!")
 
-
-def generate_ssaraopt_string(template_file):
-    """ generates ssaraopt string from ssaraopt.* in template_file. If not given returns ssaraopt proper
-        Parameters: run_number: int, the current iteration the wrapper is on (maxiumum 10 before quitting)
-        Returns: ssaraopt: str, the string with the options to call ssara_federated_query.py
-    """
-
-    template_options = Template(template_file).get_options()
-
-    # Determines if any of the ssaraopt keys are not present in the template files and either
-    # utilizes the general ssaraopt option or throws an exception if that is also not present
-    # (likely an invalid template file in that case).
-
-    ssaraopt_keys = ['ssaraopt.platform', 'ssaraopt.relativeOrbit', 'ssaraopt.frame']
-
-    bad_key = False
-    for key in ssaraopt_keys:
-        if key not in template_options:
-            bad_key = True
-            if 'ssaraopt' in template_options:
-                ssaraopt = template_options['ssaraopt']
-            else:
-                raise Exception('no ssaraopt or ssaraopt.platform, relativeOrbit, frame found')
-
-    # If all of the keys are present go ahead and generate the ssaraopt string as normal.
-    if not bad_key:
-        platform = template_options['ssaraopt.platform']
-        relativeOrbit = template_options['ssaraopt.relativeOrbit']
-        frame = template_options['ssaraopt.frame']
-        ssaraopt='--platform={} --relativeOrbit={} --frame={}'.format(platform, relativeOrbit, frame)
-        if 'ssaraopt.startDate' in template_options:
-            startDate = template_options['ssaraopt.startDate']
-            ssaraopt += ' -s={}'.format(startDate)
-        if 'ssaraopt.endDate' in template_options:
-            endDate = template_options['ssaraopt.endDate']
-            ssaraopt += ' -e={}'.format(endDate)
-
-    parallel_download = template_options.get("ssaraopt.parallelDownload", '30')
-
-    ssaraopt += ' --parallel={}'.format(parallel_download)
-
-    print(ssaraopt)
-
-    return ssaraopt
-
-
-def run_ssara(run_number=1):
+def run_ssara(inps, run_number=1):
     """ Runs ssara_federated_query-cj.py and checks for download issues.
 
         Runs ssara_federated_query-cj.py and checks continuously for whether the data download has hung without
@@ -128,9 +81,11 @@ def run_ssara(run_number=1):
 
     logger.log(loglevel.INFO, "PASSED RUN NUMBER > 10")
 
-    # Compute SSARA options to use 
+    # Compute SSARA options to use
 
-    ssaraopt =  generate_ssaraopt_string(template_file=inps.template)
+    dataset_template = Template(inps.template)
+
+    ssaraopt =  dataset_template.generate_ssaraopt_string()
 
     ssaraopt = ssaraopt.split(' ')
 
@@ -179,7 +134,7 @@ def run_ssara(run_number=1):
     ssara_process.terminate()
     logger.log(loglevel.INFO, "EXIT CODE: %s", str(exit_code))
 
-    bad_codes = [137,-9]
+    bad_codes = [137, -9]
 
     # If the exit code is one that signifies an error, rerun the entire command
     if exit_code in bad_codes or hang_status:
@@ -193,7 +148,7 @@ def run_ssara(run_number=1):
     return 0
 
 if __name__ == "__main__":
-    command_line_parse(sys.argv[1:])
+    inps = command_line_parse(sys.argv[1:])
 
     inps.project_name = putils.get_project_name(custom_template_file=inps.template)
     inps.work_dir = putils.get_work_directory(None, inps.project_name)
@@ -204,6 +159,6 @@ if __name__ == "__main__":
 
     logger.log(loglevel.INFO, "DATASET: %s", str(inps.template.split('/')[-1].split(".")[0]))
     logger.log(loglevel.INFO, "DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
-    succesful = run_ssara()
+    succesful = run_ssara(inps)
     logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
     logger.log(loglevel.INFO, "------------------------------------")				

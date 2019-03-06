@@ -15,9 +15,8 @@ status = subprocess.Popen('check_for_operations_directories_and_initiate.py', sh
 if status is not 0:
    raise Exception('ERROR in check_for_operations_directories_and_initiate.py')
 ##################
-from download_ssara_rsmas import generate_ssaraopt_string
+from dataset_template import Template
 import generate_templates as gt
-
 import logging
 
 #################### LOGGERS AND LOGGING SETUP ####################
@@ -332,8 +331,11 @@ if __name__ == "__main__":
 		setup_logging_handlers(dataset, "a")
 		
 		template_file = templates_directory+'/'+dataset+'.template'
+
+		dataset_template = Template(template_file)
+
 		# Generate SSARA Options to Use
-		ssaraopt = generate_ssaraopt_string(template_file=template_file)
+		ssaraopt = dataset_template.generate_ssaraopt_string()
 		ssaraopt = 'ssara_federated_query.py ' + ssaraopt + ' --print'
 		ssaraopt=ssaraopt.split(' ')
 		
