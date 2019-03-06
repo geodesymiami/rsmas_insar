@@ -72,7 +72,7 @@ class Template:
         """
         with open(template_file) as template:
             for line in template:
-                if "=" in line:
+                if "=" in line and line[0] != "#":
                     # Splits each line on the ' = ' character string
                     # Note that the padding spaces are necessary in case of values having = in them
                     parts = line.split(" = ")
