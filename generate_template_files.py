@@ -8,6 +8,7 @@ import argparse
 import time
 from datetime import datetime
 from rsmas_logging import RsmasLogger, loglevel
+from io import StringIO
 
 logfile = os.getenv('OPERATIONS')+'/LOGS/generate_templates.log'
 logger = RsmasLogger(logfile)
@@ -15,7 +16,7 @@ logger = RsmasLogger(logfile)
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
 
 
-def cmdLineParse(argv):
+def cmd_line_parse(argv):
 
     parser = argparse.ArgumentParser(description='Generate Processing Template Files', 
                                      formatter_class=argparse.RawTextHelpFormatter, 
@@ -225,7 +226,7 @@ def main(args):
     
     logger.log(loglevel.INFO, "Generating template files on {}\n".format(datetime.fromtimestamp(time.time()).strftime(DATE_FORMAT)))
     
-    inps = cmdLineParse(args)
+    inps = cmd_line_parse(args)
 
     default_sheet = "1zAsa5cykv-WS39ufkCZdvFvaOem3Akol8aqzANnsdhE"
     test_sheet = "1Q8isYbGtGLGBoeqIQffg-587K13MtrDoQTYnx_59fFE"     #test1_templateRSMAS.csv (test1 4 datasets)
