@@ -14,6 +14,7 @@ import glob
 import messageRsmas
 import _process_utilities as putils
 from dataset_template import Template
+import create_batch as cb
 
 ###############################################################################
 EXAMPLE = '''example:
@@ -32,6 +33,8 @@ def create_parser():
     parser = argparse.ArgumentParser(description='Downloads SAR data using a variety of scripts',
                                      formatter_class=argparse.RawTextHelpFormatter, epilog=EXAMPLE)
     parser.add_argument('template_file', help='template file containing ssaraopt field')
+    parser.add_argument( '--submit', dest='submit_flag', action='store_true', help='submits job')
+
     # parser.add_argument('template_file', help='template file containing ssaraopt field', nargs='?')
     return parser
 
@@ -81,7 +84,21 @@ def download(script_name, template_file, slc_dir, outnum):
 def main(iargs=None):
     """Downloads data with ssara and asfserial scripts."""
 
+    command = 'download_rsmas.py ' + iargs[0]
+    messageRsmas.log(command)
+
     inps = command_line_parse(iargs)
+
+    #########################################
+    # Submit job
+    #########################################
+    if inps.submit_flag:
+        job_file_name = 'download_rsmas'
+        work_dir = os.getcwd()
+        job_name = inps.template_file.split(os.sep)[-1].split('.')[0]
+        wall_time = '24:00'
+
+        cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
 
     project_name = putils.get_project_name(custom_template_file=inps.template_file)
     work_dir = putils.get_work_directory(None, project_name)

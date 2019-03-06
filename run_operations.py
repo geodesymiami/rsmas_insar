@@ -92,8 +92,8 @@ def setup_logging_handlers(dset, mode):
 """
 def create_process_rsmas_parser():
 	parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description="Submits processing jobs\
- for each datasest template present in the $OPERATIONS/TEMPLATES/ directory.  \nPlace run_operation_LSF.job file\
- into $OPERATIONS directory and submit with bsub < run_operation_LSF.job. \nIt runs run_operations once daily at 12:00 PM.")
+ for each datasest template present in the $OPERATIONS/TEMPLATES/ directory.  \nPlace run_operations_LSF.job file\
+ into $OPERATIONS directory and submit with bsub < run_operations_LSF.job. \nIt runs run_operations.py once daily at 12:00 PM.")
 
 	parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
 	parser.add_argument("--dataset", dest='dataset', metavar="DATASET", help='Particular dataset to run')
@@ -223,7 +223,7 @@ def run_process_rsmas():
 	if len(psen_extra_options) == 0:
 		psen_extra_options.append('--insarmaps')
 		
-	psen_options = ['process_rsmas.py', os.getenv('OPERATIONS')+'/TEMPLATES/'+dataset+'.template'] + psen_extra_options + ['--bsub']
+	psen_options = ['process_rsmas.py', os.getenv('OPERATIONS')+'/TEMPLATES/'+dataset+'.template'] + psen_extra_options + ['--submit']
 	
 	psen_output = subprocess.check_output(psen_options).decode('utf-8')
 	
@@ -352,9 +352,9 @@ if __name__ == "__main__":
 			# Write that stored date was overwritten
 			overwrite_stored_date()
 			
-			# Submit job via process_sentinel and store output
+			# Submit job via process_rsmas and store output
 			logger.info("%s: STARTING PROCESS SENTINEL JOB AT: %s (newest date: %s)\n", dataset, psen_time, most_recent)
-			files_to_move = run_process_sentinel()
+			files_to_move = run_process_rsmas()
 			
 			all_output_files += files_to_move;
 			

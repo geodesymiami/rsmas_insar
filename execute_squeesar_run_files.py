@@ -58,12 +58,12 @@ def get_run_files():
 def set_memory_defaults():
     """ Sets an optimized memory value for each job. """
 
-    memoryuse = {'crop_merged_slc': '3700',
+    memoryuse = {'crop_merged_slc': '6000',
                  'create_patch': '3700',
                  'phase_linking': '3700',
                  'generate_interferogram_and_coherence': '3700',
                  'unwrap': '3700',
-                 'corrections_and_velocity"': '3700'}
+                 'corrections_and_velocity"': '8000'}
 
     return memoryuse
 
@@ -92,7 +92,7 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
         status = subprocess.Popen(cmd, shell=True).wait()
         if status is not 0:
             logger_exec_run.log(loglevel.ERROR, 'ERROR submitting {} using createBatch.pl'.format(item))
-            raise Exception('ERROR submitting {} using createBatch.pl'.format(item))
+            raise Exception('ERROR submitting {} using create_batch.py'.format(item))
 
         job_folder = cwd + '/' + item + '_out_jobs'
         print('jobfolder:', job_folder)

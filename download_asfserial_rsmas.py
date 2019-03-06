@@ -6,7 +6,7 @@ import argparse
 import time
 from dataset_template import Template
 import datetime
-from rsmas_logging import rsmas_logger, loglevel
+from rsmas_logging import RsmasLogger, loglevel
 import messageRsmas
 import _process_utilities as putils
 import stat
@@ -16,7 +16,7 @@ sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
 
 logfile_name = os.getenv('OPERATIONS') + '/LOGS/asfserial_rsmas.log'
-logger = rsmas_logger(file_name=logfile_name)
+logger = RsmasLogger(file_name=logfile_name)
 
 inps = None
 

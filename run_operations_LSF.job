@@ -8,7 +8,7 @@
 #BSUB -q general
 #BSUB -b 12:00
 
-s.cgood
+s.bgood
 nohup run_operations.py &
 
 sleep 120
