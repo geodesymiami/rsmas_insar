@@ -10,7 +10,6 @@ import glob
 import generate_templates as gt
 from rsmas_logging import RsmasLogger, loglevel
 from dataset_template import Template
-import download_ssara_rsmas as ssara_rsmas
 import _process_utilities as putils
 
 OPERATIONS_DIRECTORY = os.getenv('OPERATIONS')
@@ -46,7 +45,6 @@ def create_process_rsmas_parser():
 
     return parser
 
-
 def command_line_parse(args):
 
     parser = create_process_rsmas_parser()
@@ -74,7 +72,6 @@ def initiate_operations():
     if not os.path.exists(os.getenv('OPERATIONS') + '/stored_date.date'):
         open(os.getenv('OPERATIONS') + '/stored_date.date', 'a').close()  # create empty file
 
-
 def generate_templates_with_options(inps):
 
     template_options = []
@@ -90,7 +87,6 @@ def generate_templates_with_options(inps):
 
     gt.main(template_options)
 
-
 def get_datasets_to_process(dataset=None):
 
     # Obtains list of datasets to run processSentinel on
@@ -102,9 +98,7 @@ def get_datasets_to_process(dataset=None):
 
     return datasets
 
-def get_newest_data_date(dset):
-
-    template_file = "{}/{}.template".format(TEMPLATE_DIRECTORY, dset)
+def get_newest_data_date(template_file):
 
     dset_template = Template(template_file)
     ssaraopt_string = dset_template.generate_ssaraopt_string()
@@ -131,6 +125,43 @@ def get_last_downloaded_date(dset):
 
     return datetime.strptime(last_date, DATE_FORMAT)
 
+def run_process_rsmas(inps, template_file, dataset):
+
+    psen_extra_options = []
+
+    if inps.startssara:
+        psen_extra_options.append('--startssara')
+    if inps.stopssara:
+        psen_extra_options.append('--stopssara')
+    if inps.startprocess:
+        psen_extra_options.append('--startprocess')
+    if inps.stopprocess:
+        psen_extra_options.append('--stopprocess')
+    if inps.startpysar:
+        psen_extra_options.append('--startpysar')
+    if inps.stoppysarload:
+        psen_extra_options.append('--stoppysarload')
+    if inps.stoppysar:
+        psen_extra_options.append('--stoppysar')
+    if inps.startinsarmaps:
+        psen_extra_options.append('--startinsarmaps')
+
+    if len(psen_extra_options) == 0:
+        psen_extra_options.append('--insarmaps')
+
+    psen_extra_options = ' '.join(psen_extra_options)
+
+    process_rsmas_cmd = "process_rsmas.py {} {} --bsub".format(template_file, psen_extra_options)
+    process_rsmas = subprocess.check_output(process_rsmas_cmd)
+
+    job_number = process_rsmas.split('\n')[0].split("<")[1].split('>')[0]
+
+    stdout_file = "{}/{}/z_processRsmas_{}.o".format(os.getenv('SCRATHDIR'), dataset, job_number)
+    stderr_file = "{}/{}/z_processRsmas_{}.e".format(os.getenv('SCRATHDIR'), dataset, job_number)
+
+    return [stdout_file, stderr_file]
+
+
 def run_operations(args):
 
     inps = command_line_parse(args)
@@ -143,11 +174,20 @@ def run_operations(args):
     generate_templates_with_options(inps)
     datasets = get_datasets_to_process(inps.dataset)
 
+    output_files = []
+
     for dset in datasets:
 
-        newest_date = get_newest_data_date(dset)
+        template_file = "{}/{}.template".format(TEMPLATE_DIRECTORY, dset)
+
+        newest_date = get_newest_data_date(template_file)
         last_date = get_last_downloaded_date(dset)
 
+        if newest_date > last_date:
+
+            outputs = run_process_rsmas(inps, template_file, dset)
+
+            output_files += outputs
 
 
 
