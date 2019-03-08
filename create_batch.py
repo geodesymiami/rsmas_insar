@@ -148,7 +148,7 @@ def write_single_job_file(job_name, job_file_name, command_line, work_dir, email
     job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, scheduler, memory, walltime, queue)
     job_file_lines.append("\nfree")
     job_file_lines.append("\ncd " + work_dir)
-    job_file_lines.append("\n" + command_line)
+    job_file_lines.append("\n" + command_line + "\n")
 
     # write lines to .job file
     os.chdir(work_dir)
@@ -172,15 +172,15 @@ def write_batch_job_files(batch_file, out_dir, email_notif=False, scheduler=None
     if not scheduler:
         scheduler=os.getenv("JOBSCHEDULER")
 
-    job_name = batch_file.split(os.sep)[-3]
-    work_dir = os.path.join(os.environ["SCRATCHDIR"], job_name, out_dir)
+    project_name = batch_file.split(os.sep)[-3]
+    work_dir = os.path.join(os.environ["SCRATCHDIR"], project_name, out_dir)
 
     with open(batch_file) as input_file:
         job_list = input_file.readlines()
     job_files = []
     for i, command_line in enumerate(job_list):
         job_file_name = batch_file.split(os.sep)[-1] + "_" + str(i)
-        write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
+        write_single_job_file(job_file_name, job_file_name, command_line, work_dir, email_notif,
                               scheduler, memory, walltime, queue)
         job_files.append("{0}.job".format(job_file_name))
 
