@@ -19,6 +19,7 @@ import _process_utilities as putils
 from _process_utilities  import _remove_directories, clean_list
 from dataset_template import Template
 import messageRsmas
+import dem_rsmas
 
 logger  = putils.send_logger()
 
@@ -315,14 +316,9 @@ def create_or_copy_dem(inps, work_dir, template, custom_template_file):
         if 'sentinelStack.demDir' in list(template.keys()) and template['sentinelStack.demDir'] != str('auto'):
             shutil.copytree(template['sentinelStack.demDir'], dem_dir)
         else:
-            # TODO: Change subprocess call to get back error code and send error code to logger
-            command = 'dem_rsmas.py ' + custom_template_file
-            print(command)
-            messageRsmas.log(command)
-            status = subprocess.Popen(command, shell=True).wait()
-            if status is not 0:
-                logger.log(loglevel.ERROR, 'ERROR while making DEM')
-                raise Exception('ERROR while making DEM')
+            dem_rsmas.run_dem_rsmas(custom_template_file)
+            print('dem_rsmas.py ' + custom_template_file)
+            messageRsmas.log('dem_rsmas.py ' + custom_template_file)
 
 
 #################################################################################

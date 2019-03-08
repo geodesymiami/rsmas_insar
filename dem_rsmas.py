@@ -35,7 +35,7 @@ EXAMPLE='''example:
 '''
 
 ##########################################################################
-def main(argv):
+def run_dem_rsmas(argv):
 
     messageRsmas.log(' '.join(argv))
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,\
@@ -117,5 +117,5 @@ def main(argv):
 
 ###########################################################################################
 if __name__ == '__main__':
-    main(sys.argv[:])
+    run_dem_rsmas(sys.argv[:])
 
