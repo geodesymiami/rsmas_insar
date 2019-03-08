@@ -57,11 +57,12 @@ def parse_arguments(args):
     return job_submission_params
 
 
-def get_job_file_lines(job_name, job_file_name, scheduler=None, memory=3600, walltime="4:00", queue=None):
+def get_job_file_lines(job_name, job_file_name, email_notif, scheduler=None, memory=3600, walltime="4:00", queue=None):
     """
     Generates the lines of a job submission file that are based on the specified scheduler.
     :param job_name: Name of job.
     :param job_file_name: Name of job file.
+    :param email_notif: If email notifications should be on or not.
     :param scheduler: Job scheduler to use for running jobs. Defaults based on environment variable JOBSCHEDULER.
     :param memory: Amount of memory to use. Defaults to 3600 KB.
     :param walltime: Walltime for the job. Defaults to 4 hours.
@@ -107,15 +108,18 @@ def get_job_file_lines(job_name, job_file_name, scheduler=None, memory=3600, wal
     job_file_lines = [
         "#! " + shell,
         prefix + name_option.format(job_name),
-        prefix + project_option.format("insarlab"),
-        prefix + email_option.format(os.getenv("NOTIFICATIONEMAIL")),
+        prefix + project_option.format("insarlab")
+    ]
+    if email_notif:
+        job_file_lines.append(prefix + email_option.format(os.getenv("NOTIFICATIONEMAIL")))
+    job_file_lines.extend([
         prefix + process_option.format(1, 1),
         prefix + stdout_option.format(job_file_name),
         prefix + stderr_option.format(job_file_name),
         prefix + queue_option.format(queue),
         prefix + walltime_limit_option.format(walltime),
         prefix + memory_option.format(memory),
-    ]
+    ])
 
     if scheduler == "PBS":
         job_file_lines.append(prefix + "-V")
@@ -123,7 +127,7 @@ def get_job_file_lines(job_name, job_file_name, scheduler=None, memory=3600, wal
     return job_file_lines
 
 
-def write_single_job_file(job_name, job_file_name, command_line, work_dir, scheduler=None,
+def write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif, scheduler=None,
                           memory=3600, walltime="4:00", queue=None):
     """
     Writes a job file for a single job.
@@ -131,6 +135,7 @@ def write_single_job_file(job_name, job_file_name, command_line, work_dir, sched
     :param job_file_name: Name of job file.
     :param command_line: Command line containing process to run.
     :param work_dir: Work directory in which to write job, output, and error files.
+    :param email_notif: If email notifications should be on or not.
     :param scheduler: Job scheduler to use for running jobs. Defaults based on environment variable JOBSCHEDULER.
     :param memory: Amount of memory to use. Defaults to 3600 KB.
     :param walltime: Walltime for the job. Defaults to 4 hours.
@@ -140,7 +145,7 @@ def write_single_job_file(job_name, job_file_name, command_line, work_dir, sched
         scheduler=os.getenv("JOBSCHEDULER")
 
     # get lines to write in job file
-    job_file_lines = get_job_file_lines(job_name, job_file_name, scheduler, memory, walltime, queue)
+    job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, scheduler, memory, walltime, queue)
     job_file_lines.append("\nfree")
     job_file_lines.append("\ncd " + work_dir)
     job_file_lines.append("\n" + command_line)
@@ -152,11 +157,12 @@ def write_single_job_file(job_name, job_file_name, command_line, work_dir, sched
         job_file.writelines(job_file_lines)
 
 
-def write_batch_job_files(batch_file, out_dir, scheduler=None, memory=3600, walltime="4:00", queue=None):
+def write_batch_job_files(batch_file, out_dir, email_notif=False, scheduler=None, memory=3600, walltime="4:00", queue=None):
     """
     Iterates through jobs in input file and writes a job file for each job using the specified scheduler.
     :param batch_file: File containing batch of jobs for which we are creating job files.
     :param out_dir: Output directory for run files.
+    :param email_notif: If email notifications should be on or not. Defaults to false for batch submission.
     :param scheduler: Job scheduler to use for running jobs. Defaults based on environment variable JOBSCHEDULER.
     :param memory: Amount of memory to use. Defaults to 3600 KB.
     :param walltime: Walltime for the job. Defaults to 4 hours.
@@ -174,7 +180,8 @@ def write_batch_job_files(batch_file, out_dir, scheduler=None, memory=3600, wall
     job_files = []
     for i, command_line in enumerate(job_list):
         job_file_name = batch_file.split(os.sep)[-1] + "_" + str(i)
-        write_single_job_file(job_name, job_file_name, command_line, work_dir, scheduler, memory, walltime, queue)
+        write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
+                              scheduler, memory, walltime, queue)
         job_files.append("{0}.job".format(job_file_name))
 
     return job_files
@@ -251,7 +258,7 @@ def submit_batch_jobs(job_files, batch_file, out_dir, scheduler=None):
             time.sleep(wait_time_sec)
 
 
-def submit_script(job_name, job_file_name, argv, work_dir, walltime):
+def submit_script(job_name, job_file_name, argv, work_dir, walltime, email_notif=True):
     """
     Submits a single script as a job.
     :param job_name: Name of job.
@@ -259,10 +266,12 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime):
     :param argv: Command line arguments for running job.
     :param work_dir: Work directory in which to write job, output, and error files.
     :param walltime: Input parameter of walltime for the job.
+    :param email_notif: If email notifications should be on or not. Defaults to true.
     """
     command_line = os.path.basename(argv[0]) + " "
     command_line += " ".join(flag for flag in argv[1:] if flag != "--submit")
-    write_single_job_file(job_name, job_file_name, command_line, work_dir, walltime=walltime, queue=os.getenv("QUEUENAME"))
+    write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
+                          walltime=walltime, queue=os.getenv("QUEUENAME"))
     submit_single_job("{0}.job".format(job_file_name))
     sys.exit(0)
 
