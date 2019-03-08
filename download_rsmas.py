@@ -38,19 +38,6 @@ def create_parser():
     # parser.add_argument('template_file', help='template file containing ssaraopt field', nargs='?')
     return parser
 
-def ssh_with_commands(hostname, command_list):
-    """
-    Uses subprocess to ssh into a specified host and run the given commands.
-    :param hostname: Name of host to ssh to.
-    :param command_list: List of commands to run after connecting via ssh.
-    :return: Exit status from subprocess.
-    """
-    ssh_proc = subprocess.Popen(['ssh', hostname, 'bash -s -l'], stdin=subprocess.PIPE)
-    for cmd in command_list:
-        ssh_proc.stdin.write(cmd.encode('utf8'))
-        ssh_proc.stdin.write('\n'.encode('utf8'))
-    ssh_proc.communicate()
-    return ssh_proc.returncode
 
 def download(script_name, template_file, slc_dir, outnum):
     """
@@ -75,9 +62,9 @@ def download(script_name, template_file, slc_dir, outnum):
     else:
         ssh_command_list = ['s.bgood', 'cd {0}'.format(slc_dir), command]
         host = os.getenv('DOWNLOADHOST')
-        status = ssh_with_commands(host, ssh_command_list)
+        status = putils.ssh_with_commands(host, ssh_command_list)
 
-    print('Exit status from download_{0}_rsmas.py: {1}'.format(script_name, status))
+        print('Exit status from download_{0}_rsmas.py: {1}'.format(script_name, status))
 
 ###############################################################################
 

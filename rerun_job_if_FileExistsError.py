@@ -10,14 +10,17 @@ create them as needed
 import os
 import glob
 import subprocess
+import _process_utilities as putils
 
 def email_rerun_message(file_name):
-    long_name = os.getcwd().split('/')[-2] + '/' + os.getcwd().split('/')[-1] + '/' + file_name
+    cwd = os.getcwd()
+    long_name = "/".join(cwd.split('/')[-2:]) + '/' + file_name
     text_str = 'Now rerunning because of FileExists error:' + file_name
-    mail_cmd = 'echo \"'+text_str+'\" | mail -s RERUNNING:_' + long_name + ' ' +  os.getenv('NOTIFICATIONEMAIL')  
-    command = 'ssh pegasus.ccs.miami.edu \"cd '+os.getcwd()+'; '+mail_cmd+'\"'
-    print(command)
-    status = subprocess.Popen(command, shell=True).wait()
+
+    mail_command = 'echo \"'+text_str+'\" | mail -s RERUNNING:_' + long_name + ' ' +  os.getenv('NOTIFICATIONEMAIL')
+    status = putils.ssh_with_commands(hostname='pegasus.ccs.miami.edu', command_list=['cd ' + os.getcwd(), mail_command])
+    print('ssh pegasus.ccs.miami.edu cd ' + os.getcwd() + "; " + mail_command)
+
     if status is not 0:
        raise Exception('ERROR in email_rerun_message')
 

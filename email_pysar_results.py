@@ -9,9 +9,7 @@ import os
 import sys
 import glob
 import argparse
-import subprocess
 
-import messageRsmas
 import _process_utilities as putils
 
 from dataset_template import Template
@@ -106,23 +104,25 @@ def main(iargs=None, text_string='email pysar results'):
     cwd = os.getcwd()
     #import pdb; pdb.set_trace()
     for file_list in file_lists:
-       print ('###')
-       attachment_string = ''
-       i = i + 1
-       for fname in file_list:
+        print ('###')
+        attachment_string = ''
+        i = i + 1
+        for fname in file_list:
            files = glob.glob(prefix+'/'+fname)
            for file in files:
                attachment_string = attachment_string+' -a '+file
 
-       if i==1 and len(template_file)>0:
-          attachment_string = attachment_string+' -a '+template_file
+        if i==1 and len(template_file)>0:
+            attachment_string = attachment_string+' -a '+template_file
 
-       mail_command = 'echo \"'+text_string+'\" | mail -s '+cwd+' '+attachment_string+' '+ email_list
-       command = 'ssh pegasus.ccs.miami.edu \"cd '+cwd+'; '+mail_command+'\"'
-       print(command)
-       status = subprocess.Popen(command, shell=True).wait()
-       if status is not 0:
-          sys.exit('Error in email_pysar_results')
+        mail_command = 'echo \"'+text_string+'\" | mail -s '+cwd+' '+attachment_string+' '+ email_list
+
+        status = putils.ssh_with_commands(hostname="pegasus.ccs.miami.edu", command_list=['cd ' + cwd, mail_command])
+
+        print('ssh pegasus.ccs.miami.edu cd ' + cwd + "; " + mail_command)
+
+        if status is not 0:
+            raise Exception('Error in email_pysar_results')
 
 
 ###########################################################################################

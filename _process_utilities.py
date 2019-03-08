@@ -367,22 +367,26 @@ def email_pysar_results(textStr, custom_template):
 
     i = 0
     for fileList in [fileList1, fileList2]:
-       attachmentStr = ''
-       i = i + 1
-       for fname in fileList:
+        attachmentStr = ''
+        i = i + 1
+        for fname in fileList:
            fList = glob.glob(prefix+'/'+fname)
            for fileName in fList:
                attachmentStr = attachmentStr+' -a '+fileName
 
-       if i==1 and len(template_file)>0:
-          attachmentStr = attachmentStr+' -a '+template_file
+        if i==1 and len(template_file)>0:
+            attachmentStr = attachmentStr+' -a '+template_file
 
-       mailCmd = 'echo \"'+textStr+'\" | mail -s '+cwd+' '+attachmentStr+' '+custom_template['email_pysar']
-       command = 'ssh pegasus.ccs.miami.edu \"cd '+cwd+'; '+mailCmd+'\"'
-       print(command)
-       status = subprocess.Popen(command, shell=True).wait()
-       if status is not 0:
-          sys.exit('Error in email_pysar_results')
+        mail_command = 'echo \"' + textStr + '\" | mail -s ' + cwd + ' ' + attachmentStr + ' ' + custom_template['email_pysar']
+       
+        status = ssh_with_commands(hostname='pegasus.ccs.miami.edu', command_list=['cd ' + cwd, mail_command])
+        print('ssh pegasus.ccs.miami.edu cd ' + cwd + " " + mail_command)
+
+        if status != 0:
+            raise Exception("Error in emailing pysar results.")
+
+
+
 
 ###############################################################################
 
@@ -400,13 +404,10 @@ def email_insarmaps_results(custom_template):
 
     textStr = 'http://insarmaps.miami.edu/start/-0.008/-78.0/7"\?"startDataset='+hdfeos_name
 
-    mailCmd = 'echo \"'+textStr+'\" | mail -s Miami_InSAR_results:_'+os.path.basename(cwd)+' '+custom_template['email_insarmaps']
-    command = 'ssh pegasus.ccs.miami.edu \" '+mailCmd+'\"'
+    mail_command = 'echo \"'+textStr+'\" | mail -s Miami_InSAR_results:_'+os.path.basename(cwd)+' '+custom_template['email_insarmaps']
+    ssh_with_commands(hostname='pegasus.ccs.miami.edu', command_list=[mail_command])
 
-    print(command)
-    status = subprocess.Popen(command, shell=True).wait()
-    if status is not 0:
-       sys.exit('Error in email_insarmaps_results')
+    print('ssh pegasus.ccs.miami.edu ' + mail_command)
     
 ##########################################################################
 
@@ -417,6 +418,21 @@ def file_len(fname):
 
 ##########################################################################
 
+def ssh_with_commands(hostname, command_list):
+    """
+    Uses subprocess to ssh into a specified host and run the given commands.
+    :param hostname: Name of host to ssh to.
+    :param command_list: List of commands to run after connecting via ssh.
+    :return: Exit status from subprocess.
+    """
+    ssh_proc = subprocess.Popen(['ssh', hostname, 'bash -s -l'], stdin=subprocess.PIPE)
+    for cmd in command_list:
+        ssh_proc.stdin.write(cmd.encode('utf8'))
+        ssh_proc.stdin.write('\n'.encode('utf8'))
+    ssh_proc.communicate()
+    return ssh_proc.returncode
+
+##########################################################################
 
 def alphanum_key(s):
     """ Turn a string into a list of string and number chunks.
