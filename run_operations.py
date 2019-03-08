@@ -2,7 +2,7 @@ import os
 import sys
 import subprocess
 import argparse
-from datetime import datetime
+from datetime import date, datetime
 import shutil
 import time
 import glob
@@ -159,7 +159,38 @@ def run_process_rsmas(inps, template_file, dataset):
     stdout_file = "{}/{}/z_processRsmas_{}.o".format(os.getenv('SCRATHDIR'), dataset, job_number)
     stderr_file = "{}/{}/z_processRsmas_{}.e".format(os.getenv('SCRATHDIR'), dataset, job_number)
 
-    return [stdout_file, stderr_file]
+    return [stdout_file, stderr_file], job_number
+
+def copy_output_files(file_list, job_to_dset):
+
+    for f in file_list:
+
+        job = os.path.splitext(f.split("z_processRsmas_")[1])[0]
+        dataset = job_to_dset[job]
+
+        if os.path.exists(f) and os.path.isfile(f):
+
+            base = "{}/{}/{}/".format(os.getenv('OPERATIONS'), 'ERRORS', dataset)
+
+            if not os.path.exists(base):
+                os.makedirs(base)
+
+            destination = base + str(datetime.now().strftime("%m-%d-%Y")) + os.path.splitext(f)[1]
+            shutil.copy(f, destination)
+
+        else:
+            raise IOError("The file {} does not exist".format(f))
+
+def overwrite_stored_date(dset, newest_date):
+
+    new_line = "{}: {}".format(dset, newest_date.strftime(DATE_FORMAT))
+
+    lines = open(STORED_DATE_FILE, 'r').readlines()
+
+    for i, line in enumerate(lines):
+        if dset in line:
+            lines[i] = new_line
+            return
 
 
 def run_operations(args):
@@ -175,6 +206,7 @@ def run_operations(args):
     datasets = get_datasets_to_process(inps.dataset)
 
     output_files = []
+    job_to_dset = {}
 
     for dset in datasets:
 
@@ -185,9 +217,24 @@ def run_operations(args):
 
         if newest_date > last_date:
 
-            outputs = run_process_rsmas(inps, template_file, dset)
+            try:
 
-            output_files += outputs
+                outputs, job = run_process_rsmas(inps, template_file, dset)
+                overwrite_stored_date(dset, newest_date)
+
+                job_to_dset[job] = dset
+                output_files += outputs
+
+            except Exception:
+                print("process_rsmas threw and error and exited.")
+
+    while len(output_files) != 0:
+        for i, output_file in enumerate(output_files):
+            if os.path.exists(output_file) and os.path.isfile(output_file):
+                file_list = [output_files.pop(i), output_files.pop(i)]
+                copy_output_files(file_list, job_to_dset)
+
+        time.sleep(60)
 
 
 
