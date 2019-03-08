@@ -322,7 +322,7 @@ def clean_list():
     cleanlist.append([''])
     cleanlist.append(['stack', 'coreg_slaves', 'misreg', 'orbits',
                    'coarse_interferograms', 'ESD', 'interferograms',
-                   'slaves', 'geom_master'])
+                   'slaves', 'geom_master', 'DEM'])
     cleanlist.append(['merged', 'master', 'baselines', 'configs'])
     cleanlist.append(['SLC'])
     cleanlist.append(['PYSAR', 'run_files'])

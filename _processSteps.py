@@ -73,11 +73,14 @@ EXAMPLE = '''example:
          process_rsmas.py $SAMPLESDIR/GalapagosT128SenVVD.template -g
 
          cleanopt in TEMPLATEFILE controls file removal [default=0]
-             cleanopt = 0 :  none
-             cleanopt = 1 :  after sentinelStack: configs, stack, coreg_slaves, misreg, orbits, coarse_interferograms, ESD, interferograms
-             cleanopt = 2 :  after pysarApp.py --end load_data: merged, master, baselines
-             cleanopt = 3 :  after pysarApp.py --end load_data: SLC
-             cleanopt = 4 :  everything including PYSAR 
+             cleanopt = 0 :  remove none (keep all)
+             cleanopt = 1 :  remove after process: configs, stack, coreg_slaves, misreg, orbits, coarse_interferograms, ESD, interferograms, DEM
+                                             keep: merged, master, baselines, PYSAR, SLC
+             cleanopt = 2 :  remove after pysar load: merged, master, baselines
+                                                keep: PYSAR, run_files, SLC
+             cleanopt = 3 :  remove after pysar load: SLC, run_files
+                                                keep: PYSAR
+             cleanopt = 4 :  remove everything after insarmaps ingest (keep none)
 
   --------------------------------------------
   Open TopsStack_template.txt file for details.
