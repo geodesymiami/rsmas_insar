@@ -303,23 +303,23 @@ def call_ssara(flag_ssara, custom_template_file, slc_dir):
 def create_or_copy_dem(inps, work_dir, template, custom_template_file):
     """ Downloads a DEM file or copies an existing one."""
 
-    if inps.flag_dem:
-        dem_dir = work_dir + '/DEM'
-        if os.path.isdir(dem_dir) and len(os.listdir(dem_dir)) == 0:
-            os.rmdir(dem_dir)
+    #if inps.flag_dem:
+    dem_dir = work_dir + '/DEM'
+    if os.path.isdir(dem_dir) and len(os.listdir(dem_dir)) == 0:
+        os.rmdir(dem_dir)
 
-        if not os.path.isdir(dem_dir):
-            if 'sentinelStack.demDir' in list(template.keys()) and template['sentinelStack.demDir'] != str('auto'):
-                shutil.copytree(template['sentinelStack.demDir'], dem_dir)
-            else:
-                # TODO: Change subprocess call to get back error code and send error code to logger
-                command = 'dem_rsmas.py ' + custom_template_file
-                print(command)
-                messageRsmas.log(command)
-                status = subprocess.Popen(command, shell=True).wait()
-                if status is not 0:
-                    logger.log(loglevel.ERROR, 'ERROR while making DEM')
-                    raise Exception('ERROR while making DEM')
+    if not os.path.isdir(dem_dir):
+        if 'sentinelStack.demDir' in list(template.keys()) and template['sentinelStack.demDir'] != str('auto'):
+            shutil.copytree(template['sentinelStack.demDir'], dem_dir)
+        else:
+            # TODO: Change subprocess call to get back error code and send error code to logger
+            command = 'dem_rsmas.py ' + custom_template_file
+            print(command)
+            messageRsmas.log(command)
+            status = subprocess.Popen(command, shell=True).wait()
+            if status is not 0:
+                logger.log(loglevel.ERROR, 'ERROR while making DEM')
+                raise Exception('ERROR while making DEM')
 
 
 #################################################################################
