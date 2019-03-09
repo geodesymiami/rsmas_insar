@@ -163,7 +163,7 @@ def run_process_rsmas(inps, template_file, dataset):
     
     print(process_rsmas_cmd)
 
-    process_rsmas = subprocess.check_output(process_rsmas_cmd)
+    process_rsmas = subprocess.check_output(process_rsmas_cmd, shell=True)
 
     job_number = process_rsmas.split('\n')[0].split("<")[1].split('>')[0]
 
@@ -243,8 +243,8 @@ def run_operations(args):
                 job_to_dset[job] = dset
                 output_files += outputs
 
-            except Exception:
-                print("process_rsmas threw an error and exited.")
+            except Exception as e:
+                print("process_rsmas threw an error ({}) and exited.".format(e))
 
     # Wait for all of the *.o/*.e files to be generated and copy them to the $OPERATIONS/ERRORS directory
     while len(output_files) != 0:
