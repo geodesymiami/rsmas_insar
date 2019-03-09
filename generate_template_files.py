@@ -160,7 +160,7 @@ def generate_template_files(df, dataset):
                 continue
             file_base = col_name
             output_files[file_base] = generate_template_file(names, subnames, list(df[col_name]), list(df['Comments']))
-    return output_files
+    return {k:v for (k, v) in output_files.items() if v is not None}
 
 
 def generate_and_save_template_files(df, output_location, dataset):
