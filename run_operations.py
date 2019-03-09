@@ -7,10 +7,12 @@ import shutil
 import time
 import glob
 
+
 import generate_templates as gt
 from rsmas_logging import RsmasLogger, loglevel
 from dataset_template import Template
 import _process_utilities as putils
+
 
 OPERATIONS_DIRECTORY = os.getenv('OPERATIONS')
 STORED_DATE_FILE = OPERATIONS_DIRECTORY + "/stored_date.date"
