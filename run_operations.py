@@ -1,3 +1,4 @@
+#!/usr/bin/env python3 
 import os
 import sys
 import subprocess
@@ -8,7 +9,7 @@ import time
 import glob
 
 
-import generate_templates as gt
+import generate_template_files as gt
 from rsmas_logging import RsmasLogger, loglevel
 from dataset_template import Template
 import _process_utilities as putils
@@ -107,23 +108,26 @@ def get_newest_data_date(template_file):
 
     ssaraopt_cmd = 'ssara_federated_query.py {} --print'.format(ssaraopt_string)
 
-    ssara_output = subprocess.check_output(ssaraopt_cmd)
+    ssara_output = subprocess.check_output(ssaraopt_cmd, shell=True)
 
-    newest_data = ssara_output.split("\n")[-2]
+    newest_data = ssara_output.decode('utf-8').split("\n")[-2]
     date = datetime.strptime(newest_data.split(",")[3], DATE_FORMAT)
 
     return date
 
 def get_last_downloaded_date(dset):
 
-    dataset_line = ""
+    dataset_line = None
     with open(STORED_DATE_FILE) as date_file:
         for line in date_file.readlines():
             if dset in line:
                 dataset_line = line
                 break
 
-    last_date = dataset_line.split(": ")[1]
+    if dataset_line is not None:
+        last_date = dataset_line.split(": ")[1]
+    else:
+        last_date = datetime.strftime(datetime(1970, 1, 1, 0, 0, 0), DATE_FORMAT)
 
     return datetime.strptime(last_date, DATE_FORMAT)
 
@@ -153,7 +157,12 @@ def run_process_rsmas(inps, template_file, dataset):
 
     psen_extra_options = ' '.join(psen_extra_options)
 
-    process_rsmas_cmd = "process_rsmas.py {} {} --bsub".format(template_file, psen_extra_options)
+    print(psen_extra_options)
+
+    process_rsmas_cmd = "process_rsmas.py {} {} --submit".format(template_file, psen_extra_options)
+    
+    print(process_rsmas_cmd)
+
     process_rsmas = subprocess.check_output(process_rsmas_cmd)
 
     job_number = process_rsmas.split('\n')[0].split("<")[1].split('>')[0]
