@@ -52,7 +52,13 @@ def get_google_spreadsheet_as_dataframe(url_id, output_file_location, output_typ
     response = requests.get(url)
     response.raise_for_status()
 
-    return pd.read_csv(StringIO(response.content))
+    name = "templateRSMAS.csv"
+    if output_file_location is not None:
+        name = os.path.join(output_file_location, name)
+    with open(name, 'wb') as f:
+        f.write(response.content)
+
+    return pd.read_csv(name)
 
 
 def get_spreadsheet_as_dataframe(file, output_file_location, output_type="csv"):
