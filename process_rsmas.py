@@ -38,8 +38,10 @@ if __name__ == "__main__":
 
     if inps.remove_project_dir:
         _remove_directories(directories_to_delete=[inps.work_dir])
-
+    
     if not os.path.isdir(inps.work_dir):
+        if os.path.isfile(inps.work_dir):
+            os.remove(inps.work_dir)
         os.makedirs(inps.work_dir)
     os.chdir(inps.work_dir)
 
