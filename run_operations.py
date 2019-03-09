@@ -217,20 +217,26 @@ def run_operations(args):
 
         if newest_date > last_date:
 
+            #  Exit and don't overwrite date file if process_rsmas.py throws and error
             try:
-
+                # Submit processing job and running processing routine vis process_rsmas.py
                 outputs, job = run_process_rsmas(inps, template_file, dset)
+
+                # Overwrite the most recent date of data download in the date file
                 overwrite_stored_date(dset, newest_date)
 
                 job_to_dset[job] = dset
                 output_files += outputs
 
             except Exception:
-                print("process_rsmas threw and error and exited.")
+                print("process_rsmas threw an error and exited.")
 
+    # Wait for all of the *.o/*.e files to be generated and copy them to the $OPERATIONS/ERRORS directory
     while len(output_files) != 0:
         for i, output_file in enumerate(output_files):
             if os.path.exists(output_file) and os.path.isfile(output_file):
+                # Remove the output and error files (should appear next to each other in the list) and add them
+                # to the list of files to be copied to to the OPERATIONS directory
                 file_list = [output_files.pop(i), output_files.pop(i)]
                 copy_output_files(file_list, job_to_dset)
 
@@ -241,4 +247,4 @@ def run_operations(args):
 
 if __name__ == "__main__":
 
-    run_operations()
+    run_operations(sys.argv[1:])
