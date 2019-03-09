@@ -35,7 +35,7 @@ def command_line_parse(args):
     return parser.parse_args(args)
 
 
-def check_downloads(run_number, args):
+def check_downloads(inps, run_number, args):
     """ Checks if all of the ssara files to be dwonloaded actually exist.
     
         Checks if the files to be downloaded actually exist or not on the system as a means of validating 
@@ -58,7 +58,7 @@ def check_downloads(run_number, args):
     for f in files_to_check:
         if not os.path.isfile(str(os.getcwd()) + "/" + str(f)):
             logger.log(loglevel.WARNING, "The file, %s, didn't download correctly. Running ssara again.")
-            run_ssara(run_number + 1)
+            run_ssara(inps, run_number + 1)
             return
 
     logger.log(loglevel.INFO, "Everything is there!")
@@ -143,7 +143,7 @@ def run_ssara(template, run_number=1):
         if hang_status:
            logger.log(loglevel.WARNING, "Hanging, running again")
 
-        run_ssara(run_number=run_number + 1)
+        run_ssara(inps, run_number=run_number + 1)
 
     return 0
 

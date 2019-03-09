@@ -73,11 +73,14 @@ EXAMPLE = '''example:
          process_rsmas.py $SAMPLESDIR/GalapagosT128SenVVD.template -g
 
          cleanopt in TEMPLATEFILE controls file removal [default=0]
-             cleanopt = 0 :  none
-             cleanopt = 1 :  after sentinelStack: configs, stack, coreg_slaves, misreg, orbits, coarse_interferograms, ESD, interferograms
-             cleanopt = 2 :  after pysarApp.py --end load_data: merged, master, baselines
-             cleanopt = 3 :  after pysarApp.py --end load_data: SLC
-             cleanopt = 4 :  everything including PYSAR 
+             cleanopt = 0 :  remove none (keep all)
+             cleanopt = 1 :  remove after process: configs, stack, coreg_slaves, misreg, orbits, coarse_interferograms, ESD, interferograms, DEM
+                                             keep: merged, master, baselines, PYSAR, SLC
+             cleanopt = 2 :  remove after pysar load: merged, master, baselines
+                                                keep: PYSAR, run_files, SLC
+             cleanopt = 3 :  remove after pysar load: SLC, run_files
+                                                keep: PYSAR
+             cleanopt = 4 :  remove everything after insarmaps ingest (keep none)
 
   --------------------------------------------
   Open TopsStack_template.txt file for details.
@@ -303,23 +306,23 @@ def call_ssara(flag_ssara, custom_template_file, slc_dir):
 def create_or_copy_dem(inps, work_dir, template, custom_template_file):
     """ Downloads a DEM file or copies an existing one."""
 
-    if inps.flag_dem:
-        dem_dir = work_dir + '/DEM'
-        if os.path.isdir(dem_dir) and len(os.listdir(dem_dir)) == 0:
-            os.rmdir(dem_dir)
+    #if inps.flag_dem:
+    dem_dir = work_dir + '/DEM'
+    if os.path.isdir(dem_dir) and len(os.listdir(dem_dir)) == 0:
+        os.rmdir(dem_dir)
 
-        if not os.path.isdir(dem_dir):
-            if 'sentinelStack.demDir' in list(template.keys()) and template['sentinelStack.demDir'] != str('auto'):
-                shutil.copytree(template['sentinelStack.demDir'], dem_dir)
-            else:
-                # TODO: Change subprocess call to get back error code and send error code to logger
-                command = 'dem_rsmas.py ' + custom_template_file
-                print(command)
-                messageRsmas.log(command)
-                status = subprocess.Popen(command, shell=True).wait()
-                if status is not 0:
-                    logger.log(loglevel.ERROR, 'ERROR while making DEM')
-                    raise Exception('ERROR while making DEM')
+    if not os.path.isdir(dem_dir):
+        if 'sentinelStack.demDir' in list(template.keys()) and template['sentinelStack.demDir'] != str('auto'):
+            shutil.copytree(template['sentinelStack.demDir'], dem_dir)
+        else:
+            # TODO: Change subprocess call to get back error code and send error code to logger
+            command = 'dem_rsmas.py ' + custom_template_file
+            print(command)
+            messageRsmas.log(command)
+            status = subprocess.Popen(command, shell=True).wait()
+            if status is not 0:
+                logger.log(loglevel.ERROR, 'ERROR while making DEM')
+                raise Exception('ERROR while making DEM')
 
 
 #################################################################################
