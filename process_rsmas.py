@@ -67,7 +67,7 @@ if __name__ == "__main__":
         job_file_name = 'process_rsmas'
         wall_time = '48:00'
         cb.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir, wall_time)
-
+    logger_process_rsmas.log(loglevel.INFO, "submit_script")
     #########################################
     # startssara: Getting Data
     #########################################
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     #     download_ssara_rsmas.py $TE/template
     #     downlaod_asfserial_rsmas.py $TE/template
     prs.call_ssara(inps.flag_ssara, inps.custom_template_file, inps.slc_dir)
-
+    logger_process_rsmas.log(loglevel.INFO, "call_ssara")
     #########################################
     # startmakerun: create run files
     #########################################
@@ -86,13 +86,13 @@ if __name__ == "__main__":
     #     dem_rsmas.py $TE/template
 
     prs.create_or_copy_dem(inps, inps.work_dir, inps.template, inps.custom_template_file)
-
+    logger_process_rsmas.log(loglevel.INFO, "create_or_copy_dem")
     # Check for DEM and create sentinel run files
     # running the script:
     #     create_stacksentinel_run_files.py $TE/template
 
     prs.create_runfiles(inps)
-
+    logger_process_rsmas.log(loglevel.INFO, "create_run_files")
     #########################################
     # startprocess: Execute run files
     #########################################
@@ -103,7 +103,7 @@ if __name__ == "__main__":
     #    execute_stacksentinel_run_files.py $TE/template 1 4
 
     prs.process_runfiles(inps)
-
+    logger_process_rsmas.log(loglevel.INFO, "process_run_files")
     #########################################
     # startpysar: running PySAR and email results
     #########################################
@@ -118,10 +118,12 @@ if __name__ == "__main__":
         # Run PySAR script:
         #    pysarApp.py $TE/template
         prs.run_pysar(inps, start_time)
+    logger_process_rsmas.log(loglevel.INFO, "processing_method")
 
     # Run ingest insarmaps script and email results
     #    ingest_insarmaps.py $TE/template
 
     prs.run_ingest_insarmaps(inps)
+    logger_process_rsmas.log(loglevel.INFO, "ingest_insarmaps")
 
     logger_process_rsmas.log(loglevel.INFO, 'End of process_rsmas')
