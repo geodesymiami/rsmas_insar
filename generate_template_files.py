@@ -189,6 +189,8 @@ def generate_and_save_template_files(df, output_location, dataset):
         with open(filename, "w") as template_file:
             template_file.write(value)
 
+    return files_to_save
+
 
 def generate_and_save_template_files_from_dataframe(df, output_location, dataset):
     """ Generate and saves template files from a local dataframe object
@@ -198,7 +200,7 @@ def generate_and_save_template_files_from_dataframe(df, output_location, dataset
         :param dataset: str, The dataset name
 
     """
-    generate_and_save_template_files(df, output_location, dataset)
+    return generate_and_save_template_files(df, output_location, dataset)
 
 
 def main(args):
@@ -221,9 +223,11 @@ def main(args):
         output_location = inps.output
 
     df = get_spreadsheet_as_dataframe(csv_file, output_location)
-    generate_and_save_template_files_from_dataframe(df, output_location, inps.dataset)
+    files = generate_and_save_template_files_from_dataframe(df, output_location, inps.dataset)
 
     logger.log(loglevel.INFO, "Finished generating template files")
+
+    return files
 
 # TODO: Properly name variables
 # If output and input directories are declared, use them

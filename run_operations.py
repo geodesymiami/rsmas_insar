@@ -86,7 +86,9 @@ def generate_templates_with_options(inps):
         template_options.append('--sheet_id')
         template_options.append(inps.sheet_id)
 
-    gt.main(template_options)
+    template_files = gt.main(template_options)
+
+    return template_files
 
 def get_datasets_to_process(dataset=None):
 
@@ -211,8 +213,12 @@ def run_operations(args):
         shutil.rmtree(os.getenv('OPERATIONS'))
         initiate_operations()
 
-    generate_templates_with_options(inps)
-    datasets = get_datasets_to_process(inps.dataset)
+    template_files = generate_templates_with_options(inps)
+    if inps.dataset:
+        datasets = [inps.dataset]
+    else:
+        datasets = [putils.get_project_name(template) for template in template_files]
+
 
     output_files = []
     job_to_dset = {}
