@@ -66,8 +66,12 @@ if __name__ == "__main__":
     if inps.submit_flag:
         job_file_name = 'process_rsmas'
         wall_time = '48:00'
+        logger_process_rsmas.log(loglevel.INFO, sys.argv[:])
         cb.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir, wall_time)
-    logger_process_rsmas.log(loglevel.INFO, "submit_script")
+
+        logger_process_rsmas.log(loglevel.INFO, "submit_script")
+
+    logger_process_rsmas.log(loglevel.INFO, "finished submit_script")
     #########################################
     # startssara: Getting Data
     #########################################

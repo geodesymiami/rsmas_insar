@@ -12,7 +12,10 @@ import subprocess
 import argparse
 import time
 import messageRsmas
+from _process_utilities import send_logger
+from rsmas_logging import loglevel
 
+logger_create_batch = send_logger()
 
 def create_argument_parser():
     """
@@ -273,7 +276,6 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime, email_notif
     write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
                           walltime=walltime, queue=os.getenv("QUEUENAME"))
     submit_single_job("{0}.job".format(job_file_name))
-    sys.exit(0)
 
 
 if __name__ == "__main__":
