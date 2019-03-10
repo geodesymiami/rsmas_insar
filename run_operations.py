@@ -18,6 +18,9 @@ STORED_DATE_FILE = OPERATIONS_DIRECTORY + "/stored_date.date"
 TEMPLATE_DIRECTORY = OPERATIONS_DIRECTORY + "/TEMPLATES"
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
 
+logger_file = "run_operations.log"
+logger_run_operations = RsmasLogger(logger_file)
+
 def create_process_rsmas_parser():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                      description="""Submits processing jobs for each datasest template present in the 
@@ -157,11 +160,7 @@ def run_process_rsmas(inps, template_file, dataset):
 
     psen_extra_options = ' '.join(psen_extra_options)
 
-    print(psen_extra_options)
-
     process_rsmas_cmd = "process_rsmas.py {} {} --submit".format(template_file, psen_extra_options)
-    
-    print(process_rsmas_cmd)
 
     process_rsmas = subprocess.check_output(process_rsmas_cmd, shell=True)
 
@@ -170,27 +169,24 @@ def run_process_rsmas(inps, template_file, dataset):
     stdout_file = "{}/{}/z_processRsmas_{}.o".format(os.getenv('SCRATHDIR'), dataset, job_number)
     stderr_file = "{}/{}/z_processRsmas_{}.e".format(os.getenv('SCRATHDIR'), dataset, job_number)
 
+    logger_run_operations.log("Job Number: {}".format(job_number))
+
     return [stdout_file, stderr_file], job_number
 
-def copy_output_files(file_list, job_to_dset):
+def copy_output_file(output_file, job_to_dset):
 
-    for f in file_list:
+    job = os.path.splitext(output_file.split("z_processRsmas_")[1])[0]
+    dataset = job_to_dset[job]
 
-        job = os.path.splitext(f.split("z_processRsmas_")[1])[0]
-        dataset = job_to_dset[job]
+    if os.path.exists(output_file) and os.path.isfile(output_file):
 
-        if os.path.exists(f) and os.path.isfile(f):
+        base = "{}/{}/{}/".format(os.getenv('OPERATIONS'), 'ERRORS', dataset)
 
-            base = "{}/{}/{}/".format(os.getenv('OPERATIONS'), 'ERRORS', dataset)
+        if not os.path.exists(base):
+            os.makedirs(base)
 
-            if not os.path.exists(base):
-                os.makedirs(base)
-
-            destination = base + str(datetime.now().strftime("%m-%d-%Y")) + os.path.splitext(f)[1]
-            shutil.copy(f, destination)
-
-        else:
-            raise IOError("The file {} does not exist".format(f))
+        destination = base + str(datetime.now().strftime("%m-%d-%Y")) + os.path.splitext(f)[1]
+        shutil.copy(output_file, destination)
 
 def overwrite_stored_date(dset, newest_date):
 
@@ -201,6 +197,7 @@ def overwrite_stored_date(dset, newest_date):
     for i, line in enumerate(lines):
         if dset in line:
             lines[i] = new_line
+            logger_run_operations.log()
             return
 
 
@@ -219,6 +216,7 @@ def run_operations(args):
     else:
         datasets = [putils.get_project_name(template) for template in template_files]
 
+    logger_run_operations.log("Datasets to Process: {}".format(datasets))
 
     output_files = []
     job_to_dset = {}
@@ -227,10 +225,17 @@ def run_operations(args):
 
         template_file = "{}/{}.template".format(TEMPLATE_DIRECTORY, dset)
 
+        logger_run_operations.log("{}: {}".format(dset, template_file))
+
         newest_date = get_newest_data_date(template_file)
         last_date = get_last_downloaded_date(dset)
 
+        logger_run_operations.log("Newest Date: {}".format(newest_date))
+        logger_run_operations.log("Last Date: {}".format(last_date))
+
         if newest_date > last_date:
+
+            logger_run_operations.log("Starting process_rsmas for {}".format(dset))
 
             #  Exit and don't overwrite date file if process_rsmas.py throws and error
             try:
@@ -244,18 +249,24 @@ def run_operations(args):
                 output_files += outputs
 
             except Exception as e:
-                print("process_rsmas threw an error ({}) and exited.".format(e))
+                logger_run_operations.log(loglevel.ERROR, "process_rsmas threw an error ({}) and exited.".format(e))
 
+        logger_run_operations.log("All process_rsmas calls complete. Waiting for output files to appear")
+
+    total_output_files = len(output_files)
+    mins = 0
     # Wait for all of the *.o/*.e files to be generated and copy them to the $OPERATIONS/ERRORS directory
     while len(output_files) != 0:
+        logger_run_operations.log("{}/{} output files remaining after {} minutes".format(len(output_files), total_output_files, mins))
         for i, output_file in enumerate(output_files):
             if os.path.exists(output_file) and os.path.isfile(output_file):
                 # Remove the output and error files (should appear next to each other in the list) and add them
                 # to the list of files to be copied to to the OPERATIONS directory
-                file_list = [output_files.pop(i), output_files.pop(i)]
-                copy_output_files(file_list, job_to_dset)
+                copy_output_file(output_files.pop(i), job_to_dset)
 
         time.sleep(60)
+
+        mins += 1
 
 
 
