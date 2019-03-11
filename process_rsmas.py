@@ -61,9 +61,10 @@ if __name__ == "__main__":
     #########################################
     # Submit job
     #########################################
-    if inps.bsub_flag:
-        inps.wall_time='48:00'
-        cb.submit_process(sys.argv[:], inps.work_dir, inps.project_name, inps.wall_time)
+    if inps.submit_flag:
+        job_file_name = 'process_rsmas'
+        wall_time = '48:00'
+        cb.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir, wall_time)
 
     #########################################
     # startssara: Getting Data
