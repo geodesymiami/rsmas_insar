@@ -412,26 +412,17 @@ def email_insarmaps_results(custom_template):
 
 def file_len(fname):
     """Calculate the number of lines in a file."""
-    
-    p = subprocess.Popen(['wc', '-l', fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    result, err = p.communicate()
-    if p.returncode != 0:
-        raise IOError(err)
-        
-    return int(result.strip().split()[0])    
+    with open(fname, 'r') as file:
+        return len(file.readlines())
 
 ##########################################################################
-def tryint(s):
-    try:
-        return int(s)
-    except ValueError:
-        return s
-     
+
+
 def alphanum_key(s):
     """ Turn a string into a list of string and number chunks.
         "z23a" -> ["z", 23, "a"]
     """
-    return [ tryint(c) for c in re.split('([0-9]+)', s) ]
+    return [ int(c) if c.isdigit() else c for c in re.split('([0-9]+)', s) ]
 
 def sort_nicely(l):
     """ Sort the given list in the way that humans expect.

@@ -9,11 +9,7 @@ import shutil
 import time
 import glob
 
-import subprocess
 ################### directory initiation for Josh to review (and remove comment)
-status = subprocess.Popen('check_for_operations_directories_and_initiate.py', shell=True).wait() 
-if status is not 0:
-   raise Exception('ERROR in check_for_operations_directories_and_initiate.py')
 ##################
 
 from download_ssara_rsmas import generate_ssaraopt_string
@@ -280,11 +276,25 @@ def copy_error_files_to_logs(project_dir, destination_dir):
 	    os.makedirs(destination_dir)
 	for file in error_files:
 	    shutil.copy(file, destination_dir)
+
+def check_for_operations_directories_and_initiate():
+    """ initiate directories for run_operations.py """
+
+    operations_directory = os.getenv('OPERATIONS')
+
+    os.makedirs(operations_directory, exist_ok=True)
+    os.makedirs(operations_directory + "/TEMPLATES/", exist_ok=True)
+    os.makedirs(operations_directory + "/ERRORS/", exist_ok=True)
+    open(os.getenv('OPERATIONS') + '/stored_date.date', 'a').close()  # create empty file
+
+    os.makedirs(operations_directory + "/LOGS/", exist_ok=True)
+    open(operations_directory + "/LOGS/" + '/generate_templates.log', 'a').close()  # create empty file
            
 
 if __name__ == "__main__":
 
-	from datetime import datetime
+
+    check_for_operations_directories_and_initiate()
 	
 	logger.info("RUN_OPERATIONS for %s:\n", datetime.fromtimestamp(time.time()).strftime(date_format))
 	
@@ -294,9 +304,7 @@ if __name__ == "__main__":
 	# delete OPERATIONS folder if --restart
 	if inps.restart:
 	    shutil.rmtree(os.getenv('OPERATIONS'))
-	    status = subprocess.Popen('check_for_operations_directories_and_initiate.py', shell=True).wait()
-	    if status is not 0:
-	       raise Exception('ERROR in check_for_operations_directories_and_initiate.py')
+	    check_for_operations_directories_and_initiate()
            
 	# Generate Template Files
 	template_options = []

@@ -42,6 +42,7 @@ class Template:
         """ Read template options.
         
             :param template_file: file, the template file to be read and stored in a dictionary
+            :return options     : dict, a dictionary of options as read from the template file
         """
         # Creates the options dictionary and adds the dataset name as parsed from the filename
         # to the dictionary for easy lookup
@@ -61,42 +62,42 @@ class Template:
 
                     # Add key and value to the dictionary
                     options[str(key)] = value
-        return options  
+        return options
 
-    def update_options(self, default_template_file):
-        """ Update default template file with the options from custom template file read initially.
-            
-            :param default_template_file: file, the template file to be updated
+    def update_options_from_file(self, template_file):
+        """ Updates the options dictionary with the contents of a new template file.
+
+            :param template_file: file, the new template file to update self.options with
+            :return options     : dict, updated options dictionary
         """
-        
-        template_file = os.path.abspath(default_template_file)
-        default_options = self.read_options(template_file)
-        
-        tmp_file = template_file+'.tmp'
-        with open(tmp_file, 'w') as f_tmp:
-            for line in open(template_file, 'r'):
-                c = [i.strip() for i in line.strip().split('=', 1)]
-                if not line.startswith(('%', '#')) and len(c) > 1:
-                    key = c[0]
-                    value = str.replace(c[1], '\n', '').split("#")[0].strip()
-                    if key in self.options.keys() and self.options[key] != value:
-                        line = line.replace(value, self.options[key], 1)
-                        default_options[key] = self.options[key]
-                        print('    {}: {} --> {}'.format(key, value, self.options[key]))   
-                f_tmp.write(line)
-        mvCmd = 'mv {} {}'.format(tmp_file, template_file)
-        os.system(mvCmd)
-        self.options = default_options
-        return self.options
-      
-    def update_option(self, key, value):
-        """ Updates the options dictionary key with the specified value.
+        with open(template_file) as template:
+            for line in template:
+                if "=" in line and line[0] != "#":
+                    # Splits each line on the ' = ' character string
+                    # Note that the padding spaces are necessary in case of values having = in them
+                    parts = line.split(" = ")
+                    print(parts)
+                    # The key should be the first portion of the split (stripped to remove whitespace padding)
+                    key = parts[0].rstrip()
 
-            :param key   : the dictionary key to update
-            :param value : the value to replace the key with
+                    # The value should be the second portion (stripped to remove whitespace and ending comments)
+                    value = parts[1].rstrip().split("#")[0].strip(" ")
+                    if key in self.options and self.options[key] != value:
+                        self.update_option(key, value)
+
+        return self.options
+
+    def update_option(self, key, value):
+        """ Updates a single option in the options dictionary.
+
+            :param key      : string, the key to update
+            :param value    : string, the value to update the key to
+            :return options : dict, the updated options dictionary
         """
         options = self.get_options()
         options[key] = value
+
+        return options
     
     def get_options(self):
         """ Provides direct access to the options dictionary.
