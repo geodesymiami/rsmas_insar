@@ -190,15 +190,28 @@ def copy_output_file(output_file, job_to_dset):
 
 def overwrite_stored_date(dset, newest_date):
 
-    new_line = "{}: {}".format(dset, newest_date.strftime(DATE_FORMAT))
+    new_line = "{}: {}\n".format(dset, newest_date.strftime(DATE_FORMAT))
 
-    lines = open(STORED_DATE_FILE, 'r').readlines()
+    date_file = open(STORED_DATE_FILE, 'r')
+
+    lines = date_file.readlines()
 
     for i, line in enumerate(lines):
         if dset in line:
             lines[i] = new_line
             logger_run_operations.log()
+            date_file.close()
             return
+
+    date_file.close()
+
+    date_file = open(STORED_DATE_FILE, 'a')
+    date_file.writelines([new_line])
+
+    date_file.close();
+
+
+
 
 
 def run_operations(args):
@@ -255,6 +268,7 @@ def run_operations(args):
 
     total_output_files = len(output_files)
     mins = 0
+
     # Wait for all of the *.o/*.e files to be generated and copy them to the $OPERATIONS/ERRORS directory
     while len(output_files) != 0:
         logger_run_operations.log("{}/{} output files remaining after {} minutes".format(len(output_files), total_output_files, mins))
