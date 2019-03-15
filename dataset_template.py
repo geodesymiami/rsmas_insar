@@ -52,7 +52,7 @@ class Template:
                     # Splits each line on the ' = ' character string
                     # Note that the padding spaces are necessary in case of values having = in them
                     parts = line.split(" = ")
-                    print(parts)
+
                     # The key should be the first portion of the split (stripped to remove whitespace padding)
                     key = parts[0].rstrip()
                     

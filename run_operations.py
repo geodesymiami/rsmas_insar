@@ -169,7 +169,7 @@ def run_process_rsmas(inps, template_file, dataset):
     stdout_file = "{}/{}/z_processRsmas_{}.o".format(os.getenv('SCRATHDIR'), dataset, job_number)
     stderr_file = "{}/{}/z_processRsmas_{}.e".format(os.getenv('SCRATHDIR'), dataset, job_number)
 
-    logger_run_operations.log("Job Number: {}".format(job_number))
+    logger_run_operations.log(loglevel.INFO, "Job Number: {}".format(job_number))
 
     return [stdout_file, stderr_file], job_number
 
@@ -229,7 +229,7 @@ def run_operations(args):
     else:
         datasets = [putils.get_project_name(template) for template in template_files]
 
-    logger_run_operations.log("Datasets to Process: {}".format(datasets))
+    logger_run_operations.log(loglevel.INFO, "Datasets to Process: {}".format(datasets))
 
     output_files = []
     job_to_dset = {}
@@ -238,17 +238,17 @@ def run_operations(args):
 
         template_file = "{}/{}.template".format(TEMPLATE_DIRECTORY, dset)
 
-        logger_run_operations.log("{}: {}".format(dset, template_file))
+        logger_run_operations.log(loglevel.INFO, "{}: {}".format(dset, template_file))
 
         newest_date = get_newest_data_date(template_file)
         last_date = get_last_downloaded_date(dset)
 
-        logger_run_operations.log("Newest Date: {}".format(newest_date))
-        logger_run_operations.log("Last Date: {}".format(last_date))
+        logger_run_operations.log(loglevel.INFO, "Newest Date: {}".format(newest_date))
+        logger_run_operations.log(loglevel.INFO, "Last Date: {}".format(last_date))
 
         if newest_date > last_date:
 
-            logger_run_operations.log("Starting process_rsmas for {}".format(dset))
+            logger_run_operations.log(loglevel.INFO, "Starting process_rsmas for {}".format(dset))
 
             #  Exit and don't overwrite date file if process_rsmas.py throws and error
             try:
@@ -264,14 +264,18 @@ def run_operations(args):
             except Exception as e:
                 logger_run_operations.log(loglevel.ERROR, "process_rsmas threw an error ({}) and exited.".format(e))
 
-        logger_run_operations.log("All process_rsmas calls complete. Waiting for output files to appear")
+        logger_run_operations.log(loglevel.INFO, "{} process_rsmas calls completed.".format(dset))
+
+    logger_run_operations.log(loglevel.INFO, "All process_rsmas calls complete. Waiting for output files to appear")
 
     total_output_files = len(output_files)
     mins = 0
 
+    logger_run_operations.log(loglevel.INFO, "{} total output files".format(total_output_files))
+
     # Wait for all of the *.o/*.e files to be generated and copy them to the $OPERATIONS/ERRORS directory
     while len(output_files) != 0:
-        logger_run_operations.log("{}/{} output files remaining after {} minutes".format(len(output_files), total_output_files, mins))
+        logger_run_operations.log(loglevel.INFO, "{}/{} output files remaining after {} minutes".format(len(output_files), total_output_files, mins))
         for i, output_file in enumerate(output_files):
             if os.path.exists(output_file) and os.path.isfile(output_file):
                 # Remove the output and error files (should appear next to each other in the list) and add them
@@ -281,6 +285,9 @@ def run_operations(args):
         time.sleep(60)
 
         mins += 1
+
+    logger_run_operations.log(loglevel.INFO, "run_operations.py completed.")
+    logger_run_operations.log(loglevel.INFO, "------------------------------")
 
 
 

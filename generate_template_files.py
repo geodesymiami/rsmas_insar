@@ -178,8 +178,6 @@ def generate_and_save_template_files(df, output_location, dataset):
 
     files_to_save = generate_template_files(df, dataset)
     
-    logger.log(loglevel.INFO, "Template files being generated for: %s", str(files_to_save))
-
     for key, value in files_to_save.items():
         # Print contents for debugging purposes
         if value is None:
