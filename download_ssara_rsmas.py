@@ -143,7 +143,7 @@ def run_ssara(template, run_number=1):
         if hang_status:
            logger.log(loglevel.WARNING, "Hanging, running again")
 
-        run_ssara(inps, run_number=run_number + 1)
+        run_ssara(inps.template, run_number=run_number + 1)
 
     return 0
 
