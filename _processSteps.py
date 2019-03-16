@@ -279,7 +279,7 @@ def create_or_update_template(inps):
     # Read and update default template with custom input template 
     logger.log(loglevel.INFO, 'read and update default template based on input custom template')
     if not inps.template_file == inps.custom_template_file:
-        inps.template = Template(inps.custom_template_file).update_options_from_file(inps.template_file)
+        inps.template = Template(inps.custom_template_file).update_options(inps.template_file)
 
     putils.set_default_options(inps)
 
