@@ -13,7 +13,7 @@ class Template:
             template = Template(file_name)                                  # create a template object
             options = template.get_options()                                # access the options dictionary
             dataset = options['dataset']                                    # access a specific option
-            options = template.update_options(default_template_file)        # access a specific option
+            options = template.update_options_from_file(default_template_file)        # access a specific option
 
     """
     
