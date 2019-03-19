@@ -274,29 +274,28 @@ def copy_error_files_to_logs(project_dir, destination_dir):
 	"""Copy out*.e files into LOGS/project_2017-03-20_out directory."""
 	error_files=glob.glob('out*.e')
 	if not os.path.isdir(destination_dir):
-	    os.makedirs(destination_dir)
+		os.makedirs(destination_dir)
 	for file in error_files:
-	    shutil.copy(file, destination_dir)
+		shutil.copy(file, destination_dir)
 
 def check_for_operations_directories_and_initiate():
-    """ initiate directories for run_operations.py """
 
-    operations_directory = os.getenv('OPERATIONS')
+	""" initiate directories for run_operations.py """
+	operations_directory = os.getenv('OPERATIONS')
+	os.makedirs(operations_directory, exist_ok=True)
+	os.makedirs(operations_directory + "/TEMPLATES/", exist_ok=True)
+	os.makedirs(operations_directory + "/ERRORS/", exist_ok=True)
+	open(os.getenv('OPERATIONS') + '/stored_date.date', 'a').close()  # create empty file
 
-    os.makedirs(operations_directory, exist_ok=True)
-    os.makedirs(operations_directory + "/TEMPLATES/", exist_ok=True)
-    os.makedirs(operations_directory + "/ERRORS/", exist_ok=True)
-    open(os.getenv('OPERATIONS') + '/stored_date.date', 'a').close()  # create empty file
-
-    os.makedirs(operations_directory + "/LOGS/", exist_ok=True)
-    open(operations_directory + "/LOGS/" + '/generate_templates.log', 'a').close()  # create empty file
+	os.makedirs(operations_directory + "/LOGS/", exist_ok=True)
+	open(operations_directory + "/LOGS/" + '/generate_templates.log', 'a').close()  # create empty file
            
 
 if __name__ == "__main__":
 
 
-    check_for_operations_directories_and_initiate()
-	
+	check_for_operations_directories_and_initiate()
+
 	logger.info("RUN_OPERATIONS for %s:\n", datetime.fromtimestamp(time.time()).strftime(date_format))
 	
 	# Parse command line arguments
@@ -304,8 +303,8 @@ if __name__ == "__main__":
 	
 	# delete OPERATIONS folder if --restart
 	if inps.restart:
-	    shutil.rmtree(os.getenv('OPERATIONS'))
-	    check_for_operations_directories_and_initiate()
+		shutil.rmtree(os.getenv('OPERATIONS'))
+		check_for_operations_directories_and_initiate()
            
 	# Generate Template Files
 	template_options = []
