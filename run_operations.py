@@ -13,7 +13,6 @@ import subprocess
 ################### directory initiation for Josh to review (and remove comment)
 ##################
 
-from download_ssara_rsmas import generate_ssaraopt_string
 import generate_template_files as gt
 
 import logging
