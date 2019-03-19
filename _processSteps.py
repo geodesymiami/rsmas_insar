@@ -16,6 +16,7 @@ import shutil
 import subprocess
 from rsmas_logging import RsmasLogger, loglevel
 import _process_utilities as putils
+from _process_utilities  import _remove_directories, clean_list
 from dataset_template import Template
 import messageRsmas
 
@@ -24,7 +25,7 @@ logger  = putils.send_logger()
 ####################################################################
 
 EXAMPLE = '''example:
-  process_rsmas.py  DIR/TEMPLATEFILE [options] [--bsub]
+  process_rsmas.py  DIR/TEMPLATEFILE [options] [--submit]
 
   InSAR processing using ISCE Stack and RSMAS processing scripts
 
@@ -33,7 +34,7 @@ EXAMPLE = '''example:
 
   --startmakerun       skips data downloading using SSARA
   --startprocess       skips data downloading and making run files
-  --startpysar         skips InSAR processing (needs a 'merged' directory)
+  --startpysar         skips InSAR processing (needs a 'merged','baselines', 'master' directories)
   --startinsarmaps     skips pysar  processing (needs a PYSAR directory)
   --startjobstats      skips insarmaps processing (summarizes job statistics)
   --stopsara           stops after ssara
@@ -44,7 +45,7 @@ EXAMPLE = '''example:
   --startssara         [default]
 
   --insarmaps          append after other options to upload to insarmaps.miami.edu
-  --bsub               submits job using bsub (and send email when done)
+  --submit             submits job (and send email when done)
   --nomail             suppress emailing imagefiles of results (default is emailing)
   --remove_project_dir removes project directory before starting download or processing
 
@@ -72,11 +73,14 @@ EXAMPLE = '''example:
          process_rsmas.py $SAMPLESDIR/GalapagosT128SenVVD.template -g
 
          cleanopt in TEMPLATEFILE controls file removal [default=0]
-             cleanopt = 0 :  none
-             cleanopt = 1 :  after sentinelStack: configs, baselines, stack, coreg_slaves, misreg, orbits, coarse_interferograms, ESD, interferograms
-             cleanopt = 2 :  after pysarApp.py --load_data: 'merged'
-             cleanopt = 3 :  after pysarApp.py --load_data: 'SLC'
-             cleanopt = 4 :  everything including PYSAR 
+             cleanopt = 0 :  remove none (keep all)
+             cleanopt = 1 :  remove after process: configs, stack, coreg_slaves, misreg, orbits, coarse_interferograms, ESD, interferograms, DEM
+                                             keep: merged, master, baselines, PYSAR, SLC
+             cleanopt = 2 :  remove after pysar load: merged, master, baselines
+                                                keep: PYSAR, run_files, SLC
+             cleanopt = 3 :  remove after pysar load: SLC, run_files
+                                                keep: PYSAR
+             cleanopt = 4 :  remove everything after insarmaps ingest (keep none)
 
   --------------------------------------------
   Open TopsStack_template.txt file for details.
@@ -180,10 +184,10 @@ def create_process_rsmas_parser(EXAMPLE):
         action='store_false',
         help='mail results')
     parser.add_argument(
-        '--bsub',
-        dest='bsub_flag',
+        '--submit',
+        dest='submit_flag',
         action='store_true',
-        help='submits job using bsub')
+        help='submits job')
 
     return parser
 
@@ -302,23 +306,23 @@ def call_ssara(flag_ssara, custom_template_file, slc_dir):
 def create_or_copy_dem(inps, work_dir, template, custom_template_file):
     """ Downloads a DEM file or copies an existing one."""
 
-    if inps.flag_dem:
-        dem_dir = work_dir + '/DEM'
-        if os.path.isdir(dem_dir) and len(os.listdir(dem_dir)) == 0:
-            os.rmdir(dem_dir)
+    #if inps.flag_dem:
+    dem_dir = work_dir + '/DEM'
+    if os.path.isdir(dem_dir) and len(os.listdir(dem_dir)) == 0:
+        os.rmdir(dem_dir)
 
-        if not os.path.isdir(dem_dir):
-            if 'sentinelStack.demDir' in list(template.keys()) and template['sentinelStack.demDir'] != str('auto'):
-                shutil.copytree(template['sentinelStack.demDir'], dem_dir)
-            else:
-                # TODO: Change subprocess call to get back error code and send error code to logger
-                command = 'dem_rsmas.py ' + custom_template_file
-                print(command)
-                messageRsmas.log(command)
-                status = subprocess.Popen(command, shell=True).wait()
-                if status is not 0:
-                    logger.log(loglevel.ERROR, 'ERROR while making DEM')
-                    raise Exception('ERROR while making DEM')
+    if not os.path.isdir(dem_dir):
+        if 'sentinelStack.demDir' in list(template.keys()) and template['sentinelStack.demDir'] != str('auto'):
+            shutil.copytree(template['sentinelStack.demDir'], dem_dir)
+        else:
+            # TODO: Change subprocess call to get back error code and send error code to logger
+            command = 'dem_rsmas.py ' + custom_template_file
+            print(command)
+            messageRsmas.log(command)
+            status = subprocess.Popen(command, shell=True).wait()
+            if status is not 0:
+                logger.log(loglevel.ERROR, 'ERROR while making DEM')
+                raise Exception('ERROR while making DEM')
 
 
 #################################################################################
@@ -351,7 +355,7 @@ def process_runfiles(inps):
     if inps.flag_process:
         command = 'execute_stacksentinel_run_files.py ' + inps.custom_template_file
         messageRsmas.log(command)
-        # Check the performance, change in subprocess
+        #Check the performance, change in subprocess
         status = subprocess.Popen(command, shell=True).wait()
         if status is not 0:
             logger.log(loglevel.ERROR, 'ERROR in execute_stacksentinel_run_files.py')
@@ -361,8 +365,8 @@ def process_runfiles(inps):
             shutil.rmtree('PYSAR')
 
         if int(inps.custom_template['cleanopt']) >= 1:
+            cleanlist = clean_list()
             _remove_directories(cleanlist[1])
-
 
     if inps.stopprocess:
         logger.log(loglevel.INFO, 'Exit as planned after processing')
@@ -436,6 +440,7 @@ def process_time_series(inps):
             raise Exception('ERROR in execute_squeesar_run_files.py')
 
         if int(inps.custom_template['cleanopt']) >= 1:
+            cleanlist = clean_list()
             _remove_directories(cleanlist[1])
 
     if inps.stoppysar:
@@ -463,7 +468,8 @@ def run_ingest_insarmaps(inps):
 
     # clean
     if int(inps.custom_template['cleanopt']) == 4:
-        shutil.rmtree(cleanlist[4])
+        cleanlist = clean_list()
+        _remove_directories(cleanlist[4])
 
     if inps.stopinsarmaps:
         logger.log(loglevel.DEBUG, 'Exit as planned after insarmaps')

@@ -10,8 +10,8 @@ from rsmas_logging import loglevel
 import argparse
 import subprocess
 from _process_utilities import get_project_name, send_logger
-from _process_utilities import remove_zero_size_or_length_files, concatenate_error_files 
-from _process_utilities import remove_error_files_except_first
+from _process_utilities import remove_zero_size_or_length_error_files, concatenate_error_files 
+from _process_utilities import move_error_files_except_first, move_stdout_files
 from _processSteps import create_or_update_template
 
 
@@ -158,11 +158,10 @@ if __name__ == "__main__":
 
     submit_isce_jobs(run_file_list[inps.start - 1:inps.stop], inps.work_dir, memoryuse)
     
-    remove_zero_size_or_length_files(directory='run_files')
-    
+    remove_zero_size_or_length_error_files(directory='run_files')
     concatenate_error_files(directory='run_files',out_name='out_stack_sentinel_errorfiles.e')
-    
-    remove_error_files_except_first(directory='run_files')
+    move_error_files_except_first(directory='run_files')
+    move_stdout_files(directory='run_files')
 
     logger_exec_run.log(loglevel.INFO, "-----------------Done Executing Run files-------------------")
     
