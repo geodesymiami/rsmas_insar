@@ -412,26 +412,17 @@ def email_insarmaps_results(custom_template):
 
 def file_len(fname):
     """Calculate the number of lines in a file."""
-    
-    p = subprocess.Popen(['wc', '-l', fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    result, err = p.communicate()
-    if p.returncode != 0:
-        raise IOError(err)
-        
-    return int(result.strip().split()[0])    
+    with open(fname, 'r') as file:
+        return len(file.readlines())
 
 ##########################################################################
-def tryint(s):
-    try:
-        return int(s)
-    except ValueError:
-        return s
-     
+
+
 def alphanum_key(s):
     """ Turn a string into a list of string and number chunks.
         "z23a" -> ["z", 23, "a"]
     """
-    return [ tryint(c) for c in re.split('([0-9]+)', s) ]
+    return [ int(c) if c.isdigit() else c for c in re.split('([0-9]+)', s) ]
 
 def sort_nicely(l):
     """ Sort the given list in the way that humans expect.
@@ -440,7 +431,7 @@ def sort_nicely(l):
 
 ##########################################################################
 
-def remove_zero_size_or_length_files(directory):
+def remove_zero_size_or_length_error_files(directory):
     """Removes files with zero size or zero length (*.e files in run_files)."""
     
     error_files  = glob.glob(directory + '/*.e')
@@ -448,23 +439,39 @@ def remove_zero_size_or_length_files(directory):
     for item in error_files:
         if os.path.getsize(item) == 0:       # remove zero-size files
             os.remove(item)
-            os.remove(item.replace('.e','.o'))
         elif file_len(item) == 0:
             os.remove(item)                  # remove zero-line files
-            os.remove(item.replace('.e','.o'))
     return None
 
 ##########################################################################
 
-def remove_error_files_except_first(directory):
-    """remove the error file but keep the first"""
+def move_error_files_except_first(directory):
+    """move the error file into stderr_files directory but keep the first error files"""
     try:
        error_files  = glob.glob(directory + '/*.e')
+       dir_name = os.path.dirname(error_files[0])
+       if not os.path.isdir(dir_name + '/stderr_files'):
+          os.mkdir(dir_name + '/stderr_files')
        sort_nicely(error_files)
+       shutil.copy(error_files[0], dir_name + '/stderr_files' + '/' + os.path.basename(error_files[0]))
        del error_files[0]
        for item in error_files:
-           os.remove(item)
-           os.remove(item.replace('.e','.o'))
+           shutil.move(item, dir_name + '/stderr_files' + '/' + os.path.basename(item))
+    except:
+        pass            
+    return None
+
+##########################################################################
+
+def move_stdout_files(directory):
+    """move the error file into stdout_files directory"""
+    try:
+       stdout_files  = glob.glob(directory + '/*.o')
+       dir_name = os.path.dirname(stdout_files[0])
+       if not os.path.isdir(dir_name + '/stdout_files'):
+          os.mkdir(dir_name + '/stdout_files')
+       for item in stdout_files:
+           shutil.move(item, dir_name + '/stdout_files' + '/' + os.path.basename(item))
     except:
         pass            
     return None

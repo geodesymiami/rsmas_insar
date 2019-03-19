@@ -125,6 +125,7 @@ def get_job_file_lines(job_name, job_file_name, email_notif, scheduler=None, mem
     ])
 
     if scheduler == "PBS":
+        # export all local environment variables to job
         job_file_lines.append(prefix + "-V")
 
     return job_file_lines
