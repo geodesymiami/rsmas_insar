@@ -136,31 +136,31 @@ def get_last_downloaded_date(dset):
 
 def run_process_rsmas(inps, template_file, dataset):
 
-    psen_extra_options = []
+    process_rsmas_options = []
 
     if inps.startssara:
-        psen_extra_options.append('--startssara')
+        process_rsmas_options.append('--startssara')
     if inps.stopssara:
-        psen_extra_options.append('--stopssara')
+        process_rsmas_options.append('--stopssara')
     if inps.startprocess:
-        psen_extra_options.append('--startprocess')
+        process_rsmas_options.append('--startprocess')
     if inps.stopprocess:
-        psen_extra_options.append('--stopprocess')
+        process_rsmas_options.append('--stopprocess')
     if inps.startpysar:
-        psen_extra_options.append('--startpysar')
+        process_rsmas_options.append('--startpysar')
     if inps.stoppysarload:
-        psen_extra_options.append('--stoppysarload')
+        process_rsmas_options.append('--stoppysarload')
     if inps.stoppysar:
-        psen_extra_options.append('--stoppysar')
+        process_rsmas_options.append('--stoppysar')
     if inps.startinsarmaps:
-        psen_extra_options.append('--startinsarmaps')
+        process_rsmas_options.append('--startinsarmaps')
 
-    if len(psen_extra_options) == 0:
-        psen_extra_options.append('--insarmaps')
+    if len(process_rsmas_options) == 0:
+        process_rsmas_options.append('--insarmaps')
 
-    psen_extra_options = ' '.join(psen_extra_options)
+    process_rsmas_options = ' '.join(process_rsmas_options)
 
-    process_rsmas_cmd = "process_rsmas.py {} {} --submit".format(template_file, psen_extra_options)
+    process_rsmas_cmd = "process_rsmas.py {} {} --submit".format(template_file, process_rsmas_options)
 
     process_rsmas = subprocess.check_output(process_rsmas_cmd, shell=True)
 
@@ -208,7 +208,7 @@ def overwrite_stored_date(dset, newest_date):
     date_file = open(STORED_DATE_FILE, 'a')
     date_file.writelines([new_line])
 
-    date_file.close();
+    date_file.close()
 
 
 
