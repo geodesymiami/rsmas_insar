@@ -152,9 +152,8 @@ def write_single_job_file(job_name, job_file_name, command_line, work_dir, email
     job_file_lines.append("\n" + command_line + "\n")
 
     # write lines to .job file
-    os.chdir(work_dir)
     job_file_name = "{0}.job".format(job_file_name)
-    with open(job_file_name, "w+") as job_file:
+    with open(os.path.join(work_dir, job_file_name), "w+") as job_file:
         job_file.writelines(job_file_lines)
 
 
@@ -274,7 +273,6 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime, email_notif
     write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
                           walltime=walltime, queue=os.getenv("QUEUENAME"))
     submit_single_job("{0}.job".format(job_file_name))
-    sys.exit(0)
 
 
 if __name__ == "__main__":
