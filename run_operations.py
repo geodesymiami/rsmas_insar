@@ -34,7 +34,7 @@ def create_process_rsmas_parser():
     data_args.add_argument('-dataset', dest='dataset', metavar="DATASET", help='Particular dataset to run')
     data_args.add_argument('-templatecsv', dest='template_csv', metavar='FILE', help='local csv file containing template info.')
     data_args.add_argument('-singletemplate', dest='single_template', metavar='FILE', help='singular template file to run on')
-    data_args.add_argument('--sheet_id', dest="sheet_id", metavar='SHEET ID', help='sheet id to use')
+    data_args.add_argument('--sheet_id', dest="sheet_id", metavar='SHEET ID', action='append', nargs=1, help='sheet id to use')
     data_args.add_argument('--restart', dest='restart', action='store_true', help='remove $OPERATIONS directory before starting')
 
     process_args = parser.add_argument_group("Processing steps", "processing Steps")
@@ -223,7 +223,12 @@ def run_operations(args):
         shutil.rmtree(os.getenv('OPERATIONS'))
         initiate_operations()
 
-    template_files = generate_templates_with_options(inps.template_csv, inps.dataset, inps.sheet_id)
+    template_files = []
+    # inps.sheet_id is an array of sheets.
+    # Each use of the --sheet_id command line parameter adds another array to the inps.sheet_id variable.
+    for sheet in inps.sheet_id:
+        template_files += generate_templates_with_options(inps.template_csv, inps.dataset, sheet[0])
+
     if inps.dataset:
         datasets = [inps.dataset]
     else:
