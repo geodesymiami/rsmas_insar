@@ -76,18 +76,18 @@ def initiate_operations():
     if not os.path.exists(os.getenv('OPERATIONS') + '/stored_date.date'):
         open(os.getenv('OPERATIONS') + '/stored_date.date', 'a').close()  # create empty file
 
-def generate_templates_with_options(inps):
+def generate_templates_with_options(csv, dataset, sheet):
 
     template_options = []
-    if inps.template_csv:
+    if csv:
         template_options.append('--csv')
-        template_options.append(inps.template_csv)
-    if inps.dataset:
+        template_options.append(csv)
+    if dataset:
         template_options.append('--dataset')
-        template_options.append(inps.dataset)
-    if inps.sheet_id:
+        template_options.append(dataset)
+    if sheet:
         template_options.append('--sheet_id')
-        template_options.append(inps.sheet_id)
+        template_options.append(sheet)
 
     template_files = gt.main(template_options)
 
@@ -223,7 +223,7 @@ def run_operations(args):
         shutil.rmtree(os.getenv('OPERATIONS'))
         initiate_operations()
 
-    template_files = generate_templates_with_options(inps)
+    template_files = generate_templates_with_options(inps.template_csv, inps.dataset, inps.sheet_id)
     if inps.dataset:
         datasets = [inps.dataset]
     else:
