@@ -166,8 +166,8 @@ def run_process_rsmas(inps, template_file, dataset):
 
     job_number = process_rsmas.split('\n')[0].split("<")[1].split('>')[0]
 
-    stdout_file = "{}/{}/z_processRsmas_{}.o".format(os.getenv('SCRATHDIR'), dataset, job_number)
-    stderr_file = "{}/{}/z_processRsmas_{}.e".format(os.getenv('SCRATHDIR'), dataset, job_number)
+    stdout_file = "{}/{}/process_rsmas_{}.o".format(os.getenv('SCRATHDIR'), dataset, job_number)
+    stderr_file = "{}/{}/process_rsmas_{}.e".format(os.getenv('SCRATHDIR'), dataset, job_number)
 
     logger_run_operations.log(loglevel.INFO, "Job Number: {}".format(job_number))
 
