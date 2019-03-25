@@ -192,7 +192,8 @@ def overwrite_stored_date(dset, newest_date):
 
     new_line = "{}: {}\n".format(dset, newest_date.strftime(DATE_FORMAT))
 
-    date_file = open(STORED_DATE_FILE, 'r')
+    date_file = open(STORED_DATE_FILE, 'a+')
+    date_file.seek(0)
 
     lines = date_file.readlines()
 
@@ -201,17 +202,11 @@ def overwrite_stored_date(dset, newest_date):
             lines[i] = new_line
             logger_run_operations.log()
             date_file.close()
-            return
+            break
+    else:
+        date_file.writelines([new_line])
 
     date_file.close()
-
-    date_file = open(STORED_DATE_FILE, 'a')
-    date_file.writelines([new_line])
-
-    date_file.close()
-
-
-
 
 
 def run_operations(args):
@@ -229,10 +224,7 @@ def run_operations(args):
     for sheet in inps.sheet_id:
         template_files += generate_templates_with_options(inps.template_csv, inps.dataset, sheet[0])
 
-    if inps.dataset:
-        datasets = [inps.dataset]
-    else:
-        datasets = [putils.get_project_name(template) for template in template_files]
+    datasets = get_datasets_to_process(inps.dataset)
 
     logger_run_operations.log(loglevel.INFO, "Datasets to Process: {}".format(datasets))
 
