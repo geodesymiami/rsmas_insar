@@ -273,23 +273,22 @@ def run_operations(args):
 
     logger_run_operations.log(loglevel.INFO, "All process_rsmas calls complete. Waiting for output files to appear")
 
-    total_output_files = len(output_files)
-    mins = 0
-
     logger_run_operations.log(loglevel.INFO, "{} total output files".format(total_output_files))
 
-    # Wait for all of the *.o/*.e files to be generated and copy them to the $OPERATIONS/ERRORS directory
-    while len(output_files) != 0:
-        logger_run_operations.log(loglevel.INFO, "{}/{} output files remaining after {} minutes".format(len(output_files), total_output_files, mins))
-        for i, output_file in enumerate(output_files):
-            if os.path.exists(output_file) and os.path.isfile(output_file):
-                # Remove the output and error files (should appear next to each other in the list) and add them
-                # to the list of files to be copied to to the OPERATIONS directory
-                copy_output_file(output_files.pop(i), job_to_dset)
-
-        time.sleep(60)
-
-        mins += 1
+    # check if output files exist
+    i = 0
+    wait_time_sec = 60
+    total_wait_time_min = 0
+    while i < len(output_files):
+        if os.path.isfile(output_files[i]):
+            print("Job #{} of {} complete (output file {})".format(i + 1, len(output_files), output_files[i]))
+            i += 1
+        else:
+            print("Waiting for job #{} of {} (output file {}) after {} minutes".format(i + 1, len(output_files),
+                                                                                       output_files[i],
+                                                                                       total_wait_time_min))
+            total_wait_time_min += wait_time_sec / 60
+            time.sleep(wait_time_sec)
 
     logger_run_operations.log(loglevel.INFO, "run_operations.py completed.")
     logger_run_operations.log(loglevel.INFO, "------------------------------")
