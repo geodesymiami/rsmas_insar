@@ -23,7 +23,7 @@ logger_process_rsmas  = send_logger()
 ###############################################################################
 
 
-def main(inps):
+def process(inps):
 
     #########################################
     # Initiation
@@ -130,4 +130,4 @@ if __name__ == "__main__":
 
         cb.submit_script(project_name, job_file_name, sys.argv[:], work_dir, wall_time)
     else:
-        main(inps)
+        process(inps)
