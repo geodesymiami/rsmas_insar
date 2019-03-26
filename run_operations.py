@@ -93,13 +93,12 @@ def generate_templates_with_options(csv, dataset, sheet):
 
     return template_files
 
-def get_datasets_to_process(dataset=None):
+def get_datasets_to_process(template_files, dataset=None):
 
     # Obtains list of datasets to run processSentinel on
     if dataset:
         datasets = [dataset]
     else:
-        template_files = glob.glob("{}/*.template".format(TEMPLATE_DIRECTORY))
         datasets = [putils.get_project_name(template) for template in template_files]
 
     return datasets
@@ -224,7 +223,7 @@ def run_operations(args):
     for sheet in inps.sheet_id:
         template_files += generate_templates_with_options(inps.template_csv, inps.dataset, sheet[0])
 
-    datasets = get_datasets_to_process(inps.dataset)
+    datasets = get_datasets_to_process(template_files, inps.dataset)
 
     logger_run_operations.log(loglevel.INFO, "Datasets to Process: {}".format(datasets))
 
