@@ -13,7 +13,7 @@ import os
 import sys
 import time
 import messageRsmas
-from _process_utilities  import get_work_directory, get_project_name, send_logger, _remove_directories
+from _process_utilities import get_work_directory, get_project_name, send_logger, _remove_directories
 import _processSteps as prs
 import create_batch as cb
 from rsmas_logging import loglevel
@@ -23,18 +23,16 @@ logger_process_rsmas  = send_logger()
 ###############################################################################
 
 
-if __name__ == "__main__":
+def process(inps):
 
     #########################################
     # Initiation
     #########################################
-
     start_time = time.time()
-    inps = prs.command_line_parse()
 
     inps.project_name = get_project_name(inps.custom_template_file)
     inps.work_dir = get_work_directory(None, inps.project_name)
-    inps.slc_dir = os.path.join(inps.work_dir,'SLC')
+    inps.slc_dir = os.path.join(inps.work_dir, 'SLC')
 
     if inps.remove_project_dir:
         _remove_directories(directories_to_delete=[inps.work_dir])
@@ -48,8 +46,8 @@ if __name__ == "__main__":
     #  Read and update template file:
     inps = prs.create_or_update_template(inps)
     print(inps)
-    if not inps.processingMethod or inps.workflow=='interferogram':
-        inps.processingMethod='sbas'
+    if not inps.processingMethod or inps.workflow == 'interferogram':
+        inps.processingMethod = 'sbas'
 
     if not os.path.isdir(inps.slc_dir):
         os.makedirs(inps.slc_dir)
@@ -59,19 +57,7 @@ if __name__ == "__main__":
     logger_process_rsmas.log(loglevel.INFO, 'process_rsmas.py ' + command_line)
     messageRsmas.log('##### NEW RUN #####')
     messageRsmas.log(command_line)
-    
-    #########################################
-    # Submit job
-    #########################################
-    if inps.submit_flag:
-        job_file_name = 'process_rsmas'
-        wall_time = '48:00'
-        logger_process_rsmas.log(loglevel.INFO, sys.argv[:])
-        cb.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir, wall_time)
 
-        logger_process_rsmas.log(loglevel.INFO, "submit_script")
-
-    logger_process_rsmas.log(loglevel.INFO, "finished submit_script")
     #########################################
     # startssara: Getting Data
     #########################################
@@ -112,8 +98,7 @@ if __name__ == "__main__":
     # startpysar: running PySAR and email results
     #########################################
 
-
-    if inps.processingMethod == 'squeesar' :
+    if inps.processingMethod == 'squeesar':
         # Run squeesar script:
         #    create_squeesar_run_files.py $TE/template
         #    execute_squeesar_run_files.py $TE/template
@@ -131,3 +116,22 @@ if __name__ == "__main__":
     logger_process_rsmas.log(loglevel.INFO, "ingest_insarmaps")
 
     logger_process_rsmas.log(loglevel.INFO, 'End of process_rsmas')
+
+
+if __name__ == "__main__":
+
+    inps = prs.command_line_parse()
+    
+    #########################################
+    # Submit job
+    #########################################
+    if inps.submit_flag:
+        job_file_name = 'process_rsmas'
+        wall_time = '48:00'
+
+        project_name = get_project_name(inps.custom_template_file)
+        work_dir = get_work_directory(None, project_name)
+
+        cb.submit_script(project_name, job_file_name, sys.argv[:], work_dir, wall_time)
+    else:
+        process(inps)

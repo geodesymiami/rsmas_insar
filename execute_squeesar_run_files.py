@@ -73,7 +73,8 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
 
     for item in run_file_list:
         item_memory = '_'
-        item_memory = item_memory.join(item.split('_')[3::])
+        item_memory = item_memory.join(item.split('_')[4::])
+
         try:
             memorymax = str(memoryuse[item_memory])
         except:
