@@ -127,10 +127,10 @@ def get_last_downloaded_date(dset):
                 break
 
     if dataset_line is not None:
-        last_date = dataset_line.split(": ")[1]
+        last_date = dataset_line.split(": ")[1].strip("\n")
     else:
         last_date = datetime.strftime(datetime(1970, 1, 1, 0, 0, 0), DATE_FORMAT)
-
+    
     return datetime.strptime(last_date, DATE_FORMAT)
 
 def run_process_rsmas(inps, template_file, dataset):
