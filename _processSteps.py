@@ -14,6 +14,8 @@ import argparse
 import time
 import shutil
 import subprocess
+from datetime import datetime
+import time
 from rsmas_logging import RsmasLogger, loglevel
 import _process_utilities as putils
 from _process_utilities  import _remove_directories, clean_list
@@ -189,8 +191,8 @@ def create_process_rsmas_parser(EXAMPLE):
         action='store_true',
         help='submits job')
     parser.add_argument_group(
-        '--operations',
-        dest='run_operations',
+        '--update',
+        dest='update',
         action='store_true',
         help='update stored_date file and move output files'
     )
@@ -479,3 +481,30 @@ def run_ingest_insarmaps(inps):
 
     if inps.stopinsarmaps:
         logger.log(loglevel.DEBUG, 'Exit as planned after insarmaps')
+
+
+###############################################################################
+
+
+def overwrite_stored_date(dset):
+
+    OPERATIONS_DIRECTORY = os.getenv('OPERATIONS')
+    STORED_DATE_FILE = OPERATIONS_DIRECTORY + "/stored_date.date"
+    DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
+
+    new_line = "{}: {}\n".format(dset, datetime.fromtimestamp(time.time()).strftime(DATE_FORMAT))
+
+    date_file = open(STORED_DATE_FILE, 'a+')
+    date_file.seek(0)
+
+    lines = date_file.readlines()
+
+    for i, line in enumerate(lines):
+        if dset in line:
+            lines[i] = new_line
+            date_file.close()
+            break
+    else:
+        date_file.writelines([new_line])
+
+    date_file.close()
