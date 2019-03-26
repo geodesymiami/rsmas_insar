@@ -57,7 +57,7 @@ def parse_arguments(args):
     return job_submission_params
 
 
-def get_job_file_lines(job_name, job_file_name, email_notif, scheduler=None, memory=3600, walltime="4:00", queue=None):
+def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler=None, memory=3600, walltime="4:00", queue=None):
     """
     Generates the lines of a job submission file that are based on the specified scheduler.
     :param job_name: Name of job.
@@ -114,8 +114,8 @@ def get_job_file_lines(job_name, job_file_name, email_notif, scheduler=None, mem
         job_file_lines.append(prefix + email_option.format(os.getenv("NOTIFICATIONEMAIL")))
     job_file_lines.extend([
         prefix + process_option.format(1, 1),
-        prefix + stdout_option.format(job_file_name),
-        prefix + stderr_option.format(job_file_name),
+        prefix + stdout_option.format(os.path.join(work_dir, job_file_name)),
+        prefix + stderr_option.format(os.path.join(work_dir, job_file_name)),
         prefix + queue_option.format(queue),
         prefix + walltime_limit_option.format(walltime),
         prefix + memory_option.format(memory),
@@ -146,7 +146,7 @@ def write_single_job_file(job_name, job_file_name, command_line, work_dir, email
         scheduler=os.getenv("JOBSCHEDULER")
 
     # get lines to write in job file
-    job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, scheduler, memory, walltime, queue)
+    job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler, memory, walltime, queue)
     job_file_lines.append("\nfree")
     job_file_lines.append("\ncd " + work_dir)
     job_file_lines.append("\n" + command_line + "\n")
@@ -187,7 +187,7 @@ def write_batch_job_files(batch_file, out_dir, email_notif=False, scheduler=None
     return job_files
 
 
-def submit_single_job(job_file_name, scheduler=None):
+def submit_single_job(job_file_name, work_dir, scheduler=None):
     """
     Submit a single job (to bsub or qsub).
     :param job_file_name: Name of job file to submit.
@@ -199,9 +199,9 @@ def submit_single_job(job_file_name, scheduler=None):
     
     # use bsub or qsub to submit based on scheduler
     if scheduler == "LSF":
-        command = "bsub < " + job_file_name
+        command = "bsub < " + os.path.join(work_dir, job_file_name)
     elif scheduler == "PBS":
-        command = "qsub < " + job_file_name
+        command = "qsub < " + os.path.join(work_dir, job_file_name)
     else:
         raise Exception("ERROR: scheduler {0} not supported".format(scheduler))
 
@@ -239,7 +239,7 @@ def submit_batch_jobs(job_files, batch_file, out_dir, scheduler=None):
     files = []
 
     for job in job_files:
-        job_number = submit_single_job(job, scheduler)
+        job_number = submit_single_job(job, work_dir, scheduler)
         job_file_name = job.split(".")[0]
         files.append("{}_{}.o".format(job_file_name, job_number))
         # files.append("{}_{}.e".format(job_file_name, job_number))
@@ -272,7 +272,7 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime, email_notif
     command_line += " ".join(flag for flag in argv[1:] if flag != "--submit")
     write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
                           walltime=walltime, queue=os.getenv("QUEUENAME"))
-    submit_single_job("{0}.job".format(job_file_name))
+    submit_single_job("{0}.job".format(job_file_name), work_dir)
 
 
 if __name__ == "__main__":
