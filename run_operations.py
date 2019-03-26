@@ -264,7 +264,7 @@ def run_operations(args):
 
     logger_run_operations.log(loglevel.INFO, "All process_rsmas calls complete. Waiting for output files to appear")
 
-    logger_run_operations.log(loglevel.INFO, "{} total output files".format(total_output_files))
+    logger_run_operations.log(loglevel.INFO, "{} total output files".format(len(output_files)))
 
     # check if output files exist
     i = 0
