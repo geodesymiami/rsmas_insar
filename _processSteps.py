@@ -188,6 +188,12 @@ def create_process_rsmas_parser(EXAMPLE):
         dest='submit_flag',
         action='store_true',
         help='submits job')
+    parser.add_argument_group(
+        '--operations',
+        dest='run_operations',
+        action='store_true',
+        help='update stored_date file and move output files'
+    )
 
     return parser
 
