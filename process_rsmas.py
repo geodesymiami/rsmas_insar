@@ -45,7 +45,6 @@ def process(inps):
 
     #  Read and update template file:
     inps = prs.create_or_update_template(inps)
-    print(inps)
     if not inps.processingMethod or inps.workflow == 'interferogram':
         inps.processingMethod = 'sbas'
 
@@ -54,9 +53,7 @@ def process(inps):
 
     command_line = os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1:])
     logger_process_rsmas.log(loglevel.INFO, '##### NEW RUN #####')
-    logger_process_rsmas.log(loglevel.INFO, 'process_rsmas.py ' + command_line)
-    messageRsmas.log('##### NEW RUN #####')
-    messageRsmas.log(command_line)
+    logger_process_rsmas.log(loglevel.INFO, command_line)
 
     #########################################
     # startssara: Getting Data
@@ -66,7 +63,8 @@ def process(inps):
     #     download_ssara_rsmas.py $TE/template
     #     downlaod_asfserial_rsmas.py $TE/template
     prs.call_ssara(inps.flag_ssara, inps.custom_template_file, inps.slc_dir)
-    logger_process_rsmas.log(loglevel.INFO, "call_ssara")
+    logger_process_rsmas.log(loglevel.INFO, "Finished call_ssara")
+
     #########################################
     # startmakerun: create run files
     #########################################
@@ -74,15 +72,15 @@ def process(inps):
     # create or copy DEM
     # running the script:
     #     dem_rsmas.py $TE/template
-
     prs.create_or_copy_dem(inps, inps.work_dir, inps.template, inps.custom_template_file)
-    logger_process_rsmas.log(loglevel.INFO, "create_or_copy_dem")
+    logger_process_rsmas.log(loglevel.INFO, "Finished create_or_copy_dem")
+
     # Check for DEM and create sentinel run files
     # running the script:
     #     create_stacksentinel_run_files.py $TE/template
-
     prs.create_runfiles(inps)
-    logger_process_rsmas.log(loglevel.INFO, "create_run_files")
+    logger_process_rsmas.log(loglevel.INFO, "Finished create_run_files")
+
     #########################################
     # startprocess: Execute run files
     #########################################
@@ -91,9 +89,9 @@ def process(inps):
     #    execute_stacksentinel_run_files.py $TE/template starting_run stopping_run
     #    Example for running run 1 to 4:
     #    execute_stacksentinel_run_files.py $TE/template 1 4
-
     prs.process_runfiles(inps)
-    logger_process_rsmas.log(loglevel.INFO, "process_run_files")
+    logger_process_rsmas.log(loglevel.INFO, "Finished process_run_files")
+
     #########################################
     # startpysar: running PySAR and email results
     #########################################
@@ -107,18 +105,13 @@ def process(inps):
         # Run PySAR script:
         #    pysarApp.py $TE/template
         prs.run_pysar(inps, start_time)
-    logger_process_rsmas.log(loglevel.INFO, "processing_method")
+
+    logger_process_rsmas.log(loglevel.INFO, "Finished processing_method")
 
     # Run ingest insarmaps script and email results
     #    ingest_insarmaps.py $TE/template
-
     prs.run_ingest_insarmaps(inps)
-    logger_process_rsmas.log(loglevel.INFO, "ingest_insarmaps")
-
-    if inps.update:
-        # update stored_date.date
-        prs.overwrite_stored_date(inps.project_name)
-
+    logger_process_rsmas.log(loglevel.INFO, "Finished ingest_insarmaps")
 
     logger_process_rsmas.log(loglevel.INFO, 'End of process_rsmas')
 
@@ -138,6 +131,10 @@ if __name__ == "__main__":
         work_dir = get_work_directory(None, project_name)
 
         job = cb.submit_script(project_name, job_file_name, sys.argv[:], work_dir, wall_time)
+
+        # run_operations.py needs this print statement for now.
+        # This is not for debugging purposes.
+        # DO NOT REMOVE.
         print(job)
     else:
         process(inps)
