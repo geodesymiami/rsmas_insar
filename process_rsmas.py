@@ -137,6 +137,7 @@ if __name__ == "__main__":
         project_name = get_project_name(inps.custom_template_file)
         work_dir = get_work_directory(None, project_name)
 
-        cb.submit_script(project_name, job_file_name, sys.argv[:], work_dir, wall_time)
+        job = cb.submit_script(project_name, job_file_name, sys.argv[:], work_dir, wall_time)
+        print(job)
     else:
         process(inps)

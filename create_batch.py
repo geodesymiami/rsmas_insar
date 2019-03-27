@@ -280,7 +280,7 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime, email_notif
     command_line += " ".join(flag for flag in argv[1:] if flag != "--submit")
     write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
                           walltime=walltime, queue=os.getenv("QUEUENAME"))
-    submit_single_job("{0}.job".format(job_file_name), work_dir)
+    return submit_single_job("{0}.job".format(job_file_name), work_dir)
 
 
 if __name__ == "__main__":

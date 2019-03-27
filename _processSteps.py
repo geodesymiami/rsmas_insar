@@ -190,7 +190,7 @@ def create_process_rsmas_parser(EXAMPLE):
         dest='submit_flag',
         action='store_true',
         help='submits job')
-    parser.add_argument_group(
+    parser.add_argument(
         '--update',
         dest='update',
         action='store_true',
