@@ -159,14 +159,16 @@ def run_process_rsmas(inps, template_file, dataset):
 
     process_rsmas_options = ' '.join(process_rsmas_options)
 
-    process_rsmas_cmd = "process_rsmas.py {} {} --submit".format(template_file, process_rsmas_options)
+    process_rsmas_cmd = "process_rsmas.py {} {} --submit --update".format(template_file, process_rsmas_options)
 
-    process_rsmas = subprocess.check_output(process_rsmas_cmd, shell=True)
+    process_rsmas = subprocess.check_output(process_rsmas_cmd, shell=True).decode('utf-8')
+    
+    print(process_rsmas)
 
-    job_number = process_rsmas.split('\n')[0].split("<")[1].split('>')[0]
+    job_number = process_rsmas.split('\n')[0]
 
-    stdout_file = "{}/{}/process_rsmas_{}.o".format(os.getenv('SCRATHDIR'), dataset, job_number)
-    stderr_file = "{}/{}/process_rsmas_{}.e".format(os.getenv('SCRATHDIR'), dataset, job_number)
+    stdout_file = "{}/{}/process_rsmas_{}.o".format(os.getenv('SCRATCHDIR'), dataset, job_number)
+    stderr_file = "{}/{}/process_rsmas_{}.e".format(os.getenv('SCRATCHDIR'), dataset, job_number)
 
     logger_run_operations.log(loglevel.INFO, "Job Number: {}".format(job_number))
 
@@ -191,20 +193,18 @@ def overwrite_stored_date(dset, newest_date):
 
     new_line = "{}: {}\n".format(dset, newest_date.strftime(DATE_FORMAT))
 
-    date_file = open(STORED_DATE_FILE, 'a+')
-    date_file.seek(0)
-
-    lines = date_file.readlines()
-
+    lines = open(STORED_DATE_FILE, 'r').readlines()
+    
     for i, line in enumerate(lines):
         if dset in line:
             lines[i] = new_line
-            logger_run_operations.log()
-            date_file.close()
+            date_file = open(STORED_DATE_FILE, 'w')
+            date_file.writelines(lines)
             break
     else:
-        date_file.writelines([new_line])
-
+        date_file = open(STORED_DATE_FILE, 'a')
+        date_file.write(new_line)
+    
     date_file.close()
 
 
@@ -274,6 +274,7 @@ def run_operations(args):
         if os.path.isfile(output_files[i]):
             print("Job #{} of {} complete (output file {})".format(i + 1, len(output_files), output_files[i]))
             i += 1
+            
         else:
             print("Waiting for job #{} of {} (output file {}) after {} minutes".format(i + 1, len(output_files),
                                                                                        output_files[i],
