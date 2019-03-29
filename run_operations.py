@@ -18,7 +18,7 @@ STORED_DATE_FILE = OPERATIONS_DIRECTORY + "/stored_date.date"
 TEMPLATE_DIRECTORY = OPERATIONS_DIRECTORY + "/TEMPLATES"
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
 
-logger_file = "run_operations.log"
+logger_file = "{}/{}/run_operations.log".format(OPERATIONS_DIRECTORY, "LOGS")
 logger_run_operations = RsmasLogger(logger_file)
 
 def create_process_rsmas_parser():
@@ -163,30 +163,29 @@ def run_process_rsmas(inps, template_file, dataset):
 
     process_rsmas = subprocess.check_output(process_rsmas_cmd, shell=True).decode('utf-8')
     
-    print(process_rsmas)
-
     job_number = process_rsmas.split('\n')[0]
 
     stdout_file = "{}/{}/process_rsmas_{}.o".format(os.getenv('SCRATCHDIR'), dataset, job_number)
     stderr_file = "{}/{}/process_rsmas_{}.e".format(os.getenv('SCRATCHDIR'), dataset, job_number)
 
     logger_run_operations.log(loglevel.INFO, "Job Number: {}".format(job_number))
+    logger_run_operations.log(loglevel.INFO, "Output Files: {}, {}".format(stdout_file, stderr_file))
 
     return [stdout_file, stderr_file], job_number
 
-def copy_output_file(output_file, job_to_dset):
+def copy_output_file(output_file, dset):
 
-    job = os.path.splitext(output_file.split("z_processRsmas_")[1])[0]
-    dataset = job_to_dset[job]
-
+    job = os.path.splitext(output_file.split("process_rsmas_")[1])[0]
+    
     if os.path.exists(output_file) and os.path.isfile(output_file):
 
-        base = "{}/{}/{}/".format(os.getenv('OPERATIONS'), 'ERRORS', dataset)
+        base = "{}/{}/{}/".format(os.getenv('OPERATIONS'), 'ERRORS', dset)
 
         if not os.path.exists(base):
             os.makedirs(base)
 
-        destination = base + str(datetime.now().strftime("%m-%d-%Y")) + os.path.splitext(f)[1]
+        destination = base + str(datetime.now().strftime("%m-%d-%Y")) + os.path.splitext(output_file)[1]
+
         shutil.copy(output_file, destination)
 
 def overwrite_stored_date(dset, newest_date):
@@ -215,7 +214,8 @@ def run_operations(args):
     # Remove and reinitiate $OPERATIONS directory
     if inps.restart:
         shutil.rmtree(os.getenv('OPERATIONS'))
-        initiate_operations()
+    
+    initiate_operations()
 
     template_files = []
     # inps.sheet_id is an array of sheets.
@@ -272,11 +272,12 @@ def run_operations(args):
     total_wait_time_min = 0
     while i < len(output_files):
         if os.path.isfile(output_files[i]):
-            print("Job #{} of {} complete (output file {})".format(i + 1, len(output_files), output_files[i]))
+            logger_run_operations.log(loglevel.INFO, "Job #{} of {} complete (output file {})".format(i + 1, len(output_files), output_files[i]))
+            dset = job_to_dset[output_files[i].split("process_rsmas_")[1].split(".")[0]]
+            copy_output_file(output_files[i], dset)
             i += 1
-            
         else:
-            print("Waiting for job #{} of {} (output file {}) after {} minutes".format(i + 1, len(output_files),
+            logger_run_operations.log(loglevel.INFO, "Waiting for job #{} of {} (output file {}) after {} minutes".format(i + 1, len(output_files),
                                                                                        output_files[i],
                                                                                        total_wait_time_min))
             total_wait_time_min += wait_time_sec / 60
