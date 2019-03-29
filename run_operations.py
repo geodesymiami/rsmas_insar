@@ -18,7 +18,7 @@ STORED_DATE_FILE = OPERATIONS_DIRECTORY + "/stored_date.date"
 TEMPLATE_DIRECTORY = OPERATIONS_DIRECTORY + "/TEMPLATES"
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
 
-logger_file = "run_operations.log"
+logger_file = "{}/{}/run_operations.log".format(OPERATIONS_DIRECTORY, "LOGS")
 logger_run_operations = RsmasLogger(logger_file)
 
 def create_process_rsmas_parser():
