@@ -176,13 +176,11 @@ def run_process_rsmas(inps, template_file, dataset):
 
     return [stdout_file, stderr_file], job_number
 
-def copy_output_file(output_file, dset):
-
-    job = os.path.splitext(output_file.split("process_rsmas_")[1])[0]
+def copy_output_file(output_file, dataset):
     
     if os.path.exists(output_file) and os.path.isfile(output_file):
 
-        base = os.path.join(OPERATIONS_DIRECTORY, 'ERRORS', dset, '')
+        base = os.path.join(OPERATIONS_DIRECTORY, 'ERRORS', dataset, '')
 
         if not os.path.exists(base):
             os.makedirs(base)
@@ -277,7 +275,7 @@ def run_operations(args):
         if os.path.isfile(output_files[i]):
             logger_run_operations.log(loglevel.INFO, "Job #{} of {} complete (output file {})".format(i + 1, len(output_files), output_files[i]))
             dset = job_to_dset[output_files[i].split("process_rsmas_")[1].split(".")[0]]
-            copy_output_file(output_files[i], dset)
+            copy_output_file(output_file=output_files[i], dataset=dset)
             i += 1
         else:
             logger_run_operations.log(loglevel.INFO, "Waiting for job #{} of {} (output file {}) after {} minutes".format(i + 1, len(output_files),
