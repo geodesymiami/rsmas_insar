@@ -9,7 +9,7 @@ import time
 
 import generate_template_files
 from rsmas_logging import RsmasLogger, loglevel
-from dataset_template import Template
+import dataset_template
 import _process_utilities as putils
 
 OPERATIONS_DIRECTORY = os.getenv('OPERATIONS')
@@ -104,7 +104,7 @@ def get_datasets_to_process(template_files, dataset=None):
 
 def get_newest_data_date(template_file):
 
-    dset_template = Template(template_file)
+    dset_template = dataset_template.Template(template_file)
     ssaraopt_string = dset_template.generate_ssaraopt_string()
 
     ssaraopt_cmd = 'ssara_federated_query.py {} --print'.format(ssaraopt_string)
