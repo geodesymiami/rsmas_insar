@@ -112,9 +112,8 @@ def get_newest_data_date(template_file):
     ssara_output = subprocess.check_output(ssaraopt_cmd, shell=True)
 
     newest_data = ssara_output.decode('utf-8').split("\n")[-2]
-    date = datetime.strptime(newest_data.split(",")[3], DATE_FORMAT)
 
-    return date
+    return datetime.strptime(newest_data.split(",")[3], DATE_FORMAT)
 
 def get_last_downloaded_date(dset):
 
