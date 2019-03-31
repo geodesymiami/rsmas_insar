@@ -160,7 +160,7 @@ def run_process_rsmas(inps, template_file, dataset):
 
     process_rsmas_options = ' '.join(process_rsmas_options)
 
-    process_rsmas_cmd = "process_rsmas.py {} {} --submit --update".format(template_file, process_rsmas_options)
+    process_rsmas_cmd = "process_rsmas.py {} {} --submit".format(template_file, process_rsmas_options)
 
     process_rsmas = subprocess.check_output(process_rsmas_cmd, shell=True).decode('utf-8')
     
