@@ -11,18 +11,16 @@ import os
 import sys
 
 import argparse
-import time
 import shutil
 import subprocess
-from datetime import datetime
 import time
-from rsmas_logging import RsmasLogger, loglevel
+from rsmas_logging import loglevel
 import _process_utilities as putils
 from _process_utilities  import _remove_directories, clean_list
 from dataset_template import Template
 import messageRsmas
 
-logger  = putils.send_logger()
+logger = putils.send_logger()
 
 ####################################################################
 
