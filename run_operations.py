@@ -121,7 +121,7 @@ def get_newest_data_date(template_file):
 def get_last_downloaded_date(dset):
 
     dataset_line = None
-    with open(STORED_DATE_FILE) as date_file:
+    with open(STORED_DATE_FILE, 'r') as date_file:
         for line in date_file.readlines():
             if dset in line:
                 dataset_line = line
