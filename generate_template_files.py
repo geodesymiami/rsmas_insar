@@ -142,7 +142,7 @@ def generate_template_files(df, dataset):
 
         :param df: pandas.DataFrame, the DataFrame object representation of the CSV file
         :param dataset: str, The dataset name
-        :return: output_files, List(string), list of string representations of the template files
+        :return: output_files, Dict{string:string}, list of string representations of the template files
 
     """
 
@@ -160,6 +160,8 @@ def generate_template_files(df, dataset):
                 continue
             file_base = col_name
             output_files[file_base] = generate_template_file(names, subnames, list(df[col_name]), list(df['Comments']))
+
+    # return dictionary of dataset:template_file for every existing template file
     return {k:v for (k, v) in output_files.items() if v is not None}
 
 
@@ -180,25 +182,12 @@ def generate_and_save_template_files(df, output_location, dataset):
     
     for key, value in files_to_save.items():
         # Print contents for debugging purposes
-        if value is None:
-            continue
 
         filename = os.path.join(output_location, "{}.template".format(key))
         with open(filename, "w") as template_file:
             template_file.write(value)
 
     return files_to_save
-
-
-def generate_and_save_template_files_from_dataframe(df, output_location, dataset):
-    """ Generate and saves template files from a local dataframe object
-
-        :param df: pandas.DataFrame, DataFrame object representation of the CSV file
-        :param output_location: string, the location to write the output template files to
-        :param dataset: str, The dataset name
-
-    """
-    return generate_and_save_template_files(df, output_location, dataset)
 
 
 def main(args):
@@ -221,7 +210,7 @@ def main(args):
         output_location = inps.output
 
     df = get_spreadsheet_as_dataframe(csv_file, output_location)
-    files = generate_and_save_template_files_from_dataframe(df, output_location, inps.dataset)
+    files = generate_and_save_template_files(df, output_location, inps.dataset)
 
     logger.log(loglevel.INFO, "Finished generating template files")
 
