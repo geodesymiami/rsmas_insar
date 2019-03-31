@@ -13,8 +13,12 @@ import dataset_template
 import _process_utilities as putils
 
 OPERATIONS_DIRECTORY = os.getenv('OPERATIONS')
-STORED_DATE_FILE = OPERATIONS_DIRECTORY + "/stored_date.date"
+SCRATCH_DIRECTORY = os.getenv('SCRATCHDIR')
 TEMPLATE_DIRECTORY = OPERATIONS_DIRECTORY + "/TEMPLATES"
+LOGS_DIRECTORY = OPERATIONS_DIRECTORY + "/LOGS"
+ERRORS_DIRECTORY = OPERATIONS_DIRECTORY + "/ERRORS"
+STORED_DATE_FILE = OPERATIONS_DIRECTORY + "/stored_date.date"
+
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
 
 logger_file = "{}/{}/run_operations.log".format(OPERATIONS_DIRECTORY, "LOGS")
@@ -58,22 +62,21 @@ def command_line_parse(args):
 
 def initiate_operations():
 
-    operations_directory = os.getenv('OPERATIONS')
-    templates_directory = operations_directory + "/TEMPLATES/"
-    logs_directory = operations_directory + "/LOGS/"
-    errors_directory = operations_directory + "/ERRORS/"
+    if not os.path.isdir(OPERATIONS_DIRECTORY):
+        os.mkdir(OPERATIONS_DIRECTORY)
 
-    if not os.path.isdir(operations_directory):
-        os.mkdir(operations_directory)
-    if not os.path.isdir(templates_directory):
-        os.mkdir(templates_directory)
-    if not os.path.isdir(logs_directory):
-        os.mkdir(logs_directory)
-        open(logs_directory + '/generate_templates.log', 'a').close()  # create empty file
-    if not os.path.isdir(errors_directory):
-        os.mkdir(errors_directory)
-    if not os.path.exists(os.getenv('OPERATIONS') + '/stored_date.date'):
-        open(os.getenv('OPERATIONS') + '/stored_date.date', 'a').close()  # create empty file
+    if not os.path.isdir(TEMPLATE_DIRECTORY):
+        os.mkdir(TEMPLATE_DIRECTORY)
+
+    if not os.path.isdir(LOGS_DIRECTORY):
+        os.mkdir(LOGS_DIRECTORY)
+        open(LOGS_DIRECTORY + '/generate_templates.log', 'a').close()  # create empty file
+
+    if not os.path.isdir(ERRORS_DIRECTORY):
+        os.mkdir(ERRORS_DIRECTORY)
+
+    if not os.path.exists(OPERATIONS_DIRECTORY + '/stored_date.date'):
+        open(OPERATIONS_DIRECTORY + '/stored_date.date', 'a').close()  # create empty file
 
 def generate_templates_with_options(csv, dataset, sheet):
 
@@ -163,8 +166,8 @@ def run_process_rsmas(inps, template_file, dataset):
     
     job_number = process_rsmas.split('\n')[0]
 
-    stdout_file = "{}/{}/process_rsmas_{}.o".format(os.getenv('SCRATCHDIR'), dataset, job_number)
-    stderr_file = "{}/{}/process_rsmas_{}.e".format(os.getenv('SCRATCHDIR'), dataset, job_number)
+    stdout_file = "{}/{}/process_rsmas_{}.o".format(SCRATCH_DIRECTORY, dataset, job_number)
+    stderr_file = "{}/{}/process_rsmas_{}.e".format(SCRATCH_DIRECTORY, dataset, job_number)
 
     logger_run_operations.log(loglevel.INFO, "Job Number: {}".format(job_number))
     logger_run_operations.log(loglevel.INFO, "Output Files: {}, {}".format(stdout_file, stderr_file))
@@ -177,7 +180,7 @@ def copy_output_file(output_file, dset):
     
     if os.path.exists(output_file) and os.path.isfile(output_file):
 
-        base = "{}/{}/{}/".format(os.getenv('OPERATIONS'), 'ERRORS', dset)
+        base = "{}/{}/{}/".format(OPERATIONS_DIRECTORY, 'ERRORS', dset)
 
         if not os.path.exists(base):
             os.makedirs(base)
@@ -211,7 +214,7 @@ def run_operations(args):
 
     # Remove and reinitiate $OPERATIONS directory
     if inps.restart:
-        shutil.rmtree(os.getenv('OPERATIONS'))
+        shutil.rmtree(OPERATIONS_DIRECTORY)
     
     initiate_operations()
 
