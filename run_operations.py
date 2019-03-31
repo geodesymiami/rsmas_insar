@@ -24,7 +24,7 @@ DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
 logger_file = "{}/{}/run_operations.log".format(OPERATIONS_DIRECTORY, "LOGS")
 logger_run_operations = RsmasLogger(logger_file)
 
-def create_process_rsmas_parser():
+def create_run_operations_parser():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                      description="""Submits processing jobs for each datasest template present in the 
                                      $OPERATIONS/TEMPLATES/ directory.  \nPlace run_operations_LSF.job file into 
@@ -54,7 +54,7 @@ def create_process_rsmas_parser():
 
 def command_line_parse(args):
 
-    parser = create_process_rsmas_parser()
+    parser = create_run_operations_parser()
     inps = parser.parse_args(args)
 
     return inps
