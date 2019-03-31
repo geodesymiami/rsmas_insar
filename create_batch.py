@@ -270,6 +270,7 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime, email_notif
     :param work_dir: Work directory in which to write job, output, and error files.
     :param walltime: Input parameter of walltime for the job.
     :param email_notif: If email notifications should be on or not. Defaults to true.
+    :return job number of the script that was submitted
     """
     if not os.path.isdir(work_dir):
         if os.path.isfile(work_dir):
