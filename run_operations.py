@@ -166,8 +166,10 @@ def run_process_rsmas(inps, template_file, dataset):
     
     job_number = process_rsmas.split('\n')[0]
 
-    stdout_file = "{}/{}/process_rsmas_{}.o".format(SCRATCH_DIRECTORY, dataset, job_number)
-    stderr_file = "{}/{}/process_rsmas_{}.e".format(SCRATCH_DIRECTORY, dataset, job_number)
+    file_base = os.path.join(SCRATCH_DIRECTORY, dataset)
+
+    stdout_file = os.path.join(file_base, "/process_rsmas_{}.o".format(job_number))
+    stderr_file = os.path.join(file_base, "/process_rsmas_{}.e".format(job_number))
 
     logger_run_operations.log(loglevel.INFO, "Job Number: {}".format(job_number))
     logger_run_operations.log(loglevel.INFO, "Output Files: {}, {}".format(stdout_file, stderr_file))
@@ -180,7 +182,7 @@ def copy_output_file(output_file, dset):
     
     if os.path.exists(output_file) and os.path.isfile(output_file):
 
-        base = "{}/{}/{}/".format(OPERATIONS_DIRECTORY, 'ERRORS', dset)
+        base = os.path.join(OPERATIONS_DIRECTORY, 'ERRORS', dset, '')
 
         if not os.path.exists(base):
             os.makedirs(base)
