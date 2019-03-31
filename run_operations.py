@@ -7,7 +7,7 @@ from datetime import datetime
 import shutil
 import time
 
-import generate_template_files as gt
+import generate_template_files
 from rsmas_logging import RsmasLogger, loglevel
 from dataset_template import Template
 import _process_utilities as putils
@@ -88,7 +88,7 @@ def generate_templates_with_options(csv, dataset, sheet):
         template_options.append('--sheet_id')
         template_options.append(sheet)
 
-    template_files = gt.main(template_options)
+    template_files = generate_template_files.main(template_options)
 
     return template_files
 
