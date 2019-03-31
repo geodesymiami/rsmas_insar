@@ -190,12 +190,6 @@ def create_process_rsmas_parser(EXAMPLE):
         dest='submit_flag',
         action='store_true',
         help='submits job')
-    parser.add_argument(
-        '--update',
-        dest='update',
-        action='store_true',
-        help='update stored_date file and move output files'
-    )
 
     return parser
 
@@ -481,3 +475,4 @@ def run_ingest_insarmaps(inps):
 
     if inps.stopinsarmaps:
         logger.log(loglevel.DEBUG, 'Exit as planned after insarmaps')
+

@@ -113,6 +113,8 @@ def process(inps):
     prs.run_ingest_insarmaps(inps)
     logger_process_rsmas.log(loglevel.INFO, "Finished ingest_insarmaps")
 
+    logger_process_rsmas.log(loglevel.INFO, "ingest_insarmaps")
+
     logger_process_rsmas.log(loglevel.INFO, 'End of process_rsmas')
 
 
