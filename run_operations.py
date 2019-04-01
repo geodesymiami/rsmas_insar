@@ -184,7 +184,9 @@ def copy_output_file(output_file, dataset):
         if not os.path.exists(base):
             os.makedirs(base)
 
-        destination = base + str(datetime.now().strftime("%m-%d-%Y")) + os.path.splitext(output_file)[1]
+        output_file_name = str(datetime.now().strftime("%m-%d-%Y")) + os.path.splitext(output_file)[1]
+
+        destination = os.path.join(base, output_file_name)
 
         shutil.copy(output_file, destination)
 
