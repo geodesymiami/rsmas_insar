@@ -218,7 +218,8 @@ def run_operations(args):
     initiate_operations()
 
     template_files = []
-    # inps.sheet_id is an array of sheets.
+
+    # inps.sheet_ids is an array of sheets.
     # Each use of the --sheet_id command line parameter adds another array to the inps.sheet_id variable.
     for sheet in inps.sheet_ids:
         template_files += generate_templates_with_options(inps.template_csv, inps.dataset, sheet[0])
