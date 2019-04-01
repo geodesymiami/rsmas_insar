@@ -15,8 +15,6 @@ import messageRsmas
 from _process_utilities import send_logger
 from rsmas_logging import loglevel
 
-logger_create_batch = send_logger()
-
 def create_argument_parser():
     """
     Creates an argument parser for parsing parameters for batch job submission.
