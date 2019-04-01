@@ -70,13 +70,12 @@ def initiate_operations():
 
     if not os.path.isdir(LOGS_DIRECTORY):
         os.mkdir(LOGS_DIRECTORY)
-        open(LOGS_DIRECTORY + '/generate_templates.log', 'a').close()  # create empty file
 
     if not os.path.isdir(ERRORS_DIRECTORY):
         os.mkdir(ERRORS_DIRECTORY)
 
-    if not os.path.exists(OPERATIONS_DIRECTORY + '/stored_date.date'):
-        open(OPERATIONS_DIRECTORY + '/stored_date.date', 'a').close()  # create empty file
+    if not os.path.exists(STORED_DATE_FILE):
+        open(STORED_DATE_FILE, 'a').close()  # create empty file
 
 def generate_templates_with_options(csv, dataset, sheet):
 
