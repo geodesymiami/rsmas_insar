@@ -89,7 +89,7 @@ def initiate_operations():
 
 def generate_templates_with_options(csv, dataset, sheet):
     """
-    Uses generate_template_files to generate all active template files based on the provided Google Sheet
+    Generates all active template files based on the provided Google Sheet
     :param csv: a local CSV file that can be used in lieu of a Google Sheet
     :param dataset: an individual dataset to generate a template file for
     :param sheet: the URL id of the Google Sheet containing template info
@@ -127,7 +127,7 @@ def get_datasets_to_process(template_files, dataset=None):
 
 def get_newest_data_date(template_file):
     """
-    Uses `ssara_federated_query.py --print` to obtain the most recent image date for a dataset
+    Obtains the most recent image date for a dataset
     :param template_file: the template file corresponding to the dataset being obtained
     :return: the newest image date in "YYYY-MM-DD T H:M:S.00000" format
     """
