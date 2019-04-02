@@ -331,8 +331,14 @@ def run_operations(args):
     while i < len(output_files):
         if os.path.isfile(output_files[i]):
             logger_run_operations.log(loglevel.INFO, "Job #{} of {} complete (output file {})".format(i + 1, len(output_files), output_files[i]))
-            dset = job_to_dset[output_files[i].split("process_rsmas_")[1].split(".")[0]]
+
+            # Parses the job number from the file name ('process_rsmas_jobnumber.o')
+            # Looks up dataset associated with that job number in the dictionary
+            # Copies outputs file to appropriate location in $OPERATIONS
+            job_number = output_files[i].split("process_rsmas_")[1].split(".")[0]
+            dset = job_to_dset[job_number]
             copy_output_file(output_file=output_files[i], dataset=dset)
+
             i += 1
         else:
             logger_run_operations.log(loglevel.INFO, "Waiting for job #{} of {} (output file {}) after {} minutes".format(i + 1, len(output_files),
