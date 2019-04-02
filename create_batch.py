@@ -12,8 +12,6 @@ import subprocess
 import argparse
 import time
 import messageRsmas
-from _process_utilities import send_logger
-from rsmas_logging import loglevel
 
 def create_argument_parser():
     """
