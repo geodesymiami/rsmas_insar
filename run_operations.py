@@ -204,8 +204,8 @@ def run_process_rsmas(inps, template_file, dataset):
 
     file_base = os.path.join(SCRATCH_DIRECTORY, dataset)
 
-    stdout_file = os.path.join(file_base, "/process_rsmas_{}.o".format(job_number))
-    stderr_file = os.path.join(file_base, "/process_rsmas_{}.e".format(job_number))
+    stdout_file = os.path.join(file_base, "process_rsmas_{}.o".format(job_number))
+    stderr_file = os.path.join(file_base, "process_rsmas_{}.e".format(job_number))
 
     logger_run_operations.log(loglevel.INFO, "Job Number: {}".format(job_number))
     logger_run_operations.log(loglevel.INFO, "Output Files: {}, {}".format(stdout_file, stderr_file))
