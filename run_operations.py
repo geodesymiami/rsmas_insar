@@ -136,6 +136,8 @@ def get_newest_data_date(template_file):
 
     ssaraopt_cmd = 'ssara_federated_query.py {} --print'.format(ssaraopt_string)
 
+    # Yield list of images in following format:
+    # ASF,Sentinel-1A,15775,2017-03-20T11:49:56.000000,2017-03-20T11:50:25.000000,128,3592,3592,IW,NA,DESCENDING,R,VV+VH,https://datapool.asf.alaska.edu/SLC/SA/S1A_IW_SLC__1SDV_20170320T114956_20170320T115025_015775_019FA4_097A.zip
     ssara_output = subprocess.check_output(ssaraopt_cmd, shell=True)
 
     newest_data = ssara_output.decode('utf-8').split("\n")[-2]
@@ -306,7 +308,7 @@ def run_operations(args):
 
             #  Exit and don't overwrite date file if process_rsmas.py throws and error
             try:
-                # Submit processing job and running processing routine vis process_rsmas.py
+                # Submit processing job and running processing routine via process_rsmas.py
                 outputs, job = run_process_rsmas(inps, template_file, dset)
 
                 # Overwrite the most recent date of data download in the date file
