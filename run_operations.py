@@ -112,7 +112,7 @@ def generate_templates_with_options(csv, dataset, sheet):
 
 def get_datasets_to_process(template_files, dataset=None):
     """
-    Converts the template files being used in dataset/project names
+    Extracts project names from the list of tenplate files
     :param template_files: the list of template files to parse the dataset name from
     :param dataset: a single dataset to return
     :return: a list of dataset names
