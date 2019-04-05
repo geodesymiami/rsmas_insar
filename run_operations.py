@@ -39,7 +39,7 @@ def create_run_operations_parser():
     data_args.add_argument('-dataset', dest='dataset', metavar="DATASET", help='Particular dataset to run')
     data_args.add_argument('-templatecsv', dest='template_csv', metavar='FILE', help='local csv file containing template info.')
     data_args.add_argument('-singletemplate', dest='single_template', metavar='FILE', help='singular template file to run on')
-    data_args.add_argument('--sheet_ids', dest="sheet_id", metavar='SHEET ID', action='append', nargs=1, help='sheet id to use')
+    data_args.add_argument('--sheet_id', dest="sheet_ids", metavar='SHEET ID', action='append', nargs=1, help='sheet id to use')
     data_args.add_argument('--restart', dest='restart', action='store_true', help='remove $OPERATIONS directory before starting')
 
     process_args = parser.add_argument_group("Processing steps", "processing Steps")
