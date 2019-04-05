@@ -35,7 +35,7 @@ class Template:
         #if not self.os.path.isfile(template_file):       # FA 12/18: It should use custom_template_file as this is what will be updated
         #    self.shutil.copy2(custom_template_file, self.work_dir)
         shutil.copy2(custom_template_file, self.work_dir)
-        self.options = self.read_options(template_file)
+        self.options = self.read_options(custom_template_file)
         
   
     def read_options(self,template_file):
@@ -52,7 +52,7 @@ class Template:
                     # Splits each line on the ' = ' character string
                     # Note that the padding spaces are necessary in case of values having = in them
                     parts = line.split(" = ")
-                    print(parts)
+
                     # The key should be the first portion of the split (stripped to remove whitespace padding)
                     key = parts[0].rstrip()
                     

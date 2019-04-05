@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-
+#!/usr/bin/env python3 
 import os
 import sys
 import subprocess
@@ -7,388 +6,354 @@ import argparse
 from datetime import datetime
 import shutil
 import time
-import glob
 
-import subprocess
-################### directory initiation for Josh to review (and remove comment)
-##################
-
-import generate_template_files as gt
-
-import logging
-
-#################### LOGGERS AND LOGGING SETUP ####################
-
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-
-std_formatter = logging.Formatter("%(message)s")
-
-general = logging.FileHandler(os.getenv('OPERATIONS')+'/LOGS/run_operations.log', 'a+', encoding=None)
-general.setLevel(logging.INFO)
-general.setFormatter(std_formatter)
-logger.addHandler(general)
-
-console = logging.StreamHandler()
-console.setLevel(logging.DEBUG)
-console.setFormatter(std_formatter)
-logger.addHandler(console)
-
-info_handler = None
-error_handler = None
-
-#################### GLOBAL VARIABLES ####################
-
-dataset = 'GalapagosSenDT128VV'		                				        # Single Dataset for Testing
-
-user = subprocess.check_output(['whoami']).decode('utf-8').strip("\n")  			# Currently logged in user
-	
-stored_date = None			  							# previously stored date
-most_recent = None										# date parsed from SSARA
-inps = None;				       							# command line arguments
-
-job_to_dset = {}										# dictionary of jobs to datasets
-
-date_format = "%Y-%m-%dT%H:%M:%S.%f"								# date format for reading and writing dates
+import generate_template_files
+from rsmas_logging import RsmasLogger, loglevel
+import dataset_template
+import _process_utilities as putils
 
 
+############## DIRECTORY AND FILE CONSTANTS ##############
+OPERATIONS_DIRECTORY = os.getenv('OPERATIONS')
+SCRATCH_DIRECTORY = os.getenv('SCRATCHDIR')
+TEMPLATE_DIRECTORY = os.path.join(OPERATIONS_DIRECTORY, "TEMPLATES")
+LOGS_DIRECTORY = os.path.join(OPERATIONS_DIRECTORY, "LOGS")
+ERRORS_DIRECTORY = os.path.join(OPERATIONS_DIRECTORY, "ERRORS")
+STORED_DATE_FILE = os.path.join(OPERATIONS_DIRECTORY, "stored_date.date")
 
+DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
 
-"""
-    Initializes logging handlers for INFO level and ERROR level file logging. Needed so as to be able to continue logging
-    data to the appropiate dataset log after processSentinel completes.
-    Parameters: dset: str, the dataset to write log output for
-                mode: str, the logfile write mode (can be write or append)
-    Returns:    none
-"""
-def setup_logging_handlers(dset, mode):
-	global info_handler, error_handler
-	
-	# create a file handler for INFO level logging
-	info_log_file = os.getenv('OPERATIONS')+'/LOGS/'+dset+'_info.log'
-	info_handler = logging.FileHandler(info_log_file, mode, encoding=None)
-	info_formatter = logging.Formatter("%(levelname)s - %(message)s")
-	info_handler.setLevel(logging.INFO)
-	info_handler.setFormatter(info_formatter)
-	logger.addHandler(info_handler)
+logger_file = os.path.join(LOGS_DIRECTORY, "run_operations.log")
+logger_run_operations = RsmasLogger(logger_file)
 
-	# create a file handler for ERROR level logging
-	error_log_file = os.getenv('OPERATIONS')+'/LOGS/'+dset+'_error.log'
-	error_handler = logging.FileHandler(error_log_file, mode, encoding=None)
-	err_formatter = logging.Formatter("%(levelname)s - %(message)s")
-	error_handler.setLevel(logging.ERROR)
-	error_handler.setFormatter(err_formatter)
-	logger.addHandler(error_handler)
+def create_run_operations_parser():
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
+                                     description="""Submits processing jobs for each datasest template present in the 
+                                     $OPERATIONS/TEMPLATES/ directory.  \nPlace run_operations_LSF.job file into 
+                                     $OPERATIONS directory and submit with bsub < run_operations_LSF.job. \nIt runs 
+                                     run_operations.py once daily at 12:00 PM.""")
 
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
 
-###################### Command Line Argument Processing #################
+    data_args = parser.add_argument_group("Dataset and Template Files", "Dataset and Template Files")
+    data_args.add_argument('-dataset', dest='dataset', metavar="DATASET", help='Particular dataset to run')
+    data_args.add_argument('-templatecsv', dest='template_csv', metavar='FILE', help='local csv file containing template info.')
+    data_args.add_argument('-singletemplate', dest='single_template', metavar='FILE', help='singular template file to run on')
+    data_args.add_argument('--sheet_id', dest="sheet_ids", metavar='SHEET ID', action='append', nargs=1, help='sheet id to use')
+    data_args.add_argument('--restart', dest='restart', action='store_true', help='remove $OPERATIONS directory before starting')
 
-"""
-    Defines commandline argument parser and command line arguments to accept
-    Parameters: none
-    Returns:    parser: argument parser object
-"""
-def create_process_rsmas_parser():
-	parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description="Submits processing jobs\
- for each datasest template present in the $OPERATIONS/TEMPLATES/ directory.  \nPlace run_operations_LSF.job file\
- into $OPERATIONS directory and submit with bsub < run_operations_LSF.job. \nIt runs run_operations.py once daily at 12:00 PM.")
+    process_args = parser.add_argument_group("Processing steps", "processing Steps")
+    process_args.add_argument('--startssara', dest='startssara', action='store_true', help='process_rsmas.py --startssara')
+    process_args.add_argument('--stopssara', dest='stopssara', action='store_true', help='stop after downloading')
+    process_args.add_argument('--startprocess', dest='startprocess', action='store_true', help='process using sentinelstack package')
+    process_args.add_argument('--stopprocess', dest='stopprocess', action='store_true', help='stop after processing')
+    process_args.add_argument('--startpysar', dest='startpysar', action='store_true', help='run pysar')
+    process_args.add_argument('--stoppysarload', dest='stoppysarload', action='store_true', help='stop after loading into pysar')
+    process_args.add_argument('--stoppysar', dest='stoppysar', action='store_true', help='stop after pysar processing')
+    process_args.add_argument('--startinsarmaps', dest='startinsarmaps', action='store_true', help='ingest into insarmaps')
 
-	parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
-	parser.add_argument("--dataset", dest='dataset', metavar="DATASET", help='Particular dataset to run')
-	parser.add_argument('--templatecsv', dest='template_csv', metavar='FILE', help='local csv file containing template info.')
-	parser.add_argument('--singletemplate', dest='single_template', metavar='FILE', help='singular template file to run on')
-	parser.add_argument('--startssara', dest='startssara', action='store_true', help='process_rsmas.py --startssara')
-	parser.add_argument('--stopssara', dest='stopssara', action='store_true', help='stop after downloading')
-	parser.add_argument('--startprocess', dest='startprocess', action='store_true', help='process using sentinelstack package')
-	parser.add_argument('--stopprocess', dest='stopprocess', action='store_true', help='stop after processing')
-	parser.add_argument('--startpysar', dest='startpysar', action='store_true', help='run pysar')
-	parser.add_argument('--stoppysarload', dest='stoppysarload', action='store_true', help='stop after loading into pysar')
-	parser.add_argument('--stoppysar', dest='stoppysar', action='store_true', help='stop after pysar processing')
-	parser.add_argument('--startinsarmaps', dest='startinsarmaps', action='store_true', help='ingest into insarmaps')
-	parser.add_argument('--restart', dest='restart', action='store_true', help='remove $OPERATIONS directory before starting')
-	parser.add_argument("--testsheet", dest="test_sheet", action='store_true', help='whether or not to use the test sheet')
+    return parser
 
-	return parser
-
-"""
-    Parses command line arguments into inps object as object parameters
-    Parameters: args: [str], array of command line arguments
-    Returns:    none
-"""	
 def command_line_parse(args):
-	global inps;
 
-	parser = create_process_rsmas_parser()
-	inps = parser.parse_args(args)
-	
-	logger.info("\tCOMMAND LINE VARIABLES:")
-	logger.info("\t\t--dataset     	    : %s\n", inps.dataset)
-	logger.info("\t\t--templatecsv      : %s\n", inps.template_csv)
-	logger.info("\t\t--singletemplate   : %s\n", inps.single_template)
-	logger.info("\t\t--startssara       : %s\n", inps.startssara)
-	logger.info("\t\t--stopssara        : %s\n", inps.stopssara)
-	logger.info("\t\t--startprocess     : %s\n", inps.startprocess)
-	logger.info("\t\t--stopprocess      : %s\n", inps.stopprocess)
-	logger.info("\t\t--startpysar       : %s\n", inps.startpysar)
-	logger.info("\t\t--stoppysarload    : %s\n", inps.stoppysarload)
-	logger.info("\t\t--stoppysar        : %s\n", inps.stoppysar)
-	logger.info("\t\t--startinsarmaps   : %s\n", inps.startinsarmaps)
-	logger.info("\t\t--testsheet	    : %s\n", inps.test_sheet)
-	
-###################### Auxiliary Functions #####################
+    parser = create_run_operations_parser()
+    inps = parser.parse_args(args)
 
-"""
-    Reads the most recently stored date for the given dataset from the stored_date.date file, and parses the newest data date from ssara_federated_query.
-    Parameters: ssara_output: str, string output from ssara_federated_query.py ... --print
-    Returns:    none
-"""
-def set_dates(ssara_output):
-	global stored_date, most_recent
-	
-	most_recent_data = ssara_output.split("\n")[-2]
-	most_recent = datetime.strptime(most_recent_data.split(",")[3], date_format)
+    return inps
 
-	# Write Most Recent Date to File
-	with open(os.getenv('OPERATIONS')+'/stored_date.date', 'rb') as stored_date_file:
-	
-		try:
-			date_line = subprocess.check_output(['grep', dataset, os.getenv('OPERATIONS')+'/stored_date.date']).decode('utf-8')
-			stored_date = datetime.strptime(date_line.split(": ")[1].strip('\n'), date_format)
-		except subprocess.CalledProcessError as e:
-			
-			stored_date = datetime.strptime("1970-01-01T12:00:00.000000", date_format)
-			
-			with open(os.getenv('OPERATIONS')+'/stored_date.date', 'a+') as date_file:
-				data = str(dataset + ": "+str(datetime.strftime(most_recent, date_format))+"\n")
-				date_file.write(data)
 
-"""
-    Compares the most recent and stored dates 
-    Parameters: none
-    Returns:    boolean, whether the most recent data is more recent than the stored date
-"""
-def compare_dates():
-	global stored_date, most_recent
-	
-	return most_recent > stored_date
-	
-"""
-    Overwrites the date stored in the stored_date.date file for the given dataset
-    Parameters: none
-    Returns:    none
-"""
-def overwrite_stored_date():
-	global user, most_recent
-	
-	data = []
-	with open(os.getenv('OPERATIONS')+'/stored_date.date', 'r') as date_file:
-		data = date_file.readlines();
-	
-	for i, line in enumerate(data):
-		if dataset in line:
-			data[i] = str(dataset + ": "+str(datetime.strftime(most_recent, date_format))+"\n")
-	
-	with open(os.getenv('OPERATIONS')+'/stored_date.date', 'w') as date_file:
-		date_file.writelines(data)
+def initiate_operations():
+    """
+        Creates necessary directories if they do not already exist on the file system.
+        Files and directories created:
+            OPERATIONS/
+                TEMPLATES/
+                LOGS/
+                ERRORS/
+                stored_date.date
+    """
+    if not os.path.isdir(OPERATIONS_DIRECTORY):
+        os.mkdir(OPERATIONS_DIRECTORY)
 
-"""
-    Submits a  processSentinel.py job with the associated options as defined by the provided command line arguments
-    Parameters: none
-    Returns:    [files], [str] an array of file paths to the processSentinel output and error files
-"""
-def run_process_rsmas():
-	global user, dataset
-	
-	psen_extra_options = []
-	
-	if inps.startssara:
-		psen_extra_options.append('--startssara')
-	if inps.stopssara:
-		psen_extra_options.append('--stopssara')
-	if inps.startprocess:
-		psen_extra_options.append('--startprocess') 
-	if inps.stopprocess:
-		psen_extra_options.append('--stopprocess') 
-	if inps.startpysar:
-		psen_extra_options.append('--startpysar')
-	if inps.stoppysarload:
-		psen_extra_options.append('--stoppysarload')
-	if inps.stoppysar:
-		psen_extra_options.append('--stoppysar')
-	if inps.startinsarmaps:
-		psen_extra_options.append('--startinsarmaps')
-		
-	if len(psen_extra_options) == 0:
-		psen_extra_options.append('--insarmaps')
-		
-	psen_options = ['process_rsmas.py', os.getenv('OPERATIONS')+'/TEMPLATES/'+dataset+'.template'] + psen_extra_options + ['--submit']
-	
-	psen_output = subprocess.check_output(psen_options).decode('utf-8')
-	
-	job_number = psen_output.split('\n')[0].split("<")[1].split('>')[0]
-	logger.info("JOB NUMBER: %s", job_number)
-	
-	job_to_dset[job_number] = dataset
-	
-	stdout_file_path = os.getenv('SCRATCHDIR')+'/'+dataset+'/z_processSentinel_'+job_number+'.o'
-	stderr_file_path = os.getenv('SCRATCHDIR')+'/'+dataset+'/z_processSentinel_'+job_number+'.e'
-	
-	return [stdout_file_path, stderr_file_path]
+    if not os.path.isdir(TEMPLATE_DIRECTORY):
+        os.mkdir(TEMPLATE_DIRECTORY)
 
-"""
-    Copies the output and error files from processSentinel to the $OPERATIONS/ERRORS directory
-    Parameters: files_to_move: [str], arrays of files to move to the ERRORS directory
-    Returns:    none
-"""
-def post_processing(files_to_move):
-	global output_file, most_recent
-	
-	job = files_to_move[0].split('/z_processSentinel_')[1].strip(".o")
-	
-	setup_logging_handlers(job_to_dset[job], "a+")
-	
-	for file in files_to_move:
-		if os.path.exists(file) and os.path.isfile(file):
+    if not os.path.isdir(LOGS_DIRECTORY):
+        os.mkdir(LOGS_DIRECTORY)
 
-			base = os.getenv('OPERATIONS') + '/ERRORS/'+dataset+'/'
+    if not os.path.isdir(ERRORS_DIRECTORY):
+        os.mkdir(ERRORS_DIRECTORY)
 
-			if not os.path.exists(base):
-				os.makedirs(base)
+    if not os.path.exists(STORED_DATE_FILE):
+        open(STORED_DATE_FILE, 'a').close()  # create empty file
 
-			dest = base + str(most_recent)[0:10]
-			if file[-1] is 'o':
-				dest += '.o'
-			elif file[-1] is 'e':
-				dest += '.e'
+def generate_templates_with_options(csv, dataset, sheet):
+    """
+    Generates all active template files based on the provided Google Sheet
+    :param csv: a local CSV file that can be used in lieu of a Google Sheet
+    :param dataset: an individual dataset to generate a template file for
+    :param sheet: the URL id of the Google Sheet containing template info
+    :return: a list of template files generated
+    """
+    template_options = []
+    if csv:
+        template_options.append('--csv')
+        template_options.append(csv)
+    if dataset:
+        template_options.append('--dataset')
+        template_options.append(dataset)
+    if sheet:
+        template_options.append('--sheet_id')
+        template_options.append(sheet)
 
-			shutil.copy(file, dest)
-			
-		else:
-			raise IOError
-			
-	logger.removeHandler(info_handler)
-	logger.removeHandler(error_handler)
+    template_files = generate_template_files.main(template_options)
 
-def copy_error_files_to_logs(project_dir, destination_dir):
-	"""Copy out*.e files into LOGS/project_2017-03-20_out directory."""
-	error_files=glob.glob('out*.e')
-	if not os.path.isdir(destination_dir):
-		os.makedirs(destination_dir)
-	for file in error_files:
-		shutil.copy(file, destination_dir)
+    return template_files
 
-def check_for_operations_directories_and_initiate():
+def get_datasets_to_process(template_files, dataset=None):
+    """
+    Extracts project names from the list of tenplate files
+    :param template_files: the list of template files to parse the dataset name from
+    :param dataset: a single dataset to return
+    :return: a list of dataset names
+    """
+    # Obtains list of datasets to run processSentinel on
+    if dataset:
+        datasets = [dataset]
+    else:
+        datasets = [putils.get_project_name(template) for template in template_files]
 
-	""" initiate directories for run_operations.py """
-	operations_directory = os.getenv('OPERATIONS')
-	os.makedirs(operations_directory, exist_ok=True)
-	os.makedirs(operations_directory + "/TEMPLATES/", exist_ok=True)
-	os.makedirs(operations_directory + "/ERRORS/", exist_ok=True)
-	open(os.getenv('OPERATIONS') + '/stored_date.date', 'a').close()  # create empty file
+    return datasets
 
-	os.makedirs(operations_directory + "/LOGS/", exist_ok=True)
-	open(operations_directory + "/LOGS/" + '/generate_templates.log', 'a').close()  # create empty file
-           
+def get_newest_data_date(template_file):
+    """
+    Obtains the most recent image date for a dataset
+    :param template_file: the template file corresponding to the dataset being obtained
+    :return: the newest image date in "YYYY-MM-DD T H:M:S.00000" format
+    """
+    dset_template = dataset_template.Template(template_file)
+    ssaraopt_string = dset_template.generate_ssaraopt_string()
+
+    ssaraopt_cmd = 'ssara_federated_query.py {} --print'.format(ssaraopt_string)
+
+    # Yield list of images in following format:
+    # ASF,Sentinel-1A,15775,2017-03-20T11:49:56.000000,2017-03-20T11:50:25.000000,128,3592,3592,IW,NA,DESCENDING,R,VV+VH,https://datapool.asf.alaska.edu/SLC/SA/S1A_IW_SLC__1SDV_20170320T114956_20170320T115025_015775_019FA4_097A.zip
+    ssara_output = subprocess.check_output(ssaraopt_cmd, shell=True)
+
+    newest_data = ssara_output.decode('utf-8').split("\n")[-2]
+
+    return datetime.strptime(newest_data.split(",")[3], DATE_FORMAT)
+
+def get_last_downloaded_date(dset):
+    """
+    Obtains the most recent date an image was downloaded for a given dataset by reading the stored_date.date file.
+    If this is the first time images were downloaded for a given dataset, the date 01-01-1970 is used.
+    :param dset: the dataset to get the most recent download date from
+    :return: the most recent download date in "YYYY-MM-DD T H:M:S.00000" format
+    """
+    dataset_line = None
+    with open(STORED_DATE_FILE, 'r') as date_file:
+        for line in date_file.readlines():
+            if dset in line:
+                dataset_line = line
+                break
+
+    if dataset_line is not None:
+        last_date = dataset_line.split(": ")[1].strip("\n")
+    else:
+        last_date = datetime.strftime(datetime(1970, 1, 1, 0, 0, 0), DATE_FORMAT)
+    
+    return datetime.strptime(last_date, DATE_FORMAT)
+
+def run_process_rsmas(inps, template_file, dataset):
+    """
+    Submits `process_rsmas.py` as a job for the given dataset/template_file
+    :param inps: the command line variable namespace (is modified in place)
+    :param template_file: the template file associated with the dataset being processed
+    :param dataset: the dataset being processed
+    :return: a list of the two output files to be generated by the `process_rsmas` call, and the job number of
+             the `process_rsmas` job submission.
+    """
+    process_rsmas_options = []
+
+    if inps.startssara:
+        process_rsmas_options.append('--startssara')
+    if inps.stopssara:
+        process_rsmas_options.append('--stopssara')
+    if inps.startprocess:
+        process_rsmas_options.append('--startprocess')
+    if inps.stopprocess:
+        process_rsmas_options.append('--stopprocess')
+    if inps.startpysar:
+        process_rsmas_options.append('--startpysar')
+    if inps.stoppysarload:
+        process_rsmas_options.append('--stoppysarload')
+    if inps.stoppysar:
+        process_rsmas_options.append('--stoppysar')
+    if inps.startinsarmaps:
+        process_rsmas_options.append('--startinsarmaps')
+
+    if len(process_rsmas_options) == 0:
+        process_rsmas_options.append('--insarmaps')
+
+    process_rsmas_options = ' '.join(process_rsmas_options)
+
+    process_rsmas_cmd = "process_rsmas.py {} {} --submit".format(template_file, process_rsmas_options)
+
+    process_rsmas = subprocess.check_output(process_rsmas_cmd, shell=True).decode('utf-8')
+    
+    job_number = process_rsmas.split('\n')[0]
+
+    file_base = os.path.join(SCRATCH_DIRECTORY, dataset)
+
+    stdout_file = os.path.join(file_base, "process_rsmas_{}.o".format(job_number))
+    stderr_file = os.path.join(file_base, "process_rsmas_{}.e".format(job_number))
+
+    logger_run_operations.log(loglevel.INFO, "Job Number: {}".format(job_number))
+    logger_run_operations.log(loglevel.INFO, "Output Files: {}, {}".format(stdout_file, stderr_file))
+
+    return [stdout_file, stderr_file], job_number
+
+def copy_output_file(output_file, dataset):
+    """
+    Copies the provided output_file to the $OPERATIONS/ERRORS directory for easy access
+    :param output_file: the output file to be copied (EXAMPLE: process_rsmas_00000001.o)
+    :param dataset: the dataset this file is associated with
+    """
+    if os.path.exists(output_file) and os.path.isfile(output_file):
+
+        base = os.path.join(OPERATIONS_DIRECTORY, 'ERRORS', dataset, '')
+
+        if not os.path.exists(base):
+            os.makedirs(base)
+
+        output_file_name = str(datetime.now().strftime("%m-%d-%Y")) + os.path.splitext(output_file)[1]
+
+        destination = os.path.join(base, output_file_name)
+
+        shutil.copy(output_file, destination)
+
+def overwrite_stored_date(dset, newest_date):
+    """
+    Overwrites the stored_date.date file entry for the provided dataset with the provided date
+    :param dset: the dataset to be overriden
+    :param newest_date: the new date to override with
+    """
+    new_line = "{}: {}\n".format(dset, newest_date.strftime(DATE_FORMAT))
+
+    lines = open(STORED_DATE_FILE, 'r').readlines()
+    
+    for i, line in enumerate(lines):
+        if dset in line:
+            lines[i] = new_line
+            date_file = open(STORED_DATE_FILE, 'w')
+            date_file.writelines(lines)
+            break
+    else:
+        date_file = open(STORED_DATE_FILE, 'a')
+        date_file.write(new_line)
+    
+    date_file.close()
+
+
+def run_operations(args):
+    """
+    Runs the entire data processing routing from start to finish. Steps as follows:
+        1. Generates the template files for all of the datasets in the provivded CSV or Google Sheet file
+        2. Gets the dataset names for each template files
+        for each dataset:
+            3. Gets the newest available image date from `ssara_federated_query.py`
+            4. Gets the last image date downloaded from the `stored_date.date` file
+            5. Runs `process_rsmas.py` if their is new data available
+        6. Waits for all of the output files from submitted `process_rsmas` calls to exist
+    :param args: command line arguments to use
+    """
+    inps = command_line_parse(args)
+
+    # Remove and reinitiate $OPERATIONS directory
+    if inps.restart:
+        shutil.rmtree(OPERATIONS_DIRECTORY)
+    
+    initiate_operations()
+
+    template_files = []
+
+    # inps.sheet_ids is an array of sheets.
+    # Each use of the --sheet_id command line parameter adds another array to the inps.sheet_id variable.
+    for sheet in inps.sheet_ids:
+        template_files += generate_templates_with_options(inps.template_csv, inps.dataset, sheet[0])
+
+    datasets = get_datasets_to_process(template_files, inps.dataset)
+
+    logger_run_operations.log(loglevel.INFO, "Datasets to Process: {}".format(datasets))
+
+    output_files = []
+    job_to_dset = {}
+
+    for dset in datasets:
+
+        template_file = "{}/{}.template".format(TEMPLATE_DIRECTORY, dset)
+
+        logger_run_operations.log(loglevel.INFO, "{}: {}".format(dset, template_file))
+
+        newest_date = get_newest_data_date(template_file)
+        last_date = get_last_downloaded_date(dset)
+
+        logger_run_operations.log(loglevel.INFO, "Newest Date: {}".format(newest_date))
+        logger_run_operations.log(loglevel.INFO, "Last Date: {}".format(last_date))
+
+        if newest_date > last_date:
+
+            logger_run_operations.log(loglevel.INFO, "Starting process_rsmas for {}".format(dset))
+
+            #  Exit and don't overwrite date file if process_rsmas.py throws and error
+            try:
+                # Submit processing job and running processing routine via process_rsmas.py
+                outputs, job = run_process_rsmas(inps, template_file, dset)
+
+                # Overwrite the most recent date of data download in the date file
+                overwrite_stored_date(dset, newest_date)
+
+                job_to_dset[job] = dset
+                output_files += outputs
+
+            except Exception as e:
+                logger_run_operations.log(loglevel.ERROR, "process_rsmas threw an error ({}) and exited.".format(e))
+
+        logger_run_operations.log(loglevel.INFO, "{} process_rsmas calls completed.".format(dset))
+
+    logger_run_operations.log(loglevel.INFO, "All process_rsmas calls complete. Waiting for output files to appear")
+
+    logger_run_operations.log(loglevel.INFO, "{} total output files".format(len(output_files)))
+
+    # check if output files exist
+    i = 0
+    wait_time_sec = 60
+    total_wait_time_min = 0
+    while i < len(output_files):
+        if os.path.isfile(output_files[i]):
+            logger_run_operations.log(loglevel.INFO, "Job #{} of {} complete (output file {})".format(i + 1, len(output_files), output_files[i]))
+
+            # Parses the job number from the file name ('process_rsmas_jobnumber.o')
+            # Looks up dataset associated with that job number in the dictionary
+            # Copies outputs file to appropriate location in $OPERATIONS
+            job_number = output_files[i].split("process_rsmas_")[1].split(".")[0]
+            dset = job_to_dset[job_number]
+            copy_output_file(output_file=output_files[i], dataset=dset)
+
+            i += 1
+        else:
+            logger_run_operations.log(loglevel.INFO, "Waiting for job #{} of {} (output file {}) after {} minutes".format(i + 1, len(output_files),
+                                                                                       output_files[i],
+                                                                                       total_wait_time_min))
+            total_wait_time_min += wait_time_sec / 60
+            time.sleep(wait_time_sec)
+
+    logger_run_operations.log(loglevel.INFO, "run_operations.py completed.")
+    logger_run_operations.log(loglevel.INFO, "------------------------------")
+
+
 
 if __name__ == "__main__":
 
-
-	check_for_operations_directories_and_initiate()
-
-	logger.info("RUN_OPERATIONS for %s:\n", datetime.fromtimestamp(time.time()).strftime(date_format))
-	
-	# Parse command line arguments
-	command_line_parse(sys.argv[1:])
-	
-	# delete OPERATIONS folder if --restart
-	if inps.restart:
-		shutil.rmtree(os.getenv('OPERATIONS'))
-		check_for_operations_directories_and_initiate()
-           
-	# Generate Template Files
-	template_options = []
-	if inps.template_csv:
-		template_options.append('--csv')
-		template_options.append(inps.template_csv)
-	if inps.dataset:
-		template_options.append('--dataset')
-		template_options.append(inps.dataset)
-	if inps.test_sheet:
-		template_options.append('--testsheet')
-	
-	gt.main(template_options);
-	
-	datasets = []
-	
-	templates_directory = os.getenv('OPERATIONS') + "/TEMPLATES/"
-	
-	# Obtains list of datasets to run processSentinel on
-	datasets = glob.glob(templates_directory+"*.template")
-	datasets = [d.split('.', 1)[0].split('/')[-1] for d in datasets]	
-	if inps.dataset:
-		datasets = [d for d in datasets if d == inps.dataset]
-
-	all_output_files = []
-	
-	logger.info("\tDATASETS: \n "+str(datasets))
-	
-	# Perform the processing routine for each dataset
-	for dset in datasets:
-		
-		dataset = dset;
-		
-		setup_logging_handlers(dataset, "a")
-		
-		template_file = templates_directory+'/'+dataset+'.template'
-
-		dataset_template = Template(template_file)
-
-		# Generate SSARA Options to Use
-		ssaraopt = dataset_template.generate_ssaraopt_string()
-		ssaraopt = 'ssara_federated_query.py ' + ssaraopt + ' --print'
-		ssaraopt=ssaraopt.split(' ')
-		
-		# Run SSARA and check output	
-		ssara_output = subprocess.check_output(ssaraopt).decode('utf-8');   #note to Josh: for easier debugging lets call using a string instead of a list
-		
-		# Sets date variables for stored and most recent dates
-		set_dates(ssara_output)
-
-		psen_time = datetime.fromtimestamp(time.time()).strftime(date_format)
-
-		if compare_dates():
-
-			# Write that stored date was overwritten
-			overwrite_stored_date()
-			
-			# Submit job via process_rsmas and store output
-			logger.info("%s: STARTING PROCESS SENTINEL JOB AT: %s (newest date: %s)\n", dataset, psen_time, most_recent)
-			files_to_move = run_process_rsmas()
-			
-			all_output_files += files_to_move;
-			
-		else:
-			logger.info("%s: NO NEW DATA on %s (most recent: %s)\n", dataset, psen_time, stored_date)
-
-		logger.removeHandler(info_handler)
-		logger.removeHandler(error_handler)
-		
-		# Perform post processing on all of the output and error files produced by processSentinel
-		while len(all_output_files) != 0:
-			for i, file in enumerate(all_output_files):
-				if os.path.exists(file) and os.path.isfile(file):
-					files_to_move = [all_output_files[i], all_output_files[i+1]]
-					post_processing(files_to_move)
-				
-					all_output_files[:] = [f for fi in files_to_move if fi not in file and fi not in all_output_files[i+1]]
-				
-			time.sleep(60)
-			
-		log_dir = os.getenv('OPERATIONS')+'/LOGS/'+dset+'_'+str(most_recent)[0:10]+'_out'
-		work_dir = os.getenv('SCRATCHDIR') + '/' + dset
-		copy_error_files_to_logs( project_dir=work_dir, destination_dir=log_dir)
-
-		logger.info("\tCOMPLETED AT: %s", datetime.fromtimestamp(time.time()).strftime(date_format))
-		logger.info("----------------------------------\n")	
-	
-	sys.exit()
+    run_operations(sys.argv[1:])

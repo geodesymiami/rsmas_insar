@@ -13,7 +13,6 @@ import argparse
 import time
 import messageRsmas
 
-
 def create_argument_parser():
     """
     Creates an argument parser for parsing parameters for batch job submission.
@@ -267,12 +266,18 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime, email_notif
     :param work_dir: Work directory in which to write job, output, and error files.
     :param walltime: Input parameter of walltime for the job.
     :param email_notif: If email notifications should be on or not. Defaults to true.
+    :return job number of the script that was submitted
     """
+    if not os.path.isdir(work_dir):
+        if os.path.isfile(work_dir):
+            os.remove(work_dir)
+        os.makedirs(work_dir)
+
     command_line = os.path.basename(argv[0]) + " "
     command_line += " ".join(flag for flag in argv[1:] if flag != "--submit")
     write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
                           walltime=walltime, queue=os.getenv("QUEUENAME"))
-    submit_single_job("{0}.job".format(job_file_name), work_dir)
+    return submit_single_job("{0}.job".format(job_file_name), work_dir)
 
 
 if __name__ == "__main__":
