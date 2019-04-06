@@ -13,7 +13,7 @@ from _process_utilities import get_project_name, send_logger
 from _process_utilities import remove_zero_size_or_length_error_files, concatenate_error_files 
 from _process_utilities import move_error_files_except_first, move_stdout_files
 from _processSteps import create_or_update_template
-
+from _process_utilities import remove_zero_size_or_length_error_files, raise_exception_if_job_exited
 
 logger_exec_run  = send_logger()
 
@@ -111,6 +111,9 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
         job_folder = cwd + '/' + item + '_out_jobs'
         print('jobfolder:',job_folder)
         
+        remove_zero_size_or_length_error_files(directory='run_files')
+        raise_exception_if_job_exited(directory='run_files')
+
         #if not os.path.isdir(job_folder):
         #    os.makedirs(job_folder)
         #mvlist = ['*.e ', '*.o ', '*.job ']

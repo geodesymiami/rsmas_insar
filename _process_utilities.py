@@ -463,6 +463,20 @@ def move_error_files_except_first(directory):
 
 ##########################################################################
 
+def raise_exception_if_job_exited(directory):
+    """Removes files with zero size or zero length (*.e files in run_files)."""
+    
+    files = glob.glob(directory + '/*.o')
+    search_string = 'Exited with exit code'
+
+    sort_nicely(files)
+    for file in files:
+        with open(file) as fr:
+            if search_string in fr.read(): 
+               raise Exception("ERROR: {0} exited,  contains: {1}".format(os.path.basename(file),search_string))
+
+##########################################################################
+
 def move_stdout_files(directory):
     """move the error file into stdout_files directory"""
     try:
