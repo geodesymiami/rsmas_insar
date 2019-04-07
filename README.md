@@ -51,9 +51,6 @@ mkdir -p $SENTINEL_AUX;
 echo DONE;
 ```
 
-
-```
-
 The rsmas_tools clone gives you the python scripts plus notebooks from other group members. Put all your code into these directories and occasionaly push to github so that they will be available to others. We also share all other input files through github:
 
 * The infiles is optional:
@@ -84,7 +81,7 @@ The orbits can be downloaded automatically using dloadOrbits.py which is include
 
 
 ### Next steps and possible problems
-* To check your installation, run the testdata as explained [here](https://github.com/geodesymiami/rsmas_isce/wiki/Testing-the-code). You need to have the testdata in your `$TESTDATA_ISCE` directory.
+* To check your installation, run the testdata as explained [here](https://github.com/geodesymiami/rsmas_insar/wiki/Testing-the-code). You need to have the testdata in your `$TESTDATA_ISCE` directory.
 
 ```
 ls  $TESTDATA_ISCE
