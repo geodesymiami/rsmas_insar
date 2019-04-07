@@ -15,7 +15,11 @@ cd ~/test/test1
 
 ```
 git clone https://github.com/geodesymiami/rsmas_isce.git ;
-cd rsmas_insar;
+cd rsmas_isce
+
+###temporary:
+git checkout move_to_one_folder
+###
 source default_isce22.bash;
 cd setup;
 ./install_miniconda3.csh;
