@@ -12,9 +12,9 @@ cd ~/test/test1
 
 * Install the code using the commands below (you need a reasonable recent git version (the default on pegasus is too old, get a [local version](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install_git.md), or use an old rsmas_insar version). Installation takes about 10 minutes.  For the contents of the accounts repository see [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/accounts_info.md) if you don't have access.
 
-Old version:
+
 ```
-git clone https://github.com/geodesymiami/rsmas_insar.git ;
+git clone https://github.com/geodesymiami/rsmas_isce.git ;
 cd rsmas_insar;
 source default_isce22.bash;
 cd setup;
@@ -28,7 +28,7 @@ git clone https://github.com/geodesymiami/accounts ;
 ./install_isce22.csh;
 
 cd ../sources ;
-git clone https://github.com/geodesymiami/rsmas_isce.git ; 
+ 
 git clone https://github.com/yunjunz/PySAR.git ;
 git clone https://github.com/falkamelung/geodmod.git ;
 cd ..;
@@ -47,39 +47,7 @@ mkdir -p $SENTINEL_AUX;
 echo DONE;
 ```
 
-New version, to use once Sara's restructuring is complete:
-```
-alias git='~/local_git/miniconda3/bin/git'
 
-git clone https://github.com/geodesymiami/rsmas_insar.git ;
-cd rsmas_insar;
-source default_isce22.bash;
-cd setup;
-./install_miniconda3.csh;
-hash -r;
-git clone https://github.com/geodesymiami/accounts ;
-./download_ssara_tippecanoe_3rdparty.sh;
-./install_credential_files.csh;
-./download_isce.py
-./install_isce22.csh;
-cd ../sources ;
-
-git clone https://github.com/yunjunz/PySAR.git ;
-git clone https://github.com/falkamelung/geodmod.git ;
-cd -;
-cd setup;
-make PYKML ;
-mkdir -p ~/insarlab/OPERATIONS/LOGS
-echo DONE WITH CRITICAL CODE ;
-
-make INSARMAPS;
-cd .. ;
-cd sources;
-git clone https://github.com/geodesymiami/rsmas_tools.git ; 
-cd -;
-mkdir -p $SENTINEL_ORBITS;
-mkdir -p $SENTINEL_AUX;
-echo DONE;
 ```
 
 The rsmas_tools clone gives you the python scripts plus notebooks from other group members. Put all your code into these directories and occasionaly push to github so that they will be available to others. We also share all other input files through github:
