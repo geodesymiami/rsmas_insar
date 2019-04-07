@@ -14,8 +14,8 @@ cd ~/test/test1
 
 
 ```
-git clone https://github.com/geodesymiami/rsmas_isce.git ;
-cd rsmas_isce
+git clone https://github.com/geodesymiami/rsmas_insar.git ;
+cd rsmas_insar
 
 ###temporary:
 git checkout move_to_one_folder
