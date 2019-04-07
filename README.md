@@ -1,8 +1,8 @@
 # rsmas_insar
 How to install RSMAS InSAR code.
 
-* Use bash shell [see here for tcsh.](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/readme_old_tcsh) 
-* Your [.bashrc](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/bashrc_contents.md) and [.bash_profile](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/bash_profile.md)
+* Use bash shell [see here for tcsh.](https://github.com/geodesymiami/rsmas_insar/blob/move_to_one_folder/setup/readme_old_tcsh) 
+* Your [.bashrc](https://github.com/geodesymiami/rsmas_insar/blob/move_to_one_folder/setup/bashrc_contents.md) and [.bash_profile](https://github.com/geodesymiami/rsmas_insar/blob/move_to_one_folder/setup/bash_profile.md)
 
 * Go to the area where you want to install the code (e.g. ~/test/test1).
 
@@ -10,7 +10,7 @@ How to install RSMAS InSAR code.
 cd ~/test/test1
 ```
 
-* Install the code using the commands below (you need a reasonable recent git version (the default on pegasus is too old, get a [local version](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install_git.md), or use an old rsmas_insar version). Installation takes about 10 minutes.  For the contents of the accounts repository see [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/accounts_info.md) if you don't have access.
+* Install the code using the commands below (you need a reasonable recent git version (the default on pegasus is too old, get a [local version](https://github.com/geodesymiami/rsmas_insar/blob/move_to_one_folder/setup/install_git.md), or use an old rsmas_insar version). Installation takes about 10 minutes.  For the contents of the accounts repository see [here](https://github.com/geodesymiami/rsmas_insar/blob/move_to_one_folder/setup/accounts_info.md) if you don't have access.
 
 
 ```
