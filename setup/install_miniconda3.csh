@@ -6,10 +6,11 @@ mkdir -p downloads;
 cd downloads;
 
 echo "downloading miniconda ..."
-wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh --no-check-certificate #; if ($? != 0) exit; 
-chmod 755 Miniconda3-latest-Linux-x86_64.sh
+set miniconda_version=Miniconda3-4.5.12-Linux-x86_64.sh
+wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate #; if ($? != 0) exit; 
+chmod 755 $miniconda_version
 cd ..
-downloads/Miniconda3-latest-Linux-x86_64.sh -b -p ../3rdparty/miniconda3
+downloads/$miniconda_version -b -p ../3rdparty/miniconda3
 cp condarc ../3rdparty/miniconda3/.condarc
 
 # possibly needed in China
