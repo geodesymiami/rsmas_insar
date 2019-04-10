@@ -23,6 +23,10 @@ def create_parser():
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
     parser.add_argument('custom_template_file', nargs='?',
                         help='custom template with option settings.\n')
+    parser.add_argument('start', nargs='?', type=int,
+                        help='starting run file number (default = 1).\n')
+    parser.add_argument('stop', nargs='?', type=int,
+                        help='stopping run file number.\n')
 
     return parser
 
@@ -36,15 +40,15 @@ def command_line_parse(args):
     return inps
 
 
-def get_run_files():
+def get_run_files(inps):
     """ Reads squeesar runfiles to a list. """
 
-    runfiles = os.path.join(inps.work_dir, 'run_files_list_sq')
+    runfiles = os.path.join(inps.work_dir, 'post_run_files_list')
     run_file_list = []
     with open(runfiles, 'r') as f:
         new_f = f.readlines()
         for line in new_f:
-            run_file_list.append('run_files_SQ/' + line.split('/')[-1][:-1])
+            run_file_list.append('post_run_files/' + line.split('/')[-1][:-1])
 
     return run_file_list
 
@@ -62,13 +66,12 @@ def set_memory_defaults():
     return memoryuse
 
 
-def submit_isce_jobs(run_file_list, cwd, memoryuse):
+def submit_run_jobs(run_file_list, cwd, memoryuse):
     """ Submits stackSentinel runfile jobs. """
 
     for item in run_file_list:
         item_memory = '_'
-        item_memory = item_memory.join(item.split('_')[4::])
-
+        item_memory = item_memory.join(item.split('_')[3::])
         try:
             memorymax = str(memoryuse[item_memory])
         except:
@@ -82,62 +85,52 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
         queuename = os.getenv('QUEUENAME')
 
         cmd = 'create_batch.py ' + cwd + '/' + item + ' --memory=' + memorymax + ' --walltime=' + walltimelimit + \
-               ' --queuename ' + queuename + ' --outdir "run_files_SQ"'
+               ' --queuename ' + queuename + ' --outdir "post_run_files"'
+
+
         print('command:', cmd)
         status = subprocess.Popen(cmd, shell=True).wait()
         if status is not 0:
-            logger_exec_run.log(loglevel.ERROR, 'ERROR submitting {} using createBatch.pl'.format(item))
             raise Exception('ERROR submitting {} using create_batch.py'.format(item))
 
         job_folder = cwd + '/' + item + '_out_jobs'
         print('jobfolder:', job_folder)
 
+        remove_zero_size_or_length_files(directory='post_run_files')
+
+        if not os.path.isdir(job_folder):
+            os.makedirs(job_folder)
+        mvlist = ['*.e ', '*.o ', '*.job ']
+        for mvitem in mvlist:
+            cmd = 'mv ' + cwd + '/post_run_files/' + mvitem + job_folder
+            print('move command:', cmd)
+            os.system(cmd)
 
     return None
 
 
 ##############################################################################
-class inpsvar:
-    pass
-
-
-if __name__ == "__main__":
-
-    inps = inpsvar()
-
-    try:
-        inps.custom_template_file = sys.argv[1]
-        inps.start = int(sys.argv[2])
-        inps.stop = int(sys.argv[3])
-    except:
-        print('')
+def main(iargs=None):
+    inps = command_line_parse(iargs)
 
     inps.project_name = get_project_name(inps.custom_template_file)
     inps.work_dir = os.getenv('SCRATCHDIR') + '/' + inps.project_name
-    inps = create_or_update_template(inps)
-    run_file_list = get_run_files()
 
-    try:
-        inps.start
-    except:
+    run_file_list = get_run_files(inps)
+
+    if inps.start is None:
         inps.start = 1
-    try:
-        inps.stop
-    except:
+    if inps.stop is None:
         inps.stop = len(run_file_list)
 
-    logger_exec_run.log(loglevel.INFO, "Executing Runfiles {} to {}".format(inps.start, inps.stop))
 
     memoryuse = set_memory_defaults()
 
-    submit_isce_jobs(run_file_list[inps.start - 1:inps.stop], inps.work_dir, memoryuse)
-
-    remove_zero_size_or_length_files(directory='run_files')
-
-    concatenate_error_files(directory='run_files', out_name='out_stack_sentinel_errorfiles.e')
-
-    remove_error_files_except_first(directory='run_files')
-
-    logger_exec_run.log(loglevel.INFO, "-----------------Done Executing Run files-------------------")
+    submit_run_jobs(run_file_list[inps.start - 1:inps.stop], inps.work_dir, memoryuse)
+    return None
 
 
+###########################################################################################
+
+if __name__ == "__main__":
+    main()
