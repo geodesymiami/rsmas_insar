@@ -18,7 +18,7 @@ then
    export PYTHONPATH=${PYTHONPATH_RSMAS}
 fi
 alias s.bgood='s.btest1'
-alias s.btest1='cd  ~/test/test1/rsmas_insar; source default_isce22.bash; source platforms.bash; source alias.bash; source custom.bash; cd -;'
+alias s.btest1='cd  ~/test/test1/rsmas_insar; source default_isce22.bash; source bashfiles/platforms.bash; source bashfiles/alias.bash; source bashfiles/custom.bash; cd -;'
 
 export HISTSIZE=1000
 ```
