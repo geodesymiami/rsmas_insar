@@ -7,4 +7,4 @@ cd ../3rdparty;
 #### PYAPS ####
 echo "downloading PyAPS ...  "
 git clone https://github.com/yunjunz/PyAPS.git
-
+git clone https://github.com/AngeliqueBenoit/pyaps3.git
