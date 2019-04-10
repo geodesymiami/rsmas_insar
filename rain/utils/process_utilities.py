@@ -119,6 +119,30 @@ def _remove_directories(directories_to_delete):
   
 ##########################################################################
 
+def create_or_update_template(inps):
+    """ Creates a default template file and/or updates it.
+        returns the values in 'inps'
+    """
+    print('\n*************** Template Options ****************')
+    # write default template
+    inps.template_file = create_default_template()
+    templateObj = Template(inps.customTemplateFile)
+    inps.custom_template = templateObj.get_options()
+    inps.template = inps.custom_template
+    # Read and update default template with custom input template
+    #if not inps.template_file == inps.customTemplateFile:
+    #    inps.template = templateObj.update_options_from_file(inps.template_file)
+
+    set_default_options(inps)
+
+    if 'cleanopt' not in inps.custom_template:
+        inps.custom_template['cleanopt'] = '0'
+
+    return inps
+
+
+##########################################################################
+
 def create_default_template():
     """ Creates default template file. """
 
@@ -258,6 +282,28 @@ def set_inps_value_from_template(inps, template_key,
 
 ##########################################################################
 
+def create_or_copy_dem(inps, work_dir, template, custom_template_file):
+    """ Downloads a DEM file or copies an existing one."""
+
+    # if inps.flag_dem:
+    dem_dir = work_dir + '/DEM'
+    if os.path.isdir(dem_dir) and len(os.listdir(dem_dir)) == 0:
+        os.rmdir(dem_dir)
+
+    if not os.path.isdir(dem_dir):
+        if 'sentinelStack.demDir' in list(template.keys()) and template['sentinelStack.demDir'] != str('auto'):
+            shutil.copytree(template['sentinelStack.demDir'], dem_dir)
+        else:
+            # TODO: Change subprocess call to get back error code and send error code to logger
+            command = 'dem_rsmas.py ' + custom_template_file
+            print(command)
+            messageRsmas.log(command)
+            status = subprocess.Popen(command, shell=True).wait()
+            if status is not 0:
+                raise Exception('ERROR while making DEM')
+
+
+###########################################################################
 
 
 def call_pysar(custom_template, custom_template_file, flag_load_and_stop):
