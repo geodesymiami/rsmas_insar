@@ -19,7 +19,7 @@ logger = send_logger()
 
 ##############################################################################
 EXAMPLE = """example:
-  create_stacksentinel_run_files.py LombokSenAT156VV.template 
+  create_runfiles.py LombokSenAT156VV.template 
 """
 
 

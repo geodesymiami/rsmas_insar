@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
-"""This script downloads SAR data and deals with various errors produced by download clients
-   Author: Falk Amelung
-   Created:12/2018
+"""
+   Author: Falk Amelung, Sara Mirzaee
 """
 ###############################################################################
 
@@ -10,16 +9,13 @@ import sys
 import glob
 import argparse
 import subprocess
-
-import messageRsmas
-import _process_utilities as putils
-
-from dataset_template import Template
+from pysar.utils import readfile
+from rain.utils.process_utilities import _remove_directories, clean_list
 
 ###############################################################################
 EXAMPLE = '''example:
-  email_pysar_results.py 
-  email_pysar_results.py $SAMPLESDIR/GalapagosSenDT128.template
+  email_results.py 
+  email_results.py $SAMPLESDIR/GalapagosSenDT128.template --insarmap
 '''
 
 def command_line_parse(iargs=None):

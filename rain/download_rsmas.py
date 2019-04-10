@@ -9,12 +9,11 @@ import os
 import sys
 import argparse
 import subprocess
-import glob
 
-import messageRsmas
-import _process_utilities as putils
-from dataset_template import Template
-import create_batch as cb
+from rain.objects import messageRsmas
+import rain.utils.process_utilities as putils
+from rain.objects.dataset_template import Template
+import rain.create_batch as cb
 
 ###############################################################################
 EXAMPLE = '''example:

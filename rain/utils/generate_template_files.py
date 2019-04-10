@@ -7,8 +7,8 @@ import requests
 import argparse
 import time
 from datetime import datetime
-from rsmas_logging import RsmasLogger, loglevel
-from io import StringIO
+from rain.objects.rsmas_logging import RsmasLogger, loglevel
+
 
 logfile = os.getenv('OPERATIONS')+'/LOGS/generate_templates.log'
 logger = RsmasLogger(logfile)

@@ -4,12 +4,10 @@ import sys
 import subprocess
 import argparse
 import time
-from dataset_template import Template
-import datetime
-from rsmas_logging import RsmasLogger, loglevel
-import messageRsmas
-import _process_utilities as putils
-import stat
+from from rain.objects.dataset_template import Template
+from rain.objects.rsmas_logging import RsmasLogger, loglevel
+from rain.objects import messageRsmas
+from rain.utils import process_utilities as putils
 import glob
 
 sys.path.insert(0, os.getenv('SSARAHOME'))

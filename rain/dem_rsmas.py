@@ -11,12 +11,10 @@
 import os
 import sys
 import glob
-import time
 import argparse
-import warnings
 import shutil
 import subprocess
-import messageRsmas
+from rain.objects import messageRsmas
 from pysar.utils import readfile
 
 EXAMPLE='''example:

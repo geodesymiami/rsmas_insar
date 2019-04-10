@@ -4,22 +4,16 @@
 #######################
 
 import os
-import sys
-import glob
-from rsmas_logging import loglevel
 import argparse
 import subprocess
-from _process_utilities import get_project_name, send_logger
-from _process_utilities import remove_zero_size_or_length_error_files, concatenate_error_files 
-from _process_utilities import move_error_files_except_first, move_stdout_files
-from _processSteps import create_or_update_template
-from _process_utilities import remove_zero_size_or_length_error_files, raise_exception_if_job_exited
+from rain.utils.process_utilities import get_project_name
+from rain.utils.process_utilities import remove_zero_size_or_length_files
 
-logger_exec_run  = send_logger()
+
 
 ##############################################################################
 EXAMPLE = """example:
-  execute_stacksentinel_run_files.py LombokSenAT156VV.template 
+  execute_runfiles.py LombokSenAT156VV.template 
 """
 
 def create_parser():
