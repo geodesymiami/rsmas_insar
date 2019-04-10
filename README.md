@@ -24,6 +24,7 @@ source default_isce22.bash;
 cd setup;
 ./install_miniconda3.csh;
 hash -r;
+conda install pygrib --yes ;
 git clone https://github.com/geodesymiami/accounts ;
 ./download_ssara_tippecanoe_3rdparty.sh;
 ./download_atmosphere_code.sh;
