@@ -477,7 +477,7 @@ def sort_nicely(l):
 
 ##########################################################################
 
-def remove_zero_size_or_length_error_files(directory):
+def remove_zero_size_or_length_files(directory):
     """Removes files with zero size or zero length (*.e files in run_files)."""
     
     error_files  = glob.glob(directory + '/*.e')
