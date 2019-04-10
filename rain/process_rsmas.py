@@ -12,6 +12,7 @@ from __future__ import print_function
 import os
 import sys
 import time
+import messageRsmas
 from _process_utilities import get_work_directory, get_project_name, send_logger, _remove_directories
 import _processSteps as prs
 import create_batch as cb
@@ -61,8 +62,8 @@ def process(inps):
     # running download scripts:
     #     download_ssara_rsmas.py $TE/template
     #     downlaod_asfserial_rsmas.py $TE/template
-    prs.call_ssara(inps.flag_ssara, inps.custom_template_file, inps.slc_dir)
-    logger_process_rsmas.log(loglevel.INFO, "Finished call_ssara")
+    prs.call_download(inps.flag_ssara, inps.custom_template_file, inps.slc_dir)
+    logger_process_rsmas.log(loglevel.INFO, "Finished call_download")
 
     #########################################
     # startmakerun: create run files
@@ -120,6 +121,9 @@ def process(inps):
 if __name__ == "__main__":
 
     inps = prs.command_line_parse()
+
+    messageRsmas.log('##### NEW RUN #####')
+    messageRsmas.log(os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1:]))
     
     #########################################
     # Submit job
