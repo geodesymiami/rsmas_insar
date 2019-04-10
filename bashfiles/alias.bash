@@ -1,5 +1,5 @@
 # vim: set filetype=sh:
-echo "sourcing ${PWD}/alias.bash ..."
+echo "sourcing ${PWD}/bashfiles/alias.bash ..."
 
 ###################################################################
 # skip remaining setup if not an interactive shell
@@ -19,6 +19,7 @@ alias setqueuebigmem='export QUEUENAME=bigmem; echo "QUEUENAME:   "${QUEUENAME}'
 ######## roi_pac and setup ###########
 ######################################
 alias cdr='cd ${PARENTDIR}'
+alias cdrb='cd ${PARENTDIR}/bashfiles'
 alias cdrs='cd ${INT_SCR}'
 alias cdrsa='cd ${PARENTDIR}/samples'
 alias cdrain='cd ${PARENTDIR}/rain'

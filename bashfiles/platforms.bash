@@ -1,5 +1,5 @@
 ###############################################
-echo "sourcing $PWD/platforms.bash ..."
+echo "sourcing $PWD/bashfiles/platforms.bash ..."
 
 if [[ (${HOST} == login3) || (${HOST} == login4) || (${HOST} =~ vis) ]]  
 then
