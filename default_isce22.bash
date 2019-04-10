@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # vim: set filetype=sh:
 echo "sourcing ${PWD}/default_isce22.bash ..."
 #####################################################
