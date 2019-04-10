@@ -13,7 +13,7 @@ import os
 import sys
 import time
 from rain.objects import messageRsmas
-from rain.utils.processSteps import RsmasInsar, command_line_parse
+from rain.utils.process_steps import RsmasInsar, command_line_parse
 
 ###############################################################################
 
