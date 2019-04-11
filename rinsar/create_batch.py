@@ -11,7 +11,7 @@ import sys
 import subprocess
 import argparse
 import time
-from rain.objects import messageRsmas
+from rinsar.objects import messageRsmas
 
 def create_argument_parser():
     """

@@ -14,7 +14,7 @@ import glob
 import argparse
 import shutil
 import subprocess
-from rain.objects import messageRsmas
+from rinsar.objects import messageRsmas
 from pysar.utils import readfile
 
 EXAMPLE='''example:

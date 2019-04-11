@@ -12,8 +12,8 @@ from __future__ import print_function
 import os
 import sys
 import time
-from rain.objects import messageRsmas
-from rain.utils.process_steps import RsmasInsar, command_line_parse
+from rinsar.objects import messageRsmas
+from rinsar.utils.process_steps import RsmasInsar, command_line_parse
 
 ###############################################################################
 

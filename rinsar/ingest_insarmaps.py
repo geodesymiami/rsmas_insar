@@ -10,12 +10,12 @@ import sys
 import glob
 import shutil
 import argparse
-from rain.objects.rsmas_logging import loglevel
-from rain.objects import messageRsmas
+from rinsar.objects.rsmas_logging import loglevel
+from rinsar.objects import messageRsmas
 import password_config as password
 
-from rain.utils.process_utilities import create_or_update_template
-from rain.utils.process_utilities  import get_work_directory, get_project_name, send_logger
+from rinsar.utils.process_utilities import create_or_update_template
+from rinsar.utils.process_utilities  import get_work_directory, get_project_name, send_logger
 
 
 logger  = send_logger()

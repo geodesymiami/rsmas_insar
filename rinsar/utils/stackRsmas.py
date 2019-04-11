@@ -8,7 +8,7 @@ import os, sys
 import argparse
 from stackSentinel import get_dates
 import numpy as np
-from rain.objects.stack_rsmas import config, pre_run, post_run
+from rinsar.objects.stack_rsmas import config, pre_run, post_run
 from pysqsar_utilities import convert_geo2image_coord, patch_slice
 
 helpstr= '''

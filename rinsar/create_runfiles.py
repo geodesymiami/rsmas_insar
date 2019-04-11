@@ -8,12 +8,12 @@ import subprocess
 import glob
 
 import argparse
-from rain.objects.rsmas_logging import loglevel
-from rain.objects import messageRsmas
+from rinsar.objects.rsmas_logging import loglevel
+from rinsar.objects import messageRsmas
 
-from rain.utils.process_utilities import create_or_update_template, create_or_copy_dem
-from rain.utils.process_utilities import get_work_directory, get_project_name
-from rain.utils.process_utilities import _remove_directories, send_logger
+from rinsar.utils.process_utilities import create_or_update_template, create_or_copy_dem
+from rinsar.utils.process_utilities import get_work_directory, get_project_name
+from rinsar.utils.process_utilities import _remove_directories, send_logger
 
 logger = send_logger()
 
@@ -66,7 +66,7 @@ def main(argv):
             print('')
             print('**************************')
         else:
-            from rain.utils.stackRsmas import preprocessStack
+            from rinsar.utils.stackRsmas import preprocessStack
             preprocessStack(inps, i=0)
 
             run_file_list = glob.glob(inps.work_dir + '/pre_run_files/run_*')

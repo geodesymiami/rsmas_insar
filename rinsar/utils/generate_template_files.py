@@ -7,7 +7,7 @@ import requests
 import argparse
 import time
 from datetime import datetime
-from rain.objects.rsmas_logging import RsmasLogger, loglevel
+from rinsar.objects.rsmas_logging import RsmasLogger, loglevel
 
 
 logfile = os.getenv('OPERATIONS')+'/LOGS/generate_templates.log'

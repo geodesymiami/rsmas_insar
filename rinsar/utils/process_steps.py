@@ -10,10 +10,10 @@
 import os
 import argparse
 import shutil
-import rain
-import rain.utils.process_utilities as putils
-from rain.utils.process_utilities import _remove_directories, clean_list
-from rain.utils.process_utilities import get_project_name, get_work_directory
+import rinsar
+import rinsar.utils.process_utilities as putils
+from rinsar.utils.process_utilities import _remove_directories, clean_list
+from rinsar.utils.process_utilities import get_project_name, get_work_directory
 from pysar.utils import readfile, utils as ut
 
 ####################################################################
@@ -119,7 +119,7 @@ def command_line_parse(iargs=None):
     if not os.path.isdir(inps.slc_dir):
         os.makedirs(inps.slc_dir)
 
-    template_file = os.path.join(os.getenv('PARENTDIR'), 'rain/defaults/rsmas_insar_template.txt')
+    template_file = os.path.join(os.getenv('PARENTDIR'), 'rinsar/defaults/rsmas_insar_template.txt')
     # generate default template
     if inps.generate_template:
         dest_file = os.path.join(os.getcwd(), os.path.basename(template_file))
@@ -209,7 +209,7 @@ class RsmasInsar:
 
         # 3. Read templates
         # 3.1 Get default template file
-        lfile = os.path.join(os.getenv('PARENTDIR'), 'rain/defaults/rsmas_insar_template.txt')  # latest version
+        lfile = os.path.join(os.getenv('PARENTDIR'), 'rinsar/defaults/rsmas_insar_template.txt')  # latest version
         cfile = os.path.join(self.work_dir, 'rsmas_insar_template.txt')  # current version
         if not os.path.isfile(cfile):
             print('copy default template file {} to work directory'.format(lfile))
@@ -270,8 +270,8 @@ class RsmasInsar:
         1- images
         2- DEM
         """
-        rain.create_runfiles.main([self.customTemplateFile, '--step', 'preprocess'])
-        rain.execute_pre_runfiles.main([self.customTemplateFile])
+        rinsar.create_runfiles.main([self.customTemplateFile, '--step', 'preprocess'])
+        rinsar.execute_pre_runfiles.main([self.customTemplateFile])
         return
 
     def run_process_images(self, step_name):
@@ -279,8 +279,8 @@ class RsmasInsar:
         1. create run_files
         2. execute run_files
         """
-        rain.create_runfiles.main([self.customTemplateFile, '--step', 'mainprocess'])
-        rain.execute_runfiles.main([self.customTemplateFile])
+        rinsar.create_runfiles.main([self.customTemplateFile, '--step', 'mainprocess'])
+        rinsar.execute_runfiles.main([self.customTemplateFile])
         return
 
     def run_timeseries_and_insarmaps(self, step_name):
@@ -289,8 +289,8 @@ class RsmasInsar:
         1 - inversion either via small baseline or squeesar
         2 - corrections with PySAR
         """
-        rain.create_runfiles.main([self.customTemplateFile, '--step', 'postprocess'])
-        rain.execute_post_runfiles.main([self.customTemplateFile])
+        rinsar.create_runfiles.main([self.customTemplateFile, '--step', 'postprocess'])
+        rinsar.execute_post_runfiles.main([self.customTemplateFile])
         return
 
     def run(self, steps=STEP_LIST):

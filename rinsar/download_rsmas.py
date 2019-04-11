@@ -10,10 +10,10 @@ import sys
 import argparse
 import subprocess
 
-from rain.objects import messageRsmas
-import rain.utils.process_utilities as putils
-from rain.objects.dataset_template import Template
-import rain.create_batch as cb
+from rinsar.objects import messageRsmas
+import rinsar.utils.process_utilities as putils
+from rinsar.objects.dataset_template import Template
+import rinsar.create_batch as cb
 
 ###############################################################################
 EXAMPLE = '''example:

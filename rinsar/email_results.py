@@ -10,7 +10,7 @@ import glob
 import argparse
 import subprocess
 from pysar.utils import readfile
-from rain.utils.process_utilities import _remove_directories, clean_list
+from rinsar.utils.process_utilities import _remove_directories, clean_list
 
 ###############################################################################
 EXAMPLE = '''example:

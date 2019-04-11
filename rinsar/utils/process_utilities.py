@@ -15,13 +15,13 @@ import re
 import subprocess
 from pysar.utils import utils
 from pysar.utils import readfile
-from rain.objects.rsmas_logging import RsmasLogger, loglevel
+from rinsar.objects.rsmas_logging import RsmasLogger, loglevel
 import shutil
 from collections import namedtuple
-from rain.objects.dataset_template import Template
+from rinsar.objects.dataset_template import Template
 
 from pysar.defaults.auto_path import autoPath
-from rain.objects import messageRsmas
+from rinsar.objects import messageRsmas
 ###############################################################################
 
 logfile_name = os.getenv('OPERATIONS') + '/LOGS/process_rsmas.log'

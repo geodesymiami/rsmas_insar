@@ -6,10 +6,10 @@ import time
 import subprocess
 import datetime
 import argparse
-from rain.objects.dataset_template import Template
-from rain.objects.rsmas_logging import RsmasLogger, loglevel
-from rain.objects import messageRsmas
-from rain.utils import process_utilities as putils
+from rinsar.objects.dataset_template import Template
+from rinsar.objects.rsmas_logging import RsmasLogger, loglevel
+from rinsar.objects import messageRsmas
+from rinsar.utils import process_utilities as putils
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password

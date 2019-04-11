@@ -6,7 +6,7 @@
 import os
 import argparse
 import subprocess
-from rain.utils.process_utilities import get_project_name, remove_zero_size_or_length_files
+from rinsar.utils.process_utilities import get_project_name, remove_zero_size_or_length_files
 
 
 ##############################################################################
