@@ -292,7 +292,7 @@ def create_or_update_template(inps):
 ###############################################################################
 
 
-def call_ssara(flag_ssara, custom_template_file, slc_dir):
+def call_download(flag_ssara, custom_template_file, slc_dir):
     """ Calls download_ssara.py for downloading """
 
     if flag_ssara:
