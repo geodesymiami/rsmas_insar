@@ -12,7 +12,7 @@ from __future__ import print_function
 import os
 import sys
 import time
-from rinsar.objects import messageRsmas
+from rinsar.objects import message_rsmas
 from rinsar.utils.process_steps import RsmasInsar, command_line_parse
 from rinsar.utils.process_utilities import get_work_directory, get_project_name
 import rinsar.create_batch as cb
@@ -36,8 +36,8 @@ def main(iargs=None):
 
     else:
         command_line = os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1:])
-        messageRsmas.log('##### NEW RUN #####')
-        messageRsmas.log(command_line)
+        message_rsmas.log('##### NEW RUN #####')
+        message_rsmas.log(command_line)
 
         objInsar = RsmasInsar(inps.customTemplateFile, inps.work_dir)
         objInsar.startup()

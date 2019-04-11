@@ -11,7 +11,7 @@ import glob
 import shutil
 import argparse
 from rinsar.objects.rsmas_logging import loglevel
-from rinsar.objects import messageRsmas
+from rinsar.objects import message_rsmas
 import password_config as password
 
 from rinsar.utils.process_utilities import create_or_update_template
@@ -78,7 +78,7 @@ if __name__ == "__main__":
 
     out_file = 'out_insarmaps'
     logger.log(loglevel.INFO, command1)
-    messageRsmas.log(command1)
+    message_rsmas.log(command1)
     command1 = '('+command1+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
     status = subprocess.Popen(command1, shell=True).wait()
     if status is not 0:
@@ -88,7 +88,7 @@ if __name__ == "__main__":
 
     # TODO: Change subprocess call to get back error code and send error code to logger
     logger.log(loglevel.INFO, command2)
-    messageRsmas.log(command2)
+    message_rsmas.log(command2)
     command2 = '('+command2+' | tee -a '+out_file+'.o) 3>&1 1>&2 2>&3 | tee -a '+out_file+'.e'
     status = subprocess.Popen(command2, shell=True).wait()
     if status is not 0:

@@ -10,7 +10,7 @@ import sys
 import argparse
 import subprocess
 
-from rinsar.objects import messageRsmas
+from rinsar.objects import message_rsmas
 import rinsar.utils.process_utilities as putils
 from rinsar.objects.dataset_template import Template
 import rinsar.create_batch as cb
@@ -84,7 +84,7 @@ def main(iargs=None):
     """Downloads data with ssara and asfserial scripts."""
 
     command = 'download_rsmas.py ' + iargs[0]
-    messageRsmas.log(command)
+    message_rsmas.log(command)
 
     inps = command_line_parse(iargs)
 

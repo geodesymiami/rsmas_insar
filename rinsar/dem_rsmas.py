@@ -14,7 +14,7 @@ import glob
 import argparse
 import shutil
 import subprocess
-from rinsar.objects import messageRsmas
+from rinsar.objects import message_rsmas
 from pysar.utils import readfile
 
 EXAMPLE='''example:
@@ -35,7 +35,7 @@ EXAMPLE='''example:
 ##########################################################################
 def main(argv):
 
-    messageRsmas.log(' '.join(argv))
+    message_rsmas.log(' '.join(argv))
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,\
                                      epilog=EXAMPLE)
     parser.add_argument('custom_template_file', nargs='?',\
@@ -86,7 +86,7 @@ def main(argv):
   
     demBbox=str(int(south))+' '+str(int(north))+' '+str(int(west))+' '+str(int(east))
     cmd ='dem.py -a stitch -b '+demBbox+' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
-    messageRsmas.log(cmd)
+    message_rsmas.log(cmd)
 
     try:
        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True, universal_newlines=True)

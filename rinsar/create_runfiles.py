@@ -9,7 +9,7 @@ import glob
 
 import argparse
 from rinsar.objects.rsmas_logging import loglevel
-from rinsar.objects import messageRsmas
+from rinsar.objects import message_rsmas
 
 from rinsar.utils.process_utilities import create_or_update_template, create_or_copy_dem
 from rinsar.utils.process_utilities import get_work_directory, get_project_name
@@ -117,7 +117,7 @@ def main(argv):
         command = '(' + command + ' | tee ' + out_file + '.o) 3>&1 1>&2 2>&3 | tee ' + out_file + '.e'
 
         logger.log(loglevel.INFO, command)
-        messageRsmas.log(command)
+        message_rsmas.log(command)
 
         temp_list = ['run_files', 'configs', 'orbits']
         _remove_directories(temp_list)
@@ -181,7 +181,7 @@ def main(argv):
         command = '(' + command + ' | tee ' + out_file + '.o) 3>&1 1>&2 2>&3 | tee ' + out_file + '.e'
 
         logger.log(loglevel.INFO, command)
-        messageRsmas.log(command)
+        message_rsmas.log(command)
 
         status = subprocess.Popen(command, shell=True).wait()
         if status is not 0:

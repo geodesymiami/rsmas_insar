@@ -11,7 +11,7 @@ import sys
 import subprocess
 import argparse
 import time
-from rinsar.objects import messageRsmas
+from rinsar.objects import message_rsmas
 
 def create_argument_parser():
     """
@@ -282,6 +282,6 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime, email_notif
 
 if __name__ == "__main__":
     PARAMS = parse_arguments(sys.argv[1::])
-    messageRsmas.log(os.path.basename(sys.argv[0]) + " " + " ".join(sys.argv[1::]))
+    message_rsmas.log(os.path.basename(sys.argv[0]) + " " + " ".join(sys.argv[1::]))
     JOBS = write_batch_job_files(PARAMS.file, PARAMS.outdir, memory=PARAMS.memory, walltime=PARAMS.wall, queue=PARAMS.queue)
     submit_batch_jobs(JOBS, PARAMS.file, PARAMS.outdir)
