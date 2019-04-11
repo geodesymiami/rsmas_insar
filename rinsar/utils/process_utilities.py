@@ -309,7 +309,7 @@ def get_job_defaults():
 
     import configparser
 
-    config_dir = os.path.expandvars('${rsmas_insar}/rinsar/defaults')
+    config_dir = os.path.expandvars('${RSMAS_INSAR}/rinsar/defaults')
     config_file = os.path.join(config_dir, 'job_defaults.cfg')
     if not os.path.isfile(config_file):
         raise ValueError('job config file NOT found, it should be: {}'.format(config_file))

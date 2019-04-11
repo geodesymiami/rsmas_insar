@@ -6,7 +6,7 @@
 import os
 import argparse
 import subprocess
-from rinsar.utils.process_utilities import get_project_name
+from rinsar.utils.process_utilities import get_project_name, get_job_defaults
 from rinsar.utils.process_utilities import remove_zero_size_or_length_files
 
 
@@ -54,43 +54,23 @@ def get_run_files(inps):
     return run_file_list
 
 
-def set_memory_defaults():
-    """ Sets an optimized memory value for each job. """
 
-    memoryuse = {'unpack_slc_topo_master': '3700',
-                 'average_baseline': '3700',
-                 'extract_burst_overlaps': '3700',
-                 'overlap_geo2rdr_resample': '4000',
-                 'pairs_misreg': '3700',
-                 'timeseries_misreg': '3700',
-                 'geo2rdr_resample': '5000',
-                 'extract_stack_valid_region': '3700',
-                 'merge': '3700',
-                 'merge_burst_igram': '3700',
-                 'grid_baseline': '3700',
-                 'generate_igram': '3700',
-                 'filter_coherence': '6000',
-                 'merge_master_slave_slc': '3700',
-                 'unwrap': '3700'}
-
-    return memoryuse
-
-
-def submit_run_jobs(run_file_list, cwd, memoryuse):
+def submit_run_jobs(run_file_list, cwd, config):
     """ Submits stackSentinel runfile jobs. """
 
     for item in run_file_list:
-        item_memory = '_'
-        item_memory = item_memory.join(item.split('_')[3::])
+        step_name = '_'
+        step_name = step_name.join(item.split('_')[3::])
         try:
-            memorymax = str(memoryuse[item_memory])
+            memorymax = config[step_name]['memory']
         except:
-            memorymax = '3700'
+            memorymax = config['DEFAULT']['memory']
 
-        if os.getenv('QUEUENAME') == 'debug':
-            walltimelimit = '0:30'
-        else:
-            walltimelimit = '4:00'
+
+        try:
+            walltimelimit = config[step_name]['walltime']
+        except:
+            walltimelimit = config['DEFAULT']['walltime']
 
 
         queuename = os.getenv('QUEUENAME')
@@ -135,10 +115,9 @@ def main(iargs=None):
     if inps.stop is None:
         inps.stop = len(run_file_list)
 
+    config_def = get_job_defaults()
 
-    memoryuse = set_memory_defaults()
-
-    submit_run_jobs(run_file_list[inps.start - 1:inps.stop], inps.work_dir, memoryuse)
+    submit_run_jobs(run_file_list[inps.start - 1:inps.stop], inps.work_dir, config_def)
     return None
 
 
