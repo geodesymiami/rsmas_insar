@@ -302,6 +302,24 @@ def create_or_copy_dem(inps, work_dir, template, custom_template_file):
             if status is not 0:
                 raise Exception('ERROR while making DEM')
 
+##########################################################################
+
+def get_job_defaults():
+    """ Sets an optimized memory value for each job. """
+
+    import configparser
+
+    config_dir = os.path.expandvars('${rsmas_insar}/rinsar/defaults')
+    config_file = os.path.join(config_dir, 'job_defaults.cfg')
+    if not os.path.isfile(config_file):
+        raise ValueError('job config file NOT found, it should be: {}'.format(config_file))
+
+    config = configparser.ConfigParser(delimiters='=')
+    config.read(config_file)
+
+
+    return config
+
 
 ###########################################################################
 

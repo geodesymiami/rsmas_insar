@@ -6,7 +6,7 @@
 import os
 import argparse
 import subprocess
-from rinsar.utils.process_utilities import get_project_name, remove_zero_size_or_length_files
+from rinsar.utils.process_utilities import get_project_name, get_job_defaults, remove_zero_size_or_length_files
 
 
 ##############################################################################
@@ -51,30 +51,24 @@ def get_run_files(inps):
     return run_file_list
 
 
-def set_memory_defaults():
-    """ Sets an optimized memory value for each job. """
 
-    memoryuse = {'download_data': '3700',
-                 'download_dem': '3700'}
-
-    return memoryuse
-
-
-def submit_run_jobs(run_file_list, cwd, memoryuse):
+def submit_run_jobs(run_file_list, cwd, config):
     """ Submits stackSentinel runfile jobs. """
 
     for item in run_file_list:
-        item_memory = '_'
-        item_memory = item_memory.join(item.split('_')[3::])
+        step_name = '_'
+        step_name = step_name.join(item.split('_')[3::])
         try:
-            memorymax = str(memoryuse[item_memory])
+            memorymax = config[step_name]['memory']
         except:
-            memorymax = '3700'
+            memorymax = config['DEFAULT']['memory']
 
-        if os.getenv('QUEUENAME') == 'debug':
-            walltimelimit = '0:30'
-        else:
-            walltimelimit = '4:00'
+
+        try:
+            walltimelimit = config[step_name]['walltime']
+        except:
+            walltimelimit = config['DEFAULT']['walltime']
+
 
         queuename = os.getenv('QUEUENAME')
 
@@ -118,9 +112,9 @@ def main(iargs=None):
     if inps.stop is None:
         inps.stop = len(run_file_list)
 
-    memoryuse = set_memory_defaults()
+    config_def = get_job_defaults()
 
-    submit_run_jobs(run_file_list[inps.start - 1:inps.stop], inps.work_dir, memoryuse)
+    submit_run_jobs(run_file_list[inps.start - 1:inps.stop], inps.work_dir, config_def)
     return None
 
 
