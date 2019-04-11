@@ -84,7 +84,7 @@ def download(script_name, template_file, slc_dir, outnum):
 def main(iargs=None):
     """Downloads data with ssara and asfserial scripts."""
 
-    command = 'download_rsmas.py ' + iargs[0]
+    command = os.path.basename(__file__) + ' ' + iargs[0]
     messageRsmas.log(command)
 
     inps = command_line_parse(iargs)

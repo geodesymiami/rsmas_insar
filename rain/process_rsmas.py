@@ -123,7 +123,8 @@ if __name__ == "__main__":
     inps = prs.command_line_parse()
 
     messageRsmas.log('##### NEW RUN #####')
-    messageRsmas.log(os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1:]))
+    messageRsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1:]))
+
     
     #########################################
     # Submit job

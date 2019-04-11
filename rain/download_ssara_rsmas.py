@@ -154,7 +154,7 @@ if __name__ == "__main__":
     inps.work_dir = putils.get_work_directory(None, inps.project_name)
     inps.slcDir = inps.work_dir + "/SLC"
     os.chdir(inps.work_dir)
-    messageRsmas.log(os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1::]))
+    messageRsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
     os.chdir(inps.slcDir)
 
     logger.log(loglevel.INFO, "DATASET: %s", str(inps.template.split('/')[-1].split(".")[0]))
