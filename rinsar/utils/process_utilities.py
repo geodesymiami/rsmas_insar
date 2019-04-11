@@ -9,9 +9,7 @@
 
 from __future__ import print_function
 import os
-import sys
 import glob
-import re
 import subprocess
 from pysar.utils import utils
 from pysar.utils import readfile
@@ -321,50 +319,6 @@ def get_job_defaults():
     return config
 
 
-###########################################################################
-
-
-def call_pysar(custom_template, custom_template_file, flag_load_and_stop):
-    """ Calls pysarAPP to load and process data. """
-
-    # TODO: Change subprocess call to get back error code and send error code to logger
-    logger.log(loglevel.DEBUG,'\n*************** running pysar ****************')
-    command = 'pysarApp.py ' + custom_template_file + ' --end load_data |& tee out_pysar.log'
-    out_file = 'out_pysar_load'
-    logger.log(loglevel.INFO, command)
-    message_rsmas.log(command)
-    command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
-    status = subprocess.Popen(command, shell=True).wait()
-    if status is not 0:
-        logger.log(loglevel.ERROR,'ERROR in pysarApp.py --end load_data')
-        raise Exception('ERROR in pysarApp.py --end load_data')
-
-    if flag_load_and_stop:
-        logger.log(loglevel.DEBUG,'Exit as planned after loading into pysar')
-        return
-
-    # clean after loading data for cleanopt >= 2
-    if 'All data needed found' in open('out_pysar.log').read():
-        if int(custom_template['cleanopt']) >= 2:
-            print('Cleaning files:   cleanopt= ' + str(custom_template['cleanopt']))
-            cleanlist=clean_list()
-            _remove_directories(cleanlist[2])
-        if int(custom_template['cleanopt']) >= 3:
-            _remove_directories(cleanlist[3])
-
-    command = 'pysarApp.py ' + custom_template_file
-    out_file = 'out_pysar'
-    logger.log(loglevel.INFO, command)
-    message_rsmas.log(command)
-    command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
-    message_rsmas.log(command)
-    status = subprocess.Popen(command, shell=True).wait()
-    if status is not 0:
-        logger.log(loglevel.ERROR,'ERROR in pysarApp.py')
-        raise Exception('ERROR in pysarApp.py')
-     
-    return None
-        
 ##########################################################################
 
 def run_or_skip(custom_template_file):
@@ -392,106 +346,13 @@ def clean_list():
     cleanlist.append(['PYSAR', 'run_files'])
     
     return cleanlist
-  
-##########################################################################
-
-
-def email_pysar_results(textStr, custom_template):
-    """ email pysar results """
-    
-    if 'email_pysar' not in custom_template:
-        return
-
-    cwd = os.getcwd()
-
-    fileList1 = ['velocity.png',\
-                 'avgSpatialCoherence.png',\
-                 'temporalCoherence.png',\
-                 'maskTempCoh.png',\
-                 'mask.png',\
-                 'demRadar_error.png',\
-                 'velocityStd.png',\
-                 'geo_velocity.png',\
-                 'coherence*.png',\
-                 'unwrapPhase*.png',\
-                 'rms_timeseriesResidual_quadratic.pdf',\
-                 'CoherenceHistory.pdf',\
-                 'CoherenceMatrix.pdf',\
-                 'bl_list.txt',\
-                 'Network.pdf',\
-                 'geo_velocity_masked.kmz']
-
-    fileList2 = ['timeseries*.png',\
-                 'geo_timeseries*.png']
-
-    if os.path.isdir('PYSAR/PIC'):
-       prefix='PYSAR/PIC'
-
-    template_file = glob.glob('PYSAR/INPUTS/*.template')[0]
-
-    i = 0
-    for fileList in [fileList1, fileList2]:
-       attachmentStr = ''
-       i = i + 1
-       for fname in fileList:
-           fList = glob.glob(prefix+'/'+fname)
-           for fileName in fList:
-               attachmentStr = attachmentStr+' -a '+fileName
-
-       if i==1 and len(template_file)>0:
-          attachmentStr = attachmentStr+' -a '+template_file
-
-       mailCmd = 'echo \"'+textStr+'\" | mail -s '+cwd+' '+attachmentStr+' '+custom_template['email_pysar']
-       command = 'ssh pegasus.ccs.miami.edu \"cd '+cwd+'; '+mailCmd+'\"'
-       print(command)
-       status = subprocess.Popen(command, shell=True).wait()
-       if status is not 0:
-          sys.exit('Error in email_pysar_results')
 
 ###############################################################################
-
-def email_insarmaps_results(custom_template):
-    """ email link to insarmaps.miami.edu """
-    
-    if 'email_insarmaps' not in custom_template:
-      return
-
-    cwd = os.getcwd()
-
-    hdfeos_file = glob.glob('./PYSAR/S1*.he5')
-    hdfeos_file = hdfeos_file[0]
-    hdfeos_name = os.path.splitext(os.path.basename(hdfeos_file))[0]
-
-    textStr = 'http://insarmaps.miami.edu/start/-0.008/-78.0/7"\?"startDataset='+hdfeos_name
-
-    mailCmd = 'echo \"'+textStr+'\" | mail -s Miami_InSAR_results:_'+os.path.basename(cwd)+' '+custom_template['email_insarmaps']
-    command = 'ssh pegasus.ccs.miami.edu \" '+mailCmd+'\"'
-
-    print(command)
-    status = subprocess.Popen(command, shell=True).wait()
-    if status is not 0:
-       sys.exit('Error in email_insarmaps_results')
-    
-##########################################################################
 
 def file_len(fname):
     """Calculate the number of lines in a file."""
     with open(fname, 'r') as file:
         return len(file.readlines())
-
-##########################################################################
-
-
-def alphanum_key(s):
-    """ Turn a string into a list of string and number chunks.
-        "z23a" -> ["z", 23, "a"]
-    """
-    return [ int(c) if c.isdigit() else c for c in re.split('([0-9]+)', s) ]
-
-def sort_nicely(l):
-    """ Sort the given list in the way that humans expect.
-    """
-    l.sort(key=alphanum_key)
 
 ##########################################################################
 
@@ -506,100 +367,5 @@ def remove_zero_size_or_length_files(directory):
         elif file_len(item) == 0:
             os.remove(item)                  # remove zero-line files
     return None
-
-##########################################################################
-
-def move_error_files_except_first(directory):
-    """move the error file into stderr_files directory but keep the first error files"""
-    try:
-       error_files  = glob.glob(directory + '/*.e')
-       dir_name = os.path.dirname(error_files[0])
-       if not os.path.isdir(dir_name + '/stderr_files'):
-          os.mkdir(dir_name + '/stderr_files')
-       sort_nicely(error_files)
-       shutil.copy(error_files[0], dir_name + '/stderr_files' + '/' + os.path.basename(error_files[0]))
-       del error_files[0]
-       for item in error_files:
-           shutil.move(item, dir_name + '/stderr_files' + '/' + os.path.basename(item))
-    except:
-        pass            
-    return None
-
-##########################################################################
-
-def raise_exception_if_job_exited(directory):
-    """Removes files with zero size or zero length (*.e files in run_files)."""
-    
-    files = glob.glob(directory + '/*.o')
-    search_string = 'Exited with exit code'
-
-    sort_nicely(files)
-    for file in files:
-        with open(file) as fr:
-            if search_string in fr.read(): 
-               raise Exception("ERROR: {0} exited,  contains: {1}".format(os.path.basename(file),search_string))
-
-##########################################################################
-
-def move_stdout_files(directory):
-    """move the error file into stdout_files directory"""
-    try:
-       stdout_files  = glob.glob(directory + '/*.o')
-       dir_name = os.path.dirname(stdout_files[0])
-       if not os.path.isdir(dir_name + '/stdout_files'):
-          os.mkdir(dir_name + '/stdout_files')
-       for item in stdout_files:
-           shutil.move(item, dir_name + '/stdout_files' + '/' + os.path.basename(item))
-    except:
-        pass            
-    return None
-
-##########################################################################
-
-def concatenate_error_files(directory, out_name):
-    """
-    Concatenate error files to one file (*.e files in run_files).
-    :param directory: str
-    :param out_name: str
-    :return: None
-    """
-    
-    error_files = glob.glob(directory + '/*.e')
-    with open(out_name, 'w') as outfile:
-        for fname in error_files:
-            outfile.write('#########################\n')
-            outfile.write('#### ' + fname + ' \n')
-            outfile.write('#########################\n')
-            with open(fname) as infile:
-                outfile.write(infile.read())
-                
-    return None           
-                
   
-##########################################################################
 
-def check_error_files_sentinelstack(pattern):
-
-    errorFiles  = glob.glob(pattern)
-
-    elist = []
-    for item in errorFiles:
-        if os.path.getsize(item) == 0:       # remove zero-size error files
-            os.remove(item)
-        elif file_len(item) == 0:
-            os.remove(item)                  # remove zero-lines files
-        else:
-            elist.append(item)
-
-    # skip non-fatal errors
-    error_skip_dict = {'FileExistsError: [Errno 17] File exists:': 'merged/geom_master',
-                       'RuntimeWarning: Mean of empty slice': 'warnings.warn'}
-    for efile in elist:
-        with open(efile) as efr:
-            for item in error_skip_dict:
-                if item in efr.read() and error_skip_dict[item] in efr.read():
-                    sys.stderr.write('Skipped error in: '+efile+'\n')
-                else:
-                    sys.exit('Error file found: '+efile)
-
-##########################################################################
