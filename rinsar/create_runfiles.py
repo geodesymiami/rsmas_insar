@@ -66,7 +66,7 @@ def main(argv):
             print('')
             print('**************************')
         else:
-            from rinsar.utils.stackRsmas import preprocessStack
+            from rinsar.utils.stack_run import preprocessStack
             preprocessStack(inps, i=0)
 
             run_file_list = glob.glob(inps.work_dir + '/pre_run_files/run_*')
@@ -142,7 +142,7 @@ def main(argv):
         inps.bbox = '"{} {} {} {}"'.format(inps.custom_template['lat_south'], inps.custom_template['lat_north'],
                                               inps.custom_template['lon_west'], inps.custom_template['lon_east'])
 
-        command = 'stackRsmas.py'
+        command = 'stack_run.py'
 
         items = ['squeesar.plmethod', 'squeesar.patch_size', 'squeesar.range_window', 'squeesar.azimuth_window']
         inpspar = []

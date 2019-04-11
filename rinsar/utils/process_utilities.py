@@ -21,7 +21,7 @@ from collections import namedtuple
 from rinsar.objects.dataset_template import Template
 
 from pysar.defaults.auto_path import autoPath
-from rinsar.objects import messageRsmas
+from rinsar.objects import message_rsmas
 ###############################################################################
 
 logfile_name = os.getenv('OPERATIONS') + '/LOGS/process_rsmas.log'
@@ -297,7 +297,7 @@ def create_or_copy_dem(inps, work_dir, template, custom_template_file):
             # TODO: Change subprocess call to get back error code and send error code to logger
             command = 'dem_rsmas.py ' + custom_template_file
             print(command)
-            messageRsmas.log(command)
+            message_rsmas.log(command)
             status = subprocess.Popen(command, shell=True).wait()
             if status is not 0:
                 raise Exception('ERROR while making DEM')
@@ -314,7 +314,7 @@ def call_pysar(custom_template, custom_template_file, flag_load_and_stop):
     command = 'pysarApp.py ' + custom_template_file + ' --end load_data |& tee out_pysar.log'
     out_file = 'out_pysar_load'
     logger.log(loglevel.INFO, command)
-    messageRsmas.log(command)
+    message_rsmas.log(command)
     command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
     status = subprocess.Popen(command, shell=True).wait()
     if status is not 0:
@@ -337,9 +337,9 @@ def call_pysar(custom_template, custom_template_file, flag_load_and_stop):
     command = 'pysarApp.py ' + custom_template_file
     out_file = 'out_pysar'
     logger.log(loglevel.INFO, command)
-    messageRsmas.log(command)
+    message_rsmas.log(command)
     command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
-    messageRsmas.log(command)
+    message_rsmas.log(command)
     status = subprocess.Popen(command, shell=True).wait()
     if status is not 0:
         logger.log(loglevel.ERROR,'ERROR in pysarApp.py')

@@ -3,10 +3,10 @@
 #the following licence:
 #
 # Yunjun, Jun 2016: to use this, add $INT_SCR to $PYTHONPATH, and import as below
-# import messageRsmas
+# import message_rsmas
 # or for more simple use (recommend):
-# from messageRsmas import log
-# from messageRsmas import Message as msg
+# from message_rsmas import log
+# from message_rsmas import Message as msg
 from __future__ import print_function
 import os
 import sys
@@ -50,7 +50,7 @@ def Status(arg1,arg2):
     # I thought was the purpose of this.  
     # a work around is the following:
     # eCode=os.system("test2.py qw1")
-    # if (eCode != 0): messageRsmas.Message("failed in test2.py"); sys.exit(1)
+    # if (eCode != 0): message_rsmas.Message("failed in test2.py"); sys.exit(1)
 
 
 # perl code that got translated

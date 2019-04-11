@@ -8,7 +8,7 @@ import datetime
 import argparse
 from rinsar.objects.dataset_template import Template
 from rinsar.objects.rsmas_logging import RsmasLogger, loglevel
-from rinsar.objects import messageRsmas
+from rinsar.objects import message_rsmas
 from rinsar.utils import process_utilities as putils
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
@@ -94,7 +94,7 @@ def run_ssara(template, run_number=1):
     # Runs ssara_federated_query-cj.py with proper options
     ssara_call    = ['ssara_federated_query-cj.py'] + ssaraopt + ['--print', '--download']
     print(' '.join(ssara_call))
-    messageRsmas.log(' '.join(ssara_call))
+    message_rsmas.log(' '.join(ssara_call))
     ssara_process = subprocess.Popen(ssara_call)
 
     logger.log(loglevel.INFO, "STARTED PROCESS")
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     inps.work_dir = putils.get_work_directory(None, inps.project_name)
     inps.slcDir = inps.work_dir + "/SLC"
     os.chdir(inps.work_dir)
-    messageRsmas.log(os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1::]))
+    message_rsmas.log(os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1::]))
     os.chdir(inps.slcDir)
 
     logger.log(loglevel.INFO, "DATASET: %s", str(inps.template.split('/')[-1].split(".")[0]))

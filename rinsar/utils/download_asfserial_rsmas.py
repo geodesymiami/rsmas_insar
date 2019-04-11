@@ -6,7 +6,7 @@ import argparse
 import time
 from rinsar.objects.dataset_template import Template
 from rinsar.objects.rsmas_logging import RsmasLogger, loglevel
-from rinsar.objects import messageRsmas
+from rinsar.objects import message_rsmas
 from rinsar.utils import process_utilities as putils
 import glob
 
@@ -119,7 +119,7 @@ if __name__ == "__main__":
 	inps.work_dir = putils.get_work_directory(None, inps.project_name)
 	inps.slcDir = inps.work_dir + "/SLC"
 	os.chdir(inps.work_dir)
-	messageRsmas.log(os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1::]))
+	message_rsmas.log(os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1::]))
 	os.chdir(inps.slcDir)
 	try:
 		os.remove(os.path.expanduser('~')+'/.bulk_download_cookiejar.txt')
