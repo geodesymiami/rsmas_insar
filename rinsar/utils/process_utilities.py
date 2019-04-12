@@ -280,7 +280,7 @@ def set_inps_value_from_template(inps, template_key,
 
 ##########################################################################
 
-def create_or_copy_dem(inps, work_dir, template, custom_template_file):
+def create_or_copy_dem(work_dir, template, custom_template_file):
     """ Downloads a DEM file or copies an existing one."""
 
     # if inps.flag_dem:
