@@ -367,5 +367,16 @@ def remove_zero_size_or_length_files(directory):
         elif file_len(item) == 0:
             os.remove(item)                  # remove zero-line files
     return None
-  
+
+
+def alphanum_key(s):
+    """ Turn a string into a list of string and number chunks.
+        "z23a" -> ["z", 23, "a"]
+    """
+    return [ int(c) if c.isdigit() else c for c in re.split('([0-9]+)', s) ]
+
+def sort_nicely(l):
+    """ Sort the given list in the way that humans expect.
+    """
+    l.sort(key=alphanum_key)
 
