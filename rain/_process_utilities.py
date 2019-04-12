@@ -467,6 +467,8 @@ def raise_exception_if_job_exited(directory):
     """Removes files with zero size or zero length (*.e files in run_files)."""
     
     files = glob.glob(directory + '/*.o')
+
+    # need to add for PBS. search_string='Terminated'
     search_string = 'Exited with exit code'
 
     sort_nicely(files)
