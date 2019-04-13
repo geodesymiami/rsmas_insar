@@ -14,11 +14,11 @@ import argparse
 import shutil
 import subprocess
 import time
-from rsmas_logging import loglevel
-import _process_utilities as putils
-from _process_utilities  import _remove_directories, clean_list
-from dataset_template import Template
-import messageRsmas
+from rinsar.rsmas_logging import loglevel
+import rinsar._process_utilities as putils
+from rinsar._process_utilities  import _remove_directories, clean_list
+from rinsar.dataset_template import Template
+from rinsar import messageRsmas
 
 logger = putils.send_logger()
 
