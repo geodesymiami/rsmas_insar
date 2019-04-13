@@ -16,7 +16,7 @@ import argparse
 import warnings
 import shutil
 import subprocess
-import messageRsmas
+from rinsar import messageRsmas
 from pysar.utils import readfile
 
 EXAMPLE='''example:
