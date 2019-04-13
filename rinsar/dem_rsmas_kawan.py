@@ -14,7 +14,7 @@ import glob
 import argparse
 import shutil
 import subprocess
-from . import messageRsmas
+from rinsar import messageRsmas
 import re
 from pysar.utils import readfile
 
