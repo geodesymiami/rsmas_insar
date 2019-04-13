@@ -9,12 +9,12 @@ import sys
 import glob
 
 import argparse
-from rsmas_logging import loglevel
-import messageRsmas
+from rinsar.rsmas_logging import loglevel
+from rinsar import messageRsmas
 
-from _processSteps import create_or_update_template, create_or_copy_dem
-from _process_utilities  import get_work_directory, get_project_name
-from _process_utilities  import _remove_directories, send_logger
+from rinsar._processSteps import create_or_update_template, create_or_copy_dem
+from rinsar._process_utilities  import get_work_directory, get_project_name
+from rinsar._process_utilities  import _remove_directories, send_logger
 
 logger  = send_logger()
 
