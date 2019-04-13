@@ -10,14 +10,14 @@ import sys
 import glob
 import shutil
 import argparse
-from rsmas_logging import loglevel
-import messageRsmas
+from rinsar.rsmas_logging import loglevel
+from rinsar import messageRsmas
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
 
-from _processSteps import create_or_update_template
-from _process_utilities  import get_work_directory, get_project_name, send_logger
+from rinsar._processSteps import create_or_update_template
+from rinsar._process_utilities  import get_work_directory, get_project_name, send_logger
 
 
 logger  = send_logger()
