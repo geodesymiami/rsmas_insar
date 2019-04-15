@@ -474,3 +474,31 @@ def run_ingest_insarmaps(inps):
     if inps.stopinsarmaps:
         logger.log(loglevel.DEBUG, 'Exit as planned after insarmaps')
 
+###############################################################################
+
+
+def overwrite_stored_date(dset, newest_date, stored_date_file="stored_date.date", date_format="%Y-%m-%dT%H:%M:%S.%f"):
+    """
+    Overwrites the stored_date.date file entry for the provided dataset with the provided date
+    :param dset: the dataset to be overriden
+    :param newest_date: the new date to override with
+    :param stored_date_file: the filename of the stored_date_file (defaults to "stored_date.date")
+    :param date_format: the format of the new date to be stored (defaults to "%Y-%m-%dT%H:%M:%S.%f")
+    """
+    new_line = "{}: {}\n".format(dset, newest_date.strftime(date_format))
+
+    stored_date_file = os.path.join(os.getenv("OPERATIONS"), stored_date_file)
+
+    lines = open(stored_date_file, 'r').readlines()
+
+    for i, line in enumerate(lines):
+        if dset in line:
+            lines[i] = new_line
+            date_file = open(stored_date_file, 'w')
+            date_file.writelines(lines)
+            break
+    else:
+        date_file = open(stored_date_file, 'a')
+        date_file.write(new_line)
+
+    date_file.close()
