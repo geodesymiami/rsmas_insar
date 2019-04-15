@@ -188,6 +188,11 @@ def create_process_rsmas_parser(EXAMPLE):
         dest='submit_flag',
         action='store_true',
         help='submits job')
+    parser.add_argument(
+        '--update_date_file',
+        dest='update_date_file',
+        nargs=1,
+        help='updates the stored_date file with given date')
 
     return parser
 

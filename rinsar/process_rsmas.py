@@ -113,6 +113,9 @@ def process(inps):
     prs.run_ingest_insarmaps(inps)
     logger_process_rsmas.log(loglevel.INFO, "Finished ingest_insarmaps")
 
+    if len(inps.update_store_date) > 0:
+        prs.overwrite_stored_date(inps.project_name, inps.update_stored_date)
+
     logger_process_rsmas.log(loglevel.INFO, "ingest_insarmaps")
 
     logger_process_rsmas.log(loglevel.INFO, 'End of process_rsmas')
