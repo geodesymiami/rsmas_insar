@@ -12,11 +12,11 @@ from __future__ import print_function
 import os
 import sys
 import time
-import messageRsmas
-from _process_utilities import get_work_directory, get_project_name, send_logger, _remove_directories
-import _processSteps as prs
-import create_batch as cb
-from rsmas_logging import loglevel
+from rinsar import messageRsmas
+from rinsar._process_utilities import get_work_directory, get_project_name, send_logger, _remove_directories
+import rinsar._processSteps as prs
+import rinsar.create_batch as cb
+from rinsar.rsmas_logging import loglevel
 
 logger_process_rsmas = send_logger()
 

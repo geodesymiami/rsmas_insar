@@ -7,10 +7,10 @@ from datetime import datetime
 import shutil
 import time
 
-import generate_template_files
-from rsmas_logging import RsmasLogger, loglevel
-import dataset_template
-import _process_utilities as putils
+from rinsar import generate_template_files
+from rinsar.rsmas_logging import RsmasLogger, loglevel
+from rinsar import dataset_template
+import rinsar._process_utilities as putils
 
 
 ############## DIRECTORY AND FILE CONSTANTS ##############

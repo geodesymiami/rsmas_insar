@@ -11,10 +11,10 @@ import glob
 import argparse
 import subprocess
 
-import messageRsmas
-import _process_utilities as putils
+from rinsar import messageRsmas
+import rinsar._process_utilities as putils
 
-from dataset_template import Template
+from rinsar.dataset_template import Template
 
 ###############################################################################
 EXAMPLE = '''example:

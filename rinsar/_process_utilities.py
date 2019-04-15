@@ -16,12 +16,12 @@ import subprocess
 sys.path.insert(0, os.getenv('SSARAHOME'))
 from pysar.utils import utils
 from pysar.utils import readfile
-from rsmas_logging import RsmasLogger, loglevel
+from rinsar.rsmas_logging import RsmasLogger, loglevel
 import shutil
 from collections import namedtuple
 
 from pysar.defaults.auto_path import autoPath
-import messageRsmas
+from rinsar import messageRsmas
 ###############################################################################
 
 logfile_name = os.getenv('OPERATIONS') + '/LOGS/process_rsmas.log'

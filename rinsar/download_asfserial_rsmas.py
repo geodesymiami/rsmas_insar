@@ -4,11 +4,11 @@ import sys
 import subprocess
 import argparse
 import time
-from dataset_template import Template
+from rinsar.dataset_template import Template
 import datetime
-from rsmas_logging import RsmasLogger, loglevel
-import messageRsmas
-import _process_utilities as putils
+from rinsar.rsmas_logging import RsmasLogger, loglevel
+from rinsar import messageRsmas
+import rinsar._process_utilities as putils
 import stat
 import glob
 
