@@ -113,8 +113,8 @@ def process(inps):
     prs.run_ingest_insarmaps(inps)
     logger_process_rsmas.log(loglevel.INFO, "Finished ingest_insarmaps")
 
-    if len(inps.update_store_date) > 0:
-        prs.overwrite_stored_date(inps.project_name, inps.update_stored_date)
+    if len(inps.update_date_file) > 0:
+        prs.overwrite_stored_date(inps.project_name, inps.update_date_file)
 
     logger_process_rsmas.log(loglevel.INFO, "ingest_insarmaps")
 
@@ -125,8 +125,8 @@ if __name__ == "__main__":
 
     inps = prs.command_line_parse()
 
-    messageRsmas.log('##### NEW RUN #####')
-    messageRsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1:]))
+    #messageRsmas.log('##### NEW RUN #####')
+    #messageRsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1:]))
 
     
     #########################################

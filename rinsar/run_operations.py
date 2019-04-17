@@ -197,13 +197,14 @@ def run_process_rsmas(inps, template_file, dataset, newest_date):
     if len(process_rsmas_options) == 0:
         process_rsmas_options.append('--insarmaps')
 
-    process_rsmas_options.extend(["--update_stored_date", newest_date])
+    process_rsmas_options.extend(["--update_date_file",  newest_date.strftime(DATE_FORMAT)])
     process_rsmas_options = ' '.join(process_rsmas_options)
 
     process_rsmas_cmd = "process_rsmas.py {} {} --submit".format(template_file, process_rsmas_options)
 
     process_rsmas = subprocess.check_output(process_rsmas_cmd, shell=True).decode('utf-8')
     
+    print(process_rsmas)
     job_number = process_rsmas.split('\n')[0]
 
     file_base = os.path.join(SCRATCH_DIRECTORY, dataset)

@@ -490,7 +490,7 @@ def overwrite_stored_date(dset, newest_date, stored_date_file="stored_date.date"
     :param stored_date_file: the filename of the stored_date_file (defaults to "stored_date.date")
     :param date_format: the format of the new date to be stored (defaults to "%Y-%m-%dT%H:%M:%S.%f")
     """
-    new_line = "{}: {}\n".format(dset, newest_date.strftime(date_format))
+    new_line = "{}: {}\n".format(dset, newest_date[0])
 
     stored_date_file = os.path.join(os.getenv("OPERATIONS"), stored_date_file)
 
