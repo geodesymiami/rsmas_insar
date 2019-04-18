@@ -218,6 +218,8 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
     else:
         raise Exception("ERROR: scheduler {0} not supported".format(scheduler))
 
+    print("{0} submitted as {1} job #{2}".format(job_file_name, scheduler, job_number))
+
     return job_number
 
 
@@ -237,11 +239,13 @@ def submit_batch_jobs(job_files, batch_file, out_dir, scheduler=None):
 
     files = []
 
-    for job in job_files:
+    for i, job in enumerate(job_files):
         job_number = submit_single_job(job, work_dir, scheduler)
         job_file_name = job.split(".")[0]
         files.append("{}_{}.o".format(job_file_name, job_number))
         # files.append("{}_{}.e".format(job_file_name, job_number))
+        if len(job_files) < 100 or i == 0 or i % 50 == 49:
+            print("Submitting from {0}: job #{1} of {2} jobs".format(batch_file.split(os.sep)[-1], i+1, len(job_files)))
 
     # check if output files exist
     i = 0
