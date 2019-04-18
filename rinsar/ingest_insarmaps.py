@@ -12,6 +12,7 @@ import shutil
 import argparse
 from rinsar.rsmas_logging import loglevel
 from rinsar import messageRsmas
+import rinsar.create_batch as cb
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
@@ -35,6 +36,7 @@ def create_parser():
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
     parser.add_argument('custom_template_file', nargs='?',
                         help='custom template with option settings.\n')
+    parser.add_argument( '--submit', dest='submit_flag', action='store_true', help='submits job')
 
     return parser
 
@@ -54,6 +56,17 @@ if __name__ == "__main__":
     inps.project_name = get_project_name(inps.custom_template_file)
     inps.work_dir = get_work_directory(None, inps.project_name)
     inps = create_or_update_template(inps)
+
+    #########################################
+    # Submit job
+    #########################################
+    if inps.submit_flag:
+        job_file_name = 'ingest_insarmaps'
+        job_name = inps.project_name
+        work_dir = inps.work_dir
+        wall_time = '24:00'
+
+        cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
 
     os.chdir(inps.work_dir)
 

@@ -11,6 +11,7 @@ from rinsar import messageRsmas
 import rinsar._process_utilities as putils
 import stat
 import glob
+import rinsar.create_batch as cb
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
@@ -23,6 +24,7 @@ inps = None
 def create_parser():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('template', metavar="FILE", help='template file to use.')
+	parser.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
 
 	return parser
 
@@ -120,6 +122,18 @@ if __name__ == "__main__":
 	inps.project_name = putils.get_project_name(custom_template_file=inps.template)
 	inps.work_dir = putils.get_work_directory(None, inps.project_name)
 	inps.slcDir = inps.work_dir + "/SLC"
+
+	#########################################
+	# Submit job
+	#########################################
+	if inps.submit_flag:
+		job_file_name = 'download_asfserial_rsmas'
+		job_name = inps.template.split(os.sep)[-1].split('.')[0]
+		work_dir = inps.work_dir
+		wall_time = '24:00'
+
+		cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
+
 	os.chdir(inps.work_dir)
 	messageRsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 	os.chdir(inps.slcDir)
