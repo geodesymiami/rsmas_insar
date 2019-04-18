@@ -19,7 +19,7 @@ from pysar.utils import readfile
 from rinsar.rsmas_logging import RsmasLogger, loglevel
 import shutil
 from collections import namedtuple
-from natsort import natsorted
+
 from pysar.defaults.auto_path import autoPath
 from rinsar import messageRsmas
 ###############################################################################
@@ -418,16 +418,16 @@ def file_len(fname):
 ##########################################################################
 
 
-#def alphanum_key(s):
-#    """ Turn a string into a list of string and number chunks.
-#        "z23a" -> ["z", 23, "a"]
-#    """
-#    return [ int(c) if c.isdigit() else c for c in re.split('([0-9]+)', s) ]
+def alphanum_key(s):
+    """ Turn a string into a list of string and number chunks.
+        "z23a" -> ["z", 23, "a"]
+    """
+    return [ int(c) if c.isdigit() else c for c in re.split('([0-9]+)', s) ]
 
-#def sort_nicely(l):
-#    """ Sort the given list in the way that humans expect.
-#    """
-#    l.sort(key=alphanum_key)
+def sort_nicely(l):
+    """ Sort the given list in the way that humans expect.
+    """
+    l.sort(key=alphanum_key)
 
 ##########################################################################
 
@@ -435,8 +435,7 @@ def remove_zero_size_or_length_error_files(directory):
     """Removes files with zero size or zero length (*.e files in run_files)."""
     
     error_files  = glob.glob(directory + '/*.e')
-    #sort_nicely(error_files)
-    natsorted(error_files)
+    sort_nicely(error_files)
     for item in error_files:
         if os.path.getsize(item) == 0:       # remove zero-size files
             os.remove(item)
@@ -453,8 +452,7 @@ def move_error_files_except_first(directory):
        dir_name = os.path.dirname(error_files[0])
        if not os.path.isdir(dir_name + '/stderr_files'):
           os.mkdir(dir_name + '/stderr_files')
-       #sort_nicely(error_files)
-       natsorted(error_files)
+       sort_nicely(error_files)
        shutil.copy(error_files[0], dir_name + '/stderr_files' + '/' + os.path.basename(error_files[0]))
        del error_files[0]
        for item in error_files:
@@ -473,8 +471,7 @@ def raise_exception_if_job_exited(directory):
     # need to add for PBS. search_string='Terminated'
     search_string = 'Exited with exit code'
 
-    #sort_nicely(files)
-    natsorted(error_files)
+    sort_nicely(files)
     for file in files:
         with open(file) as fr:
             if search_string in fr.read(): 
