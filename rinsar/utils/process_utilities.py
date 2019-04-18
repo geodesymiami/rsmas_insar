@@ -13,6 +13,7 @@ import glob
 import subprocess
 from pysar.utils import utils
 from pysar.utils import readfile
+from natsort import natsorted
 from rinsar.objects.rsmas_logging import RsmasLogger, loglevel
 import shutil
 from collections import namedtuple
@@ -299,6 +300,7 @@ def create_or_copy_dem(work_dir, template, custom_template_file):
             status = subprocess.Popen(command, shell=True).wait()
             if status is not 0:
                 raise Exception('ERROR while making DEM')
+    return dem_dir
 
 ##########################################################################
 
@@ -360,7 +362,8 @@ def remove_zero_size_or_length_files(directory):
     """Removes files with zero size or zero length (*.e files in run_files)."""
     
     error_files  = glob.glob(directory + '/*.e')
-    sort_nicely(error_files)
+    #sort_nicely(error_files)
+    natsorted(error_files)
     for item in error_files:
         if os.path.getsize(item) == 0:       # remove zero-size files
             os.remove(item)
@@ -369,14 +372,14 @@ def remove_zero_size_or_length_files(directory):
     return None
 
 
-def alphanum_key(s):
-    """ Turn a string into a list of string and number chunks.
-        "z23a" -> ["z", 23, "a"]
-    """
-    return [ int(c) if c.isdigit() else c for c in re.split('([0-9]+)', s) ]
+#def alphanum_key(s):
+#    """ Turn a string into a list of string and number chunks.
+#        "z23a" -> ["z", 23, "a"]
+#    """
+#    return [ int(c) if c.isdigit() else c for c in re.split('([0-9]+)', s) ]
 
-def sort_nicely(l):
-    """ Sort the given list in the way that humans expect.
-    """
-    l.sort(key=alphanum_key)
+#def sort_nicely(l):
+#    """ Sort the given list in the way that humans expect.
+#    """
+#    l.sort(key=alphanum_key)
 

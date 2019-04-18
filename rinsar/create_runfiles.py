@@ -6,7 +6,7 @@
 import os, sys
 import subprocess
 import glob
-
+from natsort import natsorted
 import argparse
 from rinsar.objects.rsmas_logging import loglevel
 from rinsar.objects import message_rsmas
@@ -69,16 +69,13 @@ def main(argv):
             from rinsar.utils.stack_run import preprocessStack
             preprocessStack(inps, i=0)
 
-            run_file_list = glob.glob(inps.work_dir + '/pre_run_files/run_*')
+            run_file_list = natsorted(glob.glob(inps.work_dir + '/pre_run_files/run_*'))
             with open(inps.work_dir + '/pre_run_files_list', 'w') as run_file:
                 for item in run_file_list:
                     run_file.writelines(item + '\n')
 
-
-
     elif inps.step == 'mainprocess':
 
-        inps.slcDir = inps.work_dir + '/SLC'
         try:
             files1 = glob.glob(inps.work_dir + '/DEM/*.wgs84')[0]
             files2 = glob.glob(inps.work_dir + '/DEM/*.dem')[0]
@@ -127,7 +124,7 @@ def main(argv):
             logger.log(loglevel.ERROR, 'ERROR making run_files using {}'.format(script))
             raise Exception('ERROR making run_files using {}'.format(script))
 
-        run_file_list = glob.glob(inps.work_dir + '/run_files/run_*')
+        run_file_list = natsorted(glob.glob(inps.work_dir + '/run_files/run_*'))
         with open(inps.work_dir + '/run_files_list', 'w') as run_file:
             for item in run_file_list:
                 run_file.writelines(item + '\n')
@@ -188,15 +185,15 @@ def main(argv):
             logger.log(loglevel.ERROR, 'ERROR making run_files using {}'.format(script))
             raise Exception('ERROR making run_files using {}'.format(script))
 
-        run_file_list = glob.glob(inps.work_dir + '/post_run_files/run_*')
+        run_file_list = natsorted(glob.glob(inps.work_dir + '/post_run_files/run_*'))
         with open(inps.work_dir + '/post_run_files_list', 'w') as run_file:
             for item in run_file_list:
                 run_file.writelines(item + '\n')
 
-
     logger.log(loglevel.INFO, "-----------------Done making Run files-------------------")
 
 ###########################################################################################
+
 
 if __name__ == "__main__":
     main(sys.argv[:])
