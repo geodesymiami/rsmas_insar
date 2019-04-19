@@ -91,7 +91,25 @@ def run_ssara(template, run_number=1):
 
     ssaraopt = ssaraopt.split(' ')
 
+    ssaraopt_kml = ['--kml' if x.startswith('--parallel') else x for x in ssaraopt]
+    ssaraopt_print = ['--print' if x.startswith('--parallel') else x for x in ssaraopt]
+    ssaraopt_print.append('>')
+    ssaraopt_print.append('ssara_listing.txt')
+
     logger.log(loglevel.INFO, "GENERATED SSARAOPT STRING")
+
+    # get ssara kml file and print listing
+    ssara_call    = ['ssara_federated_query.py'] + ssaraopt_kml 
+    print(' '.join(ssara_call))
+    messageRsmas.log(' '.join(ssara_call))
+    ssara_process = subprocess.Popen(ssara_call)
+    ssara_call    = ['ssara_federated_query.py'] + ssaraopt_print 
+    print(' '.join(ssara_call))
+    messageRsmas.log(' '.join(ssara_call))
+    proc = subprocess.Popen(' '.join(ssara_call), stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+    output, error = proc.communicate()
+
+    #ssara_process = subprocess.Popen(ssara_call)
 
     # Runs ssara_federated_query-cj.py with proper options
     ssara_call    = ['ssara_federated_query-cj.py'] + ssaraopt + ['--print', '--download']
@@ -154,7 +172,7 @@ if __name__ == "__main__":
 
     inps.project_name = putils.get_project_name(custom_template_file=inps.template)
     inps.work_dir = putils.get_work_directory(None, inps.project_name)
-    inps.slcDir = inps.work_dir + "/SLC"
+    inps.slc_dir = inps.work_dir + "/SLC"
 
     #########################################
     # Submit job
@@ -166,10 +184,13 @@ if __name__ == "__main__":
         wall_time = '24:00'
 
         cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
+        sys.exit(0)
 
     os.chdir(inps.work_dir)
     messageRsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
-    os.chdir(inps.slcDir)
+    if not os.path.isdir(inps.slc_dir):
+        os.makedirs(inps.slc_dir)
+    os.chdir(inps.slc_dir)
 
     logger.log(loglevel.INFO, "DATASET: %s", str(inps.template.split('/')[-1].split(".")[0]))
     logger.log(loglevel.INFO, "DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
