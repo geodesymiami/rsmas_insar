@@ -102,8 +102,6 @@ def cmdLineParse(iargs=None):
     inps.slc_dirname = os.path.abspath(inps.slc_dirname)
     inps.work_dir = os.path.abspath(inps.work_dir)
 
-    import pbd; pdb.set_trace()
-
     return inps
 
 
