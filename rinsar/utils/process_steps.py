@@ -20,7 +20,7 @@ from pysar.utils import readfile, utils as ut
 
 STEP_LIST = [
     'download',
-    'proc_image',
+    'process_stack',
     'timeseries',
 ]
 
@@ -39,7 +39,7 @@ EXAMPLE = """example:
   process_rsmas.py -H                                 #print    default template options
   # Run with --start/stop/dostep options
   process_rsmas.py GalapagosSenDT128.template --dostep download    #run at step 'download' only
-  process_rsmas.py GalapagosSenDT128.template --end    proc_image  #end after step 'proc_image'
+  process_rsmas.py GalapagosSenDT128.template --end    process_stack  #end after step 'process_stack'
 """
 
 
@@ -302,7 +302,7 @@ class RsmasInsar:
             if sname == 'download':
                 self.run_download_data(sname)
 
-            elif sname == 'proc_image':
+            elif sname == 'process_stack':
                 self.run_process_images(sname)
 
             elif sname == 'timeseries':
