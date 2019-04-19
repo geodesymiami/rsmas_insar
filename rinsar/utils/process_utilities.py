@@ -362,24 +362,10 @@ def remove_zero_size_or_length_files(directory):
     """Removes files with zero size or zero length (*.e files in run_files)."""
     
     error_files  = glob.glob(directory + '/*.e')
-    #sort_nicely(error_files)
-    natsorted(error_files)
+    error_file = natsorted(error_files)
     for item in error_files:
         if os.path.getsize(item) == 0:       # remove zero-size files
             os.remove(item)
         elif file_len(item) == 0:
             os.remove(item)                  # remove zero-line files
     return None
-
-
-#def alphanum_key(s):
-#    """ Turn a string into a list of string and number chunks.
-#        "z23a" -> ["z", 23, "a"]
-#    """
-#    return [ int(c) if c.isdigit() else c for c in re.split('([0-9]+)', s) ]
-
-#def sort_nicely(l):
-#    """ Sort the given list in the way that humans expect.
-#    """
-#    l.sort(key=alphanum_key)
-
