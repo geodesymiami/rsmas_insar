@@ -36,20 +36,20 @@ def create_parser():
     return parser
 
 
-def command_line_parse(args):
+def command_line_parse(iargs=None):
     """ Parses command line agurments into inps variable. """
 
     parser = create_parser()
-    inps = parser.parse_args(args)
+    inps = parser.parse_args(args=iargs)
 
     return inps
 
 
 ###########################################################################################
 
-def main(argv):
+def main(iargs=None):
 
-    inps = command_line_parse(argv[:])
+    inps = command_line_parse(iargs)
     inps.project_name = get_project_name(inps.customTemplateFile)
     inps.work_dir = get_work_directory(None, inps.project_name)
     inps = create_or_update_template(inps)
@@ -196,4 +196,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    main(sys.argv[:])
+    main()
