@@ -9,7 +9,7 @@ import argparse
 from stackSentinel import get_dates
 import numpy as np
 from rinsar.objects.stack_rsmas import config, pre_run, post_run
-from pysqsar_utilities import convert_geo2image_coord, patch_slice
+from process_utilities import convert_geo2image_coord, patch_slice
 
 helpstr= '''
 Stack processor for Sentinel-1 data using process_rsmas.py .
