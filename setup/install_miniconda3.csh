@@ -30,6 +30,7 @@ cd ../bin
 
 ./pip install --upgrade pip
 ./pip install opencv-python
+conda install natsort --yes
 
 #setenv CONDA_ENVS_PATH ${PARENTDIR}/3rdparty/miniconda3/envs/
 #conda env create -f ${PARENTDIR}/requirements_isce22.txt --name isce22

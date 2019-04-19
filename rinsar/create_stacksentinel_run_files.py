@@ -11,7 +11,7 @@ import glob
 import argparse
 from rinsar.rsmas_logging import loglevel
 from rinsar import messageRsmas
-
+from natsort import natsorted
 from rinsar._processSteps import create_or_update_template, create_or_copy_dem
 from rinsar._process_utilities  import get_work_directory, get_project_name
 from rinsar._process_utilities  import _remove_directories, send_logger
@@ -107,7 +107,7 @@ if __name__ == "__main__":
         raise Exception('ERROR making run_files using {}'.format(script))
 
 
-    run_file_list = glob.glob(inps.work_dir + '/run_files/run_*')
+    run_file_list = natsorted(glob.glob(inps.work_dir + '/run_files/run_*'))
     with open(inps.work_dir + '/run_files_list', 'w') as run_file:
         for item in run_file_list:
             run_file.writelines(item + '\n')
