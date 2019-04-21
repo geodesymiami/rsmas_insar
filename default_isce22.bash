@@ -63,6 +63,9 @@ export PYTHONPATH=${PYTHONPATH}:${PARENTDIR}/3rdparty/PyAPS
 export PYTHONPATH=${PYTHONPATH}:${SENTINEL_STACK}
 export PYTHONPATH_RSMAS=${PYTHONPATH}
 
+######### Ignore warnings ############
+export PYTHONWARNINGS="ignore:Unverified HTTPS request"
+
 #####################################
 ############ Set paths ##############
 #####################################
