@@ -194,7 +194,7 @@ def set_default_options(inps):
          TemplateTuple('sentinelStack.stopDate', 'stopDate', None),
          TemplateTuple('sentinelStack.useGPU', 'useGPU', False),
          TemplateTuple('sentinelStack.processingMethod', 'processingMethod', 'sbas'),
-         TemplateTuple('sentinelStack.demMethod', 'demMethod', 'bbox'),
+         TemplateTuple('sentinelStack.demMethod', 'demMethod', 'ssara'),
          ]
         
         # TemplateTuple('sentinelStack.pairList', 'ilist', None),

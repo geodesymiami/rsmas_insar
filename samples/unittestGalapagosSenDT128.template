@@ -5,6 +5,7 @@ ssaraopt = --platform=SENTINEL-1A,SENTINEL-1B -r 128 -f 590-593 -s 2016-06-01  -
 processor                      = isce
 
 #sentinelStack.demDir           = /nethome/famelung/insarlab/DEMDIR/Sentinel/GalapagosSenDT128/DEM
+#sentinelStack.demMethod        = boundingBox
 sentinelStack.boundingBox      = '-1 -0.6 -91.7 -90.9' # '-1 0.15 -91.6 -90.9'
 sentinelStack.boundingBox      = '-0.7 -0.6 -91.7 -90.9' # '-1 0.15 -91.6 -90.9'
 sentinelStack.subswath         = 1    # '1 2'
