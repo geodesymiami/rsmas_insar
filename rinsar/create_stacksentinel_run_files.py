@@ -34,7 +34,6 @@ def create_parser():
 
     return parser
 
-
 def command_line_parse(args):
     """ Parses command line agurments into inps variable. """
 
@@ -42,8 +41,6 @@ def command_line_parse(args):
     inps = parser.parse_args(args)
     
     return inps
-
-
 
 if __name__ == "__main__":
 
@@ -53,24 +50,21 @@ if __name__ == "__main__":
     inps = create_or_update_template(inps)
     os.chdir(inps.work_dir)
 
-
-
     try:
-        files1 = glob.glob(inps.work_dir + '/DEM/*.wgs84')[0]
-        files2 = glob.glob(inps.work_dir + '/DEM/*.dem')[0]
-        dem_file = [files1, files2]
+        files1 = glob.glob(inps.work_dir + '/DEM/*.wgs84')
+        files2 = glob.glob(inps.work_dir + '/DEM/*.dem')
+        dem_file = files1[:] + files2[:]
         dem_file = dem_file[0]
     except:
         dem_file = create_or_copy_dem(work_dir=inps.work_dir,
-                                             template=inps.template,
-                                             custom_template_file=inps.custom_template_file)
+                    template=inps.template,
+                    custom_template_file=inps.custom_template_file)
 
     inps.demDir = dem_file
     command = 'stackSentinel.py'
 
     if inps.processingMethod == 'squeesar' or inps.processingMethod == 'ps':
         inps.workflow = 'slc'
-
         
     prefixletters = ['-slc_directory', '-orbit_directory', '-aux_directory', '-working_directory', 
                     '-dem', '-master_date', '-num_connections', '-num_overlap_connections', 
