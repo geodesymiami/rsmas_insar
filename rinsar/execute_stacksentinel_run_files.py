@@ -9,11 +9,13 @@ import glob
 from rinsar.rsmas_logging import loglevel
 import argparse
 import subprocess
+from rinsar import messageRsmas
 from rinsar._process_utilities import get_project_name, send_logger
 from rinsar._process_utilities import remove_zero_size_or_length_error_files, concatenate_error_files 
 from rinsar._process_utilities import move_error_files_except_first, move_stdout_files
 from rinsar._processSteps import create_or_update_template
 from rinsar._process_utilities import remove_zero_size_or_length_error_files, raise_exception_if_job_exited
+import rinsar.create_batch as cb
 
 logger_exec_run  = send_logger()
 
@@ -22,13 +24,60 @@ EXAMPLE = """example:
   execute_stacksentinel_run_files.py LombokSenAT156VV.template 
 """
 
+def main(args=None):
+
+    command = os.path.basename(__file__) + ' ' + ' '.join(args[0:])
+    messageRsmas.log(command)
+
+    inps = command_line_parse(sys.argv[1:])
+
+    #########################################
+    # Submit job
+    #########################################
+    if inps.submit_flag:
+        job_file_name = 'execute_stacksentinel_run_files'
+        work_dir = os.getcwd()
+        job_name = inps.custom_template_file.split(os.sep)[-1].split('.')[0]
+        wall_time = '36:00'
+
+        cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
+        sys.exit(0);
+
+    inps.project_name = get_project_name(inps.custom_template_file)
+    inps.work_dir = os.getenv('SCRATCHDIR') + '/' + inps.project_name
+    inps = create_or_update_template(inps)
+    run_file_list = get_run_files(inps)
+
+    if inps.stop_run == 999:
+        inps.stop_run = len(run_file_list)
+
+    logger_exec_run.log(loglevel.INFO, "Executing Runfiles {} to {}".format(inps.start_run,inps.stop_run))
+
+    memoryuse = set_memory_defaults()
+
+    submit_isce_jobs(run_file_list[inps.start_run - 1:inps.stop_run], inps.work_dir, memoryuse)
+    
+    remove_zero_size_or_length_error_files(directory='run_files')
+    concatenate_error_files(directory='run_files',out_name='out_stack_sentinel_errorfiles.e')
+    move_error_files_except_first(directory='run_files')
+    move_stdout_files(directory='run_files')
+
+    logger_exec_run.log(loglevel.INFO, "-----------------Done Executing Run files-------------------")
+    
+    
 def create_parser():
     """ Creates command line argument parser object. """
 
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, epilog=EXAMPLE)
+    #parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, epilog=EXAMPLE)
+    parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
     parser.add_argument('custom_template_file', nargs='?',
                         help='custom template with option settings.\n')
+    parser.add_argument( '--submit', dest='submit_flag', action='store_true', help='submits job')
+    parser.add_argument('--start_run', dest='start_run', default='1', type=int,
+                        help='run_file number to start with, default=1')
+    parser.add_argument('--stop_run', dest='stop_run', default='999', type=int,
+                        help='run_file number to start with, default: last file')
 
     return parser
 
@@ -42,7 +91,7 @@ def command_line_parse(args):
     return inps
 
 
-def get_run_files():
+def get_run_files(inps):
     """ Reads stackSentinel runfiles to a list. """
 
     runfiles = os.path.join(inps.work_dir, 'run_files_list')
@@ -91,7 +140,7 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
         if os.getenv('QUEUENAME') == 'debug':
             walltimelimit = '0:30'
         else:
-            walltimelimit = '4:00'
+            walltimelimit = '16:00'
 
         if item_memory == 'phase_linking':
             walltimelimit = '40:00'
@@ -125,47 +174,7 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
     return None
 
 ##############################################################################
-class inpsvar:
-    pass
 
 if __name__ == "__main__":
+    main(sys.argv[1:])
 
-    inps = inpsvar()
-
-    try:
-        inps.custom_template_file = sys.argv[1]
-        inps.start = int(sys.argv[2])
-        inps.stop = int(sys.argv[3])
-    except:
-        print('')
-
-    inps.project_name = get_project_name(inps.custom_template_file)
-    inps.work_dir = os.getenv('SCRATCHDIR') + '/' + inps.project_name
-    inps = create_or_update_template(inps)
-    run_file_list = get_run_files()
-
-    try:
-        inps.start
-    except:
-        inps.start = 1
-    try:
-        inps.stop
-    except:
-        inps.stop = len(run_file_list)
-
-
-    logger_exec_run.log(loglevel.INFO, "Executing Runfiles {} to {}".format(inps.start,inps.stop))
-
-
-    memoryuse = set_memory_defaults()
-
-    submit_isce_jobs(run_file_list[inps.start - 1:inps.stop], inps.work_dir, memoryuse)
-    
-    remove_zero_size_or_length_error_files(directory='run_files')
-    concatenate_error_files(directory='run_files',out_name='out_stack_sentinel_errorfiles.e')
-    move_error_files_except_first(directory='run_files')
-    move_stdout_files(directory='run_files')
-
-    logger_exec_run.log(loglevel.INFO, "-----------------Done Executing Run files-------------------")
-    
-    
