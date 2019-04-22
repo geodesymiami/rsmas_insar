@@ -88,34 +88,20 @@ def run_ssara(template, run_number=1):
     dataset_template = Template(template)
 
     ssaraopt = dataset_template.generate_ssaraopt_string()
-
     ssaraopt = ssaraopt.split(' ')
-
-    ssaraopt_kml = ['--kml' if x.startswith('--parallel') else x for x in ssaraopt]
-    ssaraopt_print = ['--print' if x.startswith('--parallel') else x for x in ssaraopt]
-    ssaraopt_print.append('>')
-    ssaraopt_print.append('ssara_listing.txt')
-
     logger.log(loglevel.INFO, "GENERATED SSARAOPT STRING")
 
-    # get ssara kml file and print listing
-    ssara_call    = ['ssara_federated_query.py'] + ssaraopt_kml 
-    print(' '.join(ssara_call))
-    messageRsmas.log(' '.join(ssara_call))
-    ssara_process = subprocess.Popen(ssara_call)
-    ssara_call    = ['ssara_federated_query.py'] + ssaraopt_print 
-    print(' '.join(ssara_call))
-    messageRsmas.log(' '.join(ssara_call))
-    proc = subprocess.Popen(' '.join(ssara_call), stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-    output, error = proc.communicate()
+    # add intersectWith to ssaraopt string 
+    ssaraopt = add_polygon_to_ssaraopt(dataset_template, ssaraopt = ssaraopt)
 
-    #ssara_process = subprocess.Popen(ssara_call)
+    # get kml file and create listing
+    get_ssara_kml_and_listing(ssaraopt = ssaraopt)
 
     # Runs ssara_federated_query-cj.py with proper options
     ssara_call    = ['ssara_federated_query-cj.py'] + ssaraopt + ['--print', '--download']
-    print(' '.join(ssara_call))
+    print('Download data using:\n' + ' '.join(ssara_call))
     messageRsmas.log(' '.join(ssara_call))
-    ssara_process = subprocess.Popen(ssara_call)
+    ssara_process = subprocess.Popen(' '.join(ssara_call), shell=True)
 
     logger.log(loglevel.INFO, "STARTED PROCESS")
    
@@ -128,7 +114,6 @@ def run_ssara(template, run_number=1):
     logger.log(loglevel.INFO, "INITIAL COMPLETION STATUS: %s", str(completion_status))
 
     # while the process has not completed
-    #import pdb; pdb.set_trace()
     while completion_status is None:
 
         i = i + 1
@@ -166,6 +151,44 @@ def run_ssara(template, run_number=1):
         run_ssara(template, run_number=run_number + 1)
 
     return 0
+
+def get_ssara_kml_and_listing(ssaraopt): 
+    """download the ssara kml file and generate a file listing of granules to be downloaded"""
+
+    ssaraopt_kml = ['--kml' if x.startswith('--parallel') else x for x in ssaraopt]
+    ssaraopt_print = ['--print' if x.startswith('--parallel') else x for x in ssaraopt]
+    ssaraopt_print.append('>')
+    ssaraopt_print.append('ssara_listing.txt')
+
+    ssara_call    = ['ssara_federated_query.py'] + ssaraopt_kml 
+    print('Get KML using:\n' + ' '.join(ssara_call))
+    messageRsmas.log(' '.join(ssara_call))
+    ssara_process = subprocess.run(' '.join(ssara_call), shell=True)
+    ssara_call    = ['ssara_federated_query.py'] + ssaraopt_print 
+    print('Get listing using:\n' + ' '.join(ssara_call))
+    messageRsmas.log(' '.join(ssara_call))
+    ssara_process = subprocess.run(' '.join(ssara_call), shell=True)
+
+    return None
+
+def add_polygon_to_ssaraopt( dataset_template, ssaraopt ):
+    """calculates intersectsWith polygon from bbox and replace frame in ssaraopt if give"""
+    bbox_list = dataset_template.get_options()['sentinelStack.boundingBox'][1:-1].split(' ')
+    delta_lat = 0.2
+    delta_lon = 0.1
+    min_lat = float( bbox_list[0] ) - delta_lat
+    max_lat = float( bbox_list[1] ) + delta_lat
+    min_lon = float( bbox_list[2] ) - delta_lon
+    max_lon = float( bbox_list[3] ) + delta_lon
+
+    polygon = '--intersectsWith=\'Polygon(({:.2f} {:.2f}, {:.2f} {:.2f}, {:.2f} {:.2f}, {:.2f} {:.2f}, {:.2f} {:.2f}))\'' .format(
+        min_lon, min_lat, min_lon, max_lat, max_lon, max_lat, max_lon, min_lat, min_lon, min_lat)
+
+    # add --polygon and remove --frame option
+    ssaraopt.insert(2,polygon)
+    ssaraopt = [ x for x in ssaraopt if not x[0:7]=='--frame']
+
+    return ssaraopt
 
 if __name__ == "__main__":
     inps = command_line_parse(sys.argv[1:])
