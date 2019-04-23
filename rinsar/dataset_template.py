@@ -36,7 +36,7 @@ class Template:
         #    self.shutil.copy2(custom_template_file, self.work_dir)
         shutil.copy2(custom_template_file, self.work_dir)
         self.options = self.read_options(custom_template_file)
-        
+        self.options = correct_keyvalue_quotes(self.options.copy())
   
     def read_options(self,template_file):
         """ Read template options.
@@ -45,6 +45,7 @@ class Template:
         """
         # Creates the options dictionary and adds the dataset name as parsed from the filename
         # to the dictionary for easy lookup
+        
         options = {'dataset': template_file.split('/')[-1].split(".")[0]}
         with open(template_file) as template:
             for line in template:
@@ -149,3 +150,38 @@ class Template:
         ssaraopt += ' --parallel={}'.format(parallel_download)
 
         return ssaraopt
+
+def correct_keyvalue_quotes(options_in):
+         """ quote-independent reformatting of sentinel.subswath key-value:
+                 1 2 ---> '1 2'
+                 1  ---> 1
+                '1' ---> 1
+                -1 0.15 -91.6 -90.9 ---> '-1 0.15 -91.6 -90.9'
+         """
+         for item in ['sentinelStack.subswath', 'sentinelStack.boundingBox']:
+             if item in options_in.keys():
+                 value_orig = options_in[item]
+                 value_new = check_correct_quotes(value_orig)
+                 options_in[item] = value_new
+                 print(value_orig + '-->' + value_new)
+         return options_in
+
+
+def check_correct_quotes(string):
+         """ checks weather quotes are as required and corrects/replaces if needed
+         """
+
+         if string[0:1] == '\'':
+            num_item = string.split(' ')
+            if len(num_item) == 1:
+                out_string = string[1:2]
+            else:
+                out_string = string
+         else:
+            num_item = string.split(' ')
+            if len(num_item) >= 2:
+                out_string = '\'' + string + '\''    
+            else:
+                out_string = string
+         return out_string
+
