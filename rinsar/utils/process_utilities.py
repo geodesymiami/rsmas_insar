@@ -229,17 +229,18 @@ def set_inps_value_from_template(inps, template_key,
     if default_value == 'None':
         default_value = None
 
+
     if not REQUIRED:
         # Set default value
         if not key_name in inps:
             if template_key in inps.custom_template:
-                inps_dict[key_name] = inps.custom_template[template_key]
+                inps_dict[key_name] = inps.custom_template[template_key].strip("'")
             else:
                 inps_dict[key_name] = default_value
 
     else:
         if template_key in inps.template:
-            inps_dict[key_name] = inps.template[template_key]
+            inps_dict[key_name] = inps.template[template_key].strip("'")
         else:
             logger.log(loglevel.ERROR, '{} is required'.format(template_key))
             raise Exception('ERROR: {0} is required'.format(template_key))

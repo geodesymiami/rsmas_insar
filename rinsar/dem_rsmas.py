@@ -48,7 +48,7 @@ def main(args):
         if inps.demMethod == 'ssara':
             inps.flag_ssara = True
             inps.flag_boundingBox = False
-        if inps.demMethod == 'boundingBox':
+        if inps.demMethod == 'bbox':
             inps.flag_ssara = False
             inps.flag_boundingBox = True
 
@@ -64,11 +64,11 @@ def main(args):
     elif inps.flag_boundingBox:
         print('DEM generation using ISCE')
         bbox = inps.boundingBox
-        south = bbox.split(' ')[0].split('\'')[1]  # assumes quotes '-1 0.15 -91.3 -91.0'
+        south = bbox.split(' ')[0]
         north = bbox.split(' ')[1]
         west = bbox.split(' ')[2]
-        east = bbox.split(' ')[3].split('\'')[0]
-
+        east = bbox.split(' ')[3]
+        import pdb; pdb.set_trace()
         south = round(float(south) - 0.5)
         north = round(float(north) + 0.5)
         west = round(float(west) - 0.5)
@@ -76,7 +76,7 @@ def main(args):
 
         demBbox = str(int(south)) + ' ' + str(int(north)) + ' ' + str(int(west)) + ' ' + str(int(east))
         cmd = 'dem.py -a stitch -b ' + demBbox + ' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
-        messageRsmas.log(cmd)
+        message_rsmas.log(cmd)
 
         try:
             output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True, universal_newlines=True)
