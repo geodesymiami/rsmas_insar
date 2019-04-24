@@ -13,12 +13,14 @@ from stackSentinel import *
 from Stack import sentinelSLC
 from matplotlib.path import Path as Path
 from rinsar.objects.stack_rsmas import rsmasRun
-from rinsar.utils.pysqsar_utilities import convert_geo2image_coord, patch_slice
+from rinsar.utils.process_utilities import convert_geo2image_coord, patch_slice
 from rinsar.utils.process_utilities import get_slc_list, make_run_list
 from rinsar.objects.auto_defaults import PathFind
 
 pathObj = PathFind()
 ###########################################
+
+
 def run_download(inps):
 
     if os.path.exists(os.path.join(inps.work_dir, pathObj.rundir)):
@@ -52,8 +54,11 @@ class CreateRun:
         self.customTemplateFile = inps.customTemplateFile
         self.work_dir = inps.work_dir
         self.workflow = inps.workflow
-        cleanlist = pathObj.isce_clean_list()
-        for item in cleanlist[1]:
+        self.geo_master_dir = os.path.join(self.work_dir, pathObj.geomasterdir)
+        self.squeesar_dir = os.path.join(self.work_dir, pathObj.squeesar)
+
+        clean_list = pathObj.isce_clean_list()
+        for item in clean_list[1]:
             if os.path.isdir(os.path.join(inps.work_dir, item)):
                 shutil.rmtree(os.path.join(inps.work_dir, item))
 
@@ -115,8 +120,6 @@ class CreateRun:
 
         return
 
-
-
     def run_stack_workflow(self):        ### This part is for isceStack run_files
         if self.workflow == 'interferogram':
             interferogramStack(self.inps, self.acquisitionDates, self.stackMasterDate, self.slaveDates,
@@ -142,9 +145,7 @@ class CreateRun:
         self.iter = len(run_list)
         return
 
-
-
-    def generalStack(self, inps):
+    def general_stack(self, inps):
 
         i = self.iter + 1
         runObj = rsmasRun()
@@ -182,12 +183,9 @@ class CreateRun:
             runObj.finalize()
 
             self.iter = i
-            self.generalStack(inps)
+            self.general_stack(inps)
 
         elif inps.processingMethod == 'squeesar':
-
-            self.geo_master_dir = os.path.join(self.work_dir, pathObj.geomasterdir)
-            self.squeesar_dir = os.path.join(self.work_dir, pathObj.squeesar)
 
             cbox = [val for val in inps.cropbox.split()]
             if len(cbox) != 4:
@@ -210,7 +208,6 @@ class CreateRun:
 
             for i in range(len(self.allSLCs) - 1):
                 self.pairs_sm.append((self.allSLCs[0], self.allSLCs[i + 1]))
-
 
             i = self.iter 
 
@@ -250,7 +247,7 @@ class CreateRun:
             runObj.finalize()
 
             self.iter = i
-            self.generalStack(inps)
+            self.general_stack(inps)
 
         return
 
