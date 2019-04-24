@@ -55,7 +55,7 @@ class CreateRun:
         self.work_dir = inps.work_dir
         self.workflow = inps.workflow
         self.geo_master_dir = os.path.join(self.work_dir, pathObj.geomasterdir)
-        self.squeesar_dir = os.path.join(self.work_dir, pathObj.squeesar)
+        self.squeesar_dir = os.path.join(self.work_dir, pathObj.squeesardir)
 
         clean_list = pathObj.isce_clean_list()
         for item in clean_list[1]:
