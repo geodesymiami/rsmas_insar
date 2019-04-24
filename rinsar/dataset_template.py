@@ -117,11 +117,11 @@ class Template:
 
         """
 
-        # Determines if any of the ssaraopt keys are not present in the template files and either
-        # utilizes the general ssaraopt option or throws an exception if that is also not present
+        # Determines if the required ssaraopt keys are present in the template files and either
+        # utilizes the general ssaraopt option or throws an exception 
         # (likely an invalid template file in that case).
 
-        ssaraopt_keys = ['ssaraopt.platform', 'ssaraopt.relativeOrbit', 'ssaraopt.frame']
+        ssaraopt_keys = ['ssaraopt.platform', 'ssaraopt.relativeOrbit']
 
         bad_key = False
         for key in ssaraopt_keys:
@@ -130,24 +130,30 @@ class Template:
                 if 'ssaraopt' in self.options:
                     ssaraopt = self.options['ssaraopt']
                 else:
-                    raise Exception('no ssaraopt or ssaraopt.platform, relativeOrbit, frame found')
+                    raise Exception('no ssaraopt or ssaraopt.platform, relativeOrbit found')
 
         # If all of the keys are present go ahead and generate the ssaraopt string as normal.
         if not bad_key:
             platform = self.options['ssaraopt.platform']
             relativeOrbit = self.options['ssaraopt.relativeOrbit']
-            frame = self.options['ssaraopt.frame']
-            ssaraopt = '--platform={} --relativeOrbit={} --frame={}'.format(platform, relativeOrbit, frame)
+            ssaraopt = '--platform={} --relativeOrbit={}'.format(platform, relativeOrbit)
+            if 'ssaraopt.frame' in self.options.keys():
+                frame = self.options['ssaraopt.frame']
+                ssaraopt += ' --frames={}'.format(frame)
             if 'ssaraopt.startDate' in self.options:
                 startDate = self.options['ssaraopt.startDate']
                 ssaraopt += ' -s={}'.format(startDate)
             if 'ssaraopt.endDate' in self.options:
                 endDate = self.options['ssaraopt.endDate']
                 ssaraopt += ' -e={}'.format(endDate)
+            if 'ssaraopt.parallel' in self.options:
+                parallel = self.options['ssaraopt.parallel']
+            else:
+                 parallel = 30
+            ssaraopt += ' --parallel={}'.format(parallel)
 
-        parallel_download = self.options.get("ssaraopt.parallelDownload", '30')
-
-        ssaraopt += ' --parallel={}'.format(parallel_download)
+            #this was in Josh's code (above yje ssaraopt assignment) but unclear  what it does
+            #parallel_download = self.options.get("ssaraopt.parallelDownload", '30')
 
         return ssaraopt
 
