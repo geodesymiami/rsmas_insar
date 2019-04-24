@@ -1,7 +1,0 @@
-sentinelStack.processingMethod            = smallbaseline         # [smallbaseline, squeesar]
-squeesar.wsizerange = 15
-squeesar.wsizeazimuth = 11
-lat_south  =  -0.95  # The area for filtering in squeezer
-lat_north  =  -0.75
-lon_west  =  -91.10
-lon_east  =  -91.00
