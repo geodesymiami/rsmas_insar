@@ -6,16 +6,15 @@
 import os
 import argparse
 import subprocess
-from rinsar.utils.process_utilities import get_project_name, get_job_defaults
-from rinsar.utils.process_utilities import remove_zero_size_or_length_files
-
-
+from rinsar.objects import message_rsmas
+from rinsar.utils.process_utilities import get_project_name, get_config_defaults
+from rinsar.utils.process_utilities import remove_zero_size_or_length_files, read_run_list
+import rinsar.create_batch as cb
 
 ##############################################################################
 EXAMPLE = """example:
   execute_runfiles.py LombokSenAT156VV.template 
 """
-
 
 def create_parser():
     """ Creates command line argument parser object. """
@@ -28,6 +27,7 @@ def create_parser():
                         help='starting run file number (default = 1).\n')
     parser.add_argument('stop', nargs='?', type=int,
                         help='stopping run file number.\n')
+    parser.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
 
     return parser
 
@@ -41,10 +41,10 @@ def command_line_parse(iargs=None):
     return inps
 
 
-def get_run_files(inps):
+def get_run_files(work_dir):
     """ Reads main runfiles to a list. """
 
-    runfiles = os.path.join(inps.work_dir, 'run_files_list')
+    runfiles = os.path.join(work_dir, 'run_files_list')
     run_file_list = []
     with open(runfiles, 'r') as f:
         new_f = f.readlines()
@@ -52,7 +52,6 @@ def get_run_files(inps):
             run_file_list.append('run_files/' + line.split('/')[-1][:-1])
 
     return run_file_list
-
 
 
 def submit_run_jobs(run_file_list, cwd, config):
@@ -84,19 +83,7 @@ def submit_run_jobs(run_file_list, cwd, config):
         if status is not 0:
             raise Exception('ERROR submitting {} using create_batch.py'.format(item))
 
-        job_folder = cwd + '/' + item + '_out_jobs'
-        print('jobfolder:', job_folder)
-
-        remove_zero_size_or_length_files(directory='run_files')
-
-        if not os.path.isdir(job_folder):
-            os.makedirs(job_folder)
-
-        mvlist = ['*.e ', '*.o ', '*.job ']
-        for mvitem in mvlist:
-            cmd = 'mv ' + cwd + '/run_files/' + mvitem + job_folder
-            print('move command:',cmd)
-            os.system(cmd)
+        #remove_zero_size_or_length_files(directory='run_files')
 
     return None
 
@@ -106,18 +93,34 @@ def main(iargs=None):
     inps = command_line_parse(iargs)
 
     inps.project_name = get_project_name(inps.custom_template_file)
-    inps.work_dir = os.getenv('SCRATCHDIR') + '/' + inps.project_name
+    inps.work_dir = os.path.join(os.getenv('SCRATCHDIR'), inps.project_name)
+    os.chdir(inps.work_dir)
 
-    run_file_list = get_run_files(inps)
+    #########################################
+    # Submit job
+    #########################################
 
-    if inps.start is None:
+    if inps.submit_flag:
+        job_file_name = 'execute_runfiles'
+        work_dir = os.getcwd()
+        job_name = inps.custom_template_file.split(os.sep)[-1].split('.')[0]
+        wall_time = '36:00'
+
+        cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
+        sys.exit(0)
+
+    run_file_list = read_run_list(inps.work_dir)
+
+    if inps.start is None and 'run_0_' in run_file_list[0]:
         inps.start = 1
+    else:
+        inps.start = 0
     if inps.stop is None:
         inps.stop = len(run_file_list)
 
-    config_def = get_job_defaults()
+    config_def = get_config_defaults(config_file='job_defaults.cfg')
+    submit_run_jobs(run_file_list[inps.start:inps.stop+1], inps.work_dir, config_def)
 
-    submit_run_jobs(run_file_list[inps.start - 1:inps.stop], inps.work_dir, config_def)
     return None
 
 

@@ -11,6 +11,7 @@ from __future__ import print_function
 import os
 import glob
 import subprocess
+import configparser
 from pysar.utils import utils
 from pysar.utils import readfile
 from natsort import natsorted
@@ -21,9 +22,11 @@ from rinsar.objects.dataset_template import Template
 
 from pysar.defaults.auto_path import autoPath
 from rinsar.objects import message_rsmas
-###############################################################################
 
-logfile_name = os.getenv('OPERATIONS') + '/LOGS/process_rsmas.log'
+from rinsar.objects.auto_defaults import PathFind
+###############################################################################
+pathObj = PathFind()
+logfile_name = pathObj.logdir + '/process_rsmas.log'
 logger = RsmasLogger(file_name=logfile_name)
 
 ###############################################################################
@@ -58,16 +61,17 @@ sentinelStack.stopDate                    = auto         # [YYYY-MM-DD]. auto fo
 sentinelStack.useGPU                      = auto         # Allow App to use GPU when available [default: False]
 sentinelStack.processingMethod            = auto         # [sbas, squeesar, ps]
 sentinelStack.demMethod                   = auto         # [bbox, ssara]
-'''
-#### More options to be added if required:
-#sentinelStack.pairList                    = auto         # [file] file containing pairs to process in each line. auto for None
-#sentinelStack.overridePairs               = auto         # [yes, no] override program-generated pairs with the files on the list. auto for no
-#sentinelStack.cleanUp                     = auto         # [False, True] Remove fine*int burst fines. auto for False
-#sentinelStack.layoverMask                 = auto         # [False, True] Generate layover mask and remove from filtered phase. auto for False
-#sentinelStack.waterMask                   = auto         # [False, True] Generate water mask and remove from filtered phase. auto for False
-#sentinelStack.virtualFiles                = auto         # [False, True] writing only vrt of merged files (Default: True)
-#sentinelStack.forceOverride               = auto         # Force new acquisition override. auto for no
 
+#rsmasInsar.processingMethod               = auto         # [smallbaseline, squeesar]
+#rsmasInsar.demMethod                      = auto         # [bbox, ssara]
+
+#squeesar.plmethod                         = auto         # [EVD, EMI, PTA, sequential_EVD, sequential_EMI, sequential_PTA]
+#squeesar.patch_size                       = auto         # 200
+#squeesar.range_window                     = auto         # 21
+#squeesar.azimuth_window                   = auto         # 15
+#squeesar.cropbox                          = auto         # [ '-1 0.15 -91.7 -90.9'] required [SNEW]
+
+'''
 
 ##########################################################################
 
@@ -78,17 +82,28 @@ def send_logger():
 ##########################################################################
 
 
+def _remove_directories(directories_to_delete):
+    """ Removes given existing directories. """
+
+    for directory in directories_to_delete:
+        if os.path.isdir(directory):
+            shutil.rmtree(directory)
+
+    return None
+
+
+##########################################################################
+
+
 def get_project_name(custom_template_file):
     """ Restores project name from custom template file. """
 
     project_name = None
     if custom_template_file:
-        custom_template_file = os.path.abspath(custom_template_file)
         project_name = os.path.splitext(
             os.path.basename(custom_template_file))[0]
-        logger.log(loglevel.DEBUG, 'Project name: {}'.format(project_name))
-
     return project_name
+
 
 ##########################################################################
 
@@ -104,18 +119,8 @@ def get_work_directory(work_dir, project_name):
     work_dir = os.path.abspath(work_dir)
 
     return work_dir
-  
-##########################################################################
 
-def _remove_directories(directories_to_delete):
-    """ Removes given existing directories. """
 
-    for directory in directories_to_delete:
-        if os.path.isdir(directory):
-            shutil.rmtree(directory)
-
-    return None
-  
 ##########################################################################
 
 def create_or_update_template(inps):
@@ -124,18 +129,24 @@ def create_or_update_template(inps):
     """
     print('\n*************** Template Options ****************')
     # write default template
+    
+    inps.project_name = get_project_name(inps.customTemplateFile)
+    inps.work_dir = get_work_directory(None, inps.project_name)
+
     inps.template_file = create_default_template()
     templateObj = Template(inps.customTemplateFile)
     inps.custom_template = templateObj.get_options()
+
+    for key in inps.custom_template:
+        inps.custom_template[key] = os.path.expandvars(inps.custom_template[key])
+
+    pathObj.set_isce_defaults(inps)
+
     inps.template = inps.custom_template
-    # Read and update default template with custom input template
-    #if not inps.template_file == inps.customTemplateFile:
-    #    inps.template = templateObj.update_options_from_file(inps.template_file)
 
-    set_default_options(inps)
+    set_default_options(inps, pathObj)
 
-    if 'cleanopt' not in inps.custom_template:
-        inps.custom_template['cleanopt'] = '0'
+    del inps.template, inps.custom_template
 
     return inps
 
@@ -156,87 +167,34 @@ def create_default_template():
 
     return template_file
   
-##########################################################################
+#########################################################################
 
 
-def create_custom_template(custom_template_file, work_dir):
-    """ Creates or restores custom template file. """
-  
-    if custom_template_file:
-        # Copy custom template file to work directory
-        if utils.run_or_skip(
-                os.path.basename(
-                    custom_template_file),
-                custom_template_file,
-                check_readable=False) == 'run':
-            shutil.copy2(custom_template_file, work_dir)
-
-        # Read custom template
-        logger.log(loglevel.INFO, 'read custom template file: {}'.format(custom_template_file))
-        return readfile.read_template(custom_template_file)
-    else:
-        return dict()  
-
-##########################################################################
-
-
-def set_default_options(inps):
+def set_default_options(inps, pathObj):
     """ Sets default values for template file. """
     
-    inps.orbitDir = '$SENTINEL_ORBITS'
-    inps.auxDir = '$SENTINEL_AUX'
-    
-    TemplateTuple = namedtuple(typename='TemplateTuple',
-                               field_names=['key', 'inps_name', 'default_value'])
+    inps.orbitDir = pathObj.orbitdir
+    inps.auxDir = pathObj.auxdir
 
-    # Processing methods added by Sara 2018  (values can be: 'sbas', 'squeesar', 'ps'), ps is not
-    # implemented yet
-    required_template_vals = \
-        [TemplateTuple('sentinelStack.subswath', 'subswath', None),
-         TemplateTuple('sentinelStack.boundingBox', 'boundingBox', None),
-         ]
-    optional_template_vals = \
-        [TemplateTuple('sentinelStack.slcDir', 'slcDir', inps.work_dir + '/SLC'),
-         TemplateTuple('sentinelStack.workingDir', 'workingDir', inps.work_dir),
-         TemplateTuple('sentinelStack.master', 'masterDir', None),
-         TemplateTuple('sentinelStack.numConnections', 'numConnections', 3),
-         TemplateTuple('sentinelStack.numOverlapConnections', 'numOverlapConnections', 3),
-         TemplateTuple('sentinelStack.textCmd', 'textCmd', '\'\''),
-         TemplateTuple('sentinelStack.excludeDate', 'excludeDate', None),
-         TemplateTuple('sentinelStack.includeDate', 'includeDate', None),
-         TemplateTuple('sentinelStack.azimuthLooks', 'azimuthLooks', 3),
-         TemplateTuple('sentinelStack.rangeLooks', 'rangeLooks', 9),
-         TemplateTuple('sentinelStack.filtStrength', 'filtStrength', 0.5),
-         TemplateTuple('sentinelStack.esdCoherenceThreshold', 'esdCoherenceThreshold', 0.85),
-         TemplateTuple('sentinelStack.snrMisregThreshold', 'snrThreshold', 10),
-         TemplateTuple('sentinelStack.unwMethod', 'unwMethod', 'snaphu'),
-         TemplateTuple('sentinelStack.polarization', 'polarization', 'vv'),
-         TemplateTuple('sentinelStack.coregistration', 'coregistration', 'NESD'),
-         TemplateTuple('sentinelStack.workflow', 'workflow', 'interferogram'),
-         TemplateTuple('sentinelStack.startDate', 'startDate', None),
-         TemplateTuple('sentinelStack.stopDate', 'stopDate', None),
-         TemplateTuple('sentinelStack.useGPU', 'useGPU', False),
-         TemplateTuple('sentinelStack.processingMethod', 'processingMethod', 'sbas'),
-         TemplateTuple('sentinelStack.demMethod', 'demMethod', 'bbox'),
-         ]
-        
-        # TemplateTuple('sentinelStack.pairList', 'ilist', None),
-        # TemplateTuple('sentinelStack.overridePairs', 'ilistonly', 'no'),
-        # TemplateTuple('sentinelStack.cleanUp', 'cleanup', False),
-        # TemplateTuple('sentinelStack.layoverMask', 'layovermsk', False),
-        # TemplateTuple('sentinelStack.waterMask', 'watermsk', False),
-        # TemplateTuple('sentinelStack.virtualFiles', 'useVirtualFiles', True),
-        # TemplateTuple('sentinelStack.forceOverride', 'force', 'no')
-          
-    # Iterate over required and template values, adding them to `inps`
-    for template_val in required_template_vals:
-        set_inps_value_from_template(inps, template_key=template_val.key,
-                                     inps_name=template_val.inps_name, REQUIRED=True)
+    config_def = get_config_defaults(config_file='template_defaults.cfg')
 
-    for template_val in optional_template_vals:
-        set_inps_value_from_template(inps, template_key=template_val.key,
-                                     inps_name=template_val.inps_name,
-                                     default_value=template_val.default_value)
+    default_template_dict = {}
+    for each_section in config_def.sections():
+        for (each_key, each_val) in config_def.items(each_section):
+            default_template_dict.update({each_key: os.path.expandvars(each_val)})
+
+    required_template_vals = pathObj.required_template_options
+
+    for template_key in required_template_vals:
+        if not template_key in inps.custom_template:
+            logger.log(loglevel.ERROR, '{} is required'.format(template_key))
+            raise Exception('ERROR: {0} is required'.format(template_key))
+
+
+    for template_val in default_template_dict:
+        set_inps_value_from_template(inps, template_key=template_val,
+                                     inps_name=template_val,
+                                     default_value=default_template_dict[template_val])
     return inps
 
 ##########################################################################
@@ -261,25 +219,33 @@ def set_inps_value_from_template(inps, template_key,
     # Allows you to refer to and modify `inps` values
     inps_dict = vars(inps)
 
+
+    key_name = inps_name.split('.')
+    try:
+        key_name = key_name[1]
+    except:
+        key_name = key_name[0]
+
+    if default_value == 'None':
+        default_value = None
+
     if not REQUIRED:
         # Set default value
-        inps_dict[inps_name] = default_value
-        if template_key in inps.template:
-            value = inps.template[template_key]
-            if value == default_name:
-                # If default name is also set in `template`,
-                # set the default value.
-                inps_dict[inps_name] = default_value
+        if not key_name in inps:
+            if template_key in inps.custom_template:
+                inps_dict[key_name] = inps.custom_template[template_key]
             else:
-                inps_dict[inps_name] = value
+                inps_dict[key_name] = default_value
+
     else:
         if template_key in inps.template:
-            inps_dict[inps_name] = inps.template[template_key]
+            inps_dict[key_name] = inps.template[template_key]
         else:
             logger.log(loglevel.ERROR, '{} is required'.format(template_key))
             raise Exception('ERROR: {0} is required'.format(template_key))
 
 ##########################################################################
+
 
 def create_or_copy_dem(work_dir, template, custom_template_file):
     """ Downloads a DEM file or copies an existing one."""
@@ -304,24 +270,24 @@ def create_or_copy_dem(work_dir, template, custom_template_file):
 
 ##########################################################################
 
-def get_job_defaults():
+
+def get_config_defaults(config_file='job_defaults.cfg'):
     """ Sets an optimized memory value for each job. """
 
-    import configparser
-
-    config_dir = os.path.expandvars('${RSMAS_INSAR}/rinsar/defaults')
-    config_file = os.path.join(config_dir, 'job_defaults.cfg')
+    config_dir = pathObj.defaultdir
+    config_file = os.path.join(config_dir, config_file)
     if not os.path.isfile(config_file):
         raise ValueError('job config file NOT found, it should be: {}'.format(config_file))
 
     config = configparser.ConfigParser(delimiters='=')
+    config.optionxform = str
     config.read(config_file)
-
 
     return config
 
 
 ##########################################################################
+
 
 def run_or_skip(custom_template_file):
     """ Checks if the custom template file exists. """
@@ -332,24 +298,8 @@ def run_or_skip(custom_template_file):
     else:
         return 'skip'
 
-##########################################################################
-
-def clean_list():
-    """ Creates default directory clean list based on cleanopt in template file. """
-    """FA 3/19: add workflow as argument, convert to module located in defaults directory """
-    
-    cleanlist = []
-    cleanlist.append([''])
-    cleanlist.append(['stack', 'coreg_slaves', 'misreg', 'orbits',
-                   'coarse_interferograms', 'ESD', 'interferograms',
-                   'slaves', 'geom_master', 'DEM'])
-    cleanlist.append(['merged', 'master', 'baselines', 'configs'])
-    cleanlist.append(['SLC'])
-    cleanlist.append(['PYSAR', 'run_files'])
-    
-    return cleanlist
-
 ###############################################################################
+
 
 def file_len(fname):
     """Calculate the number of lines in a file."""
@@ -358,14 +308,74 @@ def file_len(fname):
 
 ##########################################################################
 
+
 def remove_zero_size_or_length_files(directory):
     """Removes files with zero size or zero length (*.e files in run_files)."""
     
-    error_files  = glob.glob(directory + '/*.e')
-    error_file = natsorted(error_files)
+    error_files = glob.glob(directory + '/*.e')
+    error_files = natsorted(error_files)
     for item in error_files:
         if os.path.getsize(item) == 0:       # remove zero-size files
             os.remove(item)
         elif file_len(item) == 0:
             os.remove(item)                  # remove zero-line files
     return None
+
+############################################################################
+
+
+def get_slc_list(ssaraopt, slcdir):
+    """returns the number of images from ssara command and decides to download new data or not"""
+
+    ssara_opt = ssaraopt.split(' ')
+    ssara_call = ['ssara_federated_query-cj.py'] + ssara_opt + ['--print']
+    ssara_output = subprocess.check_output(ssara_call)
+    ssara_output_array = ssara_output.decode('utf-8').split('\n')
+    ssara_output_filtered = ssara_output_array[5:len(ssara_output_array) - 1]
+
+    files_to_check = []
+    for entry in ssara_output_filtered:
+        files_to_check.append(os.path.join(slcdir, entry.split(',')[-1].split('/')[-1]))
+
+    if os.path.isdir(slcdir):
+        SAFE_files = natsorted(glob.glob(os.path.join(slcdir, 'S1*_IW_SLC*')))
+    else:
+        SAFE_files = []
+
+    if len(SAFE_files) == 0 or not SAFE_files == files_to_check:
+        download_flag = True
+    else:
+        download_flag = False
+
+    return files_to_check, download_flag
+
+############################################################################
+
+
+def make_run_list(work_dir):
+    """ exports run files to a list: run_file_list. """
+
+    run_list = glob.glob(os.path.join(work_dir, pathObj.rundir) + '/run_*')
+    run_test = glob.glob(os.path.join(work_dir, pathObj.rundir) + '/run_*')
+    for item in run_test:
+        test = item.split('/')[-1]
+        if test.endswith('.e') or test.endswith('.o') or test.endswith('.job'):
+            run_list.remove(item)
+    run_list = natsorted(run_list)
+    return run_list
+
+############################################################################
+
+
+def read_run_list(work_dir):
+    """ reads from run_file_list. """
+
+    runfiles = os.path.join(work_dir, 'run_files_list')
+    run_file_list = []
+    with open(runfiles, 'r') as f:
+        new_f = f.readlines()
+    for line in new_f:
+        run_file_list.append('run_files/' + line.split('/')[-1][:-1])
+
+    return run_file_list
+

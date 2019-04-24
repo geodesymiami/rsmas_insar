@@ -10,9 +10,12 @@ import glob
 import argparse
 import subprocess
 from pysar.utils import readfile
-from rinsar.utils.process_utilities import _remove_directories, clean_list
+from rinsar.utils.process_utilities import _remove_directories
+from rinsar.objects.auto_defaults import PathFind
 
 ###############################################################################
+pathObj = PathFind()
+
 EXAMPLE = '''example:
   email_results.py 
   email_results.py $SAMPLESDIR/GalapagosSenDT128.template --insarmap
@@ -72,12 +75,7 @@ def email_pysar_results(custom_template):
 
     cwd = os.getcwd()
 
-    fileList1 = ['velocity.png', 'avgSpatialCoherence.png', 'temporalCoherence.png', 'maskTempCoh.png', 'mask.png',
-                 'demRadar_error.png', 'velocityStd.png', 'geo_velocity.png', 'coherence*.png', 'unwrapPhase*.png',
-                 'rms_timeseriesResidual_quadratic.pdf', 'CoherenceHistory.pdf', 'CoherenceMatrix.pdf', 'bl_list.txt',
-                 'Network.pdf', 'geo_velocity_masked.kmz']
-
-    fileList2 = ['timeseries*.png','geo_timeseries*.png']
+    file_list = pathObj.get_email_file_list()
 
     if os.path.isdir('PYSAR/PIC'):
         prefix = 'PYSAR/PIC'
@@ -85,7 +83,7 @@ def email_pysar_results(custom_template):
     template_file = glob.glob('PYSAR/INPUTS/*.template')[0]
 
     i = 0
-    for fileList in [fileList1, fileList2]:
+    for fileList in file_list:
         attachmentStr = ''
         i = i + 1
         for fname in fileList:
@@ -109,7 +107,7 @@ def email_pysar_results(custom_template):
 ###########################################################################################
 def main(iargs=None):
     """ email pysar or insarmap results """
-
+     
     inps = command_line_parse(iargs)
 
     custom_template = readfile.read_template(inps.template_file)
@@ -118,7 +116,7 @@ def main(iargs=None):
         email_insarmaps_results(custom_template)
 
         if int(custom_template['cleanopt']) == 4:
-            cleanlist = clean_list()
+            cleanlist = pathObj.isce_clean_list
             _remove_directories(cleanlist[4])
 
     else:
