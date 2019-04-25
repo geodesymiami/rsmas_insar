@@ -142,11 +142,9 @@ def create_or_update_template(inps):
 
     pathObj.set_isce_defaults(inps)
 
-    inps.template = inps.custom_template
-
     set_default_options(inps, pathObj)
 
-    del inps.template, inps.custom_template
+    del inps.custom_template
 
     return inps
 
@@ -189,7 +187,6 @@ def set_default_options(inps, pathObj):
         if not template_key in inps.custom_template:
             logger.log(loglevel.ERROR, '{} is required'.format(template_key))
             raise Exception('ERROR: {0} is required'.format(template_key))
-
 
     for template_val in default_template_dict:
         set_inps_value_from_template(inps, template_key=template_val,
@@ -239,8 +236,8 @@ def set_inps_value_from_template(inps, template_key,
                 inps_dict[key_name] = default_value
 
     else:
-        if template_key in inps.template:
-            inps_dict[key_name] = inps.template[template_key].strip("'")
+        if template_key in inps.custom_template:
+            inps_dict[key_name] = inps.custom_template[template_key].strip("'")
         else:
             logger.log(loglevel.ERROR, '{} is required'.format(template_key))
             raise Exception('ERROR: {0} is required'.format(template_key))
