@@ -26,8 +26,8 @@ def create_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('template', metavar="FILE", help='template file to use.')
     parser.add_argument( '--submit', dest='submit_flag', action='store_true', help='submits job')
-    parser.add_argument('--delta_lat', dest='delta_lat', default='0.2', type=float,
-                        help='delta to add to latitude from boundingBox field, default is 0.2')
+    parser.add_argument('--delta_lat', dest='delta_lat', default='0.0', type=float,
+                        help='delta to add to latitude from boundingBox field, default is 0.0')
 
     return parser
 
@@ -112,7 +112,7 @@ def rename_latest_kml( suffix ):
 def add_polygon_to_ssaraopt( dataset_template, ssaraopt, delta_lat ):
     """calculates intersectsWith polygon from bbox and replace frame in ssaraopt if give"""
     bbox_list = dataset_template.get_options()['sentinelStack.boundingBox'][1:-1].split(' ')
-    delta_lon = 0.0
+    delta_lon = delta_lat * 0.2
     min_lat = float( bbox_list[0] ) - delta_lat
     max_lat = float( bbox_list[1] ) + delta_lat
     min_lon = float( bbox_list[2] ) - delta_lon

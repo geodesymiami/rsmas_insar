@@ -58,7 +58,7 @@ sentinelStack.startDate                   = auto         # [YYYY-MM-DD]. auto fo
 sentinelStack.stopDate                    = auto         # [YYYY-MM-DD]. auto for end date available
 sentinelStack.useGPU                      = auto         # Allow App to use GPU when available [default: False]
 sentinelStack.processingMethod            = auto         # [sbas, squeesar, ps]
-sentinelStack.demMethod                   = auto         # [bbox, ssara]
+sentinelStack.demMethod                   = auto         # [boundingBox, ssara]
 '''
 #### More options to be added if required:
 #sentinelStack.pairList                    = auto         # [file] file containing pairs to process in each line. auto for None
@@ -322,10 +322,10 @@ def clean_list():
     cleanlist.append([''])
     cleanlist.append(['stack', 'coreg_slaves', 'misreg', 'orbits',
                    'coarse_interferograms', 'ESD', 'interferograms',
-                   'slaves', 'geom_master', 'DEM'])
+                   'slaves', 'DEM'])
     cleanlist.append(['merged', 'master', 'baselines', 'configs'])
     cleanlist.append(['SLC'])
-    cleanlist.append(['PYSAR', 'run_files'])
+    cleanlist.append(['geom_master','PYSAR', 'run_files'])
     
     return cleanlist
   
@@ -462,7 +462,7 @@ def raise_exception_if_job_exited(directory):
     for file in files:
         with open(file) as fr:
             if search_string in fr.read(): 
-               raise Exception("ERROR: {0} exited,  contains: {1}".format(os.path.basename(file),search_string))
+               raise Exception("ERROR: {0}/{1} exited,  contains: {2}".format(directory,os.path.basename(file),search_string))
 
 ##########################################################################
 
