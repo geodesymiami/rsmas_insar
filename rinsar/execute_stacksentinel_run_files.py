@@ -140,8 +140,39 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
         if os.getenv('QUEUENAME') == 'debug':
             walltimelimit = '0:30'
         else:
-            walltimelimit = '16:00'
+            walltimelimit = '4:00'
 
+            vlong, long, short = '3:00', '1:00', '0:30'
+
+            item_name = os.path.basename(item)
+
+            if item_name == 'run_1_unpack_slc_topo_master':
+                walltimelimit = long 
+            if item_name == 'run_2_average_baseline':
+                walltimelimit = short
+            if item_name == 'run_3_extract_burst_overlaps':
+                walltimelimit = short
+            if item_name == 'run_4_overlap_geo2rdr_resample':
+                walltimelimit = short
+            if item_name == 'run_5_pairs_misreg':
+                walltimelimit = short
+            if item_name == 'run_6_timeseries_misreg':
+                walltimelimit = short
+            if item_name == 'run_7_geo2rdr_resample':
+                walltimelimit = vlong
+            if item_name == 'run_8_extract_stack_valid_region':
+                walltimelimit = short
+            if item_name == 'run_9_merge_burst_igram':
+                walltimelimit = short
+            if item_name == 'run_10_filter_coherence':
+                walltimelimit = short
+            if item_name == 'run_11_merge_master_slave_slc':
+                walltimelimit = short
+            if item_name == 'run_12_unwrap':
+                walltimelimit = short
+
+            #import pdb; pdb.set_trace()
+            
         if item_memory == 'phase_linking':
             walltimelimit = '40:00'
 
