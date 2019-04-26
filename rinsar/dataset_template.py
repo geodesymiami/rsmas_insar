@@ -139,7 +139,7 @@ class Template:
             ssaraopt = '--platform={} --relativeOrbit={}'.format(platform, relativeOrbit)
             if 'ssaraopt.frame' in self.options.keys():
                 frame = self.options['ssaraopt.frame']
-                ssaraopt += ' --frames={}'.format(frame)
+                ssaraopt += ' --frame={}'.format(frame)
             if 'ssaraopt.startDate' in self.options:
                 startDate = self.options['ssaraopt.startDate']
                 ssaraopt += ' -s={}'.format(startDate)
