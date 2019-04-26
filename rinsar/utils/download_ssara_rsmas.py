@@ -101,7 +101,7 @@ def run_ssara(template, run_number=1):
     # Runs ssara_federated_query-cj.py with proper options
     ssara_call = ['ssara_federated_query-cj.py'] + ssaraopt + ['--print', '--download']
     print('Download data using:\n' + ' '.join(ssara_call))
-    messageRsmas.log(' '.join(ssara_call))
+    message_rsmas.log(' '.join(ssara_call))
     ssara_process = subprocess.Popen(' '.join(ssara_call), shell=True)
 
     logger.log(loglevel.INFO, "STARTED PROCESS")
@@ -165,11 +165,11 @@ def get_ssara_kml_and_listing(ssaraopt):
 
     ssara_call = ['ssara_federated_query.py'] + ssaraopt_kml
     print('Get KML using:\n' + ' '.join(ssara_call))
-    messageRsmas.log(' '.join(ssara_call))
+    message_rsmas.log(' '.join(ssara_call))
     ssara_process = subprocess.run(' '.join(ssara_call), shell=True)
     ssara_call = ['ssara_federated_query.py'] + ssaraopt_print
     print('Get listing using:\n' + ' '.join(ssara_call))
-    messageRsmas.log(' '.join(ssara_call))
+    message_rsmas.log(' '.join(ssara_call))
     ssara_process = subprocess.run(' '.join(ssara_call), shell=True)
 
     return None
@@ -215,7 +215,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     os.chdir(inps.work_dir)
-    messageRsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
     if not os.path.isdir(inps.slc_dir):
         os.makedirs(inps.slc_dir)
     os.chdir(inps.slc_dir)
