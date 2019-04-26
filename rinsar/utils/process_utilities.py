@@ -145,7 +145,7 @@ def create_or_update_template(inps):
     set_default_options(inps, pathObj)
 
     del inps.custom_template
-
+    
     return inps
 
 
