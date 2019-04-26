@@ -68,7 +68,7 @@ def main(args):
         north = bbox.split(' ')[1]
         west = bbox.split(' ')[2]
         east = bbox.split(' ')[3]
-        import pdb; pdb.set_trace()
+        
         south = round(float(south) - 0.5)
         north = round(float(north) + 0.5)
         west = round(float(west) - 0.5)
