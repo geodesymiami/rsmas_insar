@@ -34,7 +34,7 @@ def create_parser():
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
     parser.add_argument('custom_template_file', nargs='?',
                         help='custom template with option settings.\n')
-    parser.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
+    parser.add_argument( '--submit', dest='submit_flag', action='store_true', help='submits job')
 
     return parser
 
@@ -64,7 +64,6 @@ if __name__ == "__main__":
         wall_time = '24:00'
 
         cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
-
 
     os.chdir(inps.work_dir)
 

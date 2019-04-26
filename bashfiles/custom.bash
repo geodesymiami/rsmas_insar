@@ -1,5 +1,5 @@
 # vim: set filetype=sh:
-echo "sourcing $PWD/custom.bash ..."
+echo "sourcing $PWD/bashfiles/custom.bash ..."
 
 ###### MACHINE AND JOBSUBMISSION ####################################
 #export NOTIFICATIONEMAIL=f.amelung@miami.edu           # If different from the typical famelung@rsmas.miami.edu (USER=famelung)

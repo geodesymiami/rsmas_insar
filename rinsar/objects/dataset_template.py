@@ -3,25 +3,19 @@ import shutil
 
 class Template:
     """ Template object encapsulates a dictionary of template options.
-
         Given a dataset.template file, this object creates a dictionary of options keyed on the option name. This
         will allow for accessing of various template parameters in constant time (as opposed to O(n) time) and includes
         a simple, user friendly syntax.
-
         Use as follows:
-
             template = Template(file_name)                                  # create a template object
             options = template.get_options()                                # access the options dictionary
             dataset = options['dataset']                                    # access a specific option
             options = template.update_options_from_file(default_template_file)        # access a specific option
-
     """
     
     def __init__(self, custom_template_file):
         """ Initializes Template object with a custom template file.
-
             The provided template file is parsed line by line, and each option is added to the options dictionary.
-
             :param custom_template_file: file, the template file to be accessed
         """
         # Joshua Zahner - 02/2019
@@ -36,7 +30,7 @@ class Template:
         #    self.shutil.copy2(custom_template_file, self.work_dir)
         shutil.copy2(custom_template_file, self.work_dir)
         self.options = self.read_options(custom_template_file)
-        
+        self.options = correct_keyvalue_quotes(self.options.copy())
   
     def read_options(self,template_file):
         """ Read template options.
@@ -45,6 +39,7 @@ class Template:
         """
         # Creates the options dictionary and adds the dataset name as parsed from the filename
         # to the dictionary for easy lookup
+        
         options = {'dataset': template_file.split('/')[-1].split(".")[0]}
         with open(template_file) as template:
             for line in template:
@@ -91,7 +86,6 @@ class Template:
       
     def update_option(self, key, value):
         """ Updates the options dictionary key with the specified value.
-
             :param key   : the dictionary key to update
             :param value : the value to replace the key with
         """
@@ -113,14 +107,13 @@ class Template:
     def generate_ssaraopt_string(self):
         """ Generates the ssaraopt string for ssara_federated_query.py command line calls from the options
             dictionary values.
-
         """
 
-        # Determines if any of the ssaraopt keys are not present in the template files and either
-        # utilizes the general ssaraopt option or throws an exception if that is also not present
+        # Determines if the required ssaraopt keys are present in the template files and either
+        # utilizes the general ssaraopt option or throws an exception 
         # (likely an invalid template file in that case).
 
-        ssaraopt_keys = ['ssaraopt.platform', 'ssaraopt.relativeOrbit', 'ssaraopt.frame']
+        ssaraopt_keys = ['ssaraopt.platform', 'ssaraopt.relativeOrbit']
 
         bad_key = False
         for key in ssaraopt_keys:
@@ -129,23 +122,66 @@ class Template:
                 if 'ssaraopt' in self.options:
                     ssaraopt = self.options['ssaraopt']
                 else:
-                    raise Exception('no ssaraopt or ssaraopt.platform, relativeOrbit, frame found')
+                    raise Exception('no ssaraopt or ssaraopt.platform, relativeOrbit found')
 
         # If all of the keys are present go ahead and generate the ssaraopt string as normal.
         if not bad_key:
             platform = self.options['ssaraopt.platform']
             relativeOrbit = self.options['ssaraopt.relativeOrbit']
-            frame = self.options['ssaraopt.frame']
-            ssaraopt = '--platform={} --relativeOrbit={} --frame={}'.format(platform, relativeOrbit, frame)
+            ssaraopt = '--platform={} --relativeOrbit={}'.format(platform, relativeOrbit)
+            if 'ssaraopt.frame' in self.options.keys():
+                frame = self.options['ssaraopt.frame']
+                ssaraopt += ' --frames={}'.format(frame)
             if 'ssaraopt.startDate' in self.options:
                 startDate = self.options['ssaraopt.startDate']
                 ssaraopt += ' -s={}'.format(startDate)
             if 'ssaraopt.endDate' in self.options:
                 endDate = self.options['ssaraopt.endDate']
                 ssaraopt += ' -e={}'.format(endDate)
+            if 'ssaraopt.parallel' in self.options:
+                parallel = self.options['ssaraopt.parallel']
+            else:
+                 parallel = 30
+            ssaraopt += ' --parallel={}'.format(parallel)
 
-        parallel_download = self.options.get("ssaraopt.parallelDownload", '30')
-
-        ssaraopt += ' --parallel={}'.format(parallel_download)
+            #this was in Josh's code (above yje ssaraopt assignment) but unclear  what it does
+            #parallel_download = self.options.get("ssaraopt.parallelDownload", '30')
 
         return ssaraopt
+
+def correct_keyvalue_quotes(options_in):
+         """ quote-independent reformatting of sentinel.subswath key-value:
+                 1 2 ---> '1 2'
+                 1  ---> 1
+                '1' ---> 1
+                -1 0.15 -91.6 -90.9 ---> '-1 0.15 -91.6 -90.9'
+         """
+         for item in ['sentinelStack.subswath', 'sentinelStack.boundingBox']:
+             if item in options_in.keys():
+                 value_orig = options_in[item]
+                 value_new = check_correct_quotes(value_orig)
+                 options_in[item] = value_new
+                 print(value_orig + '-->' + value_new)
+         return options_in
+
+
+def check_correct_quotes(string):
+         """ checks weather quotes are as required and corrects/replaces if needed
+         """
+
+         if string[0:1] == '\'':
+            num_item = string.split(' ')
+            if len(num_item) == 1:
+                out_string = string[1:2]
+            else:
+                out_string = string
+         else:
+            num_item = string.split(' ')
+            if len(num_item) >= 2:
+                out_string = '\'' + string + '\''    
+            else:
+                out_string = string
+         return out_string
+
+
+

@@ -22,16 +22,11 @@ from rinsar.utils.process_utilities import create_or_update_template
 EXAMPLE = '''
   example:
   dem_rsmas.py  $SAMPLES/GalapagosT128SenVVD.template
-
       uses sentinelStack.boundingBox to generate a dem in DEM folder as dem.py requires integer degrees
-
       options:
            sentinelStack.demMethod = boundingBox [default: ssara]
-
       subtracts/adds ` 0.5 degree and then rounds to full integer
-
       '-1 0.15 -91.3 -90.9' -- >'-2 1 -92 -90
-
      work for islands where zip files may be missing
 '''
 
@@ -349,5 +344,4 @@ vrttext = '''
 ###########################################################################################
 if __name__ == '__main__':
     main(sys.argv[:])
-
 

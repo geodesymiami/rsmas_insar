@@ -296,6 +296,23 @@ def run_or_skip(custom_template_file):
     else:
         return 'skip'
 
+##########################################################################
+
+
+def raise_exception_if_job_exited(directory):
+    """Removes files with zero size or zero length (*.e files in run_files)."""
+    
+    files = glob.glob(directory + '/*.o')
+
+    # need to add for PBS. search_string='Terminated'
+    search_string = 'Exited with exit code'
+    
+    files = natsorted(files)
+    for file in files:
+        with open(file) as fr:
+            if search_string in fr.read(): 
+               raise Exception("ERROR: {0}/{1} exited,  contains: {2}".format(directory,os.path.basename(file),search_string))
+
 ###############################################################################
 
 

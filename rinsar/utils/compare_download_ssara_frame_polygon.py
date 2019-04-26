@@ -8,10 +8,10 @@ import datetime
 import argparse
 import glob
 import difflib
-from rinsar.dataset_template import Template
-from rinsar.rsmas_logging import RsmasLogger, loglevel
-from rinsar import messageRsmas
-import rinsar._process_utilities as putils
+from rinsar.objects.dataset_template import Template
+from rinsar.objects.rsmas_logging import RsmasLogger, loglevel
+from rinsar.objects import messageRsmas
+import rinsar.utils.process_utilities as putils
 import rinsar.create_batch as cb
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
@@ -112,7 +112,7 @@ def rename_latest_kml( suffix ):
 def add_polygon_to_ssaraopt( dataset_template, ssaraopt, delta_lat ):
     """calculates intersectsWith polygon from bbox and replace frame in ssaraopt if give"""
     bbox_list = dataset_template.get_options()['sentinelStack.boundingBox'][1:-1].split(' ')
-    delta_lon = 0.0
+    delta_lon = delta_lat * 0.2 
     min_lat = float( bbox_list[0] ) - delta_lat
     max_lat = float( bbox_list[1] ) + delta_lat
     min_lon = float( bbox_list[2] ) - delta_lon
