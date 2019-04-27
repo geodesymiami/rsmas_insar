@@ -38,9 +38,8 @@ def main(args=None):
         job_file_name = 'execute_stacksentinel_run_files'
         work_dir = os.getcwd()
         job_name = inps.custom_template_file.split(os.sep)[-1].split('.')[0]
-        wall_time = '36:00'
 
-        cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
+        cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, inps.wall_time)
         sys.exit(0);
 
     inps.project_name = get_project_name(inps.custom_template_file)
@@ -74,10 +73,12 @@ def create_parser():
     parser.add_argument('custom_template_file', nargs='?',
                         help='custom template with option settings.\n')
     parser.add_argument( '--submit', dest='submit_flag', action='store_true', help='submits job')
-    parser.add_argument('--start_run', dest='start_run', default='1', type=int,
+    parser.add_argument('--startrun', dest='start_run', default='1', type=int,
                         help='run_file number to start with, default=1')
-    parser.add_argument('--stop_run', dest='stop_run', default='999', type=int,
+    parser.add_argument('--stoprun', dest='stop_run', default='999', type=int,
                         help='run_file number to start with, default: last file')
+    parser.add_argument( '--walltime', dest='wall_time', type=str, default='10:00',
+                        help='walltime, e.g. 2:00 (default: 10:00)')
 
     return parser
 
@@ -143,6 +144,7 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
             walltimelimit = '4:00'
 
             vlong, long, short = '3:00', '1:00', '0:30'
+            vlong, long, short = '6:00', '2:00', '1:00'
 
             item_name = os.path.basename(item)
 
@@ -163,7 +165,7 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
             if item_name == 'run_8_extract_stack_valid_region':
                 walltimelimit = short
             if item_name == 'run_9_merge_burst_igram':
-                walltimelimit = short
+                walltimelimit = long
             if item_name == 'run_10_filter_coherence':
                 walltimelimit = short
             if item_name == 'run_11_merge_master_slave_slc':
@@ -171,8 +173,6 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
             if item_name == 'run_12_unwrap':
                 walltimelimit = short
 
-            #import pdb; pdb.set_trace()
-            
         if item_memory == 'phase_linking':
             walltimelimit = '40:00'
 

@@ -131,12 +131,11 @@ if __name__ == "__main__":
     #########################################
     if inps.submit_flag:
         job_file_name = 'process_rsmas'
-        wall_time = '48:00'
 
         project_name = get_project_name(inps.custom_template_file)
         work_dir = get_work_directory(None, project_name)
 
-        job = cb.submit_script(project_name, job_file_name, sys.argv[:], work_dir, wall_time)
+        job = cb.submit_script(project_name, job_file_name, sys.argv[:], work_dir, inps.wall_time)
 
         # run_operations.py needs this print statement for now.
         # This is not for debugging purposes.
