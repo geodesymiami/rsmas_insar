@@ -48,6 +48,7 @@ EXAMPLE = '''example:
   --submit             submits job (and send email when done)
   --nomail             suppress emailing imagefiles of results (default is emailing)
   --remove_project_dir removes project directory before starting download or processing
+  --walltime           walltime for control job (which is submitting all jobs) (default: 48:00)
 
 
   e.g.:  process_rsmas.py  $SAMPLESDIR/GalapagosT128SenVVD.template
@@ -188,6 +189,12 @@ def create_process_rsmas_parser(EXAMPLE):
         dest='submit_flag',
         action='store_true',
         help='submits job')
+    parser.add_argument(
+        '--walltime',
+        dest='wall_time',
+        type=str,
+        default='48:00',
+        help='walltime, e.g. 2:00 (default: 48:00)')
 
     return parser
 
