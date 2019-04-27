@@ -24,6 +24,7 @@ from rinsar import messageRsmas
 from rinsar import dataset_template
 import re
 from pysar.utils import readfile
+from download_ssara_rsmas import add_polygon_to_ssaraopt
 
 EXAMPLE = '''
   example:
@@ -118,6 +119,9 @@ def call_ssara_dem(custom_template, inps, cwd):
     # need to refactor so that Josh's dataset_template will be used throughout 
     dset_template = dataset_template.Template(inps.custom_template_file)
     ssaraopt_string = dset_template.generate_ssaraopt_string()
+    ssaraopt_list = ssaraopt_string.split(' ')
+    ssaraopt_list = add_polygon_to_ssaraopt(dset_template, ssaraopt_list.copy(), delta_lat=0)
+    ssaraopt_string = ' '.join(ssaraopt_list)
     custom_template['ssaraopt'] = ssaraopt_string
 
     command = 'ssara_federated_query.py {ssaraopt} --dem >& {outfile}'.format(ssaraopt=custom_template['ssaraopt'], outfile=out_file)
