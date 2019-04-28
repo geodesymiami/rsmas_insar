@@ -11,6 +11,7 @@ from rinsar import messageRsmas
 import rinsar._process_utilities as putils
 import stat
 import glob
+from download_ssara_rsmas import add_polygon_to_ssaraopt
 import rinsar.create_batch as cb
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
@@ -25,6 +26,8 @@ def create_parser():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('template', metavar="FILE", help='template file to use.')
 	parser.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
+	parser.add_argument('--delta_lat', dest='delta_lat', default='0.0', type=float,
+	help='delta to add to latitude from boundingBox field, default is 0.0')
 
 	return parser
 
@@ -48,9 +51,13 @@ def generate_files_csv():
 
 	ssaraopt = dataset_template.generate_ssaraopt_string()
 	ssaraopt = ssaraopt.split(' ')
+
+	# add intersectWith to ssaraopt string
+	ssaraopt = add_polygon_to_ssaraopt(dataset_template, ssaraopt.copy(), inps.delta_lat)
 	
 	filecsv_options = ['ssara_federated_query.py']+ssaraopt+['--print', '|', 'awk', "'BEGIN{FS=\",\"; ORS=\",\"}{ print $14}'", '>', 'files.csv']
 	csv_command = ' '.join(filecsv_options)
+	messageRsmas.log(csv_command)
 	subprocess.Popen(csv_command, shell=True).wait()
 	sed_command = "sed 's/^.\{5\}//' files.csv > new_files.csv"
 	
