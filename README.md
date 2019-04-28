@@ -62,6 +62,7 @@ git clone https://github.com/geodesymiami/rsmas_tools.git ;
 mkdir -p $SENTINEL_ORBITS;
 mkdir -p $SENTINEL_AUX;
 echo DONE;
+
 ```
 
 The rsmas_tools clone gives you the python scripts plus notebooks from other group members. Put all your code into these directories and occasionaly push to github so that they will be available to others. We also share all other input files through github:
