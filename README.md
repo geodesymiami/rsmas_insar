@@ -16,27 +16,39 @@ cd ~/test/test1
 ```
 git clone https://github.com/geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
+git checkout setup_update_conda_isce
 
-source default_isce22.bash;
-cd setup;
-./install_conda_isce.csh
-
-cd ../sources ;
+cd sources ;
 git clone https://github.com/yunjunz/PySAR.git ;
 git clone https://github.com/falkamelung/geodmod.git ;
 
+mkdir ../3rdparty
 cd ../3rdparty
-git clone https://github.com/yunjunz/PyAPS.git
 git clone https://github.com/AngeliqueBenoit/pyaps3.git
-
 git clone https://github.com/mapbox/tippecanoe.git;
 git clone https://github.com/DenisCarriere/geocoder;
 
 cd ../setup;
-make PYKML ;
+./install_miniconda3.csh
+../3rdparty/miniconda3/bin/conda install isce2 -c piyushrpt --yes
+../3rdparty/miniconda3/bin/conda install --yes --file requirements_pysar.txt
+../3rdparty/miniconda3/bin/conda install git natsort pygrib --yes
+../3rdparty/miniconda3/bin/pip install --upgrade pip
+../3rdparty/miniconda3/bin/pip install opencv-python
+
+cd ../3rdparty
+./miniconda3/bin/git clone https://github.com/yunjunz/PyAPS.git
+./miniconda3/bin/git clone https://github.com/yunjunz/pykml.git
+
+cd ../3rdparty/pykml
+../../3rdparty/miniconda3/bin/python setup.py build
+../../3rdparty/miniconda3/bin/python setup.py install
 mkdir -p ~/insarlab/OPERATIONS/LOGS
 echo DONE WITH CRITICAL CODE ;
 
+cd ../..
+source default_isce22.bash;
+cd setup;
 make INSARMAPS;
 cd .. ;
 cd -;
@@ -47,6 +59,7 @@ git clone https://github.com/geodesymiami/accounts ;
 cd sources;
 git clone https://github.com/geodesymiami/rsmas_tools.git ; 
 
+source default_isce22.bash;
 echo DONE;
 ```
 
