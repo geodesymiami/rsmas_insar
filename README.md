@@ -43,9 +43,14 @@ cd ../3rdparty/pykml
 ../../3rdparty/miniconda3/bin/python setup.py build
 ../../3rdparty/miniconda3/bin/python setup.py install
 mkdir -p ~/insarlab/OPERATIONS/LOGS
+
+cd ../../setup
+git clone https://github.com/geodesymiami/accounts ;
+./install_credential_files.csh;
+./download_sentinelstack.py ;
 echo DONE WITH CRITICAL CODE ;
 
-cd ../..
+cd ..
 source default_isce22.bash;
 module load gcc/4.9.4
 cd 3rdparty
@@ -54,9 +59,6 @@ git clone https://github.com/DenisCarriere/geocoder;
 cd tippecanoe
 make install PREFIX=$PWD
 
-cd ../../setup
-git clone https://github.com/geodesymiami/accounts ;
-./install_credential_files.csh;
 cd ../sources;
 git clone https://github.com/geodesymiami/rsmas_tools.git ; 
 mkdir -p $SENTINEL_ORBITS;
