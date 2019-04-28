@@ -24,9 +24,8 @@ git clone https://github.com/falkamelung/geodmod.git ;
 
 mkdir ../3rdparty
 cd ../3rdparty
+git clone https://github.com/bakerunavco/SSARA.git
 git clone https://github.com/AngeliqueBenoit/pyaps3.git
-git clone https://github.com/mapbox/tippecanoe.git;
-git clone https://github.com/DenisCarriere/geocoder;
 
 cd ../setup;
 ./install_miniconda3.csh
@@ -48,18 +47,20 @@ echo DONE WITH CRITICAL CODE ;
 
 cd ../..
 source default_isce22.bash;
-cd setup;
-make INSARMAPS;
-cd .. ;
-cd -;
-mkdir -p $SENTINEL_ORBITS;
-mkdir -p $SENTINEL_AUX;
+module load gcc/4.9.4
+cd 3rdparty
+git clone https://github.com/mapbox/tippecanoe.git;
+git clone https://github.com/DenisCarriere/geocoder;
+cd tippecanoe
+make install PREFIX=$PWD
+
+cd ../../setup
 git clone https://github.com/geodesymiami/accounts ;
 ./install_credential_files.csh;
-cd sources;
+cd ../sources;
 git clone https://github.com/geodesymiami/rsmas_tools.git ; 
-
-source default_isce22.bash;
+mkdir -p $SENTINEL_ORBITS;
+mkdir -p $SENTINEL_AUX;
 echo DONE;
 ```
 
