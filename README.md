@@ -28,7 +28,7 @@ git clone https://github.com/bakerunavco/SSARA.git
 git clone https://github.com/AngeliqueBenoit/pyaps3.git
 
 cd ../setup;
-./install_miniconda3.csh
+./install_miniconda3_bare.csh
 ../3rdparty/miniconda3/bin/conda install isce2 -c piyushrpt --yes
 ../3rdparty/miniconda3/bin/conda install --yes --file requirements_pysar.txt
 ../3rdparty/miniconda3/bin/conda install git natsort pygrib --yes
