@@ -61,6 +61,10 @@ class CreateRun:
         for item in clean_list[1]:
             if os.path.isdir(os.path.join(inps.work_dir, item)):
                 shutil.rmtree(os.path.join(inps.work_dir, item))
+                
+        if os.path.exists(os.path.join(inps.work_dir, pathObj.rundir)):
+            del_command = 'find {} -type f -not -name {} -delete'.format(os.path.join(inps.work_dir,pathObj.rundir), '"run_0_*"')
+            os.system(del_command)
 
         if self.workflow not in ['interferogram', 'offset', 'correlation', 'slc', 'fmratecorrection']:
             print('')

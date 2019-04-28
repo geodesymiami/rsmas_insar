@@ -34,13 +34,14 @@ def main(iargs=None):
 
         job = cb.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir, wall_time)
 
+    else:
 
-    command_line = os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1:])
-    message_rsmas.log('##### NEW RUN #####')
-    message_rsmas.log(command_line)
+        command_line = os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1:])
+        message_rsmas.log('##### NEW RUN #####')
+        message_rsmas.log(command_line)
 
-    objInsar = RsmasInsar(inps)
-    objInsar.run(steps=inps.runSteps)
+        objInsar = RsmasInsar(inps)
+        objInsar.run(steps=inps.runSteps)
 
     # Timing
     m, s = divmod(time.time() - start_time, 60)
