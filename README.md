@@ -19,33 +19,34 @@ cd rsmas_insar
 
 source default_isce22.bash;
 cd setup;
-./install_miniconda3.csh;
-hash -r;
-conda install pygrib --yes ;
-git clone https://github.com/geodesymiami/accounts ;
-./download_ssara_tippecanoe_3rdparty.sh;
-./download_atmosphere_code.sh;
-./install_credential_files.csh;
-./download_isce.py
-./install_isce22.csh;
+./install_conda_isce.csh
 
 cd ../sources ;
- 
 git clone https://github.com/yunjunz/PySAR.git ;
 git clone https://github.com/falkamelung/geodmod.git ;
-cd ..;
-cd setup;
+
+cd ../3rdparty
+git clone https://github.com/yunjunz/PyAPS.git
+git clone https://github.com/AngeliqueBenoit/pyaps3.git
+
+git clone https://github.com/mapbox/tippecanoe.git;
+git clone https://github.com/DenisCarriere/geocoder;
+
+cd ../setup;
 make PYKML ;
 mkdir -p ~/insarlab/OPERATIONS/LOGS
 echo DONE WITH CRITICAL CODE ;
 
 make INSARMAPS;
 cd .. ;
-cd sources;
-git clone https://github.com/geodesymiami/rsmas_tools.git ; 
 cd -;
 mkdir -p $SENTINEL_ORBITS;
 mkdir -p $SENTINEL_AUX;
+git clone https://github.com/geodesymiami/accounts ;
+./install_credential_files.csh;
+cd sources;
+git clone https://github.com/geodesymiami/rsmas_tools.git ; 
+
 echo DONE;
 ```
 
@@ -107,5 +108,4 @@ drwxrws-w-+ 2 famelung insarlab       4096 Jan 17 16:58 test
 * Next we need to add repositories to use Gamma and roi_pac. 
 
 * The current installation contains password information. Once this is separated this repository can be made public. Rsmas_isce should be made part of this repository.
-
 
