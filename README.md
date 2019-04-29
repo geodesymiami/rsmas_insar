@@ -16,7 +16,6 @@ cd ~/test/test1
 ```
 git clone https://github.com/geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
-git checkout setup_update_conda_isce
 
 cd sources ;
 git clone https://github.com/yunjunz/PySAR.git ;
