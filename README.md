@@ -29,10 +29,11 @@ git clone https://github.com/AngeliqueBenoit/pyaps3.git
 cd ../setup;
 ./install_miniconda3_bare.csh
 ../3rdparty/miniconda3/bin/conda install isce2 -c piyushrpt --yes
-../3rdparty/miniconda3/bin/conda install --yes --file requirements_pysar.txt
-../3rdparty/miniconda3/bin/conda install git natsort pygrib --yes
+../3rdparty/miniconda3/bin/conda install --yes --file ../sources/PySAR/docs/conda.txt
+../3rdparty/miniconda3/bin/conda install --yes --file conda.txt
 ../3rdparty/miniconda3/bin/pip install --upgrade pip
 ../3rdparty/miniconda3/bin/pip install opencv-python
+../3rdparty/miniconda3/bin/pip install geocoder
 
 cd ../3rdparty
 ./miniconda3/bin/git clone https://github.com/yunjunz/PyAPS.git
@@ -55,7 +56,6 @@ cd ..
 module load gcc/4.9.4
 cd 3rdparty
 git clone https://github.com/mapbox/tippecanoe.git;
-git clone https://github.com/DenisCarriere/geocoder;
 cd tippecanoe
 make install PREFIX=$PWD
 
