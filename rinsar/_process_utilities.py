@@ -398,7 +398,7 @@ def email_insarmaps_results(custom_template):
     hdfeos_file = hdfeos_file[0]
     hdfeos_name = os.path.splitext(os.path.basename(hdfeos_file))[0]
 
-    textStr = 'http://insarmaps.miami.edu/start/-0.008/-78.0/7"\?"startDataset='+hdfeos_name
+    textStr = 'http://insarmaps.miami.edu/start/-0.008/-78.0/5"\?"startDataset='+hdfeos_name
 
     mailCmd = 'echo \"'+textStr+'\" | mail -s Miami_InSAR_results:_'+os.path.basename(cwd)+' '+custom_template['email_insarmaps']
     command = 'ssh pegasus.ccs.miami.edu \" '+mailCmd+'\"'
