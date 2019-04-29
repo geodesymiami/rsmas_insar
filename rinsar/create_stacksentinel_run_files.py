@@ -56,7 +56,7 @@ if __name__ == "__main__":
         dem_file = files1[:] + files2[:]
         dem_file = dem_file[0]
     except:
-        dem_file = create_or_copy_dem(work_dir=inps.work_dir,
+        dem_file = create_or_copy_dem(inps, work_dir=inps.work_dir,
                     template=inps.template,
                     custom_template_file=inps.custom_template_file)
 
