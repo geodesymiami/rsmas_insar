@@ -22,6 +22,7 @@ def main():
         os.makedirs(isce_dir)
     os.chdir(isce_dir)
 
+    ''' #FA 4/2019: commented out as we now use conda install isce
     command = ['wget', '--user=' + password.unavuser, '--password=' + password.unavpass, 'https://imaging.unavco.org/software/ISCE/' + isce_version]
     print('downloading isce ...')
     print('\n' + ' '.join(command) + '\n')
@@ -29,6 +30,7 @@ def main():
     output, error = proc.communicate()
     if proc.returncode is not 0:
         raise Exception('ERROR downloading isce')
+    '''
 
     iscestack_dir = os.getenv('PARENTDIR') + '/sources/isceStack'
 
