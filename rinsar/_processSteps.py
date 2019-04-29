@@ -310,7 +310,7 @@ def call_download(flag_ssara, custom_template_file, slc_dir):
 ###############################################################################
 
 
-def create_or_copy_dem(inps, work_dir, template, custom_template_file):
+def create_or_copy_dem(work_dir, template, custom_template_file):
     """ Downloads a DEM file or copies an existing one."""
 
     #if inps.flag_dem:

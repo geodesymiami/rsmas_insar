@@ -72,7 +72,7 @@ def process(inps):
     # create or copy DEM
     # running the script:
     #     dem_rsmas.py $TE/template
-    prs.create_or_copy_dem(inps, inps.work_dir, inps.template, inps.custom_template_file)
+    prs.create_or_copy_dem(inps.work_dir, inps.template, inps.custom_template_file)
     logger_process_rsmas.log(loglevel.INFO, "Finished create_or_copy_dem")
 
     # Check for DEM and create sentinel run files
