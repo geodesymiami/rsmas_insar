@@ -14,6 +14,7 @@ cd ~/test/test1
 
 
 ```
+bash
 git clone https://github.com/geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
 
