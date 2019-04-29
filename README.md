@@ -43,14 +43,15 @@ cd ../3rdparty/pykml
 ../../3rdparty/miniconda3/bin/python setup.py install
 mkdir -p ~/insarlab/OPERATIONS/LOGS
 
-cd ../../setup
+cd ../..
+source default_isce22.bash;
+cd setup
 git clone https://github.com/geodesymiami/accounts ;
 ./install_credential_files.csh;
 ./download_sentinelstack.py ;
 echo DONE WITH CRITICAL CODE ;
 
 cd ..
-source default_isce22.bash;
 module load gcc/4.9.4
 cd 3rdparty
 git clone https://github.com/mapbox/tippecanoe.git;
