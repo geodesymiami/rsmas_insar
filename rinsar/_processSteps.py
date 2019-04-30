@@ -14,6 +14,7 @@ import argparse
 import shutil
 import subprocess
 import time
+import glob
 from rinsar.rsmas_logging import loglevel
 import rinsar._process_utilities as putils
 from rinsar._process_utilities  import _remove_directories, clean_list
@@ -330,7 +331,12 @@ def create_or_copy_dem(inps, work_dir, template, custom_template_file):
             if status is not 0:
                 logger.log(loglevel.ERROR, 'ERROR while making DEM')
                 raise Exception('ERROR while making DEM')
+    files1 = glob.glob(dem_dir + '/*.wgs84')
+    files2 = glob.glob(dem_dir + '/*.dem')
+    dem_file = files1[:] + files2[:]
+    dem_file = dem_file[0]
 
+    return dem_file
 
 #################################################################################
 

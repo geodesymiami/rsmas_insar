@@ -54,6 +54,7 @@ def generate_file_lists(number_of_files=2):
                  'CoherenceMatrix.pdf',\
                  'bl_list.txt',\
                  'Network.pdf',\
+                 'geo_velocity.kmz'\
                  'geo_velocity_masked.kmz']
 
         file_list2 = ['timeseries*.png']
@@ -68,7 +69,7 @@ def generate_file_lists(number_of_files=2):
                  ]
 
         #file_list2 = [ 'unwrapPhase*.png',\
-        file_list2 = ['unwrapPhase_wrap_*.png', 'geo_velocity_masked.kmz' ]                    
+        file_list2 = ['unwrapPhase_wrap_*.png', 'geo_velocity.km', 'geo_velocity_masked.kmz' ]                    
                  #'maskTempCoh.png',\
                  #'demRadar_error.png',\
                  #'geo_velocity.png',\
