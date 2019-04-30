@@ -102,7 +102,7 @@ alias killwget='kill -9 `ps uax | grep famelung | grep wget | awk '\''{printf $2
 function bkillsubmit_time() { bkill `bjobs | grep "$1" | awk '{print $"BASH_ARGV[1]" " "}'` ; }
 function bbotsubmit_time() { echo `bjobs | grep "$1" | awk '{print $"{BASH_ARGV[1]" " "}'` ; }
 function qdelsubmit_time() { qdel `showq | grep "$1" | awk '{printf $"{BASH_ARGV[1]" " "}'` ; }
-alias bjobssum='bjobs | grep RUN | wc -l | awk '\''{print "Running jobs:",$1}'\''; bjobs | grep PEND | wc -l | awk '\''{print "Pending jobs:",$1}'\'''
+alias bjobssum='bjobs | grep Sen; bjobs | grep RUN | wc -l | awk '\''{print "Running jobs:",$1}'\''; bjobs | grep PEND | wc -l | awk '\''{print "Pending jobs:",$1}'\'''
 ######################################
 ######## login shortcuts          ####
 ######################################
