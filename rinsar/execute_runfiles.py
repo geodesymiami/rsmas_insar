@@ -41,20 +41,7 @@ def command_line_parse(iargs=None):
     return inps
 
 
-def get_run_files(work_dir):
-    """ Reads main runfiles to a list. """
-
-    runfiles = os.path.join(work_dir, 'run_files_list')
-    run_file_list = []
-    with open(runfiles, 'r') as f:
-        new_f = f.readlines()
-        for line in new_f:
-            run_file_list.append('run_files/' + line.split('/')[-1][:-1])
-
-    return run_file_list
-
-
-def submit_run_jobs(run_file_list, cwd, config):
+def submit_run_jobs(run_file_list, cwd, config, outdir='run_files'):
     """ Submits stackSentinel runfile jobs. """
 
     for item in run_file_list:
@@ -65,18 +52,15 @@ def submit_run_jobs(run_file_list, cwd, config):
         except:
             memorymax = config['DEFAULT']['memory']
 
-
         try:
             walltimelimit = config[step_name]['walltime']
         except:
             walltimelimit = config['DEFAULT']['walltime']
 
-
         queuename = os.getenv('QUEUENAME')
 
-
         cmd = 'create_batch.py ' + cwd + '/' + item + ' --memory=' + memorymax + ' --walltime=' + walltimelimit + \
-               ' --queuename ' + queuename + ' --outdir "run_files"'
+               ' --queuename ' + queuename + ' --outdir ' + outdir
 
         print('command:', cmd)
         status = subprocess.Popen(cmd, shell=True).wait()
