@@ -12,7 +12,7 @@ class Template:
             dataset = options['dataset']                                    # access a specific option
             options = template.update_options_from_file(default_template_file)        # access a specific option
     """
-    
+
     def __init__(self, custom_template_file):
         """ Initializes Template object with a custom template file.
             The provided template file is parsed line by line, and each option is added to the options dictionary.
@@ -25,21 +25,21 @@ class Template:
         project_name = os.path.splitext(os.path.basename(custom_template_file))[0] # see `get_dataset_name`
         self.work_dir = os.getenv('SCRATCHDIR') + '/' + project_name
         template_file = os.path.join(self.work_dir, os.path.basename(custom_template_file))
-        
+
         #if not self.os.path.isfile(template_file):       # FA 12/18: It should use custom_template_file as this is what will be updated
         #    self.shutil.copy2(custom_template_file, self.work_dir)
         shutil.copy2(custom_template_file, self.work_dir)
         self.options = self.read_options(custom_template_file)
         self.options = correct_keyvalue_quotes(self.options.copy())
-  
+
     def read_options(self,template_file):
         """ Read template options.
-        
+
             :param template_file: file, the template file to be read and stored in a dictionary
         """
         # Creates the options dictionary and adds the dataset name as parsed from the filename
         # to the dictionary for easy lookup
-        
+
         options = {'dataset': template_file.split('/')[-1].split(".")[0]}
         with open(template_file) as template:
             for line in template:
@@ -50,23 +50,23 @@ class Template:
 
                     # The key should be the first portion of the split (stripped to remove whitespace padding)
                     key = parts[0].rstrip()
-                    
+
                     # The value should be the second portion (stripped to remove whitespace and ending comments)
                     value = parts[1].rstrip().split("#")[0].strip(" ")
 
                     # Add key and value to the dictionary
                     options[str(key)] = value
-        return options  
+        return options
 
     def update_options(self, default_template_file):
         """ Update default template file with the options from custom template file read initially.
-            
+
             :param default_template_file: file, the template file to be updated
         """
-        
+
         template_file = os.path.abspath(default_template_file)
         default_options = self.read_options(template_file)
-        
+
         tmp_file = template_file+'.tmp'
         with open(tmp_file, 'w') as f_tmp:
             for line in open(template_file, 'r'):
@@ -77,13 +77,13 @@ class Template:
                     if key in self.options.keys() and self.options[key] != value:
                         line = line.replace(value, self.options[key], 1)
                         default_options[key] = self.options[key]
-                        print('    {}: {} --> {}'.format(key, value, self.options[key]))   
+                        print('    {}: {} --> {}'.format(key, value, self.options[key]))
                 f_tmp.write(line)
         mvCmd = 'mv {} {}'.format(tmp_file, template_file)
         os.system(mvCmd)
         self.options = default_options
         return self.options
-      
+
     def update_option(self, key, value):
         """ Updates the options dictionary key with the specified value.
             :param key   : the dictionary key to update
@@ -91,7 +91,7 @@ class Template:
         """
         options = self.get_options()
         options[key] = value
-    
+
     def get_options(self):
         """ Provides direct access to the options dictionary.
             This should be used in lieu of directly accessing the options dictionary via Template().options
@@ -103,14 +103,14 @@ class Template:
             Should be used to quickly access the dataset name when directories require the dataset name
         """
         return self.options['dataset']
-    
+
     def generate_ssaraopt_string(self):
         """ Generates the ssaraopt string for ssara_federated_query.py command line calls from the options
             dictionary values.
         """
 
         # Determines if the required ssaraopt keys are present in the template files and either
-        # utilizes the general ssaraopt option or throws an exception 
+        # utilizes the general ssaraopt option or throws an exception
         # (likely an invalid template file in that case).
 
         ssaraopt_keys = ['ssaraopt.platform', 'ssaraopt.relativeOrbit']
@@ -131,7 +131,7 @@ class Template:
             ssaraopt = '--platform={} --relativeOrbit={}'.format(platform, relativeOrbit)
             if 'ssaraopt.frame' in self.options.keys():
                 frame = self.options['ssaraopt.frame']
-                ssaraopt += ' --frames={}'.format(frame)
+                ssaraopt += ' --frame={}'.format(frame)
             if 'ssaraopt.startDate' in self.options:
                 startDate = self.options['ssaraopt.startDate']
                 ssaraopt += ' -s={}'.format(startDate)
@@ -178,10 +178,7 @@ def check_correct_quotes(string):
          else:
             num_item = string.split(' ')
             if len(num_item) >= 2:
-                out_string = '\'' + string + '\''    
+                out_string = '\'' + string + '\''
             else:
                 out_string = string
          return out_string
-
-
-

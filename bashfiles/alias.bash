@@ -22,7 +22,7 @@ alias cdr='cd ${PARENTDIR}'
 alias cdrb='cd ${PARENTDIR}/bashfiles'
 alias cdrs='cd ${INT_SCR}'
 alias cdrsa='cd ${PARENTDIR}/samples'
-alias cdrinsar='cd ${PARENTDIR}/rinsar'
+alias cdri='cd ${PARENTDIR}/rinsar'
 alias cdrt='cd ${PARENTDIR}/sources/rsmas_tools'
 alias cdrts='cd ${PARENTDIR}/sources/rsmas_tools/SAR'
 alias cdrtg='cd ${PARENTDIR}/sources/rsmas_tools/GPS'
@@ -32,15 +32,15 @@ alias cdrtmf='cd ${PARENTDIR}/sources/rsmas_tools/matlab/falk'
 alias cdss='cd ${PARENTDIR}/3rdparty/sentinelstack/sentinelstack'
 alias VDMSCRATCH='cd ${PARENTDIR}; source default.bash; source custom.bash; cd -; export SCRATCHDIR=/scratch/projects/vdm/${USER};  echo "SCRATCHDIR:   "${SCRATCHDIR}'
 alias INSARLABSCRATCH='cd ${PARENTDIR}; source default.bash; source custom.bash; cd -; export SCRATCHDIR=/scratch/projects/insarlab/famelung;  echo "SCRATCHDIR:   "${SCRATCHDIR}'
-alias TESTBENCH='export SCRATCHDIR=${SCRATCHDIR}/TESTBENCH;  echo "SCRATCHDIR:   "${SCRATCHDIR}'
-alias TESTBENCH1='export SCRATCHDIR=${SCRATCHDIR}/TESTBENCH1; echo "SCRATCHDIR:   "${SCRATCHDIR}'
-alias TESTBENCH2='export SCRATCHDIR=${SCRATCHDIR}/TESTBENCH2; echo "SCRATCHDIR:   "${SCRATCHDIR}'
-alias TESTBENCH3='export SCRATCHDIR=${SCRATCHDIR}/TESTBENCH3; echo "SCRATCHDIR:   "${SCRATCHDIR}'
-alias TESTBENCH4='export SCRATCHDIR=${SCRATCHDIR}/TESTBENCH4; echo "SCRATCHDIR:   "${SCRATCHDIR}'
+alias TESTBENCH='NOTESTBENCH;  export SCRATCHDIR=${SCRATCHDIR}/TESTBENCH;  echo "SCRATCHDIR:   "${SCRATCHDIR}'
+alias TESTBENCH1='NOTESTBENCH; export SCRATCHDIR=${SCRATCHDIR}/TESTBENCH1; echo "SCRATCHDIR:   "${SCRATCHDIR}'
+alias TESTBENCH2='NOTESTBENCH; export SCRATCHDIR=${SCRATCHDIR}/TESTBENCH2; echo "SCRATCHDIR:   "${SCRATCHDIR}'
+alias TESTBENCH3='NOTESTBENCH; export SCRATCHDIR=${SCRATCHDIR}/TESTBENCH3; echo "SCRATCHDIR:   "${SCRATCHDIR}'
+alias TESTBENCH4='NOTESTBENCH; export SCRATCHDIR=${SCRATCHDIR}/TESTBENCH4; echo "SCRATCHDIR:   "${SCRATCHDIR}'
 alias OPERATIONS='export OPERATIONS=${HOME}/insarlab/OPERATIONS; echo "OPERATIONS:  "${OPERATIONS}'
 alias TESTOPERATIONS='export OPERATIONS=${HOME}/TESTOPERATIONS; echo "OPERATIONS:  "${OPERATIONS}'
 alias TESTBENCHDAVID='export SCRATCHDIR="/projects/scratch/insarlab/dwg11"; echo "SCRATCHDIR:   "${SCRATCHDIR}'
-alias NOTESTBENCH='cd $PARENTDIR; source default.bash; source custom.bash; cd -; echo "SCRATCHDIR:   "${SCRATCHDIR}'
+alias NOTESTBENCH='cd $PARENTDIR; source bashfiles/platforms.bash; source bashfiles/custom.bash; cd -; echo "SCRATCHDIR:   "${SCRATCHDIR}'
 alias ITESTBENCH1='cd ${PARENTDIR}; source default.bash; source custom.bash; cd -; export SCRATCHDIR=/scratch/projects/insarlab/${USER}/TESTBENCH1;  echo "SCRATCHDIR:   "${SCRATCHDIR}'
 alias ITESTBENCH2='cd ${PARENTDIR}; source default.bash; source custom.bash; cd -; export SCRATCHDIR=/scratch/projects/insarlab/${USER}/TESTBENCH2;  echo "SCRATCHDIR:   "${SCRATCHDIR}'
 alias ITESTBENCH3='cd ${PARENTDIR}; source default.bash; source custom.bash; cd -; export SCRATCHDIR=/scratch/projects/insarlab/${USER}/TESTBENCH3;  echo "SCRATCHDIR:   "${SCRATCHDIR}'
@@ -102,7 +102,7 @@ alias killwget='kill -9 `ps uax | grep famelung | grep wget | awk '\''{printf $2
 function bkillsubmit_time() { bkill `bjobs | grep "$1" | awk '{print $"BASH_ARGV[1]" " "}'` ; }
 function bbotsubmit_time() { echo `bjobs | grep "$1" | awk '{print $"{BASH_ARGV[1]" " "}'` ; }
 function qdelsubmit_time() { qdel `showq | grep "$1" | awk '{printf $"{BASH_ARGV[1]" " "}'` ; }
-alias bjobssum='bjobs | grep RUN | wc -l | awk '\''{print "Running jobs:",$1}'\''; bjobs | grep PEND | wc -l | awk '\''{print "Pending jobs:",$1}'\'''
+alias bjobssum='bjobs | grep Sen; bjobs | grep RUN | wc -l | awk '\''{print "Running jobs:",$1}'\''; bjobs | grep PEND | wc -l | awk '\''{print "Pending jobs:",$1}'\'''
 ######################################
 ######## login shortcuts          ####
 ######################################
@@ -160,7 +160,7 @@ alias rm1544='find . -size 1544c  -exec rm {} \;'
 function rmswp() { rm \."$@".swp ; }
 function rmb() { mv "$@" tmp_remove_"$@" ; sleep 60 ; rm -r tmp_remove_"$@" & }    # remove in background - use for large directories
 alias xterm='xterm -sb &'
-alias rmsentinelStack='rm -rf run_files configs baselines coarse_interferograms coreg_slaves ESD geom_master interferograms master merged misreg slaves stack orbits &'
+alias rmsentinelStack='rm -rf run_files configs DEM baselines coarse_interferograms coreg_slaves ESD geom_master interferograms master merged misreg slaves stack orbits &'
 alias rmsentinelStackall='rm -rf *Sen*/run_files *Sen*/baselines *Sen*/coarse_interferograms *Sen*/configs *Sen*/coreg_slaves *Sen*/DEM *Sen*/ESD *Sen*/geom_master *Sen*/interferograms *Sen*/master *Sen*/merged *Sen*/misreg *Sen*/slaves *Sen*/stack &'
 alias rmtest1sentinelStackall='rm -rf test1*Sen*/run_files test1*1Sen*/baselines test1*Sen*/coarse_interferograms test1*Sen*/configs test1*Sen*/coreg_slaves test1*Sen*/DEM test1*Sen*/ESD test1*Sen*/geom_master test1*Sen*/interferograms test1*Sen*/master test1*Sen*/merged test1*Sen*/misreg test1*Sen*/slaves test1*Sen*/stack &'
 alias rmoperations='rm -r ${OPERATIONS} &'

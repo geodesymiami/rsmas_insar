@@ -3,6 +3,7 @@ echo "sourcing $PWD/bashfiles/platforms.bash ..."
 
 if [[ (${HOST} == login3) || (${HOST} == login4) || (${HOST} =~ vis) ]]  
 then
+  export PLATFORM=pegasus
   export JOBSCHEDULER=LSF
   export QUEUENAME=general
   export SCRATCHDIR=/projects/scratch/insarlab/${USER}
@@ -20,6 +21,7 @@ fi
 ###############################################
 if [[ ${HOST} == eos ]]
 then
+  export PLATFORM=$HOST
   export JOBSCHEDULER=PBS
   export QUEUENAME=batch
   export SCRATCHDIR=/scratch/insarlab/${USER}
@@ -27,6 +29,7 @@ fi
 ###############################################
 if [[ ${HOST} == centos7.bogon105.com ]]
 then
+  export PLATFORM=$HOST
   export JOBSCHEDULER=PBS
   export QUEUENAME=batch
   export SCRATCHDIR=/data/rsmasdata/famelung/SCRATCHDIR
@@ -37,6 +40,7 @@ fi
 ###############################################
 if [[ ${HOST} == pgftsunami ]]
 then
+  export PLATFORM=$HOST
   export JOBSCHEDULER=PBS
   export QUEUENAME=batch
   export SCRATCHDIR=/data1/Projects/insar/data

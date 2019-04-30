@@ -98,6 +98,8 @@ def main(iargs=None):
         wall_time = '24:00'
 
         cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
+        sys.exit(0);
+        #return
 
     project_name = putils.get_project_name(custom_template_file=inps.template_file)
     work_dir = putils.get_work_directory(None, project_name)

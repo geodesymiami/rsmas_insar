@@ -14,39 +14,58 @@ cd ~/test/test1
 
 
 ```
+bash
 git clone https://github.com/geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
 
-source default_isce22.bash;
-cd setup;
-./install_miniconda3.csh;
-hash -r;
-conda install pygrib --yes ;
-git clone https://github.com/geodesymiami/accounts ;
-./download_ssara_tippecanoe_3rdparty.sh;
-./download_atmosphere_code.sh;
-./install_credential_files.csh;
-./download_isce.py
-./install_isce22.csh;
-
-cd ../sources ;
- 
+cd sources ;
 git clone https://github.com/yunjunz/PySAR.git ;
 git clone https://github.com/falkamelung/geodmod.git ;
-cd ..;
-cd setup;
-make PYKML ;
+
+mkdir ../3rdparty
+cd ../3rdparty
+git clone https://github.com/bakerunavco/SSARA.git
+git clone https://github.com/AngeliqueBenoit/pyaps3.git
+
+cd ../setup;
+./install_miniconda3_bare.csh
+../3rdparty/miniconda3/bin/conda install isce2 -c piyushrpt --yes
+../3rdparty/miniconda3/bin/conda install --yes --file ../sources/PySAR/docs/conda.txt
+../3rdparty/miniconda3/bin/conda install --yes --file conda.txt
+../3rdparty/miniconda3/bin/pip install --upgrade pip
+../3rdparty/miniconda3/bin/pip install opencv-python
+../3rdparty/miniconda3/bin/pip install geocoder
+
+cd ../3rdparty
+./miniconda3/bin/git clone https://github.com/yunjunz/PyAPS.git
+./miniconda3/bin/git clone https://github.com/yunjunz/pykml.git
+
+cd ../3rdparty/pykml
+../../3rdparty/miniconda3/bin/python setup.py build
+../../3rdparty/miniconda3/bin/python setup.py install
 mkdir -p ~/insarlab/OPERATIONS/LOGS
+
+cd ../..
+source default_isce22.bash;
+cd setup
+git clone https://github.com/geodesymiami/accounts ;
+./install_credential_files.csh;
+./download_sentinelstack.py ;
 echo DONE WITH CRITICAL CODE ;
 
-make INSARMAPS;
-cd .. ;
-cd sources;
+cd ..
+module load gcc/4.9.4
+cd 3rdparty
+git clone https://github.com/mapbox/tippecanoe.git;
+cd tippecanoe
+make install PREFIX=$PWD
+
+cd ../../sources;
 git clone https://github.com/geodesymiami/rsmas_tools.git ; 
-cd -;
 mkdir -p $SENTINEL_ORBITS;
 mkdir -p $SENTINEL_AUX;
 echo DONE;
+
 ```
 
 The rsmas_tools clone gives you the python scripts plus notebooks from other group members. Put all your code into these directories and occasionaly push to github so that they will be available to others. We also share all other input files through github:
