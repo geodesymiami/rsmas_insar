@@ -153,6 +153,12 @@ class CreateRun:
 
         i = self.iter + 1
         runObj = rsmasRun()
+        runObj.configure(inps, 'run_' + str(i) + "_amplitude_ortho_geo")
+        runObj.exportAmplitude(inps)
+        runObj.finalize()
+
+        i = self.iter + 1
+        runObj = rsmasRun()
         runObj.configure(inps, 'run_' + str(i) + "_email_pysar")
         runObj.emailPySAR(inps)
         runObj.finalize()

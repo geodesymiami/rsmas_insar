@@ -15,15 +15,15 @@ import configparser
 from pysar.utils import utils
 from pysar.utils import readfile
 from natsort import natsorted
-from rinsar.objects.rsmas_logging import RsmasLogger, loglevel
+import xml.etree.ElementTree as ET
 import shutil
 from collections import namedtuple
-from rinsar.objects.dataset_template import Template
-
 from pysar.defaults.auto_path import autoPath
+from rinsar.objects.rsmas_logging import RsmasLogger, loglevel
+from rinsar.objects.dataset_template import Template
 from rinsar.objects import message_rsmas
-
 from rinsar.objects.auto_defaults import PathFind
+
 ###############################################################################
 pathObj = PathFind()
 logfile_name = pathObj.logdir + '/process_rsmas.log'
@@ -454,3 +454,34 @@ def patch_slice(lines, samples, azimuth_window, range_window, patch_size=200):
             patchlist.append(str(row) + '_' + str(col))
 
     return patch_row, patch_cols, patchlist
+
+##############################################################################
+
+
+def xmlread(filename):
+    """ Reads attributes from isce xml file """
+
+    tree = ET.parse(filename)
+    root = tree.getroot()
+    value_node_spacecraft = None
+    value_node_passdir = None
+    node_component = root.find('component')
+    for node in node_component:
+        if node.get('name') == 'mission':              # mission=S1 or spacecraftname=Sentinel-1
+            value_node_spacecraft = node.find('value')
+
+    node_bursts = node_component.find('component')
+    for node in node_bursts:
+        if node.get('name') in ['burst1', 'burst2', 'burst3']:
+            for property in node:
+                if property.get('name') == 'passdirection':
+                    value_node_passdir = property.find('value')
+
+    if value_node_passdir.text == 'DESCENDING':
+        passdirection = 'Desc'
+    else:
+        passdirection = 'Asc'
+
+    attrdict = {'missionname': value_node_spacecraft.text, 'passdirection': passdirection}
+
+    return attrdict

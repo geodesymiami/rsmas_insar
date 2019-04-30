@@ -45,7 +45,11 @@ class PathFind:
         self.configdir = 'configs'
         self.mergedslcdir = 'merged/SLC'
         self.mergedintdir = 'merged/interferograms'
+        self.geomlatlondir = 'geom_master_noDEM'
         self.wrappercommand = 'SentinelWrapper.py -c '
+        self.masterdir = 'master'
+        self.stackdir = 'stack'
+        self.tiffdir = 'GeoOrtho_tiff'
         return
 
     def set_isce_defaults(self, inps):

@@ -275,6 +275,9 @@ class rsmasRun(object):
     def pysarSB(self, inps):
         self.runf.write(self.text_cmd + 'pysarApp.py ' + inps.customTemplateFile + '\n')
 
+    def exportAmplitude(self, inps):
+        self.runf.write(self.text_cmd + 'export_ortho_geo.py ' + inps.customTemplateFile + '\n')
+
     def emailPySAR(self, inps):
         self.runf.write(self.text_cmd + 'email_results.py ' + inps.customTemplateFile + '\n')
 
