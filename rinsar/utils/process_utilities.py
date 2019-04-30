@@ -361,7 +361,7 @@ def get_slc_list(ssaraopt, slcdir):
         download_flag = True
     else:
         download_flag = False
-
+        
     return files_to_check, download_flag
 
 ############################################################################

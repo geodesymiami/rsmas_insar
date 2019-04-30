@@ -22,7 +22,7 @@ import re
 import subprocess
 from rinsar.objects import message_rsmas, dataset_template
 from pysar.utils import readfile
-dfrom rinsar.utils.download_ssara_rsmas import add_polygon_to_ssaraopt
+from rinsar.utils.download_ssara_rsmas import add_polygon_to_ssaraopt
 
 EXAMPLE = '''
   example:
