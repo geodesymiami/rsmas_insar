@@ -123,12 +123,9 @@ def create_default_template():
     """ Creates default template file. """
 
     template_file = 'stackSentinel_template.txt'
-    if not os.path.isfile(template_file):
-        logger.log(loglevel.INFO, 'generate default template file: {}'.format(template_file))
-        with open(template_file, 'w') as file:
-            file.write(TEMPLATE)
-    else:
-        logger.log(loglevel.INFO, 'default template file exists: {}'.format(template_file))
+    logger.log(loglevel.INFO, 'generate default template file: {}'.format(template_file))
+    with open(template_file, 'w') as file:
+        file.write(TEMPLATE)
     template_file = os.path.abspath(template_file)
 
     return template_file
@@ -452,6 +449,7 @@ def move_error_files_except_first(directory):
 
 def raise_exception_if_job_exited(directory):
     """Removes files with zero size or zero length (*.e files in run_files)."""
+    # FA 4/2019: convert into stand-alone function for easy adding of features
     
     files = glob.glob(directory + '/*.o')
 
@@ -460,9 +458,11 @@ def raise_exception_if_job_exited(directory):
     
     files = natsorted(files)
     for file in files:
-        with open(file) as fr:
-            if search_string in fr.read(): 
-               raise Exception("ERROR: {0}/{1} exited,  contains: {2}".format(directory,os.path.basename(file),search_string))
+        with open(file,'r') as myfile:
+            for line in myfile:
+                if search_string in line:
+                   print( line, end='')
+                   raise Exception("ERROR: {0}/{1} exited, contains: {2}".format(directory,os.path.basename(file),line.strip()))
 
 ##########################################################################
 
