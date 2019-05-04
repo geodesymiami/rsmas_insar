@@ -13,7 +13,6 @@ from stackSentinel import *
 from Stack import sentinelSLC
 from matplotlib.path import Path as Path
 from rinsar.objects.stack_rsmas import rsmasRun
-from rinsar.utils.process_utilities import convert_geo2image_coord, patch_slice
 from rinsar.utils.process_utilities import get_slc_list, make_run_list
 from rinsar.objects.auto_defaults import PathFind
 
@@ -63,7 +62,7 @@ class CreateRun:
                 shutil.rmtree(os.path.join(inps.work_dir, item))
                 
         if os.path.exists(os.path.join(inps.work_dir, pathObj.rundir)):
-            del_command = 'find {} -type f -not -name {} -delete'.format(os.path.join(inps.work_dir,pathObj.rundir), '"run_0_*"')
+            del_command = 'find {} -type f -not -name {} -delete'.format(os.path.join(inps.work_dir, pathObj.rundir), '"run_0_*"')
             os.system(del_command)
 
         if self.workflow not in ['interferogram', 'offset', 'correlation', 'slc', 'fmratecorrection']:
@@ -146,7 +145,14 @@ class CreateRun:
                              self.pairs, self.updateStack, self.allSLCs)
 
         run_list = make_run_list(self.work_dir)
-        self.iter = len(run_list)
+
+        if 'run_0' in run_list[0]:
+            self.iter = len(run_list)
+        else:
+            self.iter = len(run_list) + 1
+
+
+
         return
 
     def general_stack(self, inps):
@@ -197,33 +203,16 @@ class CreateRun:
 
         elif inps.processingMethod == 'squeesar':
 
-            cbox = [val for val in inps.cropbox.split()]
-            if len(cbox) != 4:
-                raise Exception('Bbox should contain 4 floating point values')
-
-            crop_area = np.array(
-                convert_geo2image_coord(self.geo_master_dir, np.float32(cbox[0]), np.float32(cbox[1]),
-                                        np.float32(cbox[2]), np.float32(cbox[3])))
-
-            inps.lin = crop_area[1] - crop_area[0]
-            inps.sam = crop_area[3] - crop_area[2]
-
-            inps.patch_rows, inps.patch_cols, inps.patch_list = \
-                patch_slice(inps.lin, inps.sam, np.int(inps.azimuth_window), np.int(inps.range_window),
-                            np.int(inps.patch_size))
-
-            inps.bbox_rdr = '{} {} {} {}'.format(crop_area[0], crop_area[1], crop_area[2], crop_area[3])
-
             self.pairs_sm = []
 
-            for i in range(len(self.allSLCs) - 1):
-                self.pairs_sm.append((self.allSLCs[0], self.allSLCs[i + 1]))
+            for i in range(len(self.acquisitionDates) - 1):
+                self.pairs_sm.append((self.acquisitionDates[0], self.acquisitionDates[i + 1]))
 
             i = self.iter 
 
             runObj = rsmasRun()
             runObj.configure(inps, 'run_' + str(i) + "_crop_merged_slc")
-            runObj.cropMergedSlc(self.acquisitionDates, inps)
+            runObj.cropMergedSlc(inps)
             runObj.finalize()
 
             i += 1
@@ -241,7 +230,7 @@ class CreateRun:
             i += 1
             runObj = rsmasRun()
             runObj.configure(inps, 'run_' + str(i) + "_generate_interferogram_and_coherence")
-            runObj.generateIfg(inps, self.acquisitionDates)
+            runObj.generateIfg(inps, self.pairs_sm)
             runObj.finalize()
 
             i += 1
