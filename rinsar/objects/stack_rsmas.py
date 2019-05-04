@@ -120,9 +120,9 @@ class rsmasRun(object):
     def downloadDataDEM(self, inps, download_flag):
         if download_flag == 1:
             self.runf.write('download_rsmas.py ' + inps.customTemplateFile + '\n')
-            self.runf.write('dem_rsmas.py ' + inps.customTemplateFile + '\n')
+            self.runf.write('dem_rsmas.py ' + inps.customTemplateFile + ' --boundingBox \n')
         else:
-            self.runf.write('dem_rsmas.py ' + inps.customTemplateFile + '\n')
+            self.runf.write('dem_rsmas.py ' + inps.customTemplateFile + ' --boundingBox \n')
 
     def cropMergedSlc(self, inps):
         self.runf.write(self.text_cmd + 'crop_sentinel.py ' + inps.customTemplateFile + '\n')
