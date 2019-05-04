@@ -51,11 +51,12 @@ cd setup
 git clone https://github.com/geodesymiami/accounts ;
 ./install_credential_files.csh;
 ./download_sentinelstack.py ;
+[ -f ~/.config/dask/dask_pysar.yaml ] || echo "dask_pysar.yaml not found; copying..."; cp ../sources/PySAR/pysar/defaults/dask_pysar.yaml ~/.config/dask/
 echo DONE WITH CRITICAL CODE ;
 
 cd ..
-module load gcc/4.9.4
 cd 3rdparty
+command -f module && module load gcc/4.9.4
 git clone https://github.com/mapbox/tippecanoe.git;
 cd tippecanoe
 make install PREFIX=$PWD
