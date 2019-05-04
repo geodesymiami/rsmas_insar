@@ -58,28 +58,30 @@ class Template:
                     options[str(key)] = value
         return options
 
-    def update_options(self, default_template_file):
+    def update_options(self, default_template_file_tmp):
         """ Update default template file with the options from custom template file read initially.
 
             :param default_template_file: file, the template file to be updated
         """
 
-        template_file = os.path.abspath(default_template_file)
-        default_options = self.read_options(template_file)
+        default_template_file = os.path.abspath(default_template_file_tmp)
+        default_options = self.read_options(default_template_file)
 
-        tmp_file = template_file+'.tmp'
+        tmp_file = default_template_file+'.tmp'
         with open(tmp_file, 'w') as f_tmp:
-            for line in open(template_file, 'r'):
+            for line in open(default_template_file, 'r'):
                 c = [i.strip() for i in line.strip().split('=', 1)]
                 if not line.startswith(('%', '#')) and len(c) > 1:
                     key = c[0]
+                    #print('Checking from default_template: '+ key)
                     value = str.replace(c[1], '\n', '').split("#")[0].strip()
                     if key in self.options.keys() and self.options[key] != value:
                         line = line.replace(value, self.options[key], 1)
                         default_options[key] = self.options[key]
-                        print('    {}: {} --> {}'.format(key, value, self.options[key]))
+                        print('From custom_template {}: {} --> {}'.format(key, value, self.options[key]))
+
                 f_tmp.write(line)
-        mvCmd = 'mv {} {}'.format(tmp_file, template_file)
+        mvCmd = 'mv {} {}'.format(tmp_file, default_template_file)
         os.system(mvCmd)
         self.options = default_options
         return self.options
