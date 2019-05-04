@@ -4,10 +4,12 @@
 #######################
 
 import os
+import sys
 import argparse
 import subprocess
 from rinsar.objects import message_rsmas
-from rinsar.utils.process_utilities import get_project_name, get_config_defaults
+from rinsar.utils.process_utilities import create_or_update_template
+from rinsar.utils.process_utilities import get_config_defaults, walltime_adjust
 from rinsar.utils.process_utilities import remove_zero_size_or_length_files, read_run_list
 import rinsar.create_batch as cb
 
@@ -21,7 +23,7 @@ def create_parser():
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, epilog=EXAMPLE)
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
-    parser.add_argument('custom_template_file', nargs='?',
+    parser.add_argument('customTemplateFile', nargs='?',
                         help='custom template with option settings.\n')
     parser.add_argument('start', nargs='?', type=int,
                         help='starting run file number (default = 1).\n')
@@ -40,9 +42,44 @@ def command_line_parse(iargs=None):
 
     return inps
 
+##############################################################################
 
-def submit_run_jobs(run_file_list, cwd, config, outdir='run_files'):
-    """ Submits stackSentinel runfile jobs. """
+
+def main(iargs=None):
+    inps = command_line_parse(iargs)
+    inps = create_or_update_template(inps)
+    os.chdir(inps.work_dir)
+
+    #########################################
+    # Submit job
+    #########################################
+
+    if inps.submit_flag:
+        job_file_name = 'execute_runfiles'
+        work_dir = os.getcwd()
+        job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
+        wall_time = '36:00'
+
+        cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
+        sys.exit(0)
+
+    run_file_list = read_run_list(inps.work_dir)
+
+    if inps.start is None:
+        if 'run_0_' in run_file_list[0]:
+            inps.start = 1
+        else:
+            inps.start = 0
+    else:
+        if not 'run_0_' in run_file_list[0]:
+            inps.start = inps.start - 1
+
+    if inps.stop is None:
+        inps.stop = len(run_file_list)
+
+    config = get_config_defaults(config_file='job_defaults.cfg')
+
+    run_file_list = run_file_list[inps.start:inps.stop + 1]
 
     for item in run_file_list:
         step_name = '_'
@@ -53,57 +90,17 @@ def submit_run_jobs(run_file_list, cwd, config, outdir='run_files'):
             memorymax = config['DEFAULT']['memory']
 
         try:
-            walltimelimit = config[step_name]['walltime']
+            if config[step_name]['adjust'] == 'True':
+                walltimelimit = walltime_adjust(config[step_name]['walltime'])
+            else:
+                walltimelimit = config[step_name]['walltime']
         except:
             walltimelimit = config['DEFAULT']['walltime']
 
         queuename = os.getenv('QUEUENAME')
 
-        cmd = 'create_batch.py ' + cwd + '/' + item + ' --memory=' + memorymax + ' --walltime=' + walltimelimit + \
-               ' --queuename ' + queuename + ' --outdir ' + outdir
-
-        print('command:', cmd)
-        status = subprocess.Popen(cmd, shell=True).wait()
-        if status is not 0:
-            raise Exception('ERROR submitting {} using create_batch.py'.format(item))
-
-        #remove_zero_size_or_length_files(directory='run_files')
-
-    return None
-
-
-##############################################################################
-def main(iargs=None):
-    inps = command_line_parse(iargs)
-
-    inps.project_name = get_project_name(inps.custom_template_file)
-    inps.work_dir = os.path.join(os.getenv('SCRATCHDIR'), inps.project_name)
-    os.chdir(inps.work_dir)
-
-    #########################################
-    # Submit job
-    #########################################
-
-    if inps.submit_flag:
-        job_file_name = 'execute_runfiles'
-        work_dir = os.getcwd()
-        job_name = inps.custom_template_file.split(os.sep)[-1].split('.')[0]
-        wall_time = '36:00'
-
-        cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
-        sys.exit(0)
-
-    run_file_list = read_run_list(inps.work_dir)
-
-    if inps.start is None and 'run_0_' in run_file_list[0]:
-        inps.start = 1
-    else:
-        inps.start = 0
-    if inps.stop is None:
-        inps.stop = len(run_file_list)
-
-    config_def = get_config_defaults(config_file='job_defaults.cfg')
-    submit_run_jobs(run_file_list[inps.start:inps.stop+1], inps.work_dir, config_def)
+        jobs = cb.submit_batch_jobs(batch_file=item, out_dir=os.path.join(inps.work_dir, 'run_files'),
+                                    memory=memorymax, walltime=walltimelimit, queue=queuename)
 
     return None
 
