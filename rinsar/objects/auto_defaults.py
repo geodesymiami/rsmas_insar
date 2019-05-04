@@ -1,4 +1,4 @@
-## ALL path used in the program
+## ALL path and default strings used in the program
 # Author: Sara Mirzaee
 
 import os
@@ -25,6 +25,12 @@ def correct_for_isce_naming_convention(inps):
     for old_key, new_key in zip(templateKey, isceKey):
         inps_dict[new_key] = inps_dict.pop(old_key)
 
+    if not inps_dict.startDate is None:
+        inps_dict.startDate = datetime.datetime.strptime(inps_dict.startDate, '%Y%m%d').strftime('%Y-%m-%d')
+
+    if not inps_dict.stopDate is None:
+        inps_dict.stopDate = datetime.datetime.strptime(inps_dict.stopDate, '%Y%m%d').strftime('%Y-%m-%d')
+
     return
 
 
@@ -40,7 +46,7 @@ class PathFind:
         self.orbitdir = os.path.expandvars('$SENTINEL_ORBITS')
         self.auxdir = os.path.expandvars('$SENTINEL_AUX')
         self.geomasterdir = 'merged/geom_master'
-        self.squeesardir = 'SqueeSAR'
+        self.squeesardir = 'squeesar'
         self.rundir = 'run_files'
         self.configdir = 'configs'
         self.mergedslcdir = 'merged/SLC'
@@ -67,6 +73,10 @@ class PathFind:
 
         inps_dict['custom_template']['sentinelStack.workingDir'] = inps.work_dir
 
+        if 'squeesar.cropbox' not in inps_dict['custom_template']:
+            inps_dict['custom_template']['squeesar.cropbox'] = \
+                inps_dict['custom_template']['sentinelStack.boundingBox']
+
         return
 
     def isce_clean_list(self):
@@ -78,9 +88,8 @@ class PathFind:
         cleanlist.append(['merged', 'master', 'baselines', 'configs'])
         cleanlist.append(['SLC'])
         cleanlist.append(['PYSAR', 'run_files'])
-        cleanlist.append(['stack', 'coreg_slaves', 'misreg', 'orbits',
-                          'coarse_interferograms', 'ESD', 'interferograms',
-                          'slaves', 'geom_master', 'DEM'])
+        cleanlist.append(['stack', 'misreg', 'orbits', 'coarse_interferograms', 'ESD',
+                          'interferograms', 'slaves', 'DEM'])
         return cleanlist
 
     def get_email_file_list(self):
@@ -88,8 +97,12 @@ class PathFind:
         fileList = ['velocity.png', 'avgSpatialCoherence.png', 'temporalCoherence.png', 'maskTempCoh.png', 'mask.png',
                      'demRadar_error.png', 'velocityStd.png', 'geo_velocity.png', 'coherence*.png', 'unwrapPhase*.png',
                      'rms_timeseriesResidual_quadratic.pdf', 'CoherenceHistory.pdf', 'CoherenceMatrix.pdf',
-                     'bl_list.txt','Network.pdf', 'geo_velocity_masked.kmz', 'timeseries*.png', 'geo_timeseries*.png']
+                     'bl_list.txt', 'Network.pdf', 'geo_velocity_masked.kmz', 'timeseries*.png', 'geo_timeseries*.png']
         return fileList
+
+    def get_geom_master_lists(self):
+        list_geo = ['lat', 'lon', 'los', 'hgt', 'shadowMask', 'incLocal']
+        return list_geo
 
 
 
