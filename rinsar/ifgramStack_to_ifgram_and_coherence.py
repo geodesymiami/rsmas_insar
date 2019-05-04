@@ -96,107 +96,40 @@ def main(iargs=None):
     coh_data = readfile.read(geo_file, datasetName='coherence-' + date_str)[0]
     unw_data = readfile.read(geo_file, datasetName='unwrapPhase-' + date_str)[0]
 
-    coh_out_file = 'coherence_' + date_str + '.h5'
+    out_name = 'test.tiff'
+    create_geotiff( obj, data = coh_data, outfile='qqq', type = 'coherence' )
+    #create_geotiff( data = unw_data, metadata_obj, out_name, type = 'coherence' )
+    return
 
-    data = coh_data
+def create_geotiff (obj, data, outfile, type):
+    ''' creates a geo_tiff '''
 
     originX = float(obj.get_metadata()['X_FIRST'])
     pixelWidth = float(obj.get_metadata()['X_STEP'])
     originY = float(obj.get_metadata()['Y_FIRST'])
     pixelHeight = float(obj.get_metadata()['Y_STEP'])
-    geo_transform = [originX, pixelWidth, 0, originY, 0, pixelHeight]
+    gt = [originX, pixelWidth, 0, originY, 0, pixelHeight]
  
     driver = gdal.GetDriverByName('GTiff')
-    #ds = driver.Create('output.tif', data.shape[0], data.shape[1], 1, gdal.GDT_Float64, )
-    ds = driver.Create('/nethome/famelung/output.tif', data.shape[1], data.shape[0], 1, gdal.GDT_Float64, )
+    ds = driver.Create(outfile, data.shape[1], data.shape[0], 1, gdal.GDT_Float64, )
+
     # this assumes the projection is Geographic lat/lon WGS 84
     srs = osr.SpatialReference()
     srs.ImportFromEPSG(4326)
     ds.SetProjection(srs.ExportToWkt())
-    gt = [originX, pixelWidth, 0, originY, 0, pixelHeight]
     ds.SetGeoTransform(gt)
-    outband=ds.GetRasterBand(1)
+
+    if type == 'coherence':
+        outband=ds.GetRasterBand(1)
 
     plt.imshow(data)
-    plt.savefig('/nethome/famelung/foo.png')
-    import pdb; pdb.set_trace()
+    plt.savefig( outfile )
+    #import pdb; pdb.set_trace()
     #outband.SetStatistics(np.min(data), np.max(data), np.average(data), np.std(data))
     outband.WriteArray(data)
     ds = None
-
-    '''
-    dsDict = dict()
-    dsDict['coherence'] = coh_data
-    import pdb; pdb.set_trace()
-    writefile.write(dsDict, out_file=coh_out_file, metadata=atr)
-
-    i = 0
-    coh_data = readfile.read(file, datasetName='coherence-' + date_str)[0]
-    unw_data = readfile.read(file, datasetName='unwrapPhase-' + date_str)[0]
-
-    coh_out_name = 'coherence-' + date_str  
-
-    width = coh_data.shape[1]
-    n_line = coh_data.shape[0]
-
-    #ifg = np.memmap(outputint_name , dtype=np.complex64, mode='w+', shape=(n_line, width))
-    Quality = IML.memmap(coh_out_name, mode='write', nchannels=1, nxx=width, nyy=n_line, scheme='BIL', dataType='f')
-    Quality.bands[0][:,:] = coh_data
-    IML.renderISCEXML(coh_out_name, 1, n_line, width, 'f', 'BIL')
-
-    obj_unw = isceobj.createImage()
-    obj_unw.load(coh_out_name + '.xml')
-    obj_unw.imageType = 'f'
-    obj_unw.renderHdr()
-
-    #obj_unw.setFilename(coh_out_name)
-    #obj_unw.setWidth(width)
-    #obj_unw.setLength(n_line)
-    #obj_unw.setAccessMode('READ')
-    #obj_unw.imageType = 'f'
-    #obj_unw.renderHdr()
-    #obj_unw.renderVRT()
-
-    #Ifs[:,:] = interferogram_rasterfile
-    #obj_int = isceobj.createIntImage()
-    #obj_int.setFilename(outputint_name)
-    #obj_int.setWidth(width)
-    #obj_int.setLength(n_line)
-    #obj_int.setAccessMode('READ')
-    #obj_int.renderHdr()
-    #obj_int.renderVRT()
-
-    #This is in complex format but if you want to save in float:
-
-    #out_img = isceobj.createImage()
-    #out_img.load(outputint_name + '.xml')
-    #out_img.renderHdr()
-    cmd = 'gdal_translate -of ENVI -co INTERLEAVE=BIL ' + coh_out_name + '.vrt ' + coh_out_name
-    os.system(cmd)
-    import pdb; pdb.set_trace()
-
-    #If you want to add metadata to art files:
-
-    ds = gdal.Open(outputint_name, gdal.GA_ReadOnly)
-    ds.SetMetadata({'plmethod': inps.plmethod})
-
-    #atr = readfile.read_attribute(file)
-    dataset_list= readfile.get_dataset_list(file)
-    slice_list= readfile.get_slice_list(file)
-
-    slice_list[0]
-
-    i = 1
-    unwrap_phase, atr = readfile.read(file, datasetName=slice_list[i])
-    coherence, atr = readfile.read(file, datasetName=slice_list[i+int(len(slice_list)/3)])
-
-    unwrap_phase = data[i,]
-    coherence = data[i + data.shape[0],]
-    '''
-    
-
+    return 
 ###########################################################################################
-
 
 if __name__ == '__main__':
     main(sys.argv[1:])
