@@ -12,6 +12,7 @@ import os
 import glob
 import subprocess
 import configparser
+import gdal
 from pysar.utils import utils
 from pysar.utils import readfile
 from natsort import natsorted
@@ -361,7 +362,7 @@ def get_slc_list(ssaraopt, slcdir):
         download_flag = True
     else:
         download_flag = False
-        
+
     return files_to_check, download_flag
 
 ############################################################################
@@ -390,72 +391,11 @@ def read_run_list(work_dir):
     with open(runfiles, 'r') as f:
         new_f = f.readlines()
     for line in new_f:
-        run_file_list.append('run_files/' + line.split('/')[-1][:-1])
+        run_file_list.append(work_dir + '/run_files/' + line.split('/')[-1][:-1])
 
     return run_file_list
 
 ############################################################################
-
-
-def convert_geo2image_coord(geo_master_dir, lat_south, lat_north, lon_west, lon_east, status='multilook'):
-    """ Finds the corresponding line and sample based on geographical coordinates. """
-
-    ds = gdal.Open(geo_master_dir + '/lat.rdr.full.vrt', gdal.GA_ReadOnly)
-    lat = ds.GetRasterBand(1).ReadAsArray()
-    del ds
-
-    idx_lat = np.where((lat >= lat_south) & (lat <= lat_north))
-    lat_c = np.int(np.mean(idx_lat[0]))
-
-    ds = gdal.Open(geo_master_dir + "/lon.rdr.full.vrt", gdal.GA_ReadOnly)
-    lon = ds.GetRasterBand(1).ReadAsArray()
-    lon = lon[lat_c,:]
-    del ds
-
-    idx_lon = np.where((lon >= lon_west) & (lon <= lon_east))
-
-    lon_c = np.int(np.mean(idx_lon))
-
-    lat = lat[:,lon_c]
-
-    idx_lat = np.where((lat >= lat_south) & (lat <= lat_north))
-
-    first_row = np.min(idx_lat)
-    last_row = np.max(idx_lat)
-    first_col = np.min(idx_lon)
-    last_col = np.max(idx_lon)
-
-    image_coord = [first_row, last_row, first_col, last_col]
-
-
-    return image_coord
-
-##############################################################################
-
-
-def patch_slice(lines, samples, azimuth_window, range_window, patch_size=200):
-    """ Devides an image into patches of size 200 by 200 by considering the overlay of the size of multilook window."""
-
-    patch_row_1 = np.ogrid[0:lines-50:patch_size]
-    patch_row_2 = patch_row_1+patch_size
-    patch_row_2[-1] = lines
-    patch_row_1[1::] = patch_row_1[1::] - 2*azimuth_window
-
-    patch_col_1 = np.ogrid[0:samples-50:patch_size]
-    patch_col_2 = patch_col_1+patch_size
-    patch_col_2[-1] = samples
-    patch_col_1[1::] = patch_col_1[1::] - 2*range_window
-    patch_row = [[patch_row_1], [patch_row_2]]
-    patch_cols = [[patch_col_1], [patch_col_2]]
-    patchlist = []
-
-    for row in range(len(patch_row_1)):
-        for col in range(len(patch_col_1)):
-            patchlist.append(str(row) + '_' + str(col))
-
-    return patch_row, patch_cols, patchlist
-
-##############################################################################
 
 
 def xmlread(filename):
@@ -485,3 +425,40 @@ def xmlread(filename):
     attrdict = {'missionname': value_node_spacecraft.text, 'passdirection': passdirection}
 
     return attrdict
+
+############################################################################
+
+
+def walltime_adjust(inps, default_time):
+    """ calculates the number of bursts based on boundingBox and returns an adjusting factor for walltimes """
+
+    cbox = [np.float32(val) for val in inps.boundingBox.split()]
+    if len(cbox) != 4:
+        raise Exception('Bbox should contain 4 floating point values')
+
+    latitude_distance = np.abs(cbox[1] - cbox[0]) * 111        # in km
+    number_of_subswaths = len(inps.subswath.split())
+    number_of_bursts = (np.int(np.ceil(latitude_distance/20)) + 2) * number_of_subswaths
+
+    # to be added in future for adjusting based on area
+    # longitude_distance = np.float16(np.cos(np.abs(cbox[0]) * np.pi/180.0)) * np.abs(cbox[3] - cbox[2]) * 111
+    # Area = latitude_distance * longitude_distance
+
+    default_time_hour = default_time.split(':')[0] + default_time.split(':')[1] / 60
+    hour = (default_time_hour * number_of_bursts)/60
+    minutes = np.remainder((default_time_hour * number_of_bursts), 60)
+    adjusted_time = '{:02d}:{:02d}'.format(hour, minutes)
+
+    return adjusted_time
+
+
+
+
+
+
+
+
+
+
+
+
