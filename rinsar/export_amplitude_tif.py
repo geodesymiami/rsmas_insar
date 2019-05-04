@@ -79,7 +79,6 @@ def main(iargs=None):
     project_dir = os.getenv('SCRATCHDIR') + '/' + project_name
     slave_dir = os.path.join(project_dir, pathObj.mergedslcdir)
     pic_dir = os.path.join(project_dir, pathObj.tiffdir)
-    image_type = inps.imtype
     os.chdir(slave_dir)
 
     if inps.imtype == 'Ortho':

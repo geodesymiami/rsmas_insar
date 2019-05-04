@@ -14,9 +14,8 @@ from isceobj.Planet.Planet import Planet
 from zerodop.topozero import createTopozero
 from isceobj.Util.ImageUtil import ImageLib as IML
 from rinsar.objects.auto_defaults import PathFind
-from rinsar.utils.process_utilities import create_or_update_template, get_config_defaults
-from rinsar.execute_runfiles import submit_run_jobs
-
+from rinsar.utils.process_utilities import create_or_update_template, get_config_defaults, walltime_adjust
+import rinsar.create_batch as cb
 
 pathObj = PathFind()
 
@@ -63,8 +62,8 @@ def main(iargs=None):
         print('DEM not exists!')
         sys.exit(1)
 
-    if not os.path.exists(inps.geom_masterDir + '/lon.rdr.full'):
-
+    if os.path.exists(inps.geom_masterDir + '/lon.rdr.full'):
+        os.system('rm -rf {}'.format(inps.geom_masterDir))
         os.mkdir(inps.geom_masterDir)
 
         swathList = ut.getSwathList(inps.master)
@@ -167,10 +166,29 @@ def main(iargs=None):
                 a0=inps.customTemplateFile, a1=item, a2=inps.cropbox)
             f.write(cmd)
 
-    run_file_list = ['run_amplitude_ortho', 'run_amplitude_geo']
-    config_def = get_config_defaults(config_file='job_defaults.cfg')
-    submit_run_jobs(run_file_list, os.path.join(inps.work_dir, pathObj.rundir), config_def)
+    run_file_list = [run_amplitude_ortho, run_amplitude_geo]
+    config = get_config_defaults(config_file='job_defaults.cfg')
 
+    for item in run_file_list:
+        step_name = 'amplitude_ortho_geo'
+        try:
+            memorymax = config[step_name]['memory']
+        except:
+            memorymax = config['DEFAULT']['memory']
+
+        try:
+            if config[step_name]['adjust'] == 'True':
+                walltimelimit = walltime_adjust(config[step_name]['walltime'])
+            else:
+                walltimelimit = config[step_name]['walltime']
+        except:
+            walltimelimit = config['DEFAULT']['walltime']
+
+        queuename = os.getenv('QUEUENAME')
+
+        jobs = cb.submit_batch_jobs(batch_file=item,
+                                    out_dir=os.path.join(inps.work_dir, 'run_files'),
+                                    memory=memorymax, walltime=walltimelimit, queue=queuename)
 
 if __name__ == '__main__':
     main()
