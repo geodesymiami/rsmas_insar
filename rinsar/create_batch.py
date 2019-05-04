@@ -223,14 +223,19 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
     return job_number
 
 
-def submit_batch_jobs(job_files, batch_file, out_dir, scheduler=None):
+def submit_batch_jobs(batch_file, out_dir, memory, walltime, queue, scheduler=None):
     """
     Submit a batch of jobs (to bsub or qsub) and wait for output files to exist before exiting.
-    :param job_files: Names of job files to submit.
     :param batch_file: File containing jobs that we are submitting.
     :param out_dir: Output directory for run files.
+    :param memory: Amount of memory to use. Defaults to 3600 KB.
+    :param walltime: Walltime for the job. Defaults to 4 hours.
     :param scheduler: Job scheduler to use for running jobs. Defaults based on environment variable JOBSCHEDULER.
+    :param queue: Name of the queue to which the job is to be submitted. Default is set based on the scheduler.
     """
+
+    job_files = write_batch_job_files(batch_file, out_dir, memory=memory, walltime=walltime, queue=queue)
+
     if not scheduler:
         scheduler=os.getenv("JOBSCHEDULER")
 
@@ -260,6 +265,8 @@ def submit_batch_jobs(job_files, batch_file, out_dir, scheduler=None):
             total_wait_time_min += wait_time_sec/60
             time.sleep(wait_time_sec)
 
+    return batch_file
+
 
 def submit_script(job_name, job_file_name, argv, work_dir, walltime, email_notif=True):
     """
@@ -287,5 +294,4 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime, email_notif
 if __name__ == "__main__":
     PARAMS = parse_arguments(sys.argv[1::])
     message_rsmas.log(os.path.basename(sys.argv[0]) + " " + " ".join(sys.argv[1::]))
-    JOBS = write_batch_job_files(PARAMS.file, PARAMS.outdir, memory=PARAMS.memory, walltime=PARAMS.wall, queue=PARAMS.queue)
-    submit_batch_jobs(JOBS, PARAMS.file, PARAMS.outdir)
+    submit_batch_jobs(PARAMS.file, PARAMS.outdir, memory=PARAMS.memory, walltime=PARAMS.wall, queue=PARAMS.queue)
