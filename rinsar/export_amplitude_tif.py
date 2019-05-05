@@ -113,7 +113,7 @@ def raster2geotiff(newRasterfn, gtransform, array, metadata):
     :param newRasterfn: the name of output geotiff file
     :param gtransform: geo transform object for gdal
     :param array: raster to be written to the file
-    :param metadata: all other metadat to be attached to the file
+    :param metadata: all other metadata to be attached to the file
     """
 
     cols = array.shape[1]
