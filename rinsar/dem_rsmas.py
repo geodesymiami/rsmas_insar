@@ -23,6 +23,7 @@ import subprocess
 from rinsar.objects import message_rsmas, dataset_template
 from pysar.utils import readfile
 from rinsar.utils.download_ssara_rsmas import add_polygon_to_ssaraopt
+from rinsar.utils.process_utilities import get_project_name, get_work_directory
 
 EXAMPLE = '''
   example:
@@ -43,6 +44,8 @@ def main(args):
     # set defaults: ssara=True is set in dem_parser, use custom_pemp[late field if given
     inps = dem_parser()
     custom_template = readfile.read_template(inps.custom_template_file)
+    project_name = get_project_name(inps.custom_template_file)
+    work_dir = get_work_directory(None, project_name)
 
     if 'sentinelStack.demMethod' in list(custom_template.keys()):
         if custom_template['sentinelStack.demMethod'] == 'ssara':
@@ -55,7 +58,7 @@ def main(args):
     # print( 'flag_ssara: ' +str(inps.flag_ssara))
     # print( 'flag_boundingBox : ' + str(inps.flag_boundingBox))
 
-    cwd = make_dem_dir()
+    cwd = make_dem_dir(work_dir)
 
     if inps.flag_ssara:
 
@@ -155,11 +158,12 @@ def dem_parser():
     return inps
 
 
-def make_dem_dir():
-    if os.path.isdir('DEM'):
-        shutil.rmtree('DEM')
-    os.mkdir('DEM')
-    os.chdir('DEM')
+def make_dem_dir(work_dir):
+    dem_dir = os.path.join(work_dir, 'DEM')
+    if os.path.isdir(dem_dir):
+        shutil.rmtree(dem_dir)
+    os.mkdir(dem_dir)
+    os.chdir(dem_dir)
     return os.getcwd()
 
 
