@@ -23,7 +23,7 @@ from pysar.defaults.auto_path import autoPath
 from rinsar.objects.rsmas_logging import RsmasLogger, loglevel
 from rinsar.objects.dataset_template import Template
 from rinsar.objects import message_rsmas
-from rinsar.objects.auto_defaults import PathFind
+from rinsar.objects.auto_defaults import PathFind, correct_for_isce_naming_convention
 
 ###############################################################################
 pathObj = PathFind()
@@ -432,17 +432,22 @@ def xmlread(filename):
 def walltime_adjust(inps, default_time):
     """ calculates the number of bursts based on boundingBox and returns an adjusting factor for walltimes """
 
-    cbox = [np.float32(val) for val in inps.boundingBox.split()]
-    if len(cbox) != 4:
-        raise Exception('Bbox should contain 4 floating point values')
+    from rinsar.objects.sentinel1_override import Sentinel1_burst_count
 
-    latitude_distance = np.abs(cbox[1] - cbox[0]) * 111        # in km
-    number_of_subswaths = len(inps.subswath.split())
-    number_of_bursts = (np.int(np.ceil(latitude_distance/20)) + 2) * number_of_subswaths
+    inps_dict = inps
+    correct_for_isce_naming_convention(inps_dict)
 
-    # to be added in future for adjusting based on area
-    # longitude_distance = np.float16(np.cos(np.abs(cbox[0]) * np.pi/180.0)) * np.abs(cbox[3] - cbox[2]) * 111
-    # Area = latitude_distance * longitude_distance
+    if inps_dict.swath_num is None:
+        swaths = [1, 2, 3]
+    else:
+        swaths = [int(i) for i in inps_dict.swath_num.split()]
+
+    number_of_bursts = 0
+
+    for swath in swaths:
+        obj = Sentinel1_burst_count()
+        obj.configure()
+        number_of_bursts = number_of_bursts + obj.get_burst_num(inps_dict, swath)
 
     default_time_hour = default_time.split(':')[0] + default_time.split(':')[1] / 60
     hour = (default_time_hour * number_of_bursts)/60
@@ -450,10 +455,6 @@ def walltime_adjust(inps, default_time):
     adjusted_time = '{:02d}:{:02d}'.format(hour, minutes)
 
     return adjusted_time
-
-
-
-
 
 
 

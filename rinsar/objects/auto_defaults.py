@@ -25,11 +25,11 @@ def correct_for_isce_naming_convention(inps):
     for old_key, new_key in zip(templateKey, isceKey):
         inps_dict[new_key] = inps_dict.pop(old_key)
 
-    if not inps_dict.startDate is None:
-        inps_dict.startDate = datetime.datetime.strptime(inps_dict.startDate, '%Y%m%d').strftime('%Y-%m-%d')
+    if not inps_dict['startDate'] is None:
+        inps_dict['startDate'] = datetime.datetime.strptime(inps_dict['startDate'], '%Y%m%d').strftime('%Y-%m-%d')
 
-    if not inps_dict.stopDate is None:
-        inps_dict.stopDate = datetime.datetime.strptime(inps_dict.stopDate, '%Y%m%d').strftime('%Y-%m-%d')
+    if not inps_dict['stopDate'] is None:
+        inps_dict['stopDate'] = datetime.datetime.strptime(inps_dict['stopDate'], '%Y%m%d').strftime('%Y-%m-%d')
 
     return
 
