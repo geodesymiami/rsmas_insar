@@ -12,6 +12,7 @@ parallel_download                   = 20
 processor                           = isce                                                                                                
 cleanopt                            = 0                                                                                                   
 ####################
+sentinelStack.demMethod             = boundingBox                                        # '20141007,20141031'
 sentinelStack.excludeDate           = '20160318'                                         # '20141007,20141031'
 sentinelStack.boundingBox           = '-6.4 -6.0 105.1 106.1'                            # '-1 0.15 -91.6 -90.9'                           
 sentinelStack.subswath              = 3                                                 # '1 2'                                           

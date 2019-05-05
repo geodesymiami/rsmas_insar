@@ -145,17 +145,19 @@ def submit_isce_jobs(run_file_list, cwd, memoryuse):
 
             vlong, long, short = '3:00', '1:00', '0:30'
             vlong, long, short = '6:00', '2:00', '1:00'
+            vlong, long, short = '9:00', '3:00', '2:00'
+            vlong, long, short = '12:00', '4:00', '2:00'
 
             item_name = os.path.basename(item)
 
             if item_name == 'run_1_unpack_slc_topo_master':
-                walltimelimit = long 
+                walltimelimit = vlong 
             if item_name == 'run_2_average_baseline':
                 walltimelimit = short
             if item_name == 'run_3_extract_burst_overlaps':
                 walltimelimit = short
             if item_name == 'run_4_overlap_geo2rdr_resample':
-                walltimelimit = short
+                walltimelimit = long
             if item_name == 'run_5_pairs_misreg':
                 walltimelimit = short
             if item_name == 'run_6_timeseries_misreg':
