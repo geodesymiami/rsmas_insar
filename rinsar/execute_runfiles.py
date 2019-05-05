@@ -30,6 +30,8 @@ def create_parser():
     parser.add_argument('stop', nargs='?', type=int,
                         help='stopping run file number.\n')
     parser.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
+    parser.add_argument('--walltime', dest='wall_time', type=str, default='36:00',
+                        help='walltime, e.g. 2:00 (default: 36:00)')
 
     return parser
 
@@ -58,9 +60,8 @@ def main(iargs=None):
         job_file_name = 'execute_runfiles'
         work_dir = os.getcwd()
         job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
-        wall_time = '36:00'
 
-        cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
+        cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, inps.wall_time)
         sys.exit(0)
 
     run_file_list = read_run_list(inps.work_dir)

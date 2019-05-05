@@ -79,6 +79,13 @@ def create_process_rsmas_parser():
         dest='submit_flag',
         action='store_true',
         help='submits job')
+    parser.add_argument(
+        '--walltime',
+        dest='wall_time',
+        type=str,
+        default='48:00',
+        help='walltime, e.g. 2:00 (default: 48:00)')
+
     step = parser.add_argument_group('steps processing (start/end/dostep)', STEP_HELP)
     step.add_argument('--start', dest='startStep', metavar='STEP', default=STEP_LIST[0],
                       help='start processing at the named step, default: {}'.format(STEP_LIST[0]))

@@ -129,7 +129,7 @@ def create_or_update_template(inps_dict):
         returns the values in 'inps'
     """
     inps = inps_dict
-    
+
     print('\n*************** Template Options ****************')
     # write default template
 

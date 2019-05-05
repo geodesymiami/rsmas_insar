@@ -27,12 +27,11 @@ def main(iargs=None):
     #########################################
     if inps.submit_flag:
         job_file_name = 'process_rsmas'
-        wall_time = '48:00'
 
         inps.project_name = get_project_name(inps.customTemplateFile)
         inps.work_dir = get_work_directory(None, inps.project_name)
 
-        job = cb.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir, wall_time)
+        job = cb.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir, inps.wall_time)
 
     else:
 
