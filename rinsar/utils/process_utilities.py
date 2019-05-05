@@ -124,10 +124,12 @@ def get_work_directory(work_dir, project_name):
 
 ##########################################################################
 
-def create_or_update_template(inps):
+def create_or_update_template(inps_dict):
     """ Creates a default template file and/or updates it.
         returns the values in 'inps'
     """
+    inps = inps_dict
+    
     print('\n*************** Template Options ****************')
     # write default template
 
