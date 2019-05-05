@@ -20,6 +20,68 @@ EXAMPLE = """example:
 """
 
 
+def main(iargs=None):
+    """
+    Crops SLC images from Isce merged/SLC directory and creates georectified and orthorectified products.
+    """
+
+    inps = command_line_parse(iargs)
+    project_name = os.path.basename(inps.custom_template_file).partition('.')[0]
+    project_dir = os.getenv('SCRATCHDIR') + '/' + project_name
+    slave_dir = os.path.join(project_dir, pathObj.mergedslcdir)
+    pic_dir = os.path.join(project_dir, pathObj.tiffdir)
+    os.chdir(slave_dir)
+
+    if inps.imtype == 'Ortho':
+        geo_master_dir = os.path.join(project_dir, pathObj.geomasterdir)
+    else:
+        geo_master_dir = os.path.join(project_dir, pathObj.geomlatlondir)
+
+
+    try:
+        os.system('rm '+inps.inputfile + '/geo*')
+    except:
+        print('geocoding ...')
+
+    if not os.path.exists(pic_dir):
+        os.mkdir(pic_dir)
+
+    os.chdir(os.path.join(slave_dir, inps.inputfile))
+
+    geocode_file(inps.inputfile, inps.bbox, geo_master_dir)
+
+    gfile = 'geo_' + slc + '.slc.full'
+    ds = gdal.Open(gfile + '.vrt', gdal.GA_ReadOnly)
+    array = np.abs(ds.GetRasterBand(1).ReadAsArray())
+    del ds
+
+    ##
+    array = np.where(array > 0, 10.0 * np.log10(pow(array,2)) - 83.0, array)
+
+    if inps.imtype == 'Ortho':
+        dst_file = 'Ortho_' + slc + '_backscatter.tif'
+    else:
+        dst_file = 'Geo_' + slc + '_backscatter.tif'
+
+    data = gdal.Open(gfile, gdal.GA_ReadOnly)
+    transform = data.GetGeoTransform()
+
+    ##
+    xmlfile = glob.glob(os.path.join(project_dir, pathObj.masterdir, '*.xml'))[0]
+    attributes = xmlread(xmlfile)
+    Metadata = {'SAT': attributes['missionname'], 'Mode': attributes['passdirection'],
+                'Image_Type': '{}_BackScatter'.format(inps.imtype), 'Date': slc}
+
+    raster2geotiff(dst_file, transform, array, Metadata)
+
+    print('Find the output in {}'.format(pic_dir))
+
+    os.system('mv *.tif {}'.format(pic_dir))
+    os.system('rm geo*')
+
+    return
+
+
 def create_parser():
     """ Creates command line argument parser object. """
 
@@ -45,7 +107,14 @@ def command_line_parse(iargs=None):
     return inps
 
 
-def array2raster(newRasterfn,gtransform,array, metadata):
+def raster2geotiff(newRasterfn, gtransform, array, metadata):
+    """
+    Exports the raster data to a geotiff format.
+    :param newRasterfn: the name of output geotiff file
+    :param gtransform: geo transform object for gdal
+    :param array: raster to be written to the file
+    :param metadata: all other metadat to be attached to the file
+    """
 
     cols = array.shape[1]
     rows = array.shape[0]
@@ -67,50 +136,26 @@ def array2raster(newRasterfn,gtransform,array, metadata):
     outband.FlushCache()
 
 
-
-def main(iargs=None):
+def geocode_file(slc, bbox, geo_master_dir):
     """
-    Crops SLC images from Isce merged/SLC directory, multilooks and saves the amplitudes
-    both in geo coordinates and radar coordinated.
+    Geocodes the input file
+    :param slc: input file
+    :param bbox: bounding box to crop the output file
+    :param geo_master_dir: where the geometry files are located
     """
 
-    inps = command_line_parse(iargs)
-    project_name = os.path.basename(inps.custom_template_file).partition('.')[0]
-    project_dir = os.getenv('SCRATCHDIR') + '/' + project_name
-    slave_dir = os.path.join(project_dir, pathObj.mergedslcdir)
-    pic_dir = os.path.join(project_dir, pathObj.tiffdir)
-    os.chdir(slave_dir)
-
-    if inps.imtype == 'Ortho':
-        geo_master_dir = os.path.join(project_dir, pathObj.geomasterdir)
-    else:
-        geo_master_dir = os.path.join(project_dir, pathObj.geomlatlondir)
-
-
-    try:
-        os.system('rm '+inps.inputfile + '/geo*')
-    except:
-        print('geocoding ...')
-
-    if not os.path.exists(pic_dir):
-        os.mkdir(pic_dir)
-
-    inps.bbox = [val for val in inps.bbox.split()]
-    if len(inps.bbox) != 4:
+    bbox = [val for val in bbox.split()]
+    if len(bbox) != 4:
         raise Exception('Bbox should contain 4 floating point values')
 
-    lon_west = np.float(inps.bbox[2])
-    lon_east = np.float(inps.bbox[3])
-    lat_south = np.float(inps.bbox[0])
-    lat_north = np.float(inps.bbox[1])
-
-    slc = inps.inputfile
-
-    os.chdir(os.path.join(slave_dir, slc))
+    lon_west = np.float(bbox[2])
+    lon_east = np.float(bbox[3])
+    lat_south = np.float(bbox[0])
+    lat_north = np.float(bbox[1])
 
     command_geocode = "geocodeGdal.py -l {a} -L {b} -f {c} --bbox '{l1} {l2} {L1} {L2}' -x {X} -y {Y}".format(
-        a=geo_master_dir+'/lat.rdr.full',
-        b=geo_master_dir+'/lon.rdr.full',
+        a=geo_master_dir + '/lat.rdr.full',
+        b=geo_master_dir + '/lon.rdr.full',
         c=slc + '.slc.full',
         l1=lat_south,
         l2=lat_north,
@@ -122,35 +167,6 @@ def main(iargs=None):
     print(command_geocode)
 
     os.system(command_geocode)
-
-    gfile = 'geo_' + slc + '.slc.full'
-    ds = gdal.Open(gfile + '.vrt', gdal.GA_ReadOnly)
-    array = np.abs(ds.GetRasterBand(1).ReadAsArray())
-    del ds
-
-    ##
-    array = np.where(array > 0, 10.0 * np.log10(pow(array,2)) - 83.0, array)
-
-    if inps.imtype == 'Ortho':
-        dst_file = 'Ortho_' + slc + '_backscatter.tif'
-    else:
-        dst_file = 'Geo_' + slc + '_backscatter.tif'
-
-    data = gdal.Open(gfile, gdal.GA_ReadOnly)
-    transform = data.GetGeoTransform()
-
-    ##
-    xmlfile = glob.glob(os.path.join(project_dir, pathObj.masterdir, '*.xml'))[0]
-    attributes = xmlread(xmlfile)
-    Metadata = {'SAT': attributes['missionname'], 'Mode': attributes['passdirection'],
-                'Image_Type': '{}_BackScatter'.format(inps.imtype), 'Date': slc}
-
-    array2raster(dst_file, transform, array, Metadata)
-
-    print('Find the output in {}'.format(pic_dir))
-
-    os.system('mv *.tif {}'.format(pic_dir))
-    os.system('rm geo*')
 
 
 if __name__ == '__main__':
