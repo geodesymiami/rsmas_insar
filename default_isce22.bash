@@ -49,6 +49,7 @@ export CONDA_ENVS_PATH=${PARENTDIR}/3rdparty/miniconda3/envs
 export CONDA_PREFIX=${PARENTDIR}/3rdparty/miniconda3
 export PROJ_LIB=${CONDA_PREFIX}/share/proj
 export GDAL_DATA=${PYTHON3DIR}/share/gdal
+export DASK_CONFIG=${RSMAS_INSAR}/rinsar/defaults/dask
 
 export PYTHONPATH=${PYTHONPATH-""}
 export PYTHONPATH=${PYTHONPATH}:${PYSAR_HOME}
@@ -80,6 +81,7 @@ export PATH=${PATH}:${PYSAR_HOME}/pysar:${PYSAR_HOME}/sh
 export PATH=${PYTHON3DIR}/bin:${PATH}
 export PATH=${PATH}:${PROJ_LIB}
 export PATH=${PATH}:${PARENTDIR}/3rdparty/tippecanoe/bin
+export PATH=${PATH}:${DASK_CONFIG}
 
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH-""}
 export LD_LIBRARY_PATH=${PYTHON3DIR}/lib
