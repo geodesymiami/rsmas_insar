@@ -7,10 +7,12 @@ import requests
 import argparse
 import time
 from datetime import datetime
-from rinsar.rsmas_logging import RsmasLogger, loglevel
-from io import StringIO
+from rinsar.objects.rsmas_logging import RsmasLogger, loglevel
+from rinsar.objects.auto_defaults import PathFind
 
-logfile = os.getenv('OPERATIONS')+'/LOGS/generate_templates.log'
+
+pathObj = PathFind()
+logfile_name = pathObj.logdir + '/generate_templates.log'
 logger = RsmasLogger(logfile)
 
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"

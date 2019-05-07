@@ -30,11 +30,11 @@ git clone https://github.com/AngeliqueBenoit/pyaps3.git
 cd ../setup;
 ./install_miniconda3_bare.csh
 ../3rdparty/miniconda3/bin/conda install isce2 -c piyushrpt --yes
-../3rdparty/miniconda3/bin/conda install --yes --file ../sources/PySAR/docs/conda.txt
 ../3rdparty/miniconda3/bin/conda install --yes --file conda.txt
 ../3rdparty/miniconda3/bin/pip install --upgrade pip
 ../3rdparty/miniconda3/bin/pip install opencv-python
 ../3rdparty/miniconda3/bin/pip install geocoder
+../3rdparty/miniconda3/bin/pip install git+https://github.com/dask/dask-jobqueue
 
 cd ../3rdparty
 ./miniconda3/bin/git clone https://github.com/yunjunz/PyAPS.git
@@ -56,7 +56,7 @@ echo DONE WITH CRITICAL CODE ;
 
 cd ..
 cd 3rdparty
-command -f module && module load gcc/4.9.4
+module load gcc/4.9.4
 git clone https://github.com/mapbox/tippecanoe.git;
 cd tippecanoe
 make install PREFIX=$PWD
