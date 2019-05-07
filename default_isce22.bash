@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # vim: set filetype=sh:
 echo "sourcing ${PWD}/default_isce22.bash ..."
 #####################################################
@@ -21,7 +22,7 @@ export TEMPLATES=${WORKDIR}/infiles/${USER}/TEMPLATES
 export TE=${TEMPLATES}
 
 export GEODMOD_WORKDIR=${WORKDIR}/MINDIR
-export GEODMODHOME=${PARENTDIR}/sources/geodmod                             
+export GEODMODHOME=${PARENTDIR}/sources/geodmod
 export GEODMOD_TESTDATA=${PARENTDIR}/data/testdata/geodmod
 export GEODMOD_TESTBENCH=${SCRATCHDIR}/GEODMOD_TESTBENCH
 
@@ -38,9 +39,7 @@ export SSARAHOME=${PARENTDIR}/3rdparty/SSARA
 export SSARA_ASF=${PARENTDIR}/sources/ssara_ASF
 export ISCE_HOME=${PARENTDIR}/3rdparty/miniconda3/lib/python3.7/site-packages/isce
 export RSMAS_INSAR=${PARENTDIR}
-#export SENTINEL_STACK=${PARENTDIR}/3rdparty/miniconda3/pkgs/isce2-2.3.1-f37_20190427_1/share/isce2/topsStack
 export SENTINEL_STACK=${PARENTDIR}/sources/isceStack/sentinelstack
-#export SENTINEL_STACK_MODIFIED=${PARENTDIR}/sources/sentinelstack_modified
 export PYSAR_HOME=${PARENTDIR}/sources/PySAR
 export SQUEESAR=${PARENTDIR}/sources/pysqsar
 
@@ -50,11 +49,13 @@ export CONDA_ENVS_PATH=${PARENTDIR}/3rdparty/miniconda3/envs
 export CONDA_PREFIX=${PARENTDIR}/3rdparty/miniconda3
 export PROJ_LIB=${CONDA_PREFIX}/share/proj
 export GDAL_DATA=${PYTHON3DIR}/share/gdal
+export DASK_CONFIG=${RSMAS_INSAR}/rinsar/defaults/dask
 
 export PYTHONPATH=${PYTHONPATH-""}
 export PYTHONPATH=${PYTHONPATH}:${PYSAR_HOME}
 export PYTHONPATH=${PYTHONPATH}:${INT_SCR}
-export PYTHONPATH=${PYTHONPATH}:${ISCE_HOME}:${PYTHON3DIR}/lib/python3.6/site-packages
+export PYTHONPATH=${PYTHONPATH}:${SSARA_ASF}
+export PYTHONPATH=${PYTHONPATH}:${ISCE_BUILD}:${PYTHON3DIR}/lib/python3.6/site-packages
 export PYTHONPATH=${PYTHONPATH}:${SQUEESAR}
 export PYTHONPATH=${PYTHONPATH}:${RSMAS_INSAR}
 export PYTHONPATH=${PYTHONPATH}:${PARENTDIR}/sources/rsmas_tools
@@ -75,18 +76,19 @@ export PATH=${PATH}:${RSMAS_INSAR}/rinsar:${RSMAS_INSAR}/rinsar/utils
 export PATH=${PATH}:${PARENTDIR}/rinsar
 export PATH=${PATH}:${PARENTDIR}/setup/accounts
 export PATH=${PATH}:${PARENTDIR}/sources/rsmas_tools/SAR:${PARENTDIR}/sources/rsmas_tools/GPS:${PARENTDIR}/sources/rsmas_tools/notebooks
-export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${SENTINEL_STACK}:${PATH}
+export PATH=${ISCE_BUILD}:${ISCE_HOME}/applications:${ISCE_HOME}/bin:${SENTINEL_STACK}:${PATH}
 export PATH=${PATH}:${PYSAR_HOME}/pysar:${PYSAR_HOME}/sh
 export PATH=${PYTHON3DIR}/bin:${PATH}
-export PATH=${PATH}:${PROJ_LIB} 
+export PATH=${PATH}:${PROJ_LIB}
 export PATH=${PATH}:${PARENTDIR}/3rdparty/tippecanoe/bin
+export PATH=${PATH}:${DASK_CONFIG}
 
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH-""}
 export LD_LIBRARY_PATH=${PYTHON3DIR}/lib
 export LD_RUN_PATH=${PYTHON3DIR}/lib
 
-if [ -n "${prompt}" ] 
-then 
+if [ -n "${prompt}" ]
+then
     echo "PARENTDIR:      " ${PARENTDIR}
     echo "PYTHON3DIR:     " ${PYTHON3DIR}
     echo "SSARAHOME:      " ${SSARAHOME}
