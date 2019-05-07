@@ -44,11 +44,6 @@ cd ../3rdparty/pykml
 ../../3rdparty/miniconda3/bin/python setup.py install
 mkdir -p ~/insarlab/OPERATIONS/LOGS
 
-cd ../3rdparty
-git clone https://github.com/dask/dask-jobqueue.git
-cd dask-jobqueue
-python setup.py install
-
 cd ../../..
 source default_isce22.bash;
 cd setup
@@ -64,6 +59,11 @@ command -f module && module load gcc/4.9.4
 git clone https://github.com/mapbox/tippecanoe.git;
 cd tippecanoe
 make install PREFIX=$PWD
+
+cd ../../3rdparty
+git clone https://github.com/dask/dask-jobqueue.git
+cd dask-jobqueue
+python setup.py install
 
 cd ../../sources;
 git clone https://github.com/geodesymiami/rsmas_tools.git ; 
