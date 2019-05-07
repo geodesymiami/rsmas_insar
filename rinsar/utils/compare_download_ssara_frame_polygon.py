@@ -8,10 +8,10 @@ import datetime
 import argparse
 import glob
 import difflib
-from rinsar.objects.dataset_template import Template
-from rinsar.objects.rsmas_logging import RsmasLogger, loglevel
-from rinsar.objects import message_rsmas
-import rinsar.utils.process_utilities as putils
+from rinsar.dataset_template import Template
+from rinsar.rsmas_logging import RsmasLogger, loglevel
+from rinsar import messageRsmas
+import rinsar._process_utilities as putils
 import rinsar.create_batch as cb
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
@@ -48,7 +48,7 @@ def run_ssara(template, delta_lat):
     ssaraopt = dataset_template.generate_ssaraopt_string()
     ssaraopt = ssaraopt.split(' ')
 
-    # add intersectWith to ssaraopt string
+    # add intersectWith to ssaraopt string 
     ssaraopt_polygon = add_polygon_to_ssaraopt(dataset_template, ssaraopt.copy(), delta_lat)
 
     # get kml file and create listing
@@ -56,7 +56,7 @@ def run_ssara(template, delta_lat):
 
     return 0
 
-def compare_ssara_listings(ssaraopt_frame, ssaraopt_polygon):
+def compare_ssara_listings(ssaraopt_frame, ssaraopt_polygon): 
     """download the ssara kml file and generate a file listing of granules to be downloaded"""
 
     ssaraopt_frame_kml = ['--kml' if x.startswith('--parallel') else x for x in ssaraopt_frame]
@@ -64,12 +64,12 @@ def compare_ssara_listings(ssaraopt_frame, ssaraopt_polygon):
     ssaraopt_frame_print.append('>')
     ssaraopt_frame_print.append('ssara_listing_frame.txt')
 
-    ssara_call    = ['ssara_federated_query.py'] + ssaraopt_frame_kml
-    message_rsmas.log(' '.join(ssara_call))
+    ssara_call    = ['ssara_federated_query.py'] + ssaraopt_frame_kml 
+    messageRsmas.log(' '.join(ssara_call))
     ssara_process = subprocess.run(' '.join(ssara_call), shell=True)
     rename_latest_kml(suffix ='frame')
-    ssara_call    = ['ssara_federated_query.py'] + ssaraopt_frame_print
-    message_rsmas.log(' '.join(ssara_call))
+    ssara_call    = ['ssara_federated_query.py'] + ssaraopt_frame_print 
+    messageRsmas.log(' '.join(ssara_call))
     ssara_process = subprocess.run(' '.join(ssara_call), shell=True)
 
     ssaraopt_polygon_kml = ['--kml' if x.startswith('--parallel') else x for x in ssaraopt_polygon]
@@ -77,12 +77,12 @@ def compare_ssara_listings(ssaraopt_frame, ssaraopt_polygon):
     ssaraopt_polygon_print.append('>')
     ssaraopt_polygon_print.append('ssara_listing_polygon.txt')
 
-    ssara_call    = ['ssara_federated_query.py'] + ssaraopt_polygon_kml
-    message_rsmas.log(' '.join(ssara_call))
+    ssara_call    = ['ssara_federated_query.py'] + ssaraopt_polygon_kml 
+    messageRsmas.log(' '.join(ssara_call))
     ssara_process = subprocess.run(' '.join(ssara_call), shell=True)
     rename_latest_kml(suffix ='polygon')
-    ssara_call    = ['ssara_federated_query.py'] + ssaraopt_polygon_print
-    message_rsmas.log(' '.join(ssara_call))
+    ssara_call    = ['ssara_federated_query.py'] + ssaraopt_polygon_print 
+    messageRsmas.log(' '.join(ssara_call))
     ssara_process = subprocess.run(' '.join(ssara_call), shell=True)
 
     with open('ssara_listing_frame.txt', 'r') as file0:
@@ -107,7 +107,7 @@ def rename_latest_kml( suffix ):
     new_fname = os.getcwd() + '/' + fname.split('.')[0] + '_' + suffix + '.' + fname.split('.')[1]
     os.rename(latest_file,new_fname)
 
-    return
+    return 
 
 def add_polygon_to_ssaraopt( dataset_template, ssaraopt, delta_lat ):
     """calculates intersectsWith polygon from bbox and replace frame in ssaraopt if give"""
@@ -147,7 +147,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     os.chdir(inps.work_dir)
-    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+    messageRsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
     if not os.path.isdir(inps.slc_dir):
         os.makedirs(inps.slc_dir)
     os.chdir(inps.slc_dir)

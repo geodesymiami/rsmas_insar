@@ -10,13 +10,15 @@ import sys
 import glob
 import shutil
 import argparse
-from rinsar.objects.rsmas_logging import loglevel
-from rinsar.objects import message_rsmas
+from rinsar.rsmas_logging import loglevel
+from rinsar import messageRsmas
+import rinsar.create_batch as cb
+
+sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
 
-from rinsar.utils.process_utilities import create_or_update_template
-from rinsar.utils.process_utilities import get_work_directory, get_project_name, send_logger
-import rinsar.create_batch as cb
+from rinsar._processSteps import create_or_update_template
+from rinsar._process_utilities  import get_work_directory, get_project_name, send_logger
 
 
 logger  = send_logger()
@@ -45,6 +47,7 @@ def command_line_parse(args):
     parser = create_parser()
     inps = parser.parse_args(args)
     return inps
+
 
 
 if __name__ == "__main__":
@@ -90,7 +93,7 @@ if __name__ == "__main__":
 
     out_file = 'out_insarmaps'
     logger.log(loglevel.INFO, command1)
-    message_rsmas.log(command1)
+    messageRsmas.log(command1)
     command1 = '('+command1+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
     status = subprocess.Popen(command1, shell=True).wait()
     if status is not 0:
@@ -100,7 +103,7 @@ if __name__ == "__main__":
 
     # TODO: Change subprocess call to get back error code and send error code to logger
     logger.log(loglevel.INFO, command2)
-    message_rsmas.log(command2)
+    messageRsmas.log(command2)
     command2 = '('+command2+' | tee -a '+out_file+'.o) 3>&1 1>&2 2>&3 | tee -a '+out_file+'.e'
     status = subprocess.Popen(command2, shell=True).wait()
     if status is not 0:

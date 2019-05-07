@@ -1,0 +1,30 @@
+##------------------------ stackSentinel_template.txt ------------------------##
+## 1. topsStack options
+
+sentinelStack.slcDir                      = auto         # [SLCs dir]
+sentinelStack.orbitDir                    = auto         # [/nethome/swdowinski/S1orbits/]
+sentinelStack.auxDir                      = auto         # [/nethome/swdowinski/S1aux/]
+sentinelStack.workingDir                  = auto         # [/projects/scratch/insarlab/$USER/projname]
+sentinelStack.demDir                      = auto         # [DEM file dir]
+sentinelStack.master                      = auto         # [Master acquisition]
+sentinelStack.numConnections              = auto         # [5] auto for 3
+sentinelStack.numOverlapConnections       = auto         # [N of overlap Ifgrams for NESD. Default : 3]
+sentinelStack.subswath                    = None         # [List of swaths. Default : '1 2 3']
+sentinelStack.boundingBox                 = None         # [ '-1 0.15 -91.7 -90.9'] required
+sentinelStack.textCmd                     = auto         # [eg: source ~/.bashrc]
+sentinelStack.excludeDates                = auto         # [20080520,20090817 / no], auto for no
+sentinelStack.includeDates                = auto         # [20080520,20090817 / no], auto for all
+sentinelStack.azimuthLooks                = auto         # [1 / 2 / 3 / ...], auto for 5
+sentinelStack.rangeLooks                  = auto         # [1 / 2 / 3 / ...], auto for 9
+sentinelStack.filtStrength                = auto         # [0.0-0.8] auto for 0.3
+sentinelStack.esdCoherenceThreshold       = auto         # Coherence threshold for estimating az misreg using ESD. auto for 0.85
+sentinelStack.snrMisregThreshold          = auto         # SNR threshold for estimating rng misreg using cross-correlation. auto for 10
+sentinelStack.unwMethod                   = auto         # [snaphu icu], auto for snaphu
+sentinelStack.polarization                = auto         # SAR data polarization. auto for vv
+sentinelStack.coregistration              = auto         # Coregistration options: a) geometry b) NESD. auto for NESD
+sentinelStack.workflow                    = auto         # [interferogram / offset / slc / correlation] auto for interferogram
+sentinelStack.startDate                   = auto         # [YYYY-MM-DD]. auto for first date available
+sentinelStack.stopDate                    = auto         # [YYYY-MM-DD]. auto for end date available
+sentinelStack.useGPU                      = auto         # Allow App to use GPU when available
+sentinelStack.processingMethod            = auto         # [sbas, squeesar, ps]
+sentinelStack.demMethod                   = auto         # [bbox, ssara]

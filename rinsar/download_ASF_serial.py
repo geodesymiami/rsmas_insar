@@ -33,7 +33,9 @@ import re
 
 import base64
 import time
+import getpass
 import ssl
+#import httplib2
 
 import xml.etree.ElementTree as ET
 
