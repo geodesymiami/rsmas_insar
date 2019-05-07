@@ -18,47 +18,50 @@ import sys
 import glob
 import argparse
 import shutil
-import re
 import subprocess
-from rinsar.objects import message_rsmas, dataset_template
+from rinsar import messageRsmas
+#from rinsar.dataset_template import Template
+from rinsar import dataset_template
+import re
 from pysar.utils import readfile
-from rinsar.utils.download_ssara_rsmas import add_polygon_to_ssaraopt
-from rinsar.utils.process_utilities import get_project_name, get_work_directory
+from download_ssara_rsmas import add_polygon_to_ssaraopt
 
 EXAMPLE = '''
   example:
   dem_rsmas.py  $SAMPLES/GalapagosT128SenVVD.template
+
       uses sentinelStack.boundingBox to generate a dem in DEM folder as dem.py requires integer degrees
+
       options:
            sentinelStack.demMethod = boundingBox [default: ssara]
+
       subtracts/adds ` 0.5 degree and then rounds to full integer
+
       '-1 0.15 -91.3 -90.9' -- >'-2 1 -92 -90
+
      work for islands where zip files may be missing
 '''
 
-
 def main(args):
     command = os.path.basename(__file__) + ' ' + ' '.join(args[1:])
-    message_rsmas.log(command)
+    messageRsmas.log(command)
 
     # set defaults: ssara=True is set in dem_parser, use custom_pemp[late field if given
     inps = dem_parser()
     custom_template = readfile.read_template(inps.custom_template_file)
-    project_name = get_project_name(inps.custom_template_file)
-    work_dir = get_work_directory(None, project_name)
 
     if 'sentinelStack.demMethod' in list(custom_template.keys()):
         if custom_template['sentinelStack.demMethod'] == 'ssara':
-            inps.flag_ssara = True
-            inps.flag_boundingBox = False
+           inps.flag_ssara = True
+           inps.flag_boundingBox = False
         if custom_template['sentinelStack.demMethod'] == 'boundingBox':
-            inps.flag_ssara = False
-            inps.flag_boundingBox = True
+           inps.flag_ssara = False
+           inps.flag_boundingBox = True
 
     # print( 'flag_ssara: ' +str(inps.flag_ssara))
     # print( 'flag_boundingBox : ' + str(inps.flag_boundingBox))
 
-    cwd = make_dem_dir(work_dir)
+    cwd = make_dem_dir()
 
     if inps.flag_ssara:
 
@@ -68,7 +71,7 @@ def main(args):
     elif inps.flag_boundingBox:
         print('DEM generation using ISCE')
         bbox = custom_template['sentinelStack.boundingBox']
-        south = bbox.split(' ')[0].split('\'')[1]  # assumes quotes '-1 0.15 -91.3 -91.0'
+        south = bbox.split(' ')[0].split('\'')[1]   # assumes quotes '-1 0.15 -91.3 -91.0'
         north = bbox.split(' ')[1]
         west = bbox.split(' ')[2]
         east = bbox.split(' ')[3].split('\'')[0]
@@ -80,7 +83,7 @@ def main(args):
 
         demBbox = str(int(south)) + ' ' + str(int(north)) + ' ' + str(int(west)) + ' ' + str(int(east))
         cmd = 'dem.py -a stitch -b ' + demBbox + ' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
-        message_rsmas.log(cmd)
+        messageRsmas.log(cmd)
 
         try:
             output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True, universal_newlines=True)
@@ -109,12 +112,11 @@ def main(args):
     print('End of dem_rsmas.py')
     print('################################################\n')
 
-
 def call_ssara_dem(custom_template, inps, cwd):
     print('DEM generation using SSARA')
     out_file = 'ssara_dem.log'
 
-    # need to refactor so that Josh's dataset_template will be used throughout
+    # need to refactor so that Josh's dataset_template will be used throughout 
     dset_template = dataset_template.Template(inps.custom_template_file)
     ssaraopt_string = dset_template.generate_ssaraopt_string()
     ssaraopt_list = ssaraopt_string.split(' ')
@@ -122,14 +124,12 @@ def call_ssara_dem(custom_template, inps, cwd):
     ssaraopt_string = ' '.join(ssaraopt_list)
     custom_template['ssaraopt'] = ssaraopt_string
 
-    command = 'ssara_federated_query.py {ssaraopt} --dem >& {outfile}'.format(ssaraopt=custom_template['ssaraopt'],
-                                                                              outfile=out_file)
+    command = 'ssara_federated_query.py {ssaraopt} --dem >& {outfile}'.format(ssaraopt=custom_template['ssaraopt'], outfile=out_file)
     print('command currently executing: ' + command)
     subprocess.Popen(command, shell=True).wait()
     print('downloaded dem.grd')
     grd_to_envi_and_vrt()
     grd_to_xml(cwd)
-
 
 def dem_parser():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
@@ -153,19 +153,16 @@ def dem_parser():
 
     # switch off ssara (default) if boundingBox is selected
     if inps.flag_boundingBox and inps.flag_ssara:
-        inps.flag_ssara = False
+       inps.flag_ssara = False
 
     return inps
 
-
-def make_dem_dir(work_dir):
-    dem_dir = os.path.join(work_dir, 'DEM')
-    if os.path.isdir(dem_dir):
-        shutil.rmtree(dem_dir)
-    os.mkdir(dem_dir)
-    os.chdir(dem_dir)
+def make_dem_dir():
+    if os.path.isdir('DEM'):
+        shutil.rmtree('DEM')
+    os.mkdir('DEM')
+    os.chdir('DEM')
     return os.getcwd()
-
 
 def grd_to_xml(cwd):
     print('you have started grd_to_xml')
@@ -174,24 +171,24 @@ def grd_to_xml(cwd):
     outfilexml = 'dem.dem.wgs84.xml'
     outfilevrt = 'dem.dem.wgs84.vrt'
     gdalinfopath = 'gdalinfo'
-    command = '{gdalinfopath} {file}'.format(gdalinfopath=gdalinfopath, file=filename)
+    command = '{gdalinfopath} {file}'.format(gdalinfopath = gdalinfopath, file=filename)
     print(command)
-
+    
     tempstr = subprocess.getoutput(command)
 
     # FA: it should be possible to retrieve the attributess from the objext but I did not find which fields
-    # from osgeo import gdal
-    # from gdalconst import GA_ReadOnly
-    # dataset = gdal.Open(filename,gdal.GA_ReadOnly)
-    # dataset.GetGeoTransform()
-    # ul = dataset.GetGeoTransform()
-    # dataset.RasterXSize
-
+    #from osgeo import gdal
+    #from gdalconst import GA_ReadOnly
+    #dataset = gdal.Open(filename,gdal.GA_ReadOnly)
+    #dataset.GetGeoTransform()
+    #ul = dataset.GetGeoTransform()
+    #dataset.RasterXSize
+    
     xmlparamters = dict()
 
-    xmlparamters['c1delta'] = re.findall(r'Pixel Size = \((.+),.+\)', tempstr)[0]
+    xmlparamters['c1delta'] = re.findall(r'Pixel Size = \((.+),.+\)', tempstr)[0] 
     xmlparamters['c1ev'] = round(float(re.findall(r'Upper Right\s+\( (.\d+.\d+),', tempstr)[0]), 1)
-    xmlparamters['c1size'] = int(re.findall(r'Size is (\d+),\s+\d+', tempstr)[0])
+    xmlparamters['c1size'] = int(re.findall(r'Size is (\d+),\s+\d+', tempstr)[0])  
     xmlparamters['c1sv'] = round(float(re.findall(r'Lower Left\s+\( (.\d+.\d+),', tempstr)[0]), 1)
 
     xmlparamters['c2delta'] = re.findall(r'Pixel Size = \(.+,(.+)\)', tempstr)[0]
@@ -211,14 +208,12 @@ def grd_to_xml(cwd):
     with(open(outfilexml, 'w')) as out:
         out.write(xmltext.format(**xmlparamters))
 
-
 def grd_to_envi_and_vrt():
     # Commands to create ENVI .hdr Labelled Raster and vrt xml file
     command = '''gdal_translate -ot Int16 -of ENVI dem.grd dem.dem.wgs84; 
                  gdal_translate -of vrt dem.grd dem.dem.wgs84.xml.vrt'''
     print('command currently executing: ' + command)
     subprocess.Popen(command, shell=True).wait()
-
 
 #####################################################################################
 xmltext = '''
@@ -362,4 +357,3 @@ vrttext = '''
 ###########################################################################################
 if __name__ == '__main__':
     main(sys.argv[:])
-
