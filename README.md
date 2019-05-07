@@ -44,7 +44,7 @@ cd ../3rdparty/pykml
 ../../3rdparty/miniconda3/bin/python setup.py install
 mkdir -p ~/insarlab/OPERATIONS/LOGS
 
-cd ../../..
+cd ../..
 source default_isce22.bash;
 cd setup
 git clone https://github.com/geodesymiami/accounts ;
