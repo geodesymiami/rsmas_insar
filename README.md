@@ -30,7 +30,6 @@ git clone https://github.com/AngeliqueBenoit/pyaps3.git
 cd ../setup;
 ./install_miniconda3_bare.csh
 ../3rdparty/miniconda3/bin/conda install isce2 -c piyushrpt --yes
-../3rdparty/miniconda3/bin/conda install --yes --file ../sources/PySAR/docs/conda.txt
 ../3rdparty/miniconda3/bin/conda install --yes --file conda.txt
 ../3rdparty/miniconda3/bin/pip install --upgrade pip
 ../3rdparty/miniconda3/bin/pip install opencv-python
@@ -45,7 +44,12 @@ cd ../3rdparty/pykml
 ../../3rdparty/miniconda3/bin/python setup.py install
 mkdir -p ~/insarlab/OPERATIONS/LOGS
 
-cd ../..
+cd ../3rdparty
+git clone https://github.com/dask/dask-jobqueue.git
+cd dask-jobqueue
+python setup.py install
+
+cd ../../..
 source default_isce22.bash;
 cd setup
 git clone https://github.com/geodesymiami/accounts ;
