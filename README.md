@@ -55,7 +55,7 @@ echo DONE WITH CRITICAL CODE ;
 
 cd ..
 cd 3rdparty
-command -f module && module load gcc/4.9.4
+module load gcc/4.9.4
 git clone https://github.com/mapbox/tippecanoe.git;
 cd tippecanoe
 make install PREFIX=$PWD
