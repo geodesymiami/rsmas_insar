@@ -34,6 +34,7 @@ cd ../setup;
 ../3rdparty/miniconda3/bin/pip install --upgrade pip
 ../3rdparty/miniconda3/bin/pip install opencv-python
 ../3rdparty/miniconda3/bin/pip install geocoder
+../3rdparty/miniconda3/bin/pip install git+https://github.com/dask/dask-jobqueue
 
 cd ../3rdparty
 ./miniconda3/bin/git clone https://github.com/yunjunz/PyAPS.git
@@ -59,11 +60,6 @@ module load gcc/4.9.4
 git clone https://github.com/mapbox/tippecanoe.git;
 cd tippecanoe
 make install PREFIX=$PWD
-
-cd ../../3rdparty
-git clone https://github.com/dask/dask-jobqueue.git
-cd dask-jobqueue
-python setup.py install
 
 cd ../../sources;
 git clone https://github.com/geodesymiami/rsmas_tools.git ; 
