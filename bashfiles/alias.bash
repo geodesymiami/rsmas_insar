@@ -67,10 +67,6 @@ function mailfile() { echo " " | mail -a "$1" -s mailing_files ${NOTIFICATIONEMA
 alias mailcoherence='echo " " | mail -a coherence{_1,_2,_3,_4}* -s coherence_files ${NOTIFICATIONEMAIL} ; echo "coherence file sent to <${NOTIFICATIONEMAIL}>"'
 alias mailssarakml='echo " " | mail -a *.kml -s ssara_kml_file ${NOTIFICATIONEMAIL} ; echo "kml file sent to <${NOTIFICATIONEMAIL}>"'
 ######################################
-###### insarmaps #####################
-######################################
-alias insarmapsremove='json_mbtiles2insarmaps.py -u insaradmin -p Insar123 --host insarmaps.miami.edu -P rsmastest -U rsmas@gmail.com --remove'
-######################################
 ###### geodmod #######################
 ######################################
 alias cdg='cd ${GEODMODHOME}'
@@ -103,19 +99,6 @@ function bkillsubmit_time() { bkill `bjobs | grep "$1" | awk '{print $"BASH_ARGV
 function bbotsubmit_time() { echo `bjobs | grep "$1" | awk '{print $"{BASH_ARGV[1]" " "}'` ; }
 function qdelsubmit_time() { qdel `showq | grep "$1" | awk '{printf $"{BASH_ARGV[1]" " "}'` ; }
 alias bjobssum='bjobs | grep Sen; bjobs | grep RUN | wc -l | awk '\''{print "Running jobs:",$1}'\''; bjobs | grep PEND | wc -l | awk '\''{print "Pending jobs:",$1}'\'''
-######################################
-######## login shortcuts          ####
-######################################
-alias pegasus='ssh -YC pegasus.ccs.miami.edu'
-alias visx='ssh -YC pegasus.ccs.miami.edu'
-alias pegasusdavid='ssh -YC dwg11@pegasus.ccs.miami.edu'
-alias pegasuslily='ssh -YC lbw14@pegasus.ccs.miami.edu'
-alias pegasusjosh='ssh -YC jaz101@pegasus.ccs.miami.edu'
-alias sanghoon='ssh -YC -o ServerAliveInterval=60 -p 7777 164.125.92.239'
-function scpsanghoon() { scp -P 7777 "$1" 164.125.92.239: ; }
-alias visx='ssh -YC visx.ccs.miami.edu'
-alias sshtunnel='ssh -N -f -L 2123:fembot1.rsmas.miami.edu:22 olympus.rsmas.miami.edu; ssh -YC -p 2123 localhost'
-alias sshjupyter='ssh -N -L 8888:10.141.226.234:8888 pegasus.ccs.miami.edu'
 ######################################
 ######## general #####################
 ######################################

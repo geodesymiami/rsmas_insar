@@ -1,6 +1,7 @@
 #!/bin/csh 
 ######### copy credentials to right place ##############
 
+# for ssara 
 set characterCount=`wc -m ../3rdparty/SSARA/password_config.py`
 
 if (  $characterCount[1] == 75) then
@@ -19,6 +20,7 @@ if (! -f ~/.netrc) then
   cp accounts/netrc ~/.netrc
 endif
 
+# for pyaps 
 if (! -f 3rdparty/PyAPS/pyaps/model.cfg) then
       echo Copying default model.cfg for ECMWF download with PyAPS into ../3rdparty/PyAPS/pyaps
       cp accounts/model.cfg ../3rdparty/PyAPS/pyaps
