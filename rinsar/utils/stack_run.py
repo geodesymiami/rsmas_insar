@@ -201,8 +201,7 @@ class CreateRun:
             self.iter = i
             self.general_stack(inps)
 
-
-        elif inps.processingMethod == 'squeesar' or inps.workflow == 'slc':
+        elif inps.processingMethod == 'squeesar':
 
             self.pairs_sm = []
 

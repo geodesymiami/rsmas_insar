@@ -2,4 +2,3 @@ git
 psycopg2
 pycurl
 natsort
-bokeh
