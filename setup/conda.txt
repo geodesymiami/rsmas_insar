@@ -20,3 +20,4 @@ pyproj
 pyresample
 scikit-image
 scipy
+bokeh
