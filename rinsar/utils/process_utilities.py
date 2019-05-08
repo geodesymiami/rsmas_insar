@@ -229,7 +229,6 @@ def set_inps_value_from_template(inps, template_key,
     if default_value == 'None':
         default_value = None
 
-
     if not REQUIRED:
         # Set default value
         if not key_name in inps:
