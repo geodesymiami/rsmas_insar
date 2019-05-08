@@ -78,6 +78,10 @@ def main(iargs=None):
     if inps.stop is None:
         inps.stop = len(run_file_list)
 
+    else:
+        if not 'run_0_' in run_file_list[0]:
+           inps.stop = inps.stop - 1
+
     config = get_config_defaults(config_file='job_defaults.cfg')
 
     run_file_list = run_file_list[inps.start:inps.stop + 1]
