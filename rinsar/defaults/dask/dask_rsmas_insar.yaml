@@ -2,11 +2,13 @@ jobqueue:
   lsf:
     queue: general
     project: insarlab
+
     name: rinsar_bee
 
     # Dask worker options
     cores: 2                    # Total number of cores per job
     memory: 4GB                 # This parameter is ignored by Pegasus
+
     processes: 1                # Number of Python processes per job
 
     interface: ib0              # Network interface to use like eth0 or ib0
