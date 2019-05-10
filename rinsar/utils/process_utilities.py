@@ -139,6 +139,7 @@ def create_or_update_template(inps_dict):
     inps.template_file = create_default_template()
     templateObj = Template(inps.customTemplateFile)
     inps.custom_template = templateObj.get_options()
+    inps.ssaraopt = templateObj.generate_ssaraopt_string()    
 
     for key in inps.custom_template:
         inps.custom_template[key] = os.path.expandvars(inps.custom_template[key])
