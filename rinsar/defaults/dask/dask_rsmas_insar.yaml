@@ -2,11 +2,13 @@ jobqueue:
   lsf:
     queue: general
     project: insarlab
-    name: pysar_worker_bee
+
+    name: rinsar_bee
 
     # Dask worker options
     cores: 2                    # Total number of cores per job
-    memory: 2GB                 # This parameter is ignored by Pegasus
+    memory: 4GB                 # This parameter is ignored by Pegasus
+
     processes: 1                # Number of Python processes per job
 
     interface: ib0              # Network interface to use like eth0 or ib0
@@ -25,14 +27,14 @@ jobqueue:
     # The first parameter is required by Pegasus. This parameter sets the
     # memory per node. The second parameter writes worker output to file.
     job-extra: ['-R "rusage[mem=2500]"',
-                "-o WORKER-%J.out"]
+                "-o WORKER-rinsar.%J.out"]
     log-directory: null
 
 ########################################################
-  rsmas_insar:
+  crop_sentinel:
     queue: general
     project: insarlab
-    name: rsmas_insar_worker_bee
+    name: crop_bee
 
     # Dask worker options
     cores: 2                    # Total number of cores per job
@@ -55,7 +57,7 @@ jobqueue:
     # The first parameter is required by Pegasus. This parameter sets the
     # memory per node. The second parameter writes worker output to file.
     job-extra: ['-R "rusage[mem=6400]"',
-                "-o RSMAS_INSAR_WORKER_%J.out"]
+                "-o WORKER_rinsar.%J.out"]
     log-directory: null
 
 

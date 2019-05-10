@@ -139,6 +139,7 @@ def create_or_update_template(inps_dict):
     inps.template_file = create_default_template()
     templateObj = Template(inps.customTemplateFile)
     inps.custom_template = templateObj.get_options()
+    inps.ssaraopt = templateObj.generate_ssaraopt_string()    
 
     for key in inps.custom_template:
         inps.custom_template[key] = os.path.expandvars(inps.custom_template[key])
@@ -343,7 +344,6 @@ def remove_zero_size_or_length_files(directory):
 
 def get_slc_list(ssaraopt, slcdir):
     """returns the number of images from ssara command and decides to download new data or not"""
-
     ssara_opt = ssaraopt.split(' ')
     ssara_call = ['ssara_federated_query-cj.py'] + ssara_opt + ['--print']
     ssara_output = subprocess.check_output(ssara_call)
