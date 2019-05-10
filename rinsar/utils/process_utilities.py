@@ -343,7 +343,6 @@ def remove_zero_size_or_length_files(directory):
 
 def get_slc_list(ssaraopt, slcdir):
     """returns the number of images from ssara command and decides to download new data or not"""
-
     ssara_opt = ssaraopt.split(' ')
     ssara_call = ['ssara_federated_query-cj.py'] + ssara_opt + ['--print']
     ssara_output = subprocess.check_output(ssara_call)

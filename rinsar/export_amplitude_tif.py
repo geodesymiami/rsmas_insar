@@ -32,6 +32,8 @@ def main(iargs=None):
     pic_dir = os.path.join(project_dir, pathObj.tiffdir)
     os.chdir(slave_dir)
 
+    slc = inps.inputfile
+
     if inps.imtype == 'Ortho':
         geo_master_dir = os.path.join(project_dir, pathObj.geomasterdir)
     else:
