@@ -149,7 +149,7 @@ def create_or_update_template(inps_dict):
     set_default_options(inps, pathObj)
 
     del inps.custom_template
-    
+
     return inps
 
 
@@ -220,30 +220,31 @@ def set_inps_value_from_template(inps, template_key,
     # Allows you to refer to and modify `inps` values
     inps_dict = vars(inps)
 
+    if not 'ssara' in inps_name:
 
-    key_name = inps_name.split('.')
-    try:
-        key_name = key_name[1]
-    except:
-        key_name = key_name[0]
+        key_name = inps_name.split('.')
+        try:
+            key_name = key_name[1]
+        except:
+            key_name = key_name[0]
 
-    if default_value == 'None':
-        default_value = None
+        if default_value == 'None':
+            default_value = None
 
-    if not REQUIRED:
-        # Set default value
-        if not key_name in inps:
+        if not REQUIRED:
+            # Set default value
+            if not key_name in inps:
+                if template_key in inps.custom_template:
+                    inps_dict[key_name] = inps.custom_template[template_key].strip("'")
+                else:
+                    inps_dict[key_name] = default_value
+
+        else:
             if template_key in inps.custom_template:
                 inps_dict[key_name] = inps.custom_template[template_key].strip("'")
             else:
-                inps_dict[key_name] = default_value
-
-    else:
-        if template_key in inps.custom_template:
-            inps_dict[key_name] = inps.custom_template[template_key].strip("'")
-        else:
-            logger.log(loglevel.ERROR, '{} is required'.format(template_key))
-            raise Exception('ERROR: {0} is required'.format(template_key))
+                logger.log(loglevel.ERROR, '{} is required'.format(template_key))
+                raise Exception('ERROR: {0} is required'.format(template_key))
 
 ##########################################################################
 

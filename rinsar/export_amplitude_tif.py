@@ -127,10 +127,7 @@ def raster2geotiff(newRasterfn, gtransform, array, metadata):
     outRaster = driver.Create(newRasterfn, cols, rows, dst_nbands, gdal.GDT_Float32, dst_options)
     outRaster.SetGeoTransform(gtransform)
     outband = outRaster.GetRasterBand(1)
-    outband.SetMetadata({'SAT': metadata['SAT']})                      # Could be:{ERS, ENV, S1, RS1, RS2, CSK, TSX, JERS, ALOS, ALOS2, NISAR}
-    outband.SetMetadata({'Mode': metadata['Mode']})                    # Could be:{Asc, Desc}
-    outband.SetMetadata({'Image Type': metadata['Image_Type']})        # Could be:{Ortho_BackScatter, Geo_BackScatter, Ortho_Coherence, Ortho_Interferogram, ...}
-    outband.SetMetadata({'Date': metadata['Date']})                    # Date (YYYYMMDD format)
+    outband.SetMetadata(metadata)
     outband.WriteArray(array)
     outRasterSRS = osr.SpatialReference()
     outRasterSRS.ImportFromEPSG(4326)
