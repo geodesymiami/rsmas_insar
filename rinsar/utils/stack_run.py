@@ -159,8 +159,8 @@ class CreateRun:
 
         i = self.iter + 1
         runObj = rsmasRun()
-        runObj.configure(inps, 'run_' + str(i) + "_amplitude_ortho_geo")
-        runObj.exportAmplitude(inps)
+        runObj.configure(inps, 'run_' + str(i) + "_hazard_products")
+        runObj.generateHazardProducts(inps)
         runObj.finalize()
 
         i += 1
