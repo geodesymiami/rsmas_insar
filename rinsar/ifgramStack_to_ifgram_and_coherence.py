@@ -110,7 +110,11 @@ def create_geotiff (obj, data, outfile, type):
     originY = float(obj.get_metadata()['Y_FIRST'])
     pixelHeight = float(obj.get_metadata()['Y_STEP'])
     gt = [originX, pixelWidth, 0, originY, 0, pixelHeight]
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> added ifgram and coherence to hazard products
     driver = gdal.GetDriverByName('GTiff')
     ds = driver.Create(outfile, data.shape[1], data.shape[0], 1, gdal.GDT_Float32, )
 
@@ -119,9 +123,13 @@ def create_geotiff (obj, data, outfile, type):
     srs.ImportFromEPSG(4326)
     ds.SetProjection(srs.ExportToWkt())
     ds.SetGeoTransform(gt)
+<<<<<<< HEAD
     ds.SetMetadata(obj.get_metadata())
 
 
+=======
+    ds.SetMetadata(Metadata)
+>>>>>>> added ifgram and coherence to hazard products
     ## TODO: Need to add metadata data_content: 'coherence' (use variable type)
     ## NEED HELP: I could not figure it out
 
