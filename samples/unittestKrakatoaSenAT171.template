@@ -6,8 +6,11 @@ email_pysar                         = famelung@rsmas.miami.edu
 email_insarmaps                     = famelung@rsmas.miami.edu
 ####################
 every_day_flag                      = yes                                                                                                 
-ssaraopt                            = --platform=SENTINEL-1A,SENTINEL-1B -r 171 -f 1156-1162 -s 2014-07-01 -e 2018-12-21
-parallel_download                   = 20                                                                                                  
+ssaraopt.platform                   = SENTINEL-1A,SENTINEL-1B 
+ssaraopt.relativeOrbit              = 171
+ssaraopt.startDate                  = 2014-07-01
+ssaraopt.endDate                    = 2014-07-01
+ssaraopt.parallel                   = 20                                                                                                  
 processor                           = isce                                                                                                
 cleanopt                            = 0                                                                                                   
 ####################
