@@ -55,7 +55,7 @@ class PathFind:
         self.wrappercommand = 'SentinelWrapper.py -c '
         self.masterdir = 'master'
         self.stackdir = 'stack'
-        self.tiffdir = 'GeoOrtho_tiff'
+        self.tiffdir = 'hazard_products'
         return
 
     def set_isce_defaults(self, inps):

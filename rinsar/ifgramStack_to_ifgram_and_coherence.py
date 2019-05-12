@@ -12,7 +12,7 @@ import subprocess
 import glob
 import shutil
 
-import messageRsmas
+import message_rsmas
 import _process_utilities as putils
 from dataset_template import Template
 import create_batch as cb
@@ -54,7 +54,7 @@ def create_parser():
 def main(iargs=None):
     """ generates interferograms and coherence images in GeoTiff format """
 
-    messageRsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     inps = command_line_parse(iargs)
     project_name = putils.get_project_name(custom_template_file=inps.template_file)
