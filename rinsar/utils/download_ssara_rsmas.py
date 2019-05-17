@@ -94,7 +94,7 @@ def run_ssara(template, delta_lat, run_number=1):
     logger.log(loglevel.INFO, "GENERATED SSARAOPT STRING")
 
     # add intersectWith to ssaraopt string
-    ssaraopt = add_polygon_to_ssaraopt(dataset_template, ssaraopt.copy(), delta_lat)
+    ssaraopt = add_polygon_to_ssaraopt(dataset_template.get_options(), ssaraopt.copy(), delta_lat)
 
     # get kml file and create listing
     get_ssara_kml_and_listing(ssaraopt = ssaraopt)
@@ -174,9 +174,9 @@ def get_ssara_kml_and_listing(ssaraopt):
 
     return None
 
-def add_polygon_to_ssaraopt( dataset_template, ssaraopt, delta_lat ):
+def add_polygon_to_ssaraopt(dataset_template, ssaraopt, delta_lat ):
     """calculates intersectsWith polygon from bbox and replace frame in ssaraopt if give"""
-    bbox_list = dataset_template.get_options()['sentinelStack.boundingBox'][1:-1].split(' ')
+    bbox_list = dataset_template['topsStack.boundingBox'][1:-1].split(' ')
     delta_lon = delta_lat*0.2
     min_lat = float( bbox_list[0] ) - delta_lat
     max_lat = float( bbox_list[1] ) + delta_lat
