@@ -15,7 +15,7 @@ import time
 from rinsar.objects import message_rsmas
 from rinsar.utils.process_steps import RsmasInsar, command_line_parse
 from rinsar.utils.process_utilities import get_work_directory, get_project_name
-import rinsar.create_batch as cb
+import rinsar.job_submission as js
 ###############################################################################
 
 def main(iargs=None):
@@ -31,7 +31,7 @@ def main(iargs=None):
         inps.project_name = get_project_name(inps.customTemplateFile)
         inps.work_dir = get_work_directory(None, inps.project_name)
 
-        job = cb.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir, inps.wall_time)
+        job = js.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir, inps.wall_time)
 
     else:
 

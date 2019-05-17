@@ -15,7 +15,7 @@ from zerodop.topozero import createTopozero
 from isceobj.Util.ImageUtil import ImageLib as IML
 from rinsar.objects.auto_defaults import PathFind
 from rinsar.utils.process_utilities import create_or_update_template, get_config_defaults, walltime_adjust
-import rinsar.create_batch as cb
+import rinsar.job_submission as js
 
 pathObj = PathFind()
 #################################################################################
@@ -32,7 +32,7 @@ def main(iargs=None):
         job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
         wall_time = '2:00'
 
-        cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
+        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
         sys.exit(0)
 
     demZero = create_demZero(inps.dem, inps.geom_masterDir)
@@ -64,7 +64,7 @@ def main(iargs=None):
 
         queuename = os.getenv('QUEUENAME')
 
-        jobs = cb.submit_batch_jobs(batch_file=item,
+        jobs = js.submit_batch_jobs(batch_file=item,
                                     out_dir=os.path.join(inps.work_dir, 'run_files'),
                                     memory=memorymax, walltime=walltimelimit, queue=queuename)
     return

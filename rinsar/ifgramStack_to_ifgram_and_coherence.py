@@ -17,7 +17,6 @@ from osgeo import gdal, osr, ogr
 import isce
 import isceobj
 from isceobj.Util.ImageUtil import ImageLib as IML
-import create_batch as cb
 import pysar
 import pysar.workflow  #dynamic import for modules used by pysarApp workflow
 from pysar.utils import readfile, writefile
@@ -25,7 +24,9 @@ from pysar.objects import ifgramStack
 import rinsar.utils.process_utilities as putils
 from rinsar.objects import message_rsmas
 from rinsar.objects.dataset_template import Template
+from rinsar.objects.auto_defaults import PathFind
 
+pathObj = PathFind()
 ###############################################################################
 EXAMPLE = '''example:
   download_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template
@@ -118,7 +119,12 @@ def create_geotiff (obj, data, outfile, type):
     srs.ImportFromEPSG(4326)
     ds.SetProjection(srs.ExportToWkt())
     ds.SetGeoTransform(gt)
-    ds.SetMetadata(obj.get_metadata())
+    
+    xmlfile = glob.glob(os.path.join(project_dir, pathObj.masterdir, '*.xml'))[0]
+    attributes = putils.xmlread(xmlfile)
+    Metadata = {'SAT': attributes['missionname'], 'Mode': attributes['passdirection'],
+                'Image_Type': '{}_BackScatter'.format(inps.imtype), 'Date': slc}
+    ds.SetMetadata(Metadata)
 
     ## TODO: Need to add metadata data_content: 'coherence' (use variable type)
     ## NEED HELP: I could not figure it out

@@ -16,7 +16,7 @@ import password_config as password
 
 from rinsar.utils.process_utilities import create_or_update_template
 from rinsar.utils.process_utilities import get_work_directory, get_project_name, send_logger
-import rinsar.create_batch as cb
+import rinsar.job_submission as js
 
 
 logger  = send_logger()
@@ -63,7 +63,7 @@ if __name__ == "__main__":
         work_dir = inps.work_dir
         wall_time = '24:00'
 
-        cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
+        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
 
     os.chdir(inps.work_dir)
 

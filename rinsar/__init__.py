@@ -14,7 +14,7 @@ except KeyError:
 
 __all__ = [
     'create_runfiles',
-    'create_batch',
+    'job_submission',
     'dem_rsmas',
     'download_rsmas',
     'email_results',
