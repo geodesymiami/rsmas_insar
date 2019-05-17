@@ -6,7 +6,7 @@
 # Created:9/2018
 #
 # Notes for refactoring:
-#   - use sentinelStack defaults (scurrently 'ssara' is given but ignored
+#   - use topsStack defaults (scurrently 'ssara' is given but ignored
 #   - use datast_template
 #   - for bounddingBox create a call_isce_dem function
 #   - in ssara part, use GDAL class instead of  parsing the gdalinfo output
@@ -24,13 +24,14 @@ from rinsar.objects import message_rsmas, dataset_template
 from pysar.utils import readfile
 from rinsar.utils.download_ssara_rsmas import add_polygon_to_ssaraopt
 from rinsar.utils.process_utilities import get_project_name, get_work_directory
+from rinsar.utils.process_utilities import create_or_update_template
 
 EXAMPLE = '''
   example:
   dem_rsmas.py  $SAMPLES/GalapagosT128SenVVD.template
-      uses sentinelStack.boundingBox to generate a dem in DEM folder as dem.py requires integer degrees
+      uses topsStack.boundingBox to generate a dem in DEM folder as dem.py requires integer degrees
       options:
-           sentinelStack.demMethod = boundingBox [default: ssara]
+           topsStack.demMethod = boundingBox [default: ssara]
       subtracts/adds ` 0.5 degree and then rounds to full integer
       '-1 0.15 -91.3 -90.9' -- >'-2 1 -92 -90
      work for islands where zip files may be missing
@@ -43,15 +44,16 @@ def main(args):
 
     # set defaults: ssara=True is set in dem_parser, use custom_pemp[late field if given
     inps = dem_parser()
-    custom_template = readfile.read_template(inps.custom_template_file)
-    project_name = get_project_name(inps.custom_template_file)
+    inps = create_or_update_template(inps)
+    inps.template = inps.template
+    project_name = get_project_name(inps.customTemplateFile)
     work_dir = get_work_directory(None, project_name)
 
-    if 'sentinelStack.demMethod' in list(custom_template.keys()):
-        if custom_template['sentinelStack.demMethod'] == 'ssara':
+    if 'demMethod' in list(inps.template.keys()):
+        if inps.template['demMethod'] == 'ssara':
             inps.flag_ssara = True
             inps.flag_boundingBox = False
-        if custom_template['sentinelStack.demMethod'] == 'boundingBox':
+        if inps.template['demMethod'] == 'boundingBox':
             inps.flag_ssara = False
             inps.flag_boundingBox = True
 
@@ -62,16 +64,17 @@ def main(args):
 
     if inps.flag_ssara:
 
-        call_ssara_dem(custom_template, inps, cwd)
+        call_ssara_dem(inps, cwd)
 
         print('You have finished SSARA!')
     elif inps.flag_boundingBox:
         print('DEM generation using ISCE')
-        bbox = custom_template['sentinelStack.boundingBox']
-        south = bbox.split(' ')[0].split('\'')[1]  # assumes quotes '-1 0.15 -91.3 -91.0'
-        north = bbox.split(' ')[1]
-        west = bbox.split(' ')[2]
-        east = bbox.split(' ')[3].split('\'')[0]
+        bbox = inps.template['topsStack.boundingBox'].strip("'")
+        bbox = [val for val in bbox.split()]
+        south = bbox[0]
+        north = bbox[1]
+        west = bbox[2]
+        east = bbox[3].split('\'')[0]
 
         south = round(float(south) - 0.5)
         north = round(float(north) + 0.5)
@@ -103,26 +106,24 @@ def main(args):
         os.rename('tmp.txt', xmlFile)
 
     else:
-        sys.ext('Error unspported demMethod option: ' + custom_template['sentinelStack.demMethod'])
+        sys.ext('Error unspported demMethod option: ' + inps.template['topsStack.demMethod'])
 
     print('\n###############################################')
     print('End of dem_rsmas.py')
     print('################################################\n')
 
 
-def call_ssara_dem(custom_template, inps, cwd):
+def call_ssara_dem(inps, cwd):
     print('DEM generation using SSARA')
     out_file = 'ssara_dem.log'
 
     # need to refactor so that Josh's dataset_template will be used throughout
-    dset_template = dataset_template.Template(inps.custom_template_file)
-    ssaraopt_string = dset_template.generate_ssaraopt_string()
+    ssaraopt_string = inps.ssaraopt
     ssaraopt_list = ssaraopt_string.split(' ')
-    ssaraopt_list = add_polygon_to_ssaraopt(dset_template, ssaraopt_list.copy(), delta_lat=0)
+    ssaraopt_list = add_polygon_to_ssaraopt(dataset_template=inps.template, ssaraopt=ssaraopt_list.copy(), delta_lat=0)
     ssaraopt_string = ' '.join(ssaraopt_list)
-    custom_template['ssaraopt'] = ssaraopt_string
 
-    command = 'ssara_federated_query.py {ssaraopt} --dem >& {outfile}'.format(ssaraopt=custom_template['ssaraopt'],
+    command = 'ssara_federated_query.py {ssaraopt} --dem >& {outfile}'.format(ssaraopt=ssaraopt_string,
                                                                               outfile=out_file)
     print('command currently executing: ' + command)
     subprocess.Popen(command, shell=True).wait()
@@ -135,7 +136,7 @@ def dem_parser():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                      description='Options dem geneation method: SSARA or BBOX (ISCE).',
                                      epilog=EXAMPLE)
-    parser.add_argument('custom_template_file',
+    parser.add_argument('customTemplateFile',
                         nargs='?',
                         help='custom template with option settings.\n')
     parser.add_argument('--ssara',
@@ -152,7 +153,7 @@ def dem_parser():
     inps = parser.parse_args()
 
     # switch off ssara (default) if boundingBox is selected
-    if inps.flag_boundingBox and inps.flag_ssara:
+    if inps.flag_boundingBox:
         inps.flag_ssara = False
 
     return inps
