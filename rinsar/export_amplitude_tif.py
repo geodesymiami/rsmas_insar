@@ -34,7 +34,7 @@ def main(iargs=None):
 
     slc = inps.inputfile
 
-    if inps.imtype == 'Ortho':
+    if inps.imtype == 'ortho':
         geo_master_dir = os.path.join(project_dir, pathObj.geomasterdir)
     else:
         geo_master_dir = os.path.join(project_dir, pathObj.geomlatlondir)
@@ -60,10 +60,10 @@ def main(iargs=None):
     ##
     array = np.where(array > 0, 10.0 * np.log10(pow(array,2)) - 83.0, array)
 
-    if inps.imtype == 'Ortho':
-        dst_file = 'Ortho_' + slc + '_backscatter.tif'
+    if inps.imtype == 'ortho':
+        dst_file = 'orthorectified_' + slc + '_backscatter.tif'
     else:
-        dst_file = 'Geo_' + slc + '_backscatter.tif'
+        dst_file = 'georectified_' + slc + '_backscatter.tif'
 
     data = gdal.Open(gfile, gdal.GA_ReadOnly)
     transform = data.GetGeoTransform()
@@ -94,8 +94,8 @@ def create_parser():
     parser.add_argument('-f', '--file', dest='inputfile', type=str, required=True, help='Input SLC')
     parser.add_argument('-b', '--bbox', dest='bbox', type=str, default='',
                         help="Bounding box (SNWE) ex: '20 21 110 111'")
-    parser.add_argument('-t', '--type', dest='imtype', type=str, default='Ortho',
-                        help="Ortho, Geo")
+    parser.add_argument('-t', '--type', dest='imtype', type=str, default='ortho',
+                        help="ortho, geo")
 
     return parser
 

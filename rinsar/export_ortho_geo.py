@@ -207,13 +207,13 @@ def make_run_list_amplitude(inps):
 
     with open(run_amplitude_ortho, 'w') as f:
         for item in slc_list:
-            cmd = 'export_amplitude_tif.py {a0} -f {a1} -b "{a2}" -t Ortho \n'.format(
+            cmd = 'export_amplitude_tif.py {a0} -f {a1} -b "{a2}" -t ortho \n'.format(
                 a0=inps.customTemplateFile, a1=item, a2=inps.cropbox)
             f.write(cmd)
 
     with open(run_amplitude_geo, 'w') as f:
         for item in slc_list:
-            cmd = 'export_amplitude_tif.py {a0} -f {a1} -b "{a2}" -t Geo \n'.format(
+            cmd = 'export_amplitude_tif.py {a0} -f {a1} -b "{a2}" -t geo \n'.format(
                 a0=inps.customTemplateFile, a1=item, a2=inps.cropbox)
             f.write(cmd)
 
