@@ -31,10 +31,10 @@ def create_parser():
     """ Creates command line argument parser object. """
     parser = argparse.ArgumentParser(description='Downloads SAR data using a variety of scripts',
                                      formatter_class=argparse.RawTextHelpFormatter, epilog=EXAMPLE)
-    parser.add_argument('template_file', help='template file containing ssaraopt field')
+    parser.add_argument('customTemplateFile', help='template file containing ssaraopt field')
     parser.add_argument( '--submit', dest='submit_flag', action='store_true', help='submits job')
 
-    # parser.add_argument('template_file', help='template file containing ssaraopt field', nargs='?')
+    # parser.add_argument('customTemplateFile', help='template file containing ssaraopt field', nargs='?')
     return parser
 
 def ssh_with_commands(hostname, command_list):
@@ -51,18 +51,18 @@ def ssh_with_commands(hostname, command_list):
     ssh_proc.communicate()
     return ssh_proc.returncode
 
-def download(script_name, template_file, slc_dir, outnum):
+def download(script_name, customTemplateFile, slc_dir, outnum):
     """
     Runs download script with given script name.
     :param script_name: Name of download script to run (ssara, asfserial)
-    :param template_file: Template file to download data from.
+    :param customTemplateFile: Template file to download data from.
     :param slc_dir: SLC directory inside work directory.
     """
     if script_name not in {'ssara', 'asfserial'}:
         print('{} download not supported'.format(script_name))
 
-    out_file = os.path.join(os.getcwd(), 'out_download_{0}{1}'.format(script_name,outnum))
-    command = 'download_{0}_rsmas.py {1}'.format(script_name, template_file)
+    out_file = os.path.join(os.getcwd(), 'out_download_{0}{1}'.format(script_name, outnum))
+    command = 'download_{0}_rsmas.py {1}'.format(script_name, customTemplateFile)
     command = '({0} > {1}.o) >& {1}.e'.format(command, out_file)
 
     if os.getenv('DOWNLOADHOST') == 'local':
@@ -94,27 +94,31 @@ def main(iargs=None):
     if inps.submit_flag:
         job_file_name = 'download_rsmas'
         work_dir = os.getcwd()
-        job_name = inps.template_file.split(os.sep)[-1].split('.')[0]
+        job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
         wall_time = '24:00'
 
         cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
-        sys.exit(0);
-        #return
+        sys.exit(0)
 
-    project_name = putils.get_project_name(custom_template_file=inps.template_file)
-    work_dir = putils.get_work_directory(None, project_name)
-    slc_dir = os.path.join(work_dir, 'SLC')
-    if not os.path.isdir(work_dir):
-        os.makedirs(work_dir)
+    inps = putils.create_or_update_template(inps)
+
+    if not inps.template['topsStack.slcDir'] is None:
+        slc_dir = inps.template['topsStack.slcDir']
+    else:
+        slc_dir = os.path.join(inps.work_dir, 'SLC')
+
+    if not os.path.isdir(inps.work_dir):
+        os.makedirs(inps.work_dir)
+
     if not os.path.isdir(slc_dir):
         os.makedirs(slc_dir)
 
-    os.chdir(work_dir)
+    os.chdir(inps.work_dir)
 
     # if satellite is not Sentinel (not tried yet)
-    if 'SenDT' not in project_name and 'SenAT' not in project_name:
+    if 'SenDT' not in inps.project_name and 'SenAT' not in inps.project_name:
 
-        dataset_template = Template(inps.template_file)
+        dataset_template = Template(inps.customTemplateFile)
 
         ssaraopt = dataset_template.generate_ssaraopt_string()
         ssara_call = ['ssara_federated_query.py'] + ssaraopt + ['--print', '--download']
@@ -123,10 +127,10 @@ def main(iargs=None):
 
         return
 
-    download('ssara', inps.template_file, slc_dir, outnum = 1)
-    #download('ssara', inps.template_file, slc_dir, outnum = 2)
-    download('asfserial', inps.template_file, slc_dir, outnum = 1)
-    #download('asfserial', inps.template_file, slc_dir, outnum = 1)
+    download('ssara', inps.customTemplateFile, slc_dir, outnum = 1)
+    #download('ssara', inps.customTemplateFile, slc_dir, outnum = 2)
+    download('asfserial', inps.customTemplateFile, slc_dir, outnum = 1)
+    #download('asfserial', inps.customTemplateFile, slc_dir, outnum = 1)
 
 ###########################################################################################
 
