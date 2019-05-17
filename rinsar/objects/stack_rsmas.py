@@ -40,7 +40,7 @@ class rsmasConfig(object):
     def phase_link(self, function):
         self.f.write('###################################' + '\n')
         self.f.write(function + '\n')
-        self.f.write('PSQ_sentinel : ' + '\n')
+        self.f.write('phase_linking_app : ' + '\n')
         self.f.write('patch_dir : ' + self.patchDir + '\n')
         self.f.write('range_window : ' + self.rangeWindow + '\n')
         self.f.write('azimuth_window : ' + self.azimuthWindow + '\n')
@@ -117,12 +117,9 @@ class rsmasRun(object):
 
         self.runf = open(self.run_outname, 'w')
 
-    def downloadDataDEM(self, inps, download_flag):
-        if download_flag == 1:
-            self.runf.write('download_rsmas.py ' + inps.customTemplateFile + '\n')
-            self.runf.write('dem_rsmas.py ' + inps.customTemplateFile + ' --boundingBox \n')
-        else:
-            self.runf.write('dem_rsmas.py ' + inps.customTemplateFile + ' --boundingBox \n')
+    def downloadDataDEM(self, inps):
+        self.runf.write('download_rsmas.py ' + inps.customTemplateFile + '\n')
+        self.runf.write('dem_rsmas.py ' + inps.customTemplateFile + ' --boundingBox \n')
 
     def cropMergedSlc(self, inps):
         self.runf.write(self.text_cmd + 'crop_sentinel.py ' + inps.customTemplateFile + '\n')
@@ -142,29 +139,29 @@ class rsmasRun(object):
             configObj.sqDir = os.path.join(inps.work_dir, pathObj.squeesardir)
             configObj.ifgDir = os.path.join(ifgram_dir, '{}_{}'.format(ifg[0], ifg[1]))
             configObj.ifgIndex = str(pairs.index(ifg))
-            configObj.rangeWindow = inps.range_window
-            configObj.azimuthWindow = inps.azimuth_window
+            configObj.rangeWindow = inps.template['squeesar.range_window']
+            configObj.azimuthWindow = inps.template['squeesar.azimuth_window']
             configObj.acq_num = str(len(pairs) + 1)
-            configObj.rangeLooks = inps.rangeLooks
-            configObj.azimuthLooks = inps.azimuthLooks
+            configObj.rangeLooks = inps.template['topsStack.rangeLooks']
+            configObj.azimuthLooks = inps.template['topsStack.azimuthLooks']
             configObj.generate_igram('[Function-1]')
             configObj.finalize()
-            self.runf.write(self.text_cmd + pathObj.wrappercommand + configName + '\n')
+            self.runf.write(self.text_cmd + pathObj.wrappercommandtops + configName + '\n')
         configName = os.path.join(self.config_path, 'config_generate_quality_map')
         configObj = rsmasConfig(self.config_path, configName)
         configObj.configure(self)
         configObj.sqDir = os.path.join(inps.work_dir, pathObj.squeesardir)
         configObj.ifgDir = os.path.join(inps.work_dir, pathObj.geomasterdir)
         configObj.ifgIndex = str(0)
-        configObj.rangeWindow = inps.range_window
-        configObj.azimuthWindow = inps.azimuth_window
+        configObj.rangeWindow = inps.template['squeesar.range_window']
+        configObj.azimuthWindow = inps.template['squeesar.azimuth_window']
         configObj.acq_num = str(len(pairs) + 1)
-        configObj.rangeLooks = inps.rangeLooks
-        configObj.azimuthLooks = inps.azimuthLooks
-        configObj.plmethod = inps.plmethod
+        configObj.rangeLooks = inps.template['topsStack.rangeLooks']
+        configObj.azimuthLooks = inps.template['topsStack.azimuthLooks']
+        configObj.plmethod = inps.template['squeesar.plmethod']
         configObj.generate_igram('[Function-1]')
         configObj.finalize()
-        self.runf.write(self.text_cmd + pathObj.wrappercommand + configName + '\n')
+        self.runf.write(self.text_cmd + pathObj.wrappercommandtops + configName + '\n')
 
     def unwrap(self, inps, pairs):
         for pair in pairs:
@@ -180,10 +177,10 @@ class rsmasRun(object):
             configObj.noMCF = noMCF
             configObj.master = os.path.join(self.work_dir, 'master')
             configObj.defoMax = defoMax
-            configObj.unwMethod = inps.unwMethod
+            configObj.unwMethod = inps.template['topsstack.unwMethod']
             configObj.unwrap('[Function-1]')
             configObj.finalize()
-            self.runf.write(self.text_cmd + pathObj.wrappercommand + configName + '\n')
+            self.runf.write(self.text_cmd + pathObj.wrappercommandtops + configName + '\n')
 
     def pysarCorrections(self, inps):
         self.runf.write(self.text_cmd + 'timeseries_corrections.py ' + inps.customTemplateFile + '\n')
@@ -194,14 +191,12 @@ class rsmasRun(object):
     def generateHazardProducts(self, inps):
         self.runf.write(self.text_cmd + 'export_ortho_geo.py ' + inps.customTemplateFile + '\n')
         self.runf.write(self.text_cmd + 'ifgramStack_to_ifgram_and_coherence.py ' + inps.customTemplateFile + '\n')
-
-    def emailPySAR(self, inps):
-        self.runf.write(self.text_cmd + 'email_results.py ' + inps.customTemplateFile + '\n')
-
+ 
     def ingestInsarmaps(self, inps):
         self.runf.write(self.text_cmd + 'ingest_insarmaps.py ' + inps.customTemplateFile + '\n')
 
-    def emailInsarmaps(self, inps):
+    def emailResults(self, inps):
+        self.runf.write(self.text_cmd + 'email_results.py ' + inps.customTemplateFile + '\n')
         self.runf.write(self.text_cmd + 'email_results.py ' + inps.customTemplateFile + ' --insarmap\n')
 
     def finalize(self):
