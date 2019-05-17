@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""This script converts boundingBox coordinates from ASF vertex to sentinelStack format
+"""This script converts boundingBox coordinates from ASF vertex to topsStack format
    Author: Falk Amelung
       Created:5/2019
 """
@@ -43,7 +43,7 @@ def run_convert_boundingbox(input):
     103.2,   30.95,   103.85,  30.95,   103.85,  31.54,   103.2,   31.54,   103.2,   30.95  
     min_lon, min_lat, max_lon, min_lat, max_lon, max_lat, min_lon, max_lat, min_lon, min_lat
 
-    sentinelStack boundingBox (bbox):
+    topsStack boundingBox (bbox):
     39.46   39.82   118.2   118.9
     min_lat max_lat min_lon max_lon
     """
@@ -60,7 +60,7 @@ def run_convert_boundingbox(input):
         min_lat = toks[1]
         max_lon = toks[2]
         max_lat = toks[5]
-    elif len(toks) == 4:    # sentinelStack boundingBox 
+    elif len(toks) == 4:    # topsStack boundingBox 
         min_lat = toks[0]
         max_lat = toks[1]
         min_lon = toks[2]
@@ -69,7 +69,7 @@ def run_convert_boundingbox(input):
     out_asf = min_lon + ',' + min_lat + ',' + max_lon + ',' + min_lat + ',' + max_lon + ',' + max_lat + ',' + min_lon + ',' + max_lat + ',' + min_lon + ',' + min_lat
     out_sentinel_stack = min_lat +' '+ max_lat +' '+ min_lon +' '+ max_lon 
     
-    print('\n'+'ASF Vertex and sentinelStack formats:'+'\n')
+    print('\n'+'ASF Vertex and topsStack formats:'+'\n')
     print(out_asf)
     print(out_sentinel_stack)
 
