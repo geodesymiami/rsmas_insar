@@ -18,21 +18,11 @@ class Template:
             The provided template file is parsed line by line, and each option is added to the options dictionary.
             :param custom_template_file: file, the template file to be accessed
         """
-        # Joshua Zahner - 02/2019
-        # What the hell are the following 6 lines even doing? This object should only be responsible for creating a
-        # dictionary of options from a template not working with any types of file or moving files around.
-        custom_template_file = os.path.abspath(custom_template_file)
-        project_name = os.path.splitext(os.path.basename(custom_template_file))[0] # see `get_dataset_name`
-        self.work_dir = os.getenv('SCRATCHDIR') + '/' + project_name
-        template_file = os.path.join(self.work_dir, os.path.basename(custom_template_file))
 
-        #if not self.os.path.isfile(template_file):       # FA 12/18: It should use custom_template_file as this is what will be updated
-        #    self.shutil.copy2(custom_template_file, self.work_dir)
-        shutil.copy2(custom_template_file, self.work_dir)
         self.options = self.read_options(custom_template_file)
         self.options = correct_keyvalue_quotes(self.options.copy())
 
-    def read_options(self,template_file):
+    def read_options(self, template_file):
         """ Read template options.
 
             :param template_file: file, the template file to be read and stored in a dictionary
@@ -43,7 +33,7 @@ class Template:
         options = {'dataset': template_file.split('/')[-1].split(".")[0]}
         with open(template_file) as template:
             for line in template:
-                if "=" in line:
+                if "=" in line and not line.startswith(('%', '#')):
                     # Splits each line on the ' = ' character string
                     # Note that the padding spaces are necessary in case of values having = in them
                     parts = line.split(" = ")
@@ -56,6 +46,7 @@ class Template:
 
                     # Add key and value to the dictionary
                     options[str(key)] = value
+
         return options
 
     def update_options(self, default_template_file_tmp):
@@ -158,7 +149,7 @@ def correct_keyvalue_quotes(options_in):
                 '1' ---> 1
                 -1 0.15 -91.6 -90.9 ---> '-1 0.15 -91.6 -90.9'
          """
-         for item in ['sentinelStack.subswath', 'sentinelStack.boundingBox']:
+         for item in ['topsStack.subswath', 'topsStack.boundingBox']:
              if item in options_in.keys():
                  value_orig = options_in[item]
                  value_new = check_correct_quotes(value_orig)
