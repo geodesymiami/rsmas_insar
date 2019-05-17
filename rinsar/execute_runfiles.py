@@ -8,9 +8,7 @@ import sys
 import argparse
 import subprocess
 from rinsar.objects import message_rsmas
-from rinsar.utils.process_utilities import create_or_update_template
-from rinsar.utils.process_utilities import get_config_defaults, walltime_adjust
-from rinsar.utils.process_utilities import remove_zero_size_or_length_files, read_run_list
+import rinsar.utils.process_utilities as putils
 import rinsar.create_batch as cb
 
 ##############################################################################
@@ -30,8 +28,8 @@ def create_parser():
     parser.add_argument('stop', nargs='?', type=int,
                         help='stopping run file number.\n')
     parser.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
-    parser.add_argument('--walltime', dest='wall_time', type=str, default='36:00',
-                        help='walltime, e.g. 2:00 (default: 36:00)')
+    parser.add_argument('--walltime', dest='wall_time', type=str, default='2:00',
+                        help='walltime, e.g. 2:00 (default: 2:00)')
 
     return parser
 
@@ -49,7 +47,7 @@ def command_line_parse(iargs=None):
 
 def main(iargs=None):
     inps = command_line_parse(iargs)
-    inps = create_or_update_template(inps)
+    inps = putils.create_or_update_template(inps)
     os.chdir(inps.work_dir)
 
     #########################################
@@ -64,7 +62,7 @@ def main(iargs=None):
         cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, inps.wall_time)
         sys.exit(0)
 
-    run_file_list = read_run_list(inps.work_dir)
+    run_file_list = putils.read_run_list(inps.work_dir)
 
     if inps.start is None:
         if 'run_0_' in run_file_list[0]:
@@ -82,7 +80,7 @@ def main(iargs=None):
         if not 'run_0_' in run_file_list[0]:
            inps.stop = inps.stop - 1
 
-    config = get_config_defaults(config_file='job_defaults.cfg')
+    config = putils.get_config_defaults(config_file='job_defaults.cfg')
 
     run_file_list = run_file_list[inps.start:inps.stop + 1]
 
@@ -96,7 +94,7 @@ def main(iargs=None):
 
         try:
             if config[step_name]['adjust'] == 'True':
-                walltimelimit = walltime_adjust(config[step_name]['walltime'])
+                walltimelimit = putils.walltime_adjust(config[step_name]['walltime'])
             else:
                 walltimelimit = config[step_name]['walltime']
         except:
@@ -106,6 +104,11 @@ def main(iargs=None):
 
         jobs = cb.submit_batch_jobs(batch_file=item, out_dir=os.path.join(inps.work_dir, 'run_files'),
                                     memory=memorymax, walltime=walltimelimit, queue=queuename)
+
+        putils.remove_zero_size_or_length_error_files(run_file=item)
+        putils.raise_exception_if_job_exited(run_file=item)
+        putils.concatenate_error_files(run_file=item)
+        putils.move_stdout_files(run_file=item)
 
     return None
 
