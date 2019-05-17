@@ -12,8 +12,7 @@ from rinsar.objects.rsmas_logging import loglevel
 from rinsar.objects import message_rsmas
 from rinsar.objects.auto_defaults import PathFind
 from rinsar.utils.stack_run import CreateRun, run_download
-from rinsar.objects.auto_defaults import correct_for_isce_naming_convention
-from rinsar.utils.process_utilities import create_or_update_template
+from rinsar.utils.process_utilities import create_or_update_template, copy_dask_config
 from rinsar.utils.process_utilities import make_run_list, send_logger
 
 logger = send_logger()
@@ -52,7 +51,8 @@ def main(iargs=None):
 
     inps = command_line_parse(iargs)
     inps = create_or_update_template(inps)
-    correct_for_isce_naming_convention(inps)
+
+    copy_dask_config(inps)
 
     os.chdir(inps.work_dir)
     
@@ -61,14 +61,15 @@ def main(iargs=None):
     else:
         try:
             dem_file = glob.glob('DEM/*.wgs84')[0]
-            inps.dem = dem_file
+            inps.template['topsStack.demDir'] = dem_file
         except:
             print('DEM not exists!')
             sys.exit(1)
 
+        pathObj.correct_for_isce_naming_convention(inps)
         runObj = CreateRun(inps)
         runObj.run_stack_workflow()
-        if inps.workflow in ['interferogram', 'slc']:
+        if inps.template['workflow'] in ['interferogram', 'slc']:
             runObj.run_post_stack()
 
     run_file_list = make_run_list(inps.work_dir)
