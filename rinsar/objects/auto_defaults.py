@@ -3,45 +3,14 @@
 
 import os
 import glob
-
-##################################################################################################################
-
-def correct_for_isce_naming_convention(inps):
-
-    inps_dict = vars(inps)
-
-    isceKey = ['slc_dirname', 'orbit_dirname', 'aux_dirname', 'work_dir', 'dem', 'master_date', 'num_connections',
-               'num_overlap_connections', 'swath_num', 'bbox', 'text_cmd', 'exclude_dates', 'include_dates',
-               'azimuthLooks', 'rangeLooks', 'filtStrength', 'esdCoherenceThreshold', 'snrThreshold', 'unwMethod',
-               'polarization', 'coregistration', 'workflow', 'startDate', 'stopDate', 'useGPU', 'ilist', 'ilistonly',
-               'cleanup', 'layovermsk', 'watermsk', 'useVirtualFiles', 'force']
-    
-    templateKey = ['slcDir', 'orbitDir', 'auxDir', 'workingDir', 'demDir', 'master', 'numConnections',
-                   'numOverlapConnections', 'subswath', 'boundingBox', 'textCmd', 'excludeDates', 'includeDates',
-                   'azimuthLooks', 'rangeLooks', 'filtStrength', 'esdCoherenceThreshold', 'snrMisregThreshold',
-                   'unwMethod', 'polarization', 'coregistration', 'workflow', 'startDate', 'stopDate', 'useGPU',
-                   'ilist', 'ilistonly', 'cleanup', 'layoverMask', 'waterMask', 'virtualFiles', 'forceOverride']
-
-    for old_key, new_key in zip(templateKey, isceKey):
-        inps_dict[new_key] = inps_dict.pop(old_key)
-
-    if not inps_dict['startDate'] is None:
-        inps_dict['startDate'] = datetime.datetime.strptime(inps_dict['startDate'], '%Y%m%d').strftime('%Y-%m-%d')
-
-    if not inps_dict['stopDate'] is None:
-        inps_dict['stopDate'] = datetime.datetime.strptime(inps_dict['stopDate'], '%Y%m%d').strftime('%Y-%m-%d')
-
-    return
-
-
-##################################################################################################################
+import datetime
 
 
 class PathFind:
     def __init__(self):
         self.logdir = os.getenv('OPERATIONS') + '/LOGS'
         self.scratchdir = os.getenv('SCRATCHDIR')
-        self.required_template_options = ['sentinelStack.subswath', 'sentinelStack.boundingBox']
+        self.required_template_options = ['topsStack.subswath', 'topsStack.boundingBox']
         self.defaultdir = os.path.expandvars('${RSMAS_INSAR}/rinsar/defaults')
         self.orbitdir = os.path.expandvars('$SENTINEL_ORBITS')
         self.auxdir = os.path.expandvars('$SENTINEL_AUX')
@@ -52,47 +21,59 @@ class PathFind:
         self.mergedslcdir = 'merged/SLC'
         self.mergedintdir = 'merged/interferograms'
         self.geomlatlondir = 'geom_master_noDEM'
-        self.wrappercommand = 'SentinelWrapper.py -c '
+        self.wrappercommandtops = 'topsWrapper.py -c '
+        self.wrappercommandstripmap = 'stripmapWrapper.py -c '
         self.masterdir = 'master'
         self.stackdir = 'stack'
         self.tiffdir = 'hazard_products'
+        self.daskconfig = os.path.expandvars('${RSMAS_INSAR}/rinsar/defaults/dask/dask.yaml')
         return
 
     def set_isce_defaults(self, inps):
 
         inps_dict = vars(inps)
 
-        if 'sentinelStack.slcDir' not in inps.custom_template:
-            inps_dict['custom_template']['sentinelStack.slcDir'] = inps.work_dir + '/SLC'
+        inps_dict['template']['topsStack.slcDir'] = inps.work_dir + '/SLC'
 
-        if 'sentinelStack.demDir' not in inps.custom_template:
-            inps_dict['custom_template']['sentinelStack.demDir'] = inps.work_dir + '/DEM'
+        inps_dict['template']['topsStack.demDir'] = inps.work_dir + '/DEM'
 
-        if 'cleanopt' not in inps.custom_template:
-            inps_dict['custom_template']['cleanopt'] = '0'
+        if 'cleanopt' not in inps.template:
+            inps_dict['template']['cleanopt'] = '0'
 
-        inps_dict['custom_template']['sentinelStack.workingDir'] = inps.work_dir
+        inps_dict['template']['topsStack.workingDir'] = inps.work_dir
+        inps_dict['template']['topsStack.orbitDir'] = self.orbitdir
+        inps_dict['template']['topsStack.auxDir'] = self.auxdir
 
-        if 'squeesar.cropbox' not in inps_dict['custom_template']:
-            inps_dict['custom_template']['squeesar.cropbox'] = \
-                inps_dict['custom_template']['sentinelStack.boundingBox']
+        if 'squeesar.subset' not in inps.template:
+            inps_dict['template']['squeesar.cropbox'] = \
+                inps_dict['template']['topsStack.boundingBox']
 
         return
 
-    def isce_clean_list(self):
+    @staticmethod
+    def correct_for_ssara_date_format(template_options):
+
+        inps_dict = template_options
+
+        inps_dict['ssaraopt.startDate'] = \
+            datetime.datetime.strptime(inps_dict['ssaraopt.startDate'], '%Y%m%d').strftime('%Y-%m-%d')
+        inps_dict['ssaraopt.endDate'] = \
+            datetime.datetime.strptime(inps_dict['ssaraopt.endDate'], '%Y%m%d').strftime('%Y-%m-%d')
+        return inps_dict
+
+    @staticmethod
+    def isce_clean_list():
         cleanlist = []
-        cleanlist.append([''])
-        cleanlist.append(['stack', 'coreg_slaves', 'misreg', 'orbits',
-                          'coarse_interferograms', 'ESD', 'interferograms',
-                          'slaves'])
-        cleanlist.append(['merged', 'master', 'baselines', 'configs'])
+        cleanlist.append(['stack',  'misreg', 'orbits', 'coarse_interferograms', 'ESD',
+                          'interferograms', 'slaves'])
+        cleanlist.append(['merged', 'master', 'coreg_slaves', 'baselines', 'geom_master'])
         cleanlist.append(['SLC'])
-        cleanlist.append(['PYSAR', 'run_files'])
-        cleanlist.append(['stack', 'misreg', 'orbits', 'coarse_interferograms', 'ESD',
-                          'interferograms', 'slaves', 'DEM'])
+        cleanlist.append(['PYSAR', 'run_files', 'configs', 'DEM'])
+
         return cleanlist
 
-    def get_email_file_list(self):
+    @staticmethod
+    def get_email_file_list():
 
         fileList = ['velocity.png', 'avgSpatialCoherence.png', 'temporalCoherence.png', 'maskTempCoh.png', 'mask.png',
                      'demRadar_error.png', 'velocityStd.png', 'geo_velocity.png', 'coherence*.png', 'unwrapPhase*.png',
@@ -100,10 +81,41 @@ class PathFind:
                      'bl_list.txt', 'Network.pdf', 'geo_velocity_masked.kmz', 'timeseries*.png', 'geo_timeseries*.png']
         return fileList
 
-    def get_geom_master_lists(self):
+    @staticmethod
+    def get_geom_master_lists():
         list_geo = ['lat', 'lon', 'los', 'hgt', 'shadowMask', 'incLocal']
         return list_geo
 
+    @staticmethod
+    def correct_for_isce_naming_convention(inps):
 
+        inps_dict = vars(inps)
+
+        isceKey = ['slc_dirname', 'orbit_dirname', 'aux_dirname', 'work_dir', 'dem', 'master_date', 'num_connections',
+                   'num_overlap_connections', 'swath_num', 'bbox', 'text_cmd', 'exclude_dates', 'include_dates',
+                   'azimuthLooks', 'rangeLooks', 'filtStrength', 'esdCoherenceThreshold', 'snrThreshold', 'unwMethod',
+                   'polarization', 'coregistration', 'workflow', 'startDate', 'stopDate', 'useGPU']
+
+        templateKey = ['slcDir', 'orbitDir', 'auxDir', 'workingDir', 'demDir', 'master', 'numConnections',
+                       'numOverlapConnections', 'subswath', 'boundingBox', 'textCmd', 'excludeDates', 'includeDates',
+                       'azimuthLooks', 'rangeLooks', 'filtStrength', 'esdCoherenceThreshold', 'snrMisregThreshold',
+                       'unwMethod', 'polarization', 'coregistration', 'workflow', 'startDate', 'stopDate', 'useGPU']
+        templateKey = ['topsStack.' + x for x in templateKey]
+
+        for old_key, new_key in zip(templateKey, isceKey):
+            inps_dict['template'][new_key] = inps_dict['template'].pop(old_key)
+            if inps_dict['template'][new_key] == 'None':
+                inps_dict['template'][new_key] = None
+
+        if not inps_dict['template']['startDate'] in [None, 'auto']:
+            print(inps_dict['template']['startDate'])
+            inps_dict['template']['startDate'] = datetime.datetime.strptime(inps_dict['template']['startDate'],
+                                                                            '%Y%m%d').strftime('%Y-%m-%d')
+
+        if not inps_dict['template']['stopDate'] in [None, 'auto']:
+            inps_dict['template']['stopDate'] = datetime.datetime.strptime(inps_dict['template']['stopDate'],
+                                                                           '%Y%m%d').strftime('%Y-%m-%d')
+
+        return
 
 
