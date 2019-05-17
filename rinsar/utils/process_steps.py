@@ -12,10 +12,12 @@ import argparse
 import shutil
 import rinsar
 import rinsar.utils.process_utilities as putils
-from rinsar.utils.process_utilities import _remove_directories
+from rinsar.utils.process_utilities import remove_directories, create_or_update_template
 from rinsar.utils.process_utilities import get_project_name, get_work_directory
 from pysar.utils import readfile, utils as ut
+from rinsar.objects.auto_defaults import PathFind
 
+pathObj = PathFind()
 ####################################################################
 
 STEP_LIST = [
@@ -61,7 +63,7 @@ def create_process_rsmas_parser():
     parser.add_argument(
         '--dir',
         dest='work_dir',
-        help='sentinelStack working directory, default is:\n'
+        help='topsStack working directory, default is:\n'
              'a) current directory, or\n'
              'b) $SCRATCHDIR/projectName, if meets the following 2 requirements:\n'
              '    2) environmental variable $SCRATCHDIR exists\n'
@@ -105,17 +107,16 @@ def command_line_parse(iargs=None):
     """Command line parser."""
     parser = create_process_rsmas_parser()
     inps = parser.parse_args(args=iargs)
-
-    inps.project_name = get_project_name(inps.customTemplateFile)
-    inps.work_dir = get_work_directory(None, inps.project_name)
+    inps = create_or_update_template(inps)
     inps.slc_dir = os.path.join(inps.work_dir, 'SLC')
+
     # invalid input of custom template
     if inps.customTemplateFile:
         if not os.path.isfile(inps.customTemplateFile):
             raise FileNotFoundError(inps.customTemplateFile)
 
     if inps.remove_project_dir:
-        _remove_directories(directories_to_delete=[inps.work_dir])
+        remove_directories(directories_to_delete=[inps.work_dir])
 
     if not os.path.isdir(inps.work_dir):
         os.makedirs(inps.work_dir)
@@ -165,6 +166,11 @@ class RsmasInsar:
         self.work_dir = inps.work_dir
         self.project_name = inps.project_name
         self.cwd = os.path.abspath(os.getcwd())
+        clean_list = pathObj.isce_clean_list()
+        for item in clean_list[0:int(inps.template['cleanopt'])]:
+            for directory in item:
+                if os.path.isdir(os.path.join(self.work_dir, directory)):
+                    shutil.rmtree(os.path.join(self.work_dir, directory))
         return
 
     def run_download_data(self, step_name):
