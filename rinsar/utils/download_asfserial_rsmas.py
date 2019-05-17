@@ -8,7 +8,7 @@ from rinsar.objects.dataset_template import Template
 from rinsar.objects.rsmas_logging import RsmasLogger, loglevel
 from rinsar.objects import message_rsmas
 from rinsar.utils import process_utilities as putils
-import rinsar.create_batch as cb
+import rinsar.job_submission as js
 
 import glob
 
@@ -133,7 +133,7 @@ if __name__ == "__main__":
         work_dir = inps.work_dir
         wall_time = '24:00'
 
-        cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
+        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
 
     os.chdir(inps.work_dir)
     message_rsmas.log(os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1::]))

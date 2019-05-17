@@ -13,7 +13,7 @@ from rinsar.utils import process_utilities as putils
 from rinsar.objects.auto_defaults import PathFind
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
-import rinsar.create_batch as cb
+import rinsar.job_submission as js
 
 
 pathObj = PathFind()
@@ -208,7 +208,7 @@ if __name__ == "__main__":
         work_dir = inps.work_dir
         wall_time = '24:00'
 
-        cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
+        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
         sys.exit(0)
 
     os.chdir(inps.work_dir)

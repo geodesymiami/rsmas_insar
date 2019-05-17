@@ -9,7 +9,7 @@ import argparse
 import subprocess
 from rinsar.objects import message_rsmas
 import rinsar.utils.process_utilities as putils
-import rinsar.create_batch as cb
+import rinsar.job_submission as js
 
 ##############################################################################
 EXAMPLE = """example:
@@ -59,7 +59,7 @@ def main(iargs=None):
         work_dir = os.getcwd()
         job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
 
-        cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, inps.wall_time)
+        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, inps.wall_time)
         sys.exit(0)
 
     run_file_list = putils.read_run_list(inps.work_dir)
@@ -102,7 +102,7 @@ def main(iargs=None):
 
         queuename = os.getenv('QUEUENAME')
 
-        jobs = cb.submit_batch_jobs(batch_file=item, out_dir=os.path.join(inps.work_dir, 'run_files'),
+        jobs = js.submit_batch_jobs(batch_file=item, out_dir=os.path.join(inps.work_dir, 'run_files'),
                                     memory=memorymax, walltime=walltimelimit, queue=queuename)
 
         putils.remove_zero_size_or_length_error_files(run_file=item)

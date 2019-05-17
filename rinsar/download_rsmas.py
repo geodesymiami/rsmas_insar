@@ -13,7 +13,7 @@ import subprocess
 from rinsar.objects import message_rsmas
 import rinsar.utils.process_utilities as putils
 from rinsar.objects.dataset_template import Template
-import rinsar.create_batch as cb
+import rinsar.job_submission as js
 
 ###############################################################################
 EXAMPLE = '''example:
@@ -97,7 +97,7 @@ def main(iargs=None):
         job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
         wall_time = '24:00'
 
-        cb.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
+        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
         sys.exit(0)
 
     inps = putils.create_or_update_template(inps)
