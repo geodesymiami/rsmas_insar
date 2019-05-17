@@ -39,7 +39,8 @@ export SSARAHOME=${PARENTDIR}/3rdparty/SSARA
 export SSARA_ASF=${PARENTDIR}/sources/ssara_ASF
 export ISCE_HOME=${PARENTDIR}/3rdparty/miniconda3/lib/python3.7/site-packages/isce
 export RSMAS_INSAR=${PARENTDIR}
-export SENTINEL_STACK=${PARENTDIR}/sources/isceStack/sentinelstack
+export ISCE_STACK=${PARENTDIR}/sources/isceStack/topsStack
+#export ISCE_STACK=${PARENTDIR}/sources/isceStack/stripmapStack
 export PYSAR_HOME=${PARENTDIR}/sources/PySAR
 export SQUEESAR=${PARENTDIR}/sources/pysqsar
 
@@ -60,7 +61,7 @@ export PYTHONPATH=${PYTHONPATH}:${SQUEESAR}
 export PYTHONPATH=${PYTHONPATH}:${RSMAS_INSAR}
 export PYTHONPATH=${PYTHONPATH}:${PARENTDIR}/sources/rsmas_tools
 export PYTHONPATH=${PYTHONPATH}:${PARENTDIR}/3rdparty/PyAPS
-export PYTHONPATH=${PYTHONPATH}:${SENTINEL_STACK}
+export PYTHONPATH=${PYTHONPATH}:${ISCE_STACK}
 export PYTHONPATH_RSMAS=${PYTHONPATH}
 
 ######### Ignore warnings ############
@@ -76,7 +77,7 @@ export PATH=${PATH}:${RSMAS_INSAR}/rinsar:${RSMAS_INSAR}/rinsar/utils
 export PATH=${PATH}:${PARENTDIR}/rinsar
 export PATH=${PATH}:${PARENTDIR}/setup/accounts
 export PATH=${PATH}:${PARENTDIR}/sources/rsmas_tools/SAR:${PARENTDIR}/sources/rsmas_tools/GPS:${PARENTDIR}/sources/rsmas_tools/notebooks
-export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${SENTINEL_STACK}:${PATH}
+export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${ISCE_STACK}:${PATH}
 export PATH=${PATH}:${PYSAR_HOME}/pysar:${PYSAR_HOME}/sh
 export PATH=${PYTHON3DIR}/bin:${PATH}
 export PATH=${PATH}:${PROJ_LIB}
