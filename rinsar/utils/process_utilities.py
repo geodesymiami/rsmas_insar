@@ -23,56 +23,12 @@ from pysar.defaults.auto_path import autoPath
 from rinsar.objects.rsmas_logging import RsmasLogger, loglevel
 from rinsar.objects.dataset_template import Template
 from rinsar.objects import message_rsmas
-from rinsar.objects.auto_defaults import PathFind, correct_for_isce_naming_convention
+from rinsar.objects.auto_defaults import PathFind
 
 ###############################################################################
 pathObj = PathFind()
 logfile_name = pathObj.logdir + '/process_rsmas.log'
 logger = RsmasLogger(file_name=logfile_name)
-
-###############################################################################
-TEMPLATE = '''
-##------------------------ stackSentinel_template.txt ------------------------##
-## 1. stackSentinel options
-
-sentinelStack.slcDir                      = auto         # [SLCs dir]
-sentinelStack.orbitDir                    = auto         # [$SENTINEL_ORBITS]
-sentinelStack.auxDir                      = auto         # [$SENTINEL_AUX]
-sentinelStack.workingDir                  = auto         # [/projects/scratch/insarlab/$USER/projname]
-sentinelStack.demDir                      = auto         # [DEM file dir]
-sentinelStack.master                      = auto         # [Master acquisition]
-sentinelStack.numConnections              = auto         # [5] auto for 3
-sentinelStack.numOverlapConnections       = auto         # [N of overlap Ifgrams for NESD. Default : 3]
-sentinelStack.subswath                    = None         # [List of swaths. Default : '1 2 3']
-sentinelStack.boundingBox                 = None         # [ '-1 0.15 -91.7 -90.9'] required
-sentinelStack.textCmd                     = auto         # [eg: source ~/.bashrc]
-sentinelStack.excludeDates                = auto         # [20080520,20090817 / no], auto for no
-sentinelStack.includeDates                = auto         # [20080520,20090817 / no], auto for all
-sentinelStack.azimuthLooks                = auto         # [1 / 2 / 3 / ...], auto for 5
-sentinelStack.rangeLooks                  = auto         # [1 / 2 / 3 / ...], auto for 9
-sentinelStack.filtStrength                = auto         # [0.0-0.8] auto for 0.3
-sentinelStack.esdCoherenceThreshold       = auto         # Coherence threshold for estimating az misreg using ESD. auto for 0.85
-sentinelStack.snrMisregThreshold          = auto         # SNR threshold for estimating rng misreg using cross-correlation. auto for 10
-sentinelStack.unwMethod                   = auto         # [snaphu icu], auto for snaphu
-sentinelStack.polarization                = auto         # SAR data polarization. auto for vv
-sentinelStack.coregistration              = auto         # Coregistration options: a) geometry b) NESD. auto for NESD
-sentinelStack.workflow                    = auto         # [interferogram / offset / slc / correlation] auto for interferogram
-sentinelStack.startDate                   = auto         # [YYYY-MM-DD]. auto for first date available
-sentinelStack.stopDate                    = auto         # [YYYY-MM-DD]. auto for end date available
-sentinelStack.useGPU                      = auto         # Allow App to use GPU when available [default: False]
-sentinelStack.processingMethod            = auto         # [sbas, squeesar, ps]
-sentinelStack.demMethod                   = auto         # [bbox, ssara]
-
-#rsmasInsar.processingMethod               = auto         # [smallbaseline, squeesar]
-#rsmasInsar.demMethod                      = auto         # [bbox, ssara]
-
-#squeesar.plmethod                         = auto         # [EVD, EMI, PTA, sequential_EVD, sequential_EMI, sequential_PTA]
-#squeesar.patch_size                       = auto         # 200
-#squeesar.range_window                     = auto         # 21
-#squeesar.azimuth_window                   = auto         # 15
-#squeesar.cropbox                          = auto         # [ '-1 0.15 -91.7 -90.9'] required [SNEW]
-
-'''
 
 ##########################################################################
 
@@ -83,7 +39,7 @@ def send_logger():
 ##########################################################################
 
 
-def _remove_directories(directories_to_delete):
+def remove_directories(directories_to_delete):
     """ Removes given existing directories. """
 
     for directory in directories_to_delete:
@@ -124,129 +80,116 @@ def get_work_directory(work_dir, project_name):
 
 ##########################################################################
 
+
 def create_or_update_template(inps_dict):
     """ Creates a default template file and/or updates it.
         returns the values in 'inps'
     """
+
     inps = inps_dict
 
     print('\n*************** Template Options ****************')
     # write default template
 
+    print ("Custom Template File: ", inps.customTemplateFile)
+
     inps.project_name = get_project_name(inps.customTemplateFile)
+    print ("Project Name: ", inps.project_name)
+
     inps.work_dir = get_work_directory(None, inps.project_name)
+    print("Work Dir: ", inps.work_dir)
 
-    inps.template_file = create_default_template()
-    templateObj = Template(inps.customTemplateFile)
-    inps.custom_template = templateObj.get_options()
-    inps.ssaraopt = templateObj.generate_ssaraopt_string()    
+    # Creates default Template
+    inps = create_default_template(inps)
 
-    for key in inps.custom_template:
-        inps.custom_template[key] = os.path.expandvars(inps.custom_template[key])
-
-    pathObj.set_isce_defaults(inps)
-
-    set_default_options(inps, pathObj)
-
-    del inps.custom_template
 
     return inps
-
-
-##########################################################################
-
-def create_default_template():
-    """ Creates default template file. """
-
-    template_file = 'stackSentinel_template.txt'
-    if not os.path.isfile(template_file):
-        logger.log(loglevel.INFO, 'generate default template file: {}'.format(template_file))
-        with open(template_file, 'w') as file:
-            file.write(TEMPLATE)
-    else:
-        logger.log(loglevel.INFO, 'default template file exists: {}'.format(template_file))
-    template_file = os.path.abspath(template_file)
-
-    return template_file
 
 #########################################################################
 
 
-def set_default_options(inps, pathObj):
-    """ Sets default values for template file. """
+def create_default_template(temp_inps):
+    """
+    :param temp_inps: input parsed arguments
+    :return Updated template file added to temp_inps.
+    """
 
-    inps.orbitDir = pathObj.orbitdir
-    inps.auxDir = pathObj.auxdir
+    inps = temp_inps
 
-    config_def = get_config_defaults(config_file='template_defaults.cfg')
+    inps.template_file = os.path.join(inps.work_dir, os.path.basename(inps.customTemplateFile))
 
-    default_template_dict = {}
-    for each_section in config_def.sections():
-        for (each_key, each_val) in config_def.items(each_section):
-            default_template_dict.update({each_key: os.path.expandvars(each_val)})
+    # read custom template from file
+    custom_tempObj = Template(os.path.abspath(inps.customTemplateFile))
 
-    required_template_vals = pathObj.required_template_options
+    # check for required options
+    required_template_keys = pathObj.required_template_options
 
-    for template_key in required_template_vals:
-        if not template_key in inps.custom_template:
+    for template_key in required_template_keys:
+        if not template_key in custom_tempObj.options:
             logger.log(loglevel.ERROR, '{} is required'.format(template_key))
             raise Exception('ERROR: {0} is required'.format(template_key))
 
-    for template_val in default_template_dict:
-        set_inps_value_from_template(inps, template_key=template_val,
-                                     inps_name=template_val,
-                                     default_value=default_template_dict[template_val])
+    # build ssaraopt string from ssara options
+    custom_tempObj.options.update(pathObj.correct_for_ssara_date_format(custom_tempObj.options))
+    inps.ssaraopt = custom_tempObj.generate_ssaraopt_string()
+
+    # find default values from template_defaults.cfg to assign to default_tempObj
+    default_tempObj = Template(pathObj.defaultdir + '/stack_template.txt')
+    config_template = get_config_defaults(config_file='template_defaults.cfg')
+    for each_section in config_template.sections():
+        for (each_key, each_val) in config_template.items(each_section):
+            default_tempObj.options.update({each_key: os.path.expandvars(each_val.strip("'"))})
+
+    inps.template = default_tempObj.options
+
+    pathObj.set_isce_defaults(inps)
+
+    # update default_temObj with custom_tempObj
+    for key, value in custom_tempObj.options.items():
+        if not value in [None, 'auto']:
+            inps.template.update({key: os.path.expandvars(value.strip("'"))})
+
+    if os.path.exists(inps.template_file):
+        if not os.path.samefile(inps.customTemplateFile, inps.template_file):
+            logger.log(loglevel.INFO, 'generate template file: {}'.format(inps.template_file))
+            shutil.copyfile(inps.customTemplateFile, inps.template_file)
+        else:
+            logger.log(loglevel.INFO, 'template file exists: {}'.format(inps.template_file))
+    else:
+        logger.log(loglevel.INFO, 'generate template file: {}'.format(inps.template_file))
+        shutil.copyfile(inps.customTemplateFile, inps.template_file)
+
+    # updates tempDefault dictionary with the given templateObj adding new keys
+    new_file = update_template_file(inps.template_file, custom_tempObj)
+    with open(inps.template_file, 'w') as file:
+        file.write(new_file)
+
     return inps
 
-##########################################################################
+#########################################################################
 
 
-def set_inps_value_from_template(inps, template_key,
-                                 inps_name, default_name='auto',
-                                 default_value=None, REQUIRED=False):
+def update_template_file(TEMP_FILE, custom_templateObj):
     """
-    Processes a template parameter and adds it to the inps namespace.
-    Options for setting both default values and required parameters
-    :param inps: The parsed input namespace
-    :param template: The parsed dictionary (namespace)
-    :param template_key: The desired key in `template`
-    :param inps_name: The parameter name to assign in `inps`
-    :param default_name: 'auto' is the normal placeholder
-    :param default_value: Default value to assign in `inps`
-    :param REQUIRED: Throws error if REQUIRED is True
-    :return: None
+    updates final template file in project directory based on custom template file
+    :param TEMP_FILE: file to be updated
+    :param custom_templateObj: custom template having extra or new options
+    :return: updated file text
     """
 
-    # Allows you to refer to and modify `inps` values
-    inps_dict = vars(inps)
+    # fileText = TEMP_FILE
+    with open(TEMP_FILE, 'r') as file:
+        fileText = file.read()
 
-    if not 'ssara' in inps_name:
+    tempObj = Template(TEMP_FILE)
 
-        key_name = inps_name.split('.')
-        try:
-            key_name = key_name[1]
-        except:
-            key_name = key_name[0]
+    for key, value in custom_templateObj.options.items():
+        if not key in tempObj.options:
+            fileText = fileText + "{:<38}".format(key) + "{:<15}".format("= {}".format(value.strip("'"))) + '\n'
 
-        if default_value == 'None':
-            default_value = None
+    return fileText
 
-        if not REQUIRED:
-            # Set default value
-            if not key_name in inps:
-                if template_key in inps.custom_template:
-                    inps_dict[key_name] = inps.custom_template[template_key].strip("'")
-                else:
-                    inps_dict[key_name] = default_value
-
-        else:
-            if template_key in inps.custom_template:
-                inps_dict[key_name] = inps.custom_template[template_key].strip("'")
-            else:
-                logger.log(loglevel.ERROR, '{} is required'.format(template_key))
-                raise Exception('ERROR: {0} is required'.format(template_key))
-
-##########################################################################
+#########################################################################
 
 
 def create_or_copy_dem(work_dir, template, custom_template_file):
@@ -258,8 +201,8 @@ def create_or_copy_dem(work_dir, template, custom_template_file):
         os.rmdir(dem_dir)
 
     if not os.path.isdir(dem_dir):
-        if 'sentinelStack.demDir' in list(template.keys()) and template['sentinelStack.demDir'] != str('auto'):
-            shutil.copytree(template['sentinelStack.demDir'], dem_dir)
+        if 'topsStack.demDir' in list(template.keys()) and template['topsStack.demDir'] != str('auto'):
+            shutil.copytree(template['topsStack.demDir'], dem_dir)
         else:
             # TODO: Change subprocess call to get back error code and send error code to logger
             command = 'dem_rsmas.py ' + custom_template_file
@@ -303,10 +246,10 @@ def run_or_skip(custom_template_file):
 ##########################################################################
 
 
-def raise_exception_if_job_exited(directory):
+def raise_exception_if_job_exited(run_file):
     """Removes files with zero size or zero length (*.e files in run_files)."""
     
-    files = glob.glob(directory + '/*.o')
+    files = glob.glob(run_file + '*.o')
 
     # need to add for PBS. search_string='Terminated'
     search_string = 'Exited with exit code'
@@ -315,7 +258,41 @@ def raise_exception_if_job_exited(directory):
     for file in files:
         with open(file) as fr:
             if search_string in fr.read(): 
-               raise Exception("ERROR: {0}/{1} exited,  contains: {2}".format(directory,os.path.basename(file),search_string))
+               raise Exception("ERROR: {0}/{1} exited,  contains: {2}".format(run_file, os.path.basename(file), search_string))
+
+##########################################################################
+
+
+def concatenate_error_files(run_file):
+    """
+    Concatenate error files to one file (*.e files in run_files).
+    :param directory: str
+    :param out_name: str
+    :return: None
+    """
+
+    out_name = os.path.dirname(run_file) + '/out_' + run_file.split('/')[-1] + '.e'
+    error_files = glob.glob(run_file + '*.e')
+    if not len(error_files) == 0:
+        with open(out_name, 'w') as outfile:
+            for fname in error_files:
+                outfile.write('#########################\n')
+                outfile.write('#### ' + fname + ' \n')
+                outfile.write('#########################\n')
+                with open(fname) as infile:
+                    outfile.write(infile.read())
+                os.remove(fname)
+
+        out_folder = os.path.dirname(run_file) + '/stderr_' + os.path.basename(run_file)
+
+        if not os.path.exists(out_folder):
+            os.mkdir(out_folder)
+        else:
+            shutil.rmtree(out_folder)
+            os.mkdir(out_folder)
+
+        shutil.move(out_name, out_folder)
+    return None
 
 ###############################################################################
 
@@ -328,10 +305,10 @@ def file_len(fname):
 ##########################################################################
 
 
-def remove_zero_size_or_length_files(directory):
+def remove_zero_size_or_length_error_files(run_file):
     """Removes files with zero size or zero length (*.e files in run_files)."""
 
-    error_files = glob.glob(directory + '/*.e')
+    error_files = glob.glob(run_file + '*.e')
     error_files = natsorted(error_files)
     for item in error_files:
         if os.path.getsize(item) == 0:       # remove zero-size files
@@ -340,32 +317,28 @@ def remove_zero_size_or_length_files(directory):
             os.remove(item)                  # remove zero-line files
     return None
 
-############################################################################
+##########################################################################
 
 
-def get_slc_list(ssaraopt, slcdir):
-    """returns the number of images from ssara command and decides to download new data or not"""
-    ssara_opt = ssaraopt.split(' ')
-    ssara_call = ['ssara_federated_query-cj.py'] + ssara_opt + ['--print']
-    ssara_output = subprocess.check_output(ssara_call)
-    ssara_output_array = ssara_output.decode('utf-8').split('\n')
-    ssara_output_filtered = ssara_output_array[5:len(ssara_output_array) - 1]
+def move_stdout_files(run_file):
+    """move the error file into stdout_files directory"""
 
-    files_to_check = []
-    for entry in ssara_output_filtered:
-        files_to_check.append(os.path.join(slcdir, entry.split(',')[-1].split('/')[-1]))
-
-    if os.path.isdir(slcdir):
-        SAFE_files = natsorted(glob.glob(os.path.join(slcdir, 'S1*_IW_SLC*')))
+    job_files = glob.glob(run_file + '*.job')
+    stdout_files  = glob.glob(run_file + '*.o')
+    dir_name = os.path.dirname(stdout_files[0])
+    out_folder = dir_name + '/stdout_' + os.path.basename(run_file)
+    if not os.path.isdir(out_folder):
+        os.mkdir(out_folder)
     else:
-        SAFE_files = []
+        shutil.rmtree(out_folder)
+        os.mkdir(out_folder)
 
-    if len(SAFE_files) == 0 or not SAFE_files == files_to_check:
-        download_flag = True
-    else:
-        download_flag = False
+    for item in stdout_files:
+        shutil.move(item, out_folder)
+    for item in job_files:
+        shutil.move(item, out_folder)
 
-    return files_to_check, download_flag
+    return None
 
 ############################################################################
 
@@ -437,7 +410,7 @@ def walltime_adjust(inps, default_time):
     from rinsar.objects.sentinel1_override import Sentinel1_burst_count
 
     inps_dict = inps
-    correct_for_isce_naming_convention(inps_dict)
+    pathObj.correct_for_isce_naming_convention(inps_dict)
 
     if inps_dict.swath_num is None:
         swaths = [1, 2, 3]
@@ -459,9 +432,20 @@ def walltime_adjust(inps, default_time):
     return adjusted_time
 
 
+############################################################################
 
 
+def copy_dask_config(inps):
+    """ Copy dask.yaml in project directory """
 
+    os.environ['DASK_CONFIG'] = os.path.join(inps.work_dir, 'dask')
+    inps.dask_config_dir = os.environ['DASK_CONFIG']
+    prj_config_file = os.path.join(inps.dask_config_dir, 'dask.yaml')
+    if not os.path.exists(inps.dask_config_dir):
+        os.mkdir(inps.dask_config_dir)
+    if not os.path.isfile(prj_config_file):
+        shutil.copyfile(pathObj.daskconfig, prj_config_file)
+    return
 
 
 
