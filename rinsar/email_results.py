@@ -10,7 +10,7 @@ import glob
 import argparse
 import subprocess
 from pysar.utils import readfile
-from rinsar.utils.process_utilities import _remove_directories
+from rinsar.utils.process_utilities import remove_directories
 from rinsar.objects.auto_defaults import PathFind
 
 ###############################################################################
@@ -117,7 +117,7 @@ def main(iargs=None):
 
         if int(custom_template['cleanopt']) == 4:
             cleanlist = pathObj.isce_clean_list
-            _remove_directories(cleanlist[4])
+            remove_directories(cleanlist[4])
 
     else:
         email_pysar_results(custom_template)
