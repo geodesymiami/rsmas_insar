@@ -53,6 +53,6 @@ squeesar.plmethod                     = auto         # [EVD, EMI, PTA, sequentia
 squeesar.patch_size                   = auto         # patch size to divide the image for parallel processing, auto for 300
 squeesar.range_window                 = auto         # range window size for synthetic multilook, auto for 21
 squeesar.azimuth_window               = auto         # azimuth window size for synthetic multilook, auto for 15
-squeesar.subset                       = None         # [ '-1 0.15 -91.7 -90.9'] required [SNWE]
+squeesar.subset                       = None         # [ '-1:0.15,-91.7:-90.9'] required [S:N,W:E]
 
 
