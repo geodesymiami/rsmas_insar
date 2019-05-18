@@ -52,7 +52,7 @@ def main(iargs=None):
 
     geocode_file(inps.inputfile, inps.bbox, geo_master_dir)
 
-    gfile = 'geo_' + slc + '.slc.full'
+    gfile = 'geo_' + slc + '.slc'
     ds = gdal.Open(gfile + '.vrt', gdal.GA_ReadOnly)
     array = np.abs(ds.GetRasterBand(1).ReadAsArray())
     del ds
@@ -153,9 +153,9 @@ def geocode_file(slc, bbox, geo_master_dir):
     lat_north = np.float(bbox[1])
 
     command_geocode = "geocodeGdal.py -l {a} -L {b} -f {c} --bbox '{l1} {l2} {L1} {L2}' -x {X} -y {Y}".format(
-        a=geo_master_dir + '/lat.rdr.full',
-        b=geo_master_dir + '/lon.rdr.full',
-        c=slc + '.slc.full',
+        a=geo_master_dir + '/lat.rdr',
+        b=geo_master_dir + '/lon.rdr',
+        c=slc + '.slc.ml',
         l1=lat_south,
         l2=lat_north,
         L1=lon_west,
