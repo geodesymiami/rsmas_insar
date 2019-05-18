@@ -5,6 +5,7 @@ echo "sourcing ${PWD}/default_isce22.bash ..."
 export PARENTDIR=${PWD}
 export TERM=xterm
 export VISUAL=/bin/vi
+export CPL_ZIP_ENCODING=UTF-8
 
 ###### for JOB SUBMISSION ###################
 export WORKDIR=~/insarlab
