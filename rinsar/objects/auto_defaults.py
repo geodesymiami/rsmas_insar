@@ -44,11 +44,21 @@ class PathFind:
         inps_dict['template']['topsStack.orbitDir'] = self.orbitdir
         inps_dict['template']['topsStack.auxDir'] = self.auxdir
 
-        if 'squeesar.subset' not in inps.template:
-            inps_dict['template']['squeesar.cropbox'] = \
-                inps_dict['template']['topsStack.boundingBox']
-
         return
+
+    @staticmethod
+    def grab_cropbox(inps):
+        try:
+            if inps.template['processingMethod'] == 'smallbaseline':
+                subset = inps['template']['pysar.subset.lalo']
+            else:
+                subset = inps.template['squeesar.subset']
+            cropbox = '{} {} {} {}'.format(subset[0], subset[1].split(',')[0], subset[1].split(',')[1],
+                                                     subset[2])
+        except:
+            cropbox = inps.template['topsStack.boundingBox']
+
+        return cropbox
 
     @staticmethod
     def correct_for_ssara_date_format(template_options):
@@ -100,7 +110,9 @@ class PathFind:
                        'numOverlapConnections', 'subswath', 'boundingBox', 'textCmd', 'excludeDates', 'includeDates',
                        'azimuthLooks', 'rangeLooks', 'filtStrength', 'esdCoherenceThreshold', 'snrMisregThreshold',
                        'unwMethod', 'polarization', 'coregistration', 'workflow', 'startDate', 'stopDate', 'useGPU']
-        templateKey = ['topsStack.' + x for x in templateKey]
+
+        stackprefix = os.path.basename(os.getenv('ISCE_STACK'))
+        templateKey = [stackprefix + '.' + x for x in templateKey]
 
         for old_key, new_key in zip(templateKey, isceKey):
             inps_dict['template'][new_key] = inps_dict['template'].pop(old_key)

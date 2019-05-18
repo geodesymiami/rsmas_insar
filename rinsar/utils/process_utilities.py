@@ -164,6 +164,8 @@ def create_default_template(temp_inps):
     with open(inps.template_file, 'w') as file:
         file.write(new_file)
 
+    inps.cropbox = pathObj.grab_cropbox(inps)
+
     return inps
 
 #########################################################################
