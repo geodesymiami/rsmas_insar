@@ -52,7 +52,7 @@ def main(iargs=None):
 
     geocode_file(inps.inputfile, inps.bbox, geo_master_dir)
 
-    gfile = 'geo_' + slc + '.slc'
+    gfile = 'geo_' + slc + '.slc.ml'
     ds = gdal.Open(gfile + '.vrt', gdal.GA_ReadOnly)
     array = np.abs(ds.GetRasterBand(1).ReadAsArray())
     del ds
