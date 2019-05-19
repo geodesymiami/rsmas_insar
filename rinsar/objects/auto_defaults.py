@@ -64,11 +64,15 @@ class PathFind:
     def correct_for_ssara_date_format(template_options):
 
         inps_dict = template_options
-
-        inps_dict['ssaraopt.startDate'] = \
-            datetime.datetime.strptime(inps_dict['ssaraopt.startDate'], '%Y%m%d').strftime('%Y-%m-%d')
-        inps_dict['ssaraopt.endDate'] = \
-            datetime.datetime.strptime(inps_dict['ssaraopt.endDate'], '%Y%m%d').strftime('%Y-%m-%d')
+        
+        if 'ssaraopt.startDate' in inps_dict:
+            inps_dict['ssaraopt.startDate'] = \
+                datetime.datetime.strptime(inps_dict['ssaraopt.startDate'], '%Y%m%d').strftime('%Y-%m-%d')
+        
+        if 'ssaraopt.endDate' in inps_dict:
+            inps_dict['ssaraopt.endDate'] = \
+                datetime.datetime.strptime(inps_dict['ssaraopt.endDate'], '%Y%m%d').strftime('%Y-%m-%d')
+        
         return inps_dict
 
     @staticmethod
