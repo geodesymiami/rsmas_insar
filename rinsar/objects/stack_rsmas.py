@@ -103,6 +103,9 @@ class rsmasRun(object):
     def configure(self, inps, runName):
         for k in inps.__dict__.keys():
             setattr(self, k, inps.__dict__[k])
+
+        self.customTemplateFile = os.path.expandvars(inps.customTemplateFile)
+        
         self.runDir = os.path.join(self.work_dir, pathObj.rundir)
 
         self.slcDir = os.path.join(self.work_dir, pathObj.mergedslcdir)
@@ -118,17 +121,17 @@ class rsmasRun(object):
         self.runf = open(self.run_outname, 'w')
 
     def downloadDataDEM(self, inps):
-        self.runf.write('download_rsmas.py ' + inps.customTemplateFile + '\n')
-        self.runf.write('dem_rsmas.py ' + inps.customTemplateFile + ' --boundingBox \n')
+        self.runf.write('download_rsmas.py ' + self.customTemplateFile + '\n')
+        self.runf.write('dem_rsmas.py ' + self.customTemplateFile + ' --boundingBox \n')
 
     def cropMergedSlc(self, inps):
-        self.runf.write(self.text_cmd + 'crop_sentinel.py ' + inps.customTemplateFile + '\n')
+        self.runf.write(self.text_cmd + 'crop_sentinel.py ' + self.customTemplateFile + '\n')
 
     def createPatch(self, inps):
-        self.runf.write(self.text_cmd + 'create_patch.py ' + inps.customTemplateFile + '\n')
+        self.runf.write(self.text_cmd + 'create_patch.py ' + self.customTemplateFile + '\n')
 
     def phaseLinking(self, inps):
-        self.runf.write(self.text_cmd + 'phase_linking_app.py ' + inps.customTemplateFile + '\n')
+        self.runf.write(self.text_cmd + 'phase_linking_app.py ' + self.customTemplateFile + '\n')
 
     def generateIfg(self, inps, pairs):
         ifgram_dir = os.path.dirname(self.slcDir) + '/interferograms'
@@ -183,21 +186,21 @@ class rsmasRun(object):
             self.runf.write(self.text_cmd + pathObj.wrappercommandtops + configName + '\n')
 
     def pysarCorrections(self, inps):
-        self.runf.write(self.text_cmd + 'timeseries_corrections.py ' + inps.customTemplateFile + '\n')
+        self.runf.write(self.text_cmd + 'timeseries_corrections.py ' + self.customTemplateFile + '\n')
 
     def pysarSB(self, inps):
-        self.runf.write(self.text_cmd + 'pysarApp.py ' + inps.customTemplateFile + '\n')
+        self.runf.write(self.text_cmd + 'pysarApp.py ' + self.customTemplateFile + '\n')
 
     def generateHazardProducts(self, inps):
-        self.runf.write(self.text_cmd + 'export_ortho_geo.py ' + inps.customTemplateFile + '\n')
-        self.runf.write(self.text_cmd + 'ifgramStack_to_ifgram_and_coherence.py ' + inps.customTemplateFile + '\n')
+        self.runf.write(self.text_cmd + 'export_ortho_geo.py ' + self.customTemplateFile + '\n')
+        self.runf.write(self.text_cmd + 'ifgramStack_to_ifgram_and_coherence.py ' + self.customTemplateFile + '\n')
  
     def ingestInsarmaps(self, inps):
-        self.runf.write(self.text_cmd + 'ingest_insarmaps.py ' + inps.customTemplateFile + '\n')
+        self.runf.write(self.text_cmd + 'ingest_insarmaps.py ' + self.customTemplateFile + '\n')
 
     def emailResults(self, inps):
-        self.runf.write(self.text_cmd + 'email_results.py ' + inps.customTemplateFile + '\n')
-        self.runf.write(self.text_cmd + 'email_results.py ' + inps.customTemplateFile + ' --insarmap\n')
+        self.runf.write(self.text_cmd + 'email_results.py ' + self.customTemplateFile + '\n')
+        self.runf.write(self.text_cmd + 'email_results.py ' + self.customTemplateFile + ' --insarmap\n')
 
     def finalize(self):
         self.runf.close()
