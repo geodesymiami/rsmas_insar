@@ -17,7 +17,7 @@ from isceobj.Util.ImageUtil import ImageLib as IML
 from rinsar.objects.auto_defaults import PathFind
 from rinsar.utils.process_utilities import create_or_update_template, get_config_defaults, walltime_adjust
 import rinsar.job_submission as js
-from mergeBursts import multilook
+import mergeBursts as mb
 
 pathObj = PathFind()
 #################################################################################
@@ -143,25 +143,31 @@ def create_georectified_burst_lat_lon(burst, latname, lonname, dem_zero, range_l
 def merge_burst_lat_lon(inps):
     """ merge lat and lon bursts """
 
-    merglatCmd = 'mergeBursts.py --stack {a} --inp_master {b} --dirname {c} --name_pattern {d} ' \
-                 '--outfile {e} --method {f} --range_looks {g} --azimuth_looks {h} --no_data_value {i} ' \
-                 '--multilook'.format(a=os.path.join(inps.work_dir, pathObj.stackdir), b=inps.master,
-                                      c=inps.geom_masterDir, d='lat*rdr',
-                                      e=os.path.join(inps.geom_masterDir, 'lat.rdr'), f='top',
-                                      g=inps.rangeLooks, h=inps.azimuthLooks, i=0)
+    merglatCmd = ['mergeBursts.py', ['--stack', os.path.join(inps.work_dir, pathObj.stackdir),
+                                     '--inp_master', inps.master, '--dirname', inps.geom_masterDir,
+                                     '--name_pattern', 'lat*rdr', '--outfile', os.path.join(inps.geom_masterDir, 'lat.rdr'),
+                                     '--method', 'top', '--use_virtual_files', '--multilook',
+                                     '--range_looks', str(int(inps.rangeLooks)),
+                                     '--azimuth_looks', str(int(inps.azimuthLooks)),
+                                     '--multilook_tool', 'gdal', '--no_data_value', '0']]
 
-    merglonCmd = 'mergeBursts.py --stack {a} --inp_master {b} --dirname {c} --name_pattern {d} ' \
-                 '--outfile {e} --method {f} --range_looks {g} --azimuth_looks {h} --no_data_value {i} ' \
-                 '--multilook'.format(a=os.path.join(inps.work_dir, pathObj.stackdir), b=inps.master,
-                                      c=inps.geom_masterDir, d='lon*rdr',
-                                      e=os.path.join(inps.geom_masterDir, 'lon.rdr'), f='top',
-                                      g=inps.rangeLooks, h=inps.azimuthLooks, i=0)
+    merglonCmd = ['mergeBursts.py', ['--stack', os.path.join(inps.work_dir, pathObj.stackdir),
+                                     '--inp_master', inps.master, '--dirname', inps.geom_masterDir,
+                                     '--name_pattern', 'lon*rdr', '--outfile', os.path.join(inps.geom_masterDir, 'lon.rdr'),
+                                     '--method', 'top', '--use_virtual_files', '--multilook',
+                                     '--range_looks', str(int(inps.rangeLooks)),
+                                     '--azimuth_looks', str(int(inps.azimuthLooks)),
+                                     '--multilook_tool', 'gdal', '--no_data_value', '0']]
 
-    print(merglatCmd)
-    os.system(merglatCmd)
+    if not os.path.exists(os.path.join(inps.geom_masterDir, 'lat.rdr')):
+        print(merglatCmd)
+        mb.main(merglatCmd[1])
 
-    print(merglonCmd)
-    os.system(merglonCmd)
+    if not os.path.exists(os.path.join(inps.geom_masterDir, 'lon.rdr')):
+        print(merglonCmd)
+        mb.main(merglonCmd[1])
+
+    sys.exit(0)
 
     return
 
@@ -199,12 +205,12 @@ def multilook_images(inps):
 
     for slc_full, slc_ml in zip(full_slc_list, multilooked_slc):
         if not os.path.exists(slc_ml):
-            multilook(slc_full, slc_ml, inps.azimuthLooks, inps.rangeLooks)
+            mb.multilook(slc_full, slc_ml, inps.azimuthLooks, inps.rangeLooks)
     return
 
 
 def main(iargs=None):
-    """ create orth and geo rectifying run jobs and submit them. """
+    """ create ortho and geo rectifying run jobs and submit them. """
 
     inps = cmdLineParse()
 
