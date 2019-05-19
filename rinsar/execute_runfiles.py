@@ -101,6 +101,8 @@ def main(iargs=None):
             walltimelimit = config['DEFAULT']['walltime']
 
         queuename = os.getenv('QUEUENAME')
+        
+        putils.remove_last_job_running_products(run_file=item)
 
         jobs = js.submit_batch_jobs(batch_file=item, out_dir=os.path.join(inps.work_dir, 'run_files'),
                                     memory=memorymax, walltime=walltimelimit, queue=queuename)
