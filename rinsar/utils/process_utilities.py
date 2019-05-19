@@ -18,6 +18,7 @@ from pysar.utils import readfile
 from natsort import natsorted
 import xml.etree.ElementTree as ET
 import shutil
+import yaml
 from collections import namedtuple
 from pysar.defaults.auto_path import autoPath
 from rinsar.objects.rsmas_logging import RsmasLogger, loglevel
@@ -322,6 +323,18 @@ def remove_zero_size_or_length_error_files(run_file):
 ##########################################################################
 
 
+def remove_last_job_running_products(run_file):
+    error_files = glob.glob(run_file + '*.e')
+    job_files = glob.glob(run_file + '*.job')
+    out_file = glob.glob(run_file + '*.o')
+    list_files = error_files + out_file + job_files
+    if not len(list_files) == 0:
+        for item in list_files:
+            os.remove(item)
+    return
+
+##########################################################################
+
 def move_stdout_files(run_file):
     """move the error file into stdout_files directory"""
 
@@ -448,6 +461,9 @@ def copy_dask_config(inps):
     if not os.path.isfile(prj_config_file):
         shutil.copyfile(pathObj.daskconfig, prj_config_file)
     return
+
+##########################################################################
+
 
 
 
