@@ -86,24 +86,22 @@ def main(iargs=None):
     obj = ifgramStack(geo_file)
     obj.open()
     date12_list = obj.get_date12_list()
-    dummy_data, atr = readfile.read(geo_file)
+    #dummy_data, atr = readfile.read(geo_file)
 
-    #for i in range(2):
     for i in range(len(date12_list)):
         date_str = date12_list[i]
         print('Working on ... ' + date_str)
         data_coh = readfile.read(file, datasetName='coherence-' + date_str)[0]
         data_unw = readfile.read(file, datasetName='unwrapPhase-' + date_str)[0]
 
-
         fname_coh = out_dir + '/coherence_' + date_str + '.tif'
         fname_unw = out_dir + '/interferogram_' + date_str + '.tif'
 
-        create_geotiff( obj, data = data_coh, outfile = fname_coh, type = 'coherence' )
-        create_geotiff( obj, data = data_unw, outfile = fname_unw, type = 'interferogram' )
+        create_geotiff(obj, data=data_coh, outfile=fname_coh, type='coherence', work_dir=work_dir)
+        create_geotiff(obj, data=data_unw, outfile=fname_unw, type='interferogram', work_dir=work_dir)
     return
 
-def create_geotiff (obj, data, outfile, type):
+def create_geotiff (obj, data, outfile, type, work_dir):
     ''' creates a geo_tiff '''
 
     originX = float(obj.get_metadata()['X_FIRST'])
@@ -119,11 +117,18 @@ def create_geotiff (obj, data, outfile, type):
     srs.ImportFromEPSG(4326)
     ds.SetProjection(srs.ExportToWkt())
     ds.SetGeoTransform(gt)
+<<<<<<< HEAD
     
     xmlfile = glob.glob(os.path.join(project_dir, pathObj.masterdir, '*.xml'))[0]
+=======
+
+    # metadata consistent with Backscatter products:
+    xmlfile = glob.glob(os.path.join(work_dir, pathObj.masterdir, '*.xml'))[0]
+>>>>>>> made metadata consistent with other hazard products
     attributes = putils.xmlread(xmlfile)
     Metadata = {'SAT': attributes['missionname'], 'Mode': attributes['passdirection'],
-                'Image_Type': '{}_BackScatter'.format(inps.imtype), 'Date': slc}
+                'Image_Type': 'ortho_{}'.format(type),
+                'Date': obj.get_metadata()['START_DATE'] + '-' + obj.get_metadata()['END_DATE']}
     ds.SetMetadata(Metadata)
 
     ## TODO: Need to add metadata data_content: 'coherence' (use variable type)
