@@ -6,6 +6,7 @@ import os
 import isce
 import isceobj
 import datetime
+import time
 import sys
 import shutil
 import s1a_isce_utils as ut
@@ -18,60 +19,8 @@ from rinsar.utils.process_utilities import create_or_update_template, get_config
 import rinsar.job_submission as js
 from mergeBursts import multilook
 
-try:
-    from dask.distributed import Client, as_completed
-    # dask_jobqueue is needed for HPC.
-    # PBSCluster (similar to LSFCluster) should also work out of the box
-    from dask_jobqueue import LSFCluster
-except ImportError:
-    raise ImportError('Cannot import dask.distributed or dask_jobqueue!')
-
-
 pathObj = PathFind()
 #################################################################################
-
-
-def main(iargs=None):
-    """ create orth and geo rectifying run jobs and submit them. """
-
-    inps = cmdLineParse(iargs)
-    os.environ['DASK_CONFIG'] = os.path.join(inps.work_dir, 'dask')
-
-    demZero = create_demZero(inps.dem, inps.geom_masterDir)
-
-    swathList = ut.getSwathList(inps.master)
-
-    create_georectified_lat_lon(swathList, inps.master, inps.geom_masterDir, demZero)
-
-    merge_burst_lat_lon(inps)
-
-    multilook_images(inps)
-
-    run_file_list = make_run_list_amplitude(inps)
-
-    config = get_config_defaults(config_file='job_defaults.cfg')
-
-    for item in run_file_list:
-        step_name = 'amplitude_ortho_geo'
-        try:
-            memorymax = config[step_name]['memory']
-        except:
-            memorymax = config['DEFAULT']['memory']
-
-        try:
-            if config[step_name]['adjust'] == 'True':
-                walltimelimit = walltime_adjust(config[step_name]['walltime'])
-            else:
-                walltimelimit = config[step_name]['walltime']
-        except:
-            walltimelimit = config['DEFAULT']['walltime']
-
-        queuename = os.getenv('QUEUENAME')
-
-        jobs = js.submit_batch_jobs(batch_file=item,
-                                    out_dir=os.path.join(inps.work_dir, 'run_files'),
-                                    memory=memorymax, walltime=walltimelimit, queue=queuename)
-    return
 
 
 def createParser():
@@ -81,6 +30,9 @@ def createParser():
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
     parser.add_argument('customTemplateFile', nargs='?',
                         help='custom template with option settings.\n')
+    parser.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
+    parser.add_argument('--walltime', dest='wall_time', type=str, default='2:00',
+                        help='walltime, e.g. 2:00 (default: 2:00)')
     return parser
 
 
@@ -93,6 +45,9 @@ def cmdLineParse(iargs=None):
     inps = create_or_update_template(inps)
     inps.geom_masterDir = os.path.join(inps.work_dir, pathObj.geomlatlondir)
     inps.master = os.path.join(inps.work_dir, pathObj.masterdir)
+    pathObj.rundir = os.path.join(inps.work_dir, pathObj.rundir)
+    pathObj.project = os.getenv('SCRATCHDIR').split('/')[-2]
+    print('Project: {}'.format(pathObj.project))
 
     try:
         inps.dem = glob.glob('{}/DEM/*.wgs84'.format(inps.work_dir))[0]
@@ -100,20 +55,18 @@ def cmdLineParse(iargs=None):
         print('DEM not exists!')
         sys.exit(1)
 
-    correct_for_isce_naming_convention(inps)
+    pathObj.correct_for_isce_naming_convention(inps)
 
     inps.rangeLooks = inps.template['rangeLooks']
     inps.azimuthLooks = inps.template['azimuthLooks']
 
-    if os.path.exists(inps.geom_masterDir):
-        os.system('rm -rf {}'.format(inps.geom_masterDir))
-
-    os.mkdir(inps.geom_masterDir)
+    if not os.path.exists(inps.geom_masterDir):
+        os.mkdir(inps.geom_masterDir)
 
     return inps
 
 
-def create_demZero(dem, outdir):
+def create_dem_zero(dem, outdir):
     """ create DEM with zero elevation """
 
     demImage = isceobj.createDemImage()
@@ -128,29 +81,16 @@ def create_demZero(dem, outdir):
     IML.renderISCEXML(zerodem_name, demImage.bands, demImage.coord2.coordSize, demImage.coord1.coordSize,
                       demImage.toNumpyDataType(), demImage.scheme, bbox=demImage.getsnwe())
 
-    demZero = isceobj.createDemImage()
-    demZero.load(zerodem_name + '.xml')
+    dem_zero = isceobj.createDemImage()
+    dem_zero.load(zerodem_name + '.xml')
+    return dem_zero
 
-    return demZero
 
 
-def create_georectified_lat_lon(swathList, masterdir, outdir, demZero):
+def create_georectified_lat_lon(swath_list, masterdir, outdir, dem_zero, range_looks, azimuth_looks):
     """ export geo rectified latitude and longitude """
 
-    python_executable_location = sys.executable
-    cluster = LSFCluster(python=python_executable_location)
-    NUM_WORKERS = 10
-    cluster.scale(NUM_WORKERS)
-    print("JOB FILE:", cluster.job_script())
-
-    # This line needs to be in a function or in a `if __name__ == "__main__":` block. If it is in no function
-    # or "main" block, each worker will try to create its own client (which is bad) when loading the module
-    client = Client(cluster)
-
-    futures = []
-    start_time = time.time()
-
-    for swath in swathList:
+    for swath in swath_list:
         master = ut.loadProduct(os.path.join(masterdir, 'IW{0}.xml'.format(swath)))
 
         ###Check if geometry directory already exists.
@@ -169,26 +109,13 @@ def create_georectified_lat_lon(swathList, masterdir, outdir, demZero):
             latname = os.path.join(dirname, 'lat_%02d.rdr' % (ind + 1))
             lonname = os.path.join(dirname, 'lon_%02d.rdr' % (ind + 1))
 
-            data = (dirname, burst, latname, lonname, demZero, inps.rangeLooks, inps.azimuthLooks)
-
-            future = client.submit(create_georectified_burst_lat_lon, data, retries=3)
-            futures.append(future)
-
-    i_future = 0
-    for future, result in as_completed(futures, with_results=True):
-        i_future += 1
-        print("FUTURE #" + str(i_future), "complete in", time.time() - start_time,
-              "output multilooked file:", result, "Time:", time.time())
-
-    cluster.close()
-    client.close()
+            if not (os.path.exists(latname+'.vrt') or os.path.exists(lonname+'.vrt')):
+                create_georectified_burst_lat_lon(burst, latname, lonname, dem_zero, range_looks, azimuth_looks)
 
     return
 
 
-def create_georectified_burst_lat_lon(data):
-
-    (dirname, burst, latname, lonname, demZero, rangeLooks, azimuthLooks) = data
+def create_georectified_burst_lat_lon(burst, latname, lonname, dem_zero, range_looks, azimuth_looks):
 
     planet = Planet(pname='Earth')
     topo = createTopozero()
@@ -198,10 +125,10 @@ def create_georectified_burst_lat_lon(data):
     topo.orbit = burst.orbit
     topo.width = burst.numberOfSamples
     topo.length = burst.numberOfLines
-    topo.wireInputPort(name='dem', object=demZero)
+    topo.wireInputPort(name='dem', object=dem_zero)
     topo.wireInputPort(name='planet', object=planet)
-    topo.numberRangeLooks = rangeLooks
-    topo.numberAzimuthLooks = azimuthLooks
+    topo.numberRangeLooks = int(range_looks)
+    topo.numberAzimuthLooks = int(azimuth_looks)
     topo.lookSide = -1
     topo.sensingStart = burst.sensingStart
     topo.rangeFirstSample = burst.startingRange
@@ -210,7 +137,7 @@ def create_georectified_burst_lat_lon(data):
     topo.lonFilename = lonname
     topo.topo()
 
-    return None
+    return
 
 
 def merge_burst_lat_lon(inps):
@@ -218,17 +145,17 @@ def merge_burst_lat_lon(inps):
 
     merglatCmd = 'mergeBursts.py --stack {a} --inp_master {b} --dirname {c} --name_pattern {d} ' \
                  '--outfile {e} --method {f} --range_looks {g} --azimuth_looks {h} --no_data_value {i} ' \
-                 '--multilook' \
-        .format(a=os.path.join(inps.work_dir, pathObj.stackdir), b=inps.master, c=inps.geom_masterDir,
-                d='lat*rdr', e=os.path.join(inps.geom_masterDir, 'lat.rdr'), f='top', g=inps.rangeLooks,
-                h=inps.azimuthLooks, i=0)
+                 '--multilook'.format(a=os.path.join(inps.work_dir, pathObj.stackdir), b=inps.master,
+                                      c=inps.geom_masterDir, d='lat*rdr',
+                                      e=os.path.join(inps.geom_masterDir, 'lat.rdr'), f='top',
+                                      g=inps.rangeLooks, h=inps.azimuthLooks, i=0)
 
     merglonCmd = 'mergeBursts.py --stack {a} --inp_master {b} --dirname {c} --name_pattern {d} ' \
                  '--outfile {e} --method {f} --range_looks {g} --azimuth_looks {h} --no_data_value {i} ' \
-                 '--multilook' \
-        .format(a=os.path.join(inps.work_dir, pathObj.stackdir), b=inps.master, c=inps.geom_masterDir,
-                d='lon*rdr', e=os.path.join(inps.geom_masterDir, 'lon.rdr'), f='top', g=inps.rangeLooks,
-                h=inps.azimuthLooks, i=0)
+                 '--multilook'.format(a=os.path.join(inps.work_dir, pathObj.stackdir), b=inps.master,
+                                      c=inps.geom_masterDir, d='lon*rdr',
+                                      e=os.path.join(inps.geom_masterDir, 'lon.rdr'), f='top',
+                                      g=inps.rangeLooks, h=inps.azimuthLooks, i=0)
 
     print(merglatCmd)
     os.system(merglatCmd)
@@ -264,48 +191,66 @@ def make_run_list_amplitude(inps):
 
 
 def multilook_images(inps):
+
     full_slc_list = [os.path.join(inps.work_dir, pathObj.mergedslcdir, x, x+'.slc.full')
                 for x in os.listdir(os.path.join(inps.work_dir, pathObj.mergedslcdir))]
+
     multilooked_slc = [x.split('.full')[0]+'.ml' for x in full_slc_list]
 
-    python_executable_location = sys.executable
-    cluster = LSFCluster(python=python_executable_location)
-    if len(full_slc_list) >= 40:
-        NUM_WORKERS = 40
-    else:
-        NUM_WORKERS = len(full_slc_list)
-
-    cluster.scale(NUM_WORKERS)
-    print("JOB FILE:", cluster.job_script())
-
-    # This line needs to be in a function or in a `if __name__ == "__main__":` block. If it is in no function
-    # or "main" block, each worker will try to create its own client (which is bad) when loading the module
-    client = Client(cluster)
-
-    futures = []
-    start_time = time.time()
-
     for slc_full, slc_ml in zip(full_slc_list, multilooked_slc):
-        data = (slc_full, slc_ml, inps.azimuthLooks, inps.rangeLooks)
-
-        future = client.submit(multilook_single_image, data, retries=3)
-        futures.append(future)
-
-    i_future = 0
-    for future, result in as_completed(futures, with_results=True):
-        i_future += 1
-        print("FUTURE #" + str(i_future), "complete in", time.time() - start_time,
-              "output multilooked file:", result, "Time:", time.time())
-
-    cluster.close()
-    client.close()
+        if not os.path.exists(slc_ml):
+            multilook(slc_full, slc_ml, inps.azimuthLooks, inps.rangeLooks)
     return
 
 
-def multilook_single_image(data):
-    (slc_full, slc_ml, inps.azimuthLooks, inps.rangeLooks) = data
-    out_name = multilook(slc_full, slc_ml, inps.azimuthLooks, inps.rangeLooks)
-    return out_name
+def main(iargs=None):
+    """ create orth and geo rectifying run jobs and submit them. """
+
+    inps = cmdLineParse()
+
+    if inps.submit_flag:
+        job_file_name = 'export_ortho_geo'
+        work_dir = os.getcwd()
+        job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
+        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, inps.wall_time)
+        sys.exit(0)
+
+    if not os.path.exists(os.path.join(inps.geom_masterDir, 'lon.rdr')):
+
+        dem_zero = create_dem_zero(inps.dem, inps.geom_masterDir)
+
+        swath_list = ut.getSwathList(inps.master)
+
+        create_georectified_lat_lon(swath_list, inps.master, inps.geom_masterDir, dem_zero, inps.rangeLooks,
+                                    inps.azimuthLooks)
+        merge_burst_lat_lon(inps)
+
+    multilook_images(inps)
+
+    run_file_list = make_run_list_amplitude(inps)
+
+    config = get_config_defaults(config_file='job_defaults.cfg')
+
+    for item in run_file_list:
+        step_name = 'amplitude_ortho_geo'
+        try:
+            memorymax = config[step_name]['memory']
+        except:
+            memorymax = config['DEFAULT']['memory']
+
+        try:
+            if config[step_name]['adjust'] == 'True':
+                walltimelimit = walltime_adjust(config[step_name]['walltime'])
+            else:
+                walltimelimit = config[step_name]['walltime']
+        except:
+            walltimelimit = config['DEFAULT']['walltime']
+
+        queuename = os.getenv('QUEUENAME')
+
+        jobs = js.submit_batch_jobs(batch_file=item,
+                                    out_dir=os.path.join(inps.work_dir, 'run_files'),
+                                    memory=memorymax, walltime=walltimelimit, queue=queuename)
 
 
 if __name__ == '__main__':
