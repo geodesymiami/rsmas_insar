@@ -64,12 +64,12 @@ def main(iargs=None):
     print('modify_network.py', arg_string)
     mintpy.modify_network.main(arg_string.split())
 
-    if not os.path.isdir('GEOCODE'):
-        os.makedirs('GEOCODE')
+    if not os.path.isdir(work_dir + '/mintpy/geo'):
+        os.makedirs(work_dir + '/mintpy/geo')
 
     # geocode ifgramStack
-    geo_file = os.path.dirname( os.path.dirname(file)) + '/geocode/geo_' + os.path.basename(file)
-    lookup_file = os.path.dirname( os.path.dirname(file)) + '/inputs/geometryRadar.h5'
+    geo_file = os.path.dirname(os.path.dirname(file)) + '/geo/geo_' + os.path.basename(file)
+    lookup_file = os.path.dirname(os.path.dirname(file)) + '/inputs/geometryRadar.h5'
     template_file = os.path.dirname(os.path.dirname(file)) + '/smallbaselineApp_template.txt'
     arg_string = file + ' -t ' + template_file + ' -l ' + lookup_file + ' -o ' + geo_file
     print('geocode.py', arg_string)
