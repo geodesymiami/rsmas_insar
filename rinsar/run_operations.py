@@ -9,7 +9,7 @@ import time
 
 from rinsar.utils import generate_template_files
 from rinsar.objects.rsmas_logging import RsmasLogger, loglevel
-from rinsar.pbjects import dataset_template
+from rinsar.objects import dataset_template
 import rinsar.utils.process_utilities as putils
 
 
@@ -175,26 +175,14 @@ def run_process_rsmas(inps, template_file, dataset):
              the `process_rsmas` job submission.
     """
     process_rsmas_options = []
+    print("RUNNING process_rsmas.py: " + template_file)
 
     if inps.startssara:
         process_rsmas_options.append('--startssara')
-    if inps.stopssara:
-        process_rsmas_options.append('--stopssara')
-    if inps.startprocess:
-        process_rsmas_options.append('--startprocess')
-    if inps.stopprocess:
-        process_rsmas_options.append('--stopprocess')
-    if inps.startpysar:
-        process_rsmas_options.append('--startpysar')
-    if inps.stoppysarload:
-        process_rsmas_options.append('--stoppysarload')
-    if inps.stoppysar:
-        process_rsmas_options.append('--stoppysar')
     if inps.startinsarmaps:
         process_rsmas_options.append('--startinsarmaps')
-
-    if len(process_rsmas_options) == 0:
-        process_rsmas_options.append('--insarmaps')
+    ''' FA 5/2019: here we used to have the same options as process_rsmas.py
+        need to revisit whetehr any options are useful with the run_files'''
 
     process_rsmas_options = ' '.join(process_rsmas_options)
 
