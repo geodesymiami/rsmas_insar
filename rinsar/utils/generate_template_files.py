@@ -13,7 +13,7 @@ from rinsar.objects.auto_defaults import PathFind
 
 pathObj = PathFind()
 logfile_name = pathObj.logdir + '/generate_templates.log'
-logger = RsmasLogger(logfile)
+logger = RsmasLogger(logfile_name)
 
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
 
