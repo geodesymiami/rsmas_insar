@@ -21,10 +21,10 @@ import pysar
 import pysar.workflow  #dynamic import for modules used by pysarApp workflow
 from pysar.utils import readfile, writefile
 from pysar.objects import ifgramStack
-import rinsar.utils.process_utilities as putils
-from rinsar.objects import message_rsmas
-from rinsar.objects.dataset_template import Template
-from rinsar.objects.auto_defaults import PathFind
+import minsar.utils.process_utilities as putils
+from minsar.objects import message_rsmas
+from minsar.objects.dataset_template import Template
+from minsar.objects.auto_defaults import PathFind
 
 pathObj = PathFind()
 ###############################################################################

@@ -7,9 +7,9 @@ import os
 import sys
 import argparse
 import subprocess
-from rinsar.objects import message_rsmas
-import rinsar.utils.process_utilities as putils
-import rinsar.job_submission as js
+from minsar.objects import message_rsmas
+import minsar.utils.process_utilities as putils
+import minsar.job_submission as js
 
 ##############################################################################
 EXAMPLE = """example:

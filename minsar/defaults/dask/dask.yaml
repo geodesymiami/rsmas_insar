@@ -3,7 +3,7 @@ jobqueue:
     queue: general
     project: insarlab
 
-    name: rinsar_bee
+    name: minsar_bee
 
     # Dask worker options
     cores: 2                    # Total number of cores per job
@@ -27,7 +27,7 @@ jobqueue:
     # The first parameter is required by Pegasus. This parameter sets the
     # memory per node. The second parameter writes worker output to file.
     job-extra: ['-R "rusage[mem=2500]"',
-                "-o WORKER-rinsar.%J.out"]
+                "-o WORKER-minsar.%J.out"]
     log-directory: null
 
 

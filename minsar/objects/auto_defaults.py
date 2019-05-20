@@ -11,7 +11,7 @@ class PathFind:
         self.logdir = os.getenv('OPERATIONS') + '/LOGS'
         self.scratchdir = os.getenv('SCRATCHDIR')
         self.required_template_options = ['topsStack.subswath', 'topsStack.boundingBox']
-        self.defaultdir = os.path.expandvars('${RSMAS_INSAR}/rinsar/defaults')
+        self.defaultdir = os.path.expandvars('${RSMAS_INSAR}/minsar/defaults')
         self.orbitdir = os.path.expandvars('$SENTINEL_ORBITS')
         self.auxdir = os.path.expandvars('$SENTINEL_AUX')
         self.geomasterdir = 'merged/geom_master'
@@ -26,7 +26,7 @@ class PathFind:
         self.masterdir = 'master'
         self.stackdir = 'stack'
         self.tiffdir = 'hazard_products'
-        self.daskconfig = os.path.expandvars('${RSMAS_INSAR}/rinsar/defaults/dask/dask.yaml')
+        self.daskconfig = os.path.expandvars('${RSMAS_INSAR}/minsar/defaults/dask/dask.yaml')
         return
 
     def set_isce_defaults(self, inps):

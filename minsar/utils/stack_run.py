@@ -13,9 +13,9 @@ import shutil
 from stackSentinel import *
 from Stack import sentinelSLC
 from matplotlib.path import Path as Path
-from rinsar.objects.stack_rsmas import rsmasRun
-from rinsar.utils.process_utilities import make_run_list
-from rinsar.objects.auto_defaults import PathFind
+from minsar.objects.stack_rsmas import rsmasRun
+from minsar.utils.process_utilities import make_run_list
+from minsar.objects.auto_defaults import PathFind
 
 pathObj = PathFind()
 ###########################################

@@ -4,11 +4,11 @@ import sys
 import subprocess
 import argparse
 import time
-from rinsar.objects.dataset_template import Template
-from rinsar.objects.rsmas_logging import RsmasLogger, loglevel
-from rinsar.objects import message_rsmas
-from rinsar.utils import process_utilities as putils
-import rinsar.job_submission as js
+from minsar.objects.dataset_template import Template
+from minsar.objects.rsmas_logging import RsmasLogger, loglevel
+from minsar.objects import message_rsmas
+from minsar.utils import process_utilities as putils
+import minsar.job_submission as js
 
 import glob
 

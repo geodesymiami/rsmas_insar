@@ -10,12 +10,12 @@
 import os
 import argparse
 import shutil
-import rinsar
-import rinsar.utils.process_utilities as putils
-from rinsar.utils.process_utilities import remove_directories, create_or_update_template
-from rinsar.utils.process_utilities import get_project_name, get_work_directory
+import minsar
+import minsar.utils.process_utilities as putils
+from minsar.utils.process_utilities import remove_directories, create_or_update_template
+from minsar.utils.process_utilities import get_project_name, get_work_directory
 from pysar.utils import readfile, utils as ut
-from rinsar.objects.auto_defaults import PathFind
+from minsar.objects.auto_defaults import PathFind
 
 pathObj = PathFind()
 ####################################################################
@@ -178,8 +178,8 @@ class RsmasInsar:
         1- images
         2- DEM
         """
-        rinsar.create_runfiles.main([self.customTemplateFile, '--step', 'download'])
-        rinsar.execute_runfiles.main([self.customTemplateFile, '0', '0'])
+        minsar.create_runfiles.main([self.customTemplateFile, '--step', 'download'])
+        minsar.execute_runfiles.main([self.customTemplateFile, '0', '0'])
         return
 
     def run_process(self, step_name):
@@ -187,8 +187,8 @@ class RsmasInsar:
         1. create run_files
         2. execute run_files
         """
-        rinsar.create_runfiles.main([self.customTemplateFile, '--step', 'process'])
-        rinsar.execute_runfiles.main([self.customTemplateFile])
+        minsar.create_runfiles.main([self.customTemplateFile, '--step', 'process'])
+        minsar.execute_runfiles.main([self.customTemplateFile])
         return
 
     def run(self, steps=STEP_LIST):

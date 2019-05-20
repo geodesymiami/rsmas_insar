@@ -4,7 +4,7 @@
 #######################
 
 import os
-from rinsar.objects.auto_defaults import PathFind
+from minsar.objects.auto_defaults import PathFind
 
 noMCF = 'False'
 defoMax = '2'

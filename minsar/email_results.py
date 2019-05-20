@@ -10,8 +10,8 @@ import glob
 import argparse
 import subprocess
 from pysar.utils import readfile
-from rinsar.utils.process_utilities import remove_directories
-from rinsar.objects.auto_defaults import PathFind
+from minsar.utils.process_utilities import remove_directories
+from minsar.objects.auto_defaults import PathFind
 
 ###############################################################################
 pathObj = PathFind()

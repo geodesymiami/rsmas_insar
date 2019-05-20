@@ -15,8 +15,8 @@ import time
 import subprocess
 import argparse
 import glob
-from rinsar import messageRsmas
-import rinsar._process_utilities as putils
+from minsar import messageRsmas
+import minsar._process_utilities as putils
 
 inps = None
 

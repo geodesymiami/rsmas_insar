@@ -10,10 +10,10 @@ import sys
 import argparse
 import subprocess
 
-from rinsar.objects import message_rsmas
-import rinsar.utils.process_utilities as putils
-from rinsar.objects.dataset_template import Template
-import rinsar.job_submission as js
+from minsar.objects import message_rsmas
+import minsar.utils.process_utilities as putils
+from minsar.objects.dataset_template import Template
+import minsar.job_submission as js
 
 ###############################################################################
 EXAMPLE = '''example:
