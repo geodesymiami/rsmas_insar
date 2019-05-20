@@ -11,6 +11,7 @@ import os
 import argparse
 import shutil
 import minsar
+from minsar.utils.process_utilities import get_project_name, get_work_directory
 from minsar.utils.process_utilities import remove_directories, create_or_update_template
 from minsar.objects.auto_defaults import PathFind
 
@@ -104,7 +105,8 @@ def command_line_parse(iargs=None):
     """Command line parser."""
     parser = create_process_rsmas_parser()
     inps = parser.parse_args(args=iargs)
-    inps = create_or_update_template(inps)
+    inps.project_name = get_project_name(inps.customTemplateFile)
+    inps.work_dir = get_work_directory(None, inps.project_name)
     inps.slc_dir = os.path.join(inps.work_dir, 'SLC')
 
     # invalid input of custom template
@@ -148,6 +150,8 @@ def command_line_parse(iargs=None):
         print('Remaining steps: {}'.format(STEP_LIST[idx0 + 1:]))
 
     print('-' * 50)
+
+    inps = create_or_update_template(inps)
     return inps
 
 
