@@ -2,7 +2,6 @@
 # Author: Sara Mirzaee
 
 import os
-import glob
 import datetime
 
 
@@ -82,7 +81,7 @@ class PathFind:
                           'interferograms', 'slaves'])
         cleanlist.append(['merged', 'master', 'coreg_slaves', 'baselines', 'geom_master'])
         cleanlist.append(['SLC'])
-        cleanlist.append(['PYSAR', 'run_files', 'configs', 'DEM'])
+        cleanlist.append(['MINTPY', 'run_files', 'configs', 'DEM'])
 
         return cleanlist
 

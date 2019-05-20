@@ -104,9 +104,9 @@ def create_process_rsmas_parser():
 	parser.add_argument('--stopssara', dest='stopssara', action='store_true', help='stop after downloading')
 	parser.add_argument('--startprocess', dest='startprocess', action='store_true', help='process using sentinelstack package')
 	parser.add_argument('--stopprocess', dest='stopprocess', action='store_true', help='stop after processing')
-	parser.add_argument('--startpysar', dest='startpysar', action='store_true', help='run pysar')
-	parser.add_argument('--stoppysarload', dest='stoppysarload', action='store_true', help='stop after loading into pysar')
-	parser.add_argument('--stoppysar', dest='stoppysar', action='store_true', help='stop after pysar processing')
+	parser.add_argument('--startmintpy', dest='startmintpy', action='store_true', help='run mintpy')
+	parser.add_argument('--stopmintpyload', dest='stopmintpyload', action='store_true', help='stop after loading into mintpy')
+	parser.add_argument('--stopmintpy', dest='stopmintpy', action='store_true', help='stop after mintpy processing')
 	parser.add_argument('--startinsarmaps', dest='startinsarmaps', action='store_true', help='ingest into insarmaps')
 	parser.add_argument('--restart', dest='restart', action='store_true', help='remove $OPERATIONS directory before starting')
 	parser.add_argument("--testsheet", dest="test_sheet", action='store_true', help='whether or not to use the test sheet')
@@ -132,9 +132,9 @@ def command_line_parse(args):
 	logger.info("\t\t--stopssara        : %s\n", inps.stopssara)
 	logger.info("\t\t--startprocess     : %s\n", inps.startprocess)
 	logger.info("\t\t--stopprocess      : %s\n", inps.stopprocess)
-	logger.info("\t\t--startpysar       : %s\n", inps.startpysar)
-	logger.info("\t\t--stoppysarload    : %s\n", inps.stoppysarload)
-	logger.info("\t\t--stoppysar        : %s\n", inps.stoppysar)
+	logger.info("\t\t--startmintpy       : %s\n", inps.startmintpy)
+	logger.info("\t\t--stopmintpyload    : %s\n", inps.stopmintpyload)
+	logger.info("\t\t--stopmintpy        : %s\n", inps.stopmintpy)
 	logger.info("\t\t--startinsarmaps   : %s\n", inps.startinsarmaps)
 	logger.info("\t\t--testsheet	    : %s\n", inps.test_sheet)
 	
@@ -212,10 +212,10 @@ def run_process_rsmas():
 		psen_extra_options.append('--startprocess') 
 	if inps.stopprocess:
 		psen_extra_options.append('--stopprocess') 
-	if inps.startpysar:
-		psen_extra_options.append('--startpysar')
-	if inps.stoppysarload:
-		psen_extra_options.append('--stoppysarload')
+	if inps.startmintpy:
+		psen_extra_options.append('--startmintpy')
+	if inps.stopmintpyload:
+		psen_extra_options.append('--stopmintpyload')
 	if inps.stoppysar:
 		psen_extra_options.append('--stoppysar')
 	if inps.startinsarmaps:

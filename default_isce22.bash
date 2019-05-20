@@ -42,7 +42,7 @@ export ISCE_HOME=${PARENTDIR}/3rdparty/miniconda3/lib/python3.7/site-packages/is
 export RSMAS_INSAR=${PARENTDIR}
 export ISCE_STACK=${PARENTDIR}/sources/isceStack/topsStack
 #export ISCE_STACK=${PARENTDIR}/sources/isceStack/stripmapStack
-export PYSAR_HOME=${PARENTDIR}/sources/PySAR
+export MINTPY_HOME=${PARENTDIR}/sources/MintPy
 export SQUEESAR=${PARENTDIR}/sources/pysqsar
 
 ##############  PYTHON  ##############
@@ -54,7 +54,7 @@ export GDAL_DATA=${PYTHON3DIR}/share/gdal
 export DASK_CONFIG=${RSMAS_INSAR}/minsar/defaults/dask
 
 export PYTHONPATH=${PYTHONPATH-""}
-export PYTHONPATH=${PYTHONPATH}:${PYSAR_HOME}
+export PYTHONPATH=${PYTHONPATH}:${MINTPY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${INT_SCR}
 export PYTHONPATH=${PYTHONPATH}:${SSARA_ASF}
 export PYTHONPATH=${PYTHONPATH}:${PYTHON3DIR}/lib/python3.7/site-packages:${ISCE_HOME}:${ISCE_HOME}/components
@@ -79,7 +79,7 @@ export PATH=${PATH}:${PARENTDIR}/minsar
 export PATH=${PATH}:${PARENTDIR}/setup/accounts
 export PATH=${PATH}:${PARENTDIR}/sources/rsmas_tools/SAR:${PARENTDIR}/sources/rsmas_tools/GPS:${PARENTDIR}/sources/rsmas_tools/notebooks
 export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${ISCE_STACK}:${PATH}
-export PATH=${PATH}:${PYSAR_HOME}/pysar:${PYSAR_HOME}/sh
+export PATH=${PATH}:${MINTPY_HOME}/mintpy:${MINTPY_HOME}/sh
 export PATH=${PYTHON3DIR}/bin:${PATH}
 export PATH=${PATH}:${PROJ_LIB}
 export PATH=${PATH}:${PARENTDIR}/3rdparty/tippecanoe/bin

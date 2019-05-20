@@ -13,6 +13,7 @@ import argparse
 import time
 from minsar.objects import message_rsmas
 
+
 def create_argument_parser():
     """
     Creates an argument parser for parsing parameters for batch job submission.

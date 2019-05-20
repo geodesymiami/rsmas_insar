@@ -12,7 +12,6 @@ from minsar.objects import message_rsmas
 from minsar.utils import process_utilities as putils
 from minsar.objects.auto_defaults import PathFind
 sys.path.insert(0, os.getenv('SSARAHOME'))
-import password_config as password
 import minsar.job_submission as js
 
 

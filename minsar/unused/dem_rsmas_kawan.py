@@ -16,7 +16,7 @@ import shutil
 import subprocess
 from . import messageRsmas
 import re
-from pysar.utils import readfile
+from mintpy.utils import readfile
 
 
 EXAMPLE = '''

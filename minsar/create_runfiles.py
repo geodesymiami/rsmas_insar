@@ -3,10 +3,9 @@
 # Author: Sara Mirzaee
 #######################
 
-import os, sys
-import subprocess
+import os
+import sys
 import glob
-from natsort import natsorted
 import argparse
 from minsar.objects.rsmas_logging import loglevel
 from minsar.objects import message_rsmas

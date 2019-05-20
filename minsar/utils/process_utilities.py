@@ -12,15 +12,10 @@ import os
 import glob
 import subprocess
 import configparser
-import gdal
-from pysar.utils import utils
-from pysar.utils import readfile
 from natsort import natsorted
 import xml.etree.ElementTree as ET
 import shutil
-import yaml
-from collections import namedtuple
-from pysar.defaults.auto_path import autoPath
+from mintpy.defaults.auto_path import autoPath
 from minsar.objects.rsmas_logging import RsmasLogger, loglevel
 from minsar.objects.dataset_template import Template
 from minsar.objects import message_rsmas

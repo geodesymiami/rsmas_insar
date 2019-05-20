@@ -9,7 +9,7 @@ sys.path.insert(1, rsmasinsar_path)
 try:
     os.environ['RSMAS_INSAR']
 except KeyError:
-    print('Using default PySAR Path: %s' % (insar_path))
+    print('Using default MintPy Path: %s' % (insar_path))
     os.environ['RSMAS_INSAR'] = insar_path
 
 __all__ = [

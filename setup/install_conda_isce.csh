@@ -17,7 +17,7 @@ cp condarc ../3rdparty/miniconda3/.condarc
 ../3rdparty/miniconda3/bin/conda install --yes --file requirements_pysar.txt
 
 # would be nice to fix pysar requirements so that the following works:
-#../3rdparty/miniconda3/bin/conda install --yes --file ../sources/PySAR/requirements.txt
+#../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MintPy/requirements.txt
 
 # possibly needed in China
 #miniconda3/bin/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/

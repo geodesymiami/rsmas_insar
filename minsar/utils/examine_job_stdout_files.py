@@ -8,13 +8,10 @@ EXAMPLE = """example:
   examine_job_stdout_files.py run_*.o 
 """
 
-import os
+
 import sys
-import time
-import subprocess
 import argparse
 import glob
-from minsar import messageRsmas
 import datetime
 from natsort import natsorted
 

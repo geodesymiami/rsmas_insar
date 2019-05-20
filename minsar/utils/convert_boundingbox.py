@@ -9,14 +9,9 @@ EXAMPLE = """example:
   convert_boundingbox.py '39.46 39.82 118.2 118.9'
 """
 
-import os
 import sys
-import time
-import subprocess
 import argparse
-import glob
-from minsar import messageRsmas
-import minsar._process_utilities as putils
+from minsar import message_rsmas
 
 inps = None
 

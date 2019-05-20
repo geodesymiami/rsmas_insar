@@ -1,5 +1,4 @@
 import os
-import shutil
 
 class Template:
     """ Template object encapsulates a dictionary of template options.

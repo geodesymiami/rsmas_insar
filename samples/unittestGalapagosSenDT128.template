@@ -1,5 +1,5 @@
 ######################################################
-cleanopt                          = 0   # [ 0 / 1 / 2 / 3 / 4]   0,1: none 2: keep merged,geom_master,SLC 3: keep PYSAR 4: everything
+cleanopt                          = 0   # [ 0 / 1 / 2 / 3 / 4]   0,1: none 2: keep merged,geom_master,SLC 3: keep MINTPY 4: everything
 processor                         = isce
 ssaraopt.platform                 = SENTINEL-1A,SENTINEL-1B
 ssaraopt.relativeOrbit            = 128
@@ -21,13 +21,13 @@ topsStack.unwMethod               = snaphu  # comment
 topsStack.coregistration          = auto  # [NESD geometry], auto for NESD
 topsStack.slcDir                  = $TESTDATA_ISCE/unittestGalapagosSenDT128/SLC
 
-pysar.reference.lalo              = -0.7,-91.3     # N of SN
-pysar.network.coherenceBased      = no  #[yes / no], auto for yes, exclude interferograms with coherence < minCoherence
-pysar.networkInversion.weightFunc = fim #[variance / no / coherence], auto for no
-pysar.networkInversion.parallel   = yes #[yes / no], auto for no, parallel processing using dask
-pysar.troposphericDelay.method    = auto # pyaps  #[pyaps / height_correlation / base_trop_cor / no], auto for pyaps
-pysar.save.hdfEos5                = yes   #[yes / update / no], auto for no, save timeseries to UNAVCO InSAR Archive format
-pysar.save.hdfEos5.update         = yes   #[yes / no], auto for no, put XXXXXXXX as endDate in output filename
-pysar.save.kml                    = yes  #[yes / no], auto for yes, save geocoded velocity to Google Earth KMZ file
+mintpy.reference.lalo              = -0.7,-91.3     # N of SN
+mintpy.network.coherenceBased      = no  #[yes / no], auto for yes, exclude interferograms with coherence < minCoherence
+mintpy.networkInversion.weightFunc = fim #[variance / no / coherence], auto for no
+mintpy.networkInversion.parallel   = yes #[yes / no], auto for no, parallel processing using dask
+mintpy.troposphericDelay.method    = auto # pyaps  #[pyaps / height_correlation / base_trop_cor / no], auto for pyaps
+mintpy.save.hdfEos5                = yes   #[yes / update / no], auto for no, save timeseries to UNAVCO InSAR Archive format
+mintpy.save.hdfEos5.update         = yes   #[yes / no], auto for no, put XXXXXXXX as endDate in output filename
+mintpy.save.kml                    = yes  #[yes / no], auto for yes, save geocoded velocity to Google Earth KMZ file
 
 ######################################################

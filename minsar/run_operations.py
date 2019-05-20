@@ -47,9 +47,9 @@ def create_run_operations_parser():
     process_args.add_argument('--stopssara', dest='stopssara', action='store_true', help='stop after downloading')
     process_args.add_argument('--startprocess', dest='startprocess', action='store_true', help='process using sentinelstack package')
     process_args.add_argument('--stopprocess', dest='stopprocess', action='store_true', help='stop after processing')
-    process_args.add_argument('--startpysar', dest='startpysar', action='store_true', help='run pysar')
-    process_args.add_argument('--stoppysarload', dest='stoppysarload', action='store_true', help='stop after loading into pysar')
-    process_args.add_argument('--stoppysar', dest='stoppysar', action='store_true', help='stop after pysar processing')
+    process_args.add_argument('--startmintpy', dest='startmintpy', action='store_true', help='run mintpy')
+    process_args.add_argument('--stopmintpyload', dest='stopmintpyload', action='store_true', help='stop after loading into mintpy')
+    process_args.add_argument('--stopmintpy', dest='stopmintpy', action='store_true', help='stop after mintpy processing')
     process_args.add_argument('--startinsarmaps', dest='startinsarmaps', action='store_true', help='ingest into insarmaps')
 
     return parser
