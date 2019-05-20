@@ -14,9 +14,9 @@ import glob
 from isceobj.Planet.Planet import Planet
 from zerodop.topozero import createTopozero
 from isceobj.Util.ImageUtil import ImageLib as IML
-from rinsar.objects.auto_defaults import PathFind
-from rinsar.utils.process_utilities import create_or_update_template, get_config_defaults, walltime_adjust
-import rinsar.job_submission as js
+from minsar.objects.auto_defaults import PathFind
+from minsar.utils.process_utilities import create_or_update_template, get_config_defaults, walltime_adjust
+import minsar.job_submission as js
 import mergeBursts as mb
 
 pathObj = PathFind()

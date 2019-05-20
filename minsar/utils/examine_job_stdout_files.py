@@ -14,7 +14,7 @@ import time
 import subprocess
 import argparse
 import glob
-from rinsar import messageRsmas
+from minsar import messageRsmas
 import datetime
 from natsort import natsorted
 

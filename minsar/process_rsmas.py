@@ -12,10 +12,10 @@ from __future__ import print_function
 import os
 import sys
 import time
-from rinsar.objects import message_rsmas
-from rinsar.utils.process_steps import RsmasInsar, command_line_parse
-from rinsar.utils.process_utilities import get_work_directory, get_project_name
-import rinsar.job_submission as js
+from minsar.objects import message_rsmas
+from minsar.utils.process_steps import RsmasInsar, command_line_parse
+from minsar.utils.process_utilities import get_work_directory, get_project_name
+import minsar.job_submission as js
 ###############################################################################
 
 def main(iargs=None):

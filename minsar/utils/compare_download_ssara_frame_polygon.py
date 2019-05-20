@@ -8,11 +8,11 @@ import datetime
 import argparse
 import glob
 import difflib
-from rinsar.objects.dataset_template import Template
-from rinsar.objects.rsmas_logging import RsmasLogger, loglevel
-from rinsar.objects import message_rsmas
-import rinsar.utils.process_utilities as putils
-import rinsar.job_submission as js
+from minsar.objects.dataset_template import Template
+from minsar.objects.rsmas_logging import RsmasLogger, loglevel
+from minsar.objects import message_rsmas
+import minsar.utils.process_utilities as putils
+import minsar.job_submission as js
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password

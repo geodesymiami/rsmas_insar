@@ -21,10 +21,10 @@ import shutil
 import yaml
 from collections import namedtuple
 from pysar.defaults.auto_path import autoPath
-from rinsar.objects.rsmas_logging import RsmasLogger, loglevel
-from rinsar.objects.dataset_template import Template
-from rinsar.objects import message_rsmas
-from rinsar.objects.auto_defaults import PathFind
+from minsar.objects.rsmas_logging import RsmasLogger, loglevel
+from minsar.objects.dataset_template import Template
+from minsar.objects import message_rsmas
+from minsar.objects.auto_defaults import PathFind
 
 ###############################################################################
 pathObj = PathFind()
@@ -422,7 +422,7 @@ def xmlread(filename):
 def walltime_adjust(inps, default_time):
     """ calculates the number of bursts based on boundingBox and returns an adjusting factor for walltimes """
 
-    from rinsar.objects.sentinel1_override import Sentinel1_burst_count
+    from minsar.objects.sentinel1_override import Sentinel1_burst_count
 
     inps_dict = inps
     pathObj.correct_for_isce_naming_convention(inps_dict)

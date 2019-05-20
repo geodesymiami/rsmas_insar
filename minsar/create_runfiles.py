@@ -8,12 +8,12 @@ import subprocess
 import glob
 from natsort import natsorted
 import argparse
-from rinsar.objects.rsmas_logging import loglevel
-from rinsar.objects import message_rsmas
-from rinsar.objects.auto_defaults import PathFind
-from rinsar.utils.stack_run import CreateRun, run_download
-from rinsar.utils.process_utilities import create_or_update_template, copy_dask_config
-from rinsar.utils.process_utilities import make_run_list, send_logger
+from minsar.objects.rsmas_logging import loglevel
+from minsar.objects import message_rsmas
+from minsar.objects.auto_defaults import PathFind
+from minsar.utils.stack_run import CreateRun, run_download
+from minsar.utils.process_utilities import create_or_update_template, copy_dask_config
+from minsar.utils.process_utilities import make_run_list, send_logger
 
 logger = send_logger()
 pathObj = PathFind()

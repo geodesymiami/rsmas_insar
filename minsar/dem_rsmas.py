@@ -20,11 +20,11 @@ import argparse
 import shutil
 import re
 import subprocess
-from rinsar.objects import message_rsmas, dataset_template
+from minsar.objects import message_rsmas, dataset_template
 from pysar.utils import readfile
-from rinsar.utils.download_ssara_rsmas import add_polygon_to_ssaraopt
-from rinsar.utils.process_utilities import get_project_name, get_work_directory
-from rinsar.utils.process_utilities import create_or_update_template
+from minsar.utils.download_ssara_rsmas import add_polygon_to_ssaraopt
+from minsar.utils.process_utilities import get_project_name, get_work_directory
+from minsar.utils.process_utilities import create_or_update_template
 
 EXAMPLE = '''
   example:

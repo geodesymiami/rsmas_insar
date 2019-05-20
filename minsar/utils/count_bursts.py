@@ -5,7 +5,7 @@ import os
 import sys
 import argparse
 import glob
-import rinsar._process_utilities as putils
+import minsar._process_utilities as putils
 
 inps = None
 

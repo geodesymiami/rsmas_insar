@@ -10,13 +10,13 @@ import sys
 import glob
 import shutil
 import argparse
-from rinsar.objects.rsmas_logging import loglevel
-from rinsar.objects import message_rsmas
+from minsar.objects.rsmas_logging import loglevel
+from minsar.objects import message_rsmas
 import password_config as password
 
-from rinsar.utils.process_utilities import create_or_update_template
-from rinsar.utils.process_utilities import get_work_directory, get_project_name, send_logger
-import rinsar.job_submission as js
+from minsar.utils.process_utilities import create_or_update_template
+from minsar.utils.process_utilities import get_work_directory, get_project_name, send_logger
+import minsar.job_submission as js
 
 
 logger  = send_logger()

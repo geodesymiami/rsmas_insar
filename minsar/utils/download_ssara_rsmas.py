@@ -6,14 +6,14 @@ import time
 import subprocess
 import datetime
 import argparse
-from rinsar.objects.dataset_template import Template
-from rinsar.objects.rsmas_logging import RsmasLogger, loglevel
-from rinsar.objects import message_rsmas
-from rinsar.utils import process_utilities as putils
-from rinsar.objects.auto_defaults import PathFind
+from minsar.objects.dataset_template import Template
+from minsar.objects.rsmas_logging import RsmasLogger, loglevel
+from minsar.objects import message_rsmas
+from minsar.utils import process_utilities as putils
+from minsar.objects.auto_defaults import PathFind
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
-import rinsar.job_submission as js
+import minsar.job_submission as js
 
 
 pathObj = PathFind()

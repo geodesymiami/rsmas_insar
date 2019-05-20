@@ -7,8 +7,8 @@ import requests
 import argparse
 import time
 from datetime import datetime
-from rinsar.objects.rsmas_logging import RsmasLogger, loglevel
-from rinsar.objects.auto_defaults import PathFind
+from minsar.objects.rsmas_logging import RsmasLogger, loglevel
+from minsar.objects.auto_defaults import PathFind
 
 
 pathObj = PathFind()

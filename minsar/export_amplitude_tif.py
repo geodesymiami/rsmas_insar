@@ -8,9 +8,9 @@ import gdal
 import osr
 import argparse
 import glob
-from rinsar.objects.dataset_template import Template
-from rinsar.objects.auto_defaults import PathFind
-from rinsar.utils.process_utilities import xmlread
+from minsar.objects.dataset_template import Template
+from minsar.objects.auto_defaults import PathFind
+from minsar.utils.process_utilities import xmlread
 
 pathObj = PathFind()
 ########################################
