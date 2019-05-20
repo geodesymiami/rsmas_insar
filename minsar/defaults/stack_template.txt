@@ -7,7 +7,7 @@ login                                 = auto         # [pegasus.ccs.miami.edu]
 user                                  = None         # [user]
 email_mintpy                          = None         # [user@miami.edu]
 email_insarmaps                       = None         # [user@miami.edu]
-processingMethod                      = auto         # [smallbaseline, squeesar]
+processingMethod                      = auto         # [smallbaseline, minopy]
 demMethod                             = auto         # [boundingBox, ssara]
 cleanopt                              = auto         # [ 0 / 1 / 2 / 3 / 4]   0,1: none 2: keep merged,geom_master,SLC 3: keep PYSAR 4: everything
 processor                             = auto         # [isce, ...]
@@ -49,10 +49,10 @@ topsStack.useGPU                      = auto         # Allow App to use GPU when
 
 
 ################################# SqueeSAR Parameters ######################################
-squeesar.plmethod                     = auto         # [EVD, EMI, PTA, sequential_EVD, sequential_EMI, sequential_PTA]
-squeesar.patch_size                   = auto         # patch size to divide the image for parallel processing, auto for 300
-squeesar.range_window                 = auto         # range window size for synthetic multilook, auto for 21
-squeesar.azimuth_window               = auto         # azimuth window size for synthetic multilook, auto for 15
-squeesar.subset                       = None         # [ '-1:0.15,-91.7:-90.9'] required [S:N,W:E]
+minopy.plmethod                     = auto         # [EVD, EMI, PTA, sequential_EVD, sequential_EMI, sequential_PTA]
+minopy.patch_size                   = auto         # patch size to divide the image for parallel processing, auto for 300
+minopy.range_window                 = auto         # range window size for synthetic multilook, auto for 21
+minopy.azimuth_window               = auto         # azimuth window size for synthetic multilook, auto for 15
+minopy.subset                       = None         # [ '-1:0.15,-91.7:-90.9'] required [S:N,W:E]
 
 

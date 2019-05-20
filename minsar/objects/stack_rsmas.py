@@ -50,7 +50,7 @@ class rsmasConfig(object):
         self.f.write('###################################' + '\n')
         self.f.write(function + '\n')
         self.f.write('generate_ifgram_sq : ' + '\n')
-        self.f.write('squeesar_dir : ' + self.sqDir + '\n')
+        self.f.write('minopy_dir : ' + self.sqDir + '\n')
         self.f.write('ifg_dir : ' + self.ifgDir + '\n')
         self.f.write('ifg_index : ' + self.ifgIndex + '\n')
         self.f.write('range_window : ' + self.rangeWindow + '\n')
@@ -139,11 +139,11 @@ class rsmasRun(object):
             configName = os.path.join(self.config_path, 'config_generate_ifgram_{}_{}'.format(ifg[0], ifg[1]))
             configObj = rsmasConfig(self.config_path, configName)
             configObj.configure(self)
-            configObj.sqDir = os.path.join(inps.work_dir, pathObj.squeesardir)
+            configObj.sqDir = os.path.join(inps.work_dir, pathObj.minopydir)
             configObj.ifgDir = os.path.join(ifgram_dir, '{}_{}'.format(ifg[0], ifg[1]))
             configObj.ifgIndex = str(pairs.index(ifg))
-            configObj.rangeWindow = inps.template['squeesar.range_window']
-            configObj.azimuthWindow = inps.template['squeesar.azimuth_window']
+            configObj.rangeWindow = inps.template['minopy.range_window']
+            configObj.azimuthWindow = inps.template['minopy.azimuth_window']
             configObj.acq_num = str(len(pairs) + 1)
             configObj.rangeLooks = inps.template['topsStack.rangeLooks']
             configObj.azimuthLooks = inps.template['topsStack.azimuthLooks']
@@ -153,15 +153,15 @@ class rsmasRun(object):
         configName = os.path.join(self.config_path, 'config_generate_quality_map')
         configObj = rsmasConfig(self.config_path, configName)
         configObj.configure(self)
-        configObj.sqDir = os.path.join(inps.work_dir, pathObj.squeesardir)
+        configObj.sqDir = os.path.join(inps.work_dir, pathObj.minopydir)
         configObj.ifgDir = os.path.join(inps.work_dir, pathObj.geomasterdir)
         configObj.ifgIndex = str(0)
-        configObj.rangeWindow = inps.template['squeesar.range_window']
-        configObj.azimuthWindow = inps.template['squeesar.azimuth_window']
+        configObj.rangeWindow = inps.template['minopy.range_window']
+        configObj.azimuthWindow = inps.template['minopy.azimuth_window']
         configObj.acq_num = str(len(pairs) + 1)
         configObj.rangeLooks = inps.template['topsStack.rangeLooks']
         configObj.azimuthLooks = inps.template['topsStack.azimuthLooks']
-        configObj.plmethod = inps.template['squeesar.plmethod']
+        configObj.plmethod = inps.template['minopy.plmethod']
         configObj.generate_igram('[Function-1]')
         configObj.finalize()
         self.runf.write(self.text_cmd + pathObj.wrappercommandtops + configName + '\n')

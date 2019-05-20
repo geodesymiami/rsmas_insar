@@ -48,7 +48,7 @@ class CreateRun:
         self.work_dir = inps.work_dir
         self.workflow = inps.template['workflow']
         self.geo_master_dir = os.path.join(self.work_dir, pathObj.geomasterdir)
-        self.squeesar_dir = os.path.join(self.work_dir, pathObj.squeesardir)
+        self.minopy_dir = os.path.join(self.work_dir, pathObj.minopydir)
 
         self.inps = Namespace(**inps.template)
         self.inps.customTemplateFile = inps.customTemplateFile
@@ -188,7 +188,7 @@ class CreateRun:
             self.iter = i
             self.general_stack(inps)
 
-        elif inps.processingMethod == 'squeesar' or inps.workflow == 'slc':
+        elif inps.processingMethod == 'minopy' or inps.workflow == 'slc':
 
             for i in range(len(self.acquisitionDates) - 1):
                 self.pairs_sm.append((self.acquisitionDates[0], self.acquisitionDates[i + 1]))

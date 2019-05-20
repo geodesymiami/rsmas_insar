@@ -14,7 +14,7 @@ class PathFind:
         self.orbitdir = os.path.expandvars('$SENTINEL_ORBITS')
         self.auxdir = os.path.expandvars('$SENTINEL_AUX')
         self.geomasterdir = 'merged/geom_master'
-        self.squeesardir = 'squeesar'
+        self.minopydir = 'minopy'
         self.rundir = 'run_files'
         self.configdir = 'configs'
         self.mergedslcdir = 'merged/SLC'
@@ -51,7 +51,7 @@ class PathFind:
             if inps.template['processingMethod'] == 'smallbaseline':
                 subset = inps['template']['mintpy.subset.lalo']
             else:
-                subset = inps.template['squeesar.subset']
+                subset = inps.template['minopy.subset']
             cropbox = '{} {} {} {}'.format(subset[0], subset[1].split(',')[0], subset[1].split(',')[1],
                                                      subset[2])
         except:

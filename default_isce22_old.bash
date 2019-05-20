@@ -43,7 +43,7 @@ export RSMAS_INSAR=${PARENTDIR}
 export SENTINEL_STACK=${PARENTDIR}/sources/isceStack/sentinelstack
 #export SENTINEL_STACK_MODIFIED=${PARENTDIR}/sources/sentinelstack_modified
 export MINTPY_HOME=${PARENTDIR}/sources/MintPy
-export SQUEESAR=${PARENTDIR}/sources/pysqsar
+export MINOPY=${PARENTDIR}/sources/minopy
 
 ##############  PYTHON  ##############
 export PYTHON3DIR=${PARENTDIR}/3rdparty/miniconda3
@@ -56,7 +56,7 @@ export PYTHONPATH=${PYTHONPATH-""}
 export PYTHONPATH=${PYTHONPATH}:${MINTPY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${INT_SCR}
 export PYTHONPATH=${PYTHONPATH}:${ISCE_BUILD}:${PYTHON3DIR}/lib/python3.6/site-packages
-export PYTHONPATH=${PYTHONPATH}:${SQUEESAR}
+export PYTHONPATH=${PYTHONPATH}:${MINOPY}
 export PYTHONPATH=${PYTHONPATH}:${RSMAS_INSAR}
 export PYTHONPATH=${PYTHONPATH}:${PARENTDIR}/sources/rsmas_tools
 export PYTHONPATH=${PYTHONPATH}:${PARENTDIR}/3rdparty/PyAPS
@@ -71,7 +71,7 @@ export PYTHONWARNINGS="ignore:Unverified HTTPS request"
 #####################################
 export PATH=${PATH}:${SSARAHOME}
 export PATH=${PATH}:${SSARA_ASF}
-export PATH=${PATH}:${SQUEESAR}
+export PATH=${PATH}:${MINOPY}
 export PATH=${PATH}:${RSMAS_INSAR}/minsar:${RSMAS_INSAR}/minsar/utils
 export PATH=${PATH}:${PARENTDIR}/minsar
 export PATH=${PATH}:${PARENTDIR}/setup/accounts
