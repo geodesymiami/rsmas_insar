@@ -11,10 +11,10 @@ import argparse
 import glob
 import matplotlib.pyplot as plt
 from osgeo import gdal, osr, ogr
-import pysar
-import pysar.workflow  #dynamic import for modules used by smallbaselineApp workflow
-from pysar.utils import readfile, writefile
-from pysar.objects import ifgramStack
+import mintpy
+import mintpy.workflow  #dynamic import for modules used by smallbaselineApp workflow
+from mintpy.utils import readfile, writefile
+from mintpy.objects import ifgramStack
 import minsar.utils.process_utilities as putils
 from minsar.objects import message_rsmas
 from minsar.objects.auto_defaults import PathFind
@@ -62,7 +62,7 @@ def main(iargs=None):
     # modify network so that only one connection left
     arg_string = file + ' --max-conn-num 1'
     print('modify_network.py', arg_string)
-    pysar.modify_network.main(arg_string.split())
+    mintpy.modify_network.main(arg_string.split())
 
     if not os.path.isdir('GEOCODE'):
         os.makedirs('GEOCODE')
@@ -73,7 +73,7 @@ def main(iargs=None):
     template_file = os.path.dirname(os.path.dirname(file)) + '/smallbaselineApp_template.txt'
     arg_string = file + ' -t ' + template_file + ' -l ' + lookup_file + ' -o ' + geo_file
     print('geocode.py', arg_string)
-    pysar.geocode.main(arg_string.split())
+    mintpy.geocode.main(arg_string.split())
 
     # loop over all interferograms
     obj = ifgramStack(geo_file)

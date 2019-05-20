@@ -49,7 +49,7 @@ class PathFind:
     def grab_cropbox(inps):
         try:
             if inps.template['processingMethod'] == 'smallbaseline':
-                subset = inps['template']['pysar.subset.lalo']
+                subset = inps['template']['mintpy.subset.lalo']
             else:
                 subset = inps.template['squeesar.subset']
             cropbox = '{} {} {} {}'.format(subset[0], subset[1].split(',')[0], subset[1].split(',')[1],
