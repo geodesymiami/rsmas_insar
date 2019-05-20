@@ -8,22 +8,15 @@
 import os
 import sys
 import argparse
-import subprocess
 import glob
-import shutil
-import numpy as np
 import matplotlib.pyplot as plt
 from osgeo import gdal, osr, ogr
-import isce
-import isceobj
-from isceobj.Util.ImageUtil import ImageLib as IML
 import pysar
-import pysar.workflow  #dynamic import for modules used by pysarApp workflow
+import pysar.workflow  #dynamic import for modules used by smallbaselineApp workflow
 from pysar.utils import readfile, writefile
 from pysar.objects import ifgramStack
 import minsar.utils.process_utilities as putils
 from minsar.objects import message_rsmas
-from minsar.objects.dataset_template import Template
 from minsar.objects.auto_defaults import PathFind
 
 pathObj = PathFind()
@@ -62,7 +55,7 @@ def main(iargs=None):
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)
     try:
-        file = glob.glob(work_dir + '/PYSAR/INPUTS/ifgramStack.h5')[0]
+        file = glob.glob(work_dir + '/MINTPY/INPUTS/ifgramStack.h5')[0]
     except:
         raise Exception('ERROR in ' + os.path.basename(__file__) + ': file ifgramStack.h5 not found') 
 
@@ -77,7 +70,7 @@ def main(iargs=None):
     # geocode ifgramStack
     geo_file = os.path.dirname( os.path.dirname(file)) + '/GEOCODE/geo_' + os.path.basename(file)
     lookup_file = os.path.dirname( os.path.dirname(file)) + '/INPUTS/geometryRadar.h5'
-    template_file = os.path.dirname(os.path.dirname(file)) + '/pysarApp_template.txt'
+    template_file = os.path.dirname(os.path.dirname(file)) + '/smallbaselineApp_template.txt'
     arg_string = file + ' -t ' + template_file + ' -l ' + lookup_file + ' -o ' + geo_file
     print('geocode.py', arg_string)
     pysar.geocode.main(arg_string.split())

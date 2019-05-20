@@ -185,11 +185,11 @@ class rsmasRun(object):
             configObj.finalize()
             self.runf.write(self.text_cmd + pathObj.wrappercommandtops + configName + '\n')
 
-    def pysarCorrections(self, inps):
+    def mintpyCorrections(self, inps):
         self.runf.write(self.text_cmd + 'timeseries_corrections.py ' + self.customTemplateFile + '\n')
 
-    def pysarSB(self, inps):
-        self.runf.write(self.text_cmd + 'pysarApp.py ' + self.customTemplateFile + '\n')
+    def mintpySB(self, inps):
+        self.runf.write(self.text_cmd + 'smallbaselineApp.py ' + self.customTemplateFile + '\n')
 
     def generateHazardProducts(self, inps):
         self.runf.write(self.text_cmd + 'export_ortho_geo.py ' + self.customTemplateFile + '\n')

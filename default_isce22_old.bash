@@ -42,7 +42,7 @@ export RSMAS_INSAR=${PARENTDIR}
 #export SENTINEL_STACK=${PARENTDIR}/3rdparty/isce/isce-2.2.0/contrib/stack/topsStack/
 export SENTINEL_STACK=${PARENTDIR}/sources/isceStack/sentinelstack
 #export SENTINEL_STACK_MODIFIED=${PARENTDIR}/sources/sentinelstack_modified
-export PYSAR_HOME=${PARENTDIR}/sources/PySAR
+export MINTPY_HOME=${PARENTDIR}/sources/MintPy
 export SQUEESAR=${PARENTDIR}/sources/pysqsar
 
 ##############  PYTHON  ##############
@@ -53,7 +53,7 @@ export PROJ_LIB=${CONDA_PREFIX}/share/proj
 export GDAL_DATA=${PYTHON3DIR}/share/gdal
 
 export PYTHONPATH=${PYTHONPATH-""}
-export PYTHONPATH=${PYTHONPATH}:${PYSAR_HOME}
+export PYTHONPATH=${PYTHONPATH}:${MINTPY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${INT_SCR}
 export PYTHONPATH=${PYTHONPATH}:${ISCE_BUILD}:${PYTHON3DIR}/lib/python3.6/site-packages
 export PYTHONPATH=${PYTHONPATH}:${SQUEESAR}
@@ -78,7 +78,7 @@ export PATH=${PATH}:${PARENTDIR}/setup/accounts
 export PATH=${PATH}:${PARENTDIR}/sources/rsmas_tools/SAR:${PARENTDIR}/sources/rsmas_tools/GPS:${PARENTDIR}/sources/rsmas_tools/notebooks
 #export PATH=${ISCE_BUILD}:${ISCE_HOME}/applications:${ISCE_HOME}/bin:${SENTINEL_STACK_MODIFIED}:${SENTINEL_STACK}:${PATH}
 export PATH=${ISCE_BUILD}:${ISCE_HOME}/applications:${ISCE_HOME}/bin:${SENTINEL_STACK}:${PATH}
-export PATH=${PATH}:${PYSAR_HOME}/pysar:${PYSAR_HOME}/sh
+export PATH=${PATH}:${MINTPY_HOME}/pysar:${MINTPY_HOME}/sh
 export PATH=${PYTHON3DIR}/bin:${PATH}
 export PATH=${PATH}:${PROJ_LIB} 
 export PATH=${PATH}:${PARENTDIR}/3rdparty/tippecanoe/bin

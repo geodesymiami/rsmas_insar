@@ -1,7 +1,7 @@
 CC=gcc
 CPP=cpp
 
-.PHONY: FFTW ROIPAC TIFF GEOTIFF GDAL MDX GAMMA RSMAS GAMMA_LITEND PYSAR2INSARMAPS
+.PHONY: FFTW ROIPAC TIFF GEOTIFF GDAL MDX GAMMA RSMAS GAMMA_LITEND MINTPY2INSARMAPS
 
 all:
 	make FFTW
@@ -56,7 +56,7 @@ GDAL:
 	cd $(GDALSOURCE);	./configure --prefix=$(GDALHOME) PATH=$(QPATH) 
 	cd $(GDALSOURCE); make
 	cd $(GDALSOURCE); make install
-	## GDAL is needed for PYSAR2INSARMAPS because conda does not have the postgres driver FA 11/2016
+	## GDAL is needed for MINTPY2INSARMAPS because conda does not have the postgres driver FA 11/2016
 
 MDX:
 	cd $(MDXHOME); make -f Makemdx_gfortran

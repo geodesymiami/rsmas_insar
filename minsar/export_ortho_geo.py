@@ -1,14 +1,9 @@
 #!/usr/bin/env python3
 
-import numpy as np
 import argparse
 import os
-import isce
 import isceobj
-import datetime
-import time
 import sys
-import shutil
 import s1a_isce_utils as ut
 import glob
 from isceobj.Planet.Planet import Planet

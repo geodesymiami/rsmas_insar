@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 ''' Utility to count the number of bursts based on lat*.rdr files'''
 
-import os
+
 import sys
 import argparse
 import glob
-import minsar._process_utilities as putils
+import minsar.utils.process_utilities as putils
 
 inps = None
 

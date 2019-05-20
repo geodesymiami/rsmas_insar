@@ -8,7 +8,6 @@ import gdal
 import osr
 import argparse
 import glob
-from minsar.objects.dataset_template import Template
 from minsar.objects.auto_defaults import PathFind
 from minsar.utils.process_utilities import xmlread
 

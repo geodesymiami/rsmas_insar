@@ -6,13 +6,9 @@
 
 import os
 import sys
-import numpy as np
-import datetime
 from argparse import Namespace
 import shutil
 from stackSentinel import *
-from Stack import sentinelSLC
-from matplotlib.path import Path as Path
 from minsar.objects.stack_rsmas import rsmasRun
 from minsar.utils.process_utilities import make_run_list
 from minsar.objects.auto_defaults import PathFind
@@ -185,8 +181,8 @@ class CreateRun:
             i = self.iter
 
             runObj = rsmasRun()
-            runObj.configure(inps, 'run_' + str(i) + "_pysar_small_baseline")
-            runObj.pysarSB(inps)
+            runObj.configure(inps, 'run_' + str(i) + "_mintpy_small_baseline")
+            runObj.mintpySB(inps)
             runObj.finalize()
 
             self.iter = i
@@ -231,7 +227,7 @@ class CreateRun:
             i += 1
             runObj = rsmasRun()
             runObj.configure(inps, 'run_' + str(i) + "_corrections_and_velocity")
-            runObj.pysarCorrections(inps)
+            runObj.mintpyCorrections(inps)
             runObj.finalize()
 
             self.iter = i

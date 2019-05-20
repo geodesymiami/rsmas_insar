@@ -11,10 +11,7 @@ import os
 import argparse
 import shutil
 import minsar
-import minsar.utils.process_utilities as putils
 from minsar.utils.process_utilities import remove_directories, create_or_update_template
-from minsar.utils.process_utilities import get_project_name, get_work_directory
-from pysar.utils import readfile, utils as ut
 from minsar.objects.auto_defaults import PathFind
 
 pathObj = PathFind()
