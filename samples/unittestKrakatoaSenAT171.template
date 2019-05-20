@@ -2,7 +2,7 @@ process_flag                        = TRUE
 login                               = pegasus.ccs.miami.edu                                                                               
 user                                = famelung                                                                                            
 ####################
-email_mintpy                         = famelung@rsmas.miami.edu
+email_mintpy                        = famelung@rsmas.miami.edu
 email_insarmaps                     = famelung@rsmas.miami.edu
 ####################
 every_day_flag                      = yes                                                                                                 
@@ -14,6 +14,8 @@ ssaraopt.parallel                   = 20
 processor                           = isce                                                                                                
 cleanopt                            = 0
 hazard_products_flag                = True
+insarmap_flag                       = False
+
 ####################
 topsStack.boundingBox               = '-6.201 -6.001 105.101 106.101'                            # '-1 0.15 -91.6 -90.9'
 topsStack.subswath                  = 3                                                 # '1 2'
@@ -24,6 +26,7 @@ topsStack.filtStrength              = 0.2                                       
 topsStack.unwMethod                 = snaphu                                            # comment
 topsStack.coregistration            = geometry                                          # [NESD geometry], auto for NESD
 topsStack.slcDir                    = $TESTDATA_ISCE/unittestKrakatoaSenAT171/SLC
+
 ####################
 mintpy.reference.lalo                = -6.09366, 105.4218                                #
 mintpy.reference.maskFile = no

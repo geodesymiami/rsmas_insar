@@ -157,12 +157,15 @@ class CreateRun:
 
             i += 1
 
-        runObj = rsmasRun()
-        runObj.configure(inps, 'run_' + str(i) + "_ingest_insarmaps")
-        runObj.ingestInsarmaps(inps)
-        runObj.finalize()
+        if inps.insarmap_flag == 'True':
 
-        i += 1
+            runObj = rsmasRun()
+            runObj.configure(inps, 'run_' + str(i) + "_ingest_insarmaps")
+            runObj.ingestInsarmaps(inps)
+            runObj.finalize()
+
+            i += 1
+    
         runObj = rsmasRun()
         runObj.configure(inps, 'run_' + str(i) + "_email_results")
         runObj.emailResults(inps)

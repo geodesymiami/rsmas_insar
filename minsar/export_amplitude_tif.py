@@ -40,7 +40,7 @@ def main(iargs=None):
 
 
     try:
-        os.system('rm '+inps.inputfile + '/geo*')
+        os.system('rm ' + inps.inputfile + '/geo*')
     except:
         print('geocoding ...')
 

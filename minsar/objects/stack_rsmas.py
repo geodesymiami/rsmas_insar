@@ -120,17 +120,19 @@ class rsmasRun(object):
 
         self.runf = open(self.run_outname, 'w')
 
-    def downloadDataDEM(self, inps):
+        self.insarmap_flag = inps.insarmap_flag
+
+    def downloadDataDEM(self):
         self.runf.write('download_rsmas.py ' + self.customTemplateFile + '\n')
         self.runf.write('dem_rsmas.py ' + self.customTemplateFile + ' --boundingBox \n')
 
-    def cropMergedSlc(self, inps):
+    def cropMergedSlc(self):
         self.runf.write(self.text_cmd + 'crop_sentinel.py ' + self.customTemplateFile + '\n')
 
-    def createPatch(self, inps):
+    def createPatch(self):
         self.runf.write(self.text_cmd + 'create_patch.py ' + self.customTemplateFile + '\n')
 
-    def phaseLinking(self, inps):
+    def phaseLinking(self):
         self.runf.write(self.text_cmd + 'phase_linking_app.py ' + self.customTemplateFile + '\n')
 
     def generateIfg(self, inps, pairs):
@@ -185,22 +187,23 @@ class rsmasRun(object):
             configObj.finalize()
             self.runf.write(self.text_cmd + pathObj.wrappercommandtops + configName + '\n')
 
-    def mintpyCorrections(self, inps):
+    def mintpyCorrections(self):
         self.runf.write(self.text_cmd + 'timeseries_corrections.py ' + self.customTemplateFile + '\n')
 
-    def mintpySB(self, inps):
+    def mintpySB(self):
         self.runf.write(self.text_cmd + 'smallbaselineApp.py ' + self.customTemplateFile + '\n')
 
-    def generateHazardProducts(self, inps):
+    def generateHazardProducts(self):
         self.runf.write(self.text_cmd + 'export_ortho_geo.py ' + self.customTemplateFile + '\n')
         self.runf.write(self.text_cmd + 'ifgramStack_to_ifgram_and_coherence.py ' + self.customTemplateFile + '\n')
  
-    def ingestInsarmaps(self, inps):
+    def ingestInsarmaps(self):
         self.runf.write(self.text_cmd + 'ingest_insarmaps.py ' + self.customTemplateFile + '\n')
 
-    def emailResults(self, inps):
+    def emailResults(self):
         self.runf.write(self.text_cmd + 'email_results.py ' + self.customTemplateFile + '\n')
-        self.runf.write(self.text_cmd + 'email_results.py ' + self.customTemplateFile + ' --insarmap\n')
+        if self.insarmap_flag == 'True':
+            self.runf.write(self.text_cmd + 'email_results.py ' + self.customTemplateFile + ' --insarmap\n')
 
     def finalize(self):
         self.runf.close()
