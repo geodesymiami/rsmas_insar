@@ -19,7 +19,7 @@ git clone https://github.com/geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
 
 cd sources ;
-git clone https://github.com/yunjunz/PySAR.git ;
+git clone https://github.com/insarlab/MintPy.git ;
 git clone https://github.com/falkamelung/geodmod.git ;
 
 mkdir ../3rdparty
@@ -31,7 +31,7 @@ cd ../setup;
 ./install_miniconda3_bare.csh
 ../3rdparty/miniconda3/bin/conda install isce2 -c piyushrpt --yes
 ../3rdparty/miniconda3/bin/conda install --yes --file conda.txt
-../3rdparty/miniconda3/bin/conda install --yes --file ../sources/PySAR/docs/conda.txt
+../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MintPy/docs/conda.txt
 ../3rdparty/miniconda3/bin/pip install --upgrade pip
 ../3rdparty/miniconda3/bin/pip install opencv-python
 ../3rdparty/miniconda3/bin/pip install geocoder
@@ -51,7 +51,7 @@ cd setup
 git clone https://github.com/geodesymiami/accounts ;
 ./install_credential_files.csh;
 ./download_sentinelstack.py ;
-[ -f ~/.config/dask/dask_pysar.yaml ] || echo "dask_pysar.yaml not found; copying..."; cp ../sources/PySAR/pysar/defaults/dask_pysar.yaml ~/.config/dask/
+[ -f ~/.config/dask/dask_mintpy.yaml ] || echo "dask_mintpy.yaml not found; copying..."; cp ../sources/MintPy/mintpy/defaults/dask_mintpy.yaml ~/.config/dask/
 echo DONE WITH CRITICAL CODE ;
 
 cd ..

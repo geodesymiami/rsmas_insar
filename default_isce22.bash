@@ -5,6 +5,7 @@ echo "sourcing ${PWD}/default_isce22.bash ..."
 export PARENTDIR=${PWD}
 export TERM=xterm
 export VISUAL=/bin/vi
+export CPL_ZIP_ENCODING=UTF-8
 
 ###### for JOB SUBMISSION ###################
 export WORKDIR=~/insarlab
@@ -39,9 +40,10 @@ export SSARAHOME=${PARENTDIR}/3rdparty/SSARA
 export SSARA_ASF=${PARENTDIR}/sources/ssara_ASF
 export ISCE_HOME=${PARENTDIR}/3rdparty/miniconda3/lib/python3.7/site-packages/isce
 export RSMAS_INSAR=${PARENTDIR}
-export SENTINEL_STACK=${PARENTDIR}/sources/isceStack/sentinelstack
-export PYSAR_HOME=${PARENTDIR}/sources/PySAR
-export SQUEESAR=${PARENTDIR}/sources/pysqsar
+export ISCE_STACK=${PARENTDIR}/sources/isceStack/topsStack
+#export ISCE_STACK=${PARENTDIR}/sources/isceStack/stripmapStack
+export MINTPY_HOME=${PARENTDIR}/sources/MintPy
+export MINOPY=${PARENTDIR}/sources/minopy
 
 ##############  PYTHON  ##############
 export PYTHON3DIR=${PARENTDIR}/3rdparty/miniconda3
@@ -49,18 +51,18 @@ export CONDA_ENVS_PATH=${PARENTDIR}/3rdparty/miniconda3/envs
 export CONDA_PREFIX=${PARENTDIR}/3rdparty/miniconda3
 export PROJ_LIB=${CONDA_PREFIX}/share/proj
 export GDAL_DATA=${PYTHON3DIR}/share/gdal
-export DASK_CONFIG=${RSMAS_INSAR}/rinsar/defaults/dask
+export DASK_CONFIG=${RSMAS_INSAR}/minsar/defaults/dask
 
 export PYTHONPATH=${PYTHONPATH-""}
-export PYTHONPATH=${PYTHONPATH}:${PYSAR_HOME}
+export PYTHONPATH=${PYTHONPATH}:${MINTPY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${INT_SCR}
 export PYTHONPATH=${PYTHONPATH}:${SSARA_ASF}
-export PYTHONPATH=${PYTHONPATH}:${PYTHON3DIR}/lib/python3.6/site-packages:${ISCE_HOME}:${ISCE_HOME}/components
-export PYTHONPATH=${PYTHONPATH}:${SQUEESAR}
+export PYTHONPATH=${PYTHONPATH}:${PYTHON3DIR}/lib/python3.7/site-packages:${ISCE_HOME}:${ISCE_HOME}/components
+export PYTHONPATH=${PYTHONPATH}:${MINOPY}
 export PYTHONPATH=${PYTHONPATH}:${RSMAS_INSAR}
 export PYTHONPATH=${PYTHONPATH}:${PARENTDIR}/sources/rsmas_tools
 export PYTHONPATH=${PYTHONPATH}:${PARENTDIR}/3rdparty/PyAPS
-export PYTHONPATH=${PYTHONPATH}:${SENTINEL_STACK}
+export PYTHONPATH=${PYTHONPATH}:${ISCE_STACK}
 export PYTHONPATH_RSMAS=${PYTHONPATH}
 
 ######### Ignore warnings ############
@@ -71,13 +73,13 @@ export PYTHONWARNINGS="ignore:Unverified HTTPS request"
 #####################################
 export PATH=${PATH}:${SSARAHOME}
 export PATH=${PATH}:${SSARA_ASF}
-export PATH=${PATH}:${SQUEESAR}
-export PATH=${PATH}:${RSMAS_INSAR}/rinsar:${RSMAS_INSAR}/rinsar/utils
-export PATH=${PATH}:${PARENTDIR}/rinsar
+export PATH=${PATH}:${MINOPY}
+export PATH=${PATH}:${RSMAS_INSAR}/minsar:${RSMAS_INSAR}/minsar/utils
+export PATH=${PATH}:${PARENTDIR}/minsar
 export PATH=${PATH}:${PARENTDIR}/setup/accounts
 export PATH=${PATH}:${PARENTDIR}/sources/rsmas_tools/SAR:${PARENTDIR}/sources/rsmas_tools/GPS:${PARENTDIR}/sources/rsmas_tools/notebooks
-export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${SENTINEL_STACK}:${PATH}
-export PATH=${PATH}:${PYSAR_HOME}/pysar:${PYSAR_HOME}/sh
+export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${ISCE_STACK}:${PATH}
+export PATH=${PATH}:${MINTPY_HOME}/mintpy:${MINTPY_HOME}/sh
 export PATH=${PYTHON3DIR}/bin:${PATH}
 export PATH=${PATH}:${PROJ_LIB}
 export PATH=${PATH}:${PARENTDIR}/3rdparty/tippecanoe/bin

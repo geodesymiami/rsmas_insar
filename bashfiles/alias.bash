@@ -22,7 +22,7 @@ alias cdr='cd ${PARENTDIR}'
 alias cdrb='cd ${PARENTDIR}/bashfiles'
 alias cdrs='cd ${INT_SCR}'
 alias cdrsa='cd ${PARENTDIR}/samples'
-alias cdri='cd ${PARENTDIR}/rinsar'
+alias cdri='cd ${PARENTDIR}/minsar'
 alias cdrt='cd ${PARENTDIR}/sources/rsmas_tools'
 alias cdrts='cd ${PARENTDIR}/sources/rsmas_tools/SAR'
 alias cdrtg='cd ${PARENTDIR}/sources/rsmas_tools/GPS'
@@ -56,12 +56,12 @@ alias rmt1='cd ${PARENTDIR}; source default.bash; source custom.bash; echo "Remo
 alias rmt2='cd ${PARENTDIR}; source default.bash; source custom.bash; echo "Removing ${SCRATCHDIR}/TESTBENCH2/* ....";  rm -r ${SCRATCHDIR}/TESTBENCH2/*'
 alias rmt3='cd ${PARENTDIR}; source default.bash; source custom.bash; echo "Removing ${SCRATCHDIR}/TESTBENCH3/* ....";  rm -r ${SCRATCHDIR}/TESTBENCH3/*'
 ######################################
-###### PySAR #########################
+###### MintPy #########################
 ######################################
-alias cdp='cd ${PYSAR_HOME}/pysar'
-alias cdP='cd ${PARENTDIR}/sources/PySAR'
-alias cppp='cp ${PYSAR_HOME}/sh/plot_pysarApp.sh .'
-alias mailkmz='echo " " | mail -a *.kmz -s PySAR_kmz_file ${NOTIFICATIONEMAIL} ; echo "kmz file sent to <${NOTIFICATIONEMAIL}>"'
+alias cdp='cd ${MINTPY_HOME}/mintpy'
+alias cdP='cd ${PARENTDIR}/sources/MintPy'
+alias cppp='cp ${MINTPY_HOME}/sh/plot_smallbaselineApp.sh .'
+alias mailkmz='echo " " | mail -a *.kmz -s MintPy_kmz_file ${NOTIFICATIONEMAIL} ; echo "kmz file sent to <${NOTIFICATIONEMAIL}>"'
 function mailfile() { echo " " | mail -a *"$1"* -s mailing_files ${NOTIFICATIONEMAIL} ; echo "file sent to <${NOTIFICATIONEMAIL}>" ; }
 function mailfile() { echo " " | mail -a "$1" -s mailing_files ${NOTIFICATIONEMAIL} ; echo "file sent to <${NOTIFICATIONEMAIL}>" ; }
 alias mailcoherence='echo " " | mail -a coherence{_1,_2,_3,_4}* -s coherence_files ${NOTIFICATIONEMAIL} ; echo "coherence file sent to <${NOTIFICATIONEMAIL}>"'
