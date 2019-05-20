@@ -67,7 +67,7 @@ def create_dem_zero(dem, outdir):
     demImage = isceobj.createDemImage()
     demImage.load(dem + '.xml')
 
-    zerodem_name = outdir + '/demzero.wgs84'
+    zerodem_name = os.path.expandvars(outdir + '/demzero.wgs84')
 
     immap = IML.memmap(zerodem_name, mode='write', nchannels=demImage.bands,
                        nxx=demImage.coord1.coordSize, nyy=demImage.coord2.coordSize,
@@ -89,7 +89,7 @@ def create_georectified_lat_lon(swath_list, masterdir, outdir, dem_zero, range_l
         master = ut.loadProduct(os.path.join(masterdir, 'IW{0}.xml'.format(swath)))
 
         ###Check if geometry directory already exists.
-        dirname = os.path.join(outdir, 'IW{0}'.format(swath))
+        dirname = os.path.expandvars(os.path.join(outdir, 'IW{0}'.format(swath)))
 
         if os.path.isdir(dirname):
             print('Geometry directory {0} already exists.'.format(dirname))
@@ -103,14 +103,22 @@ def create_georectified_lat_lon(swath_list, masterdir, outdir, dem_zero, range_l
 
             latname = os.path.join(dirname, 'lat_%02d.rdr' % (ind + 1))
             lonname = os.path.join(dirname, 'lon_%02d.rdr' % (ind + 1))
+            hgtname = os.path.join(dirname, 'hgt_%02d.rdr' % (ind + 1))
+            losname = os.path.join(dirname, 'los_%02d.rdr' % (ind + 1))
+            maskname = os.path.join(dirname, 'shadowMask_%02d.rdr' % (ind + 1))
+            incname = os.path.join(dirname, 'incLocal_%02d.rdr' % (ind + 1))
+
+            outnames= (latname, lonname, hgtname, losname, maskname, incname)
 
             if not (os.path.exists(latname+'.vrt') or os.path.exists(lonname+'.vrt')):
-                create_georectified_burst_lat_lon(burst, latname, lonname, dem_zero, range_looks, azimuth_looks)
+                create_georectified_burst_lat_lon(burst, outnames, dem_zero)
 
     return
 
 
-def create_georectified_burst_lat_lon(burst, latname, lonname, dem_zero, range_looks, azimuth_looks):
+def create_georectified_burst_lat_lon(burst, outnames, dem_zero):
+
+    (latname, lonname, hgtname, losname, maskname, incname) = outnames
 
     planet = Planet(pname='Earth')
     topo = createTopozero()
@@ -122,14 +130,18 @@ def create_georectified_burst_lat_lon(burst, latname, lonname, dem_zero, range_l
     topo.length = burst.numberOfLines
     topo.wireInputPort(name='dem', object=dem_zero)
     topo.wireInputPort(name='planet', object=planet)
-    topo.numberRangeLooks = int(range_looks)
-    topo.numberAzimuthLooks = int(azimuth_looks)
+    topo.numberRangeLooks = 1
+    topo.numberAzimuthLooks = 1
     topo.lookSide = -1
     topo.sensingStart = burst.sensingStart
     topo.rangeFirstSample = burst.startingRange
     topo.demInterpolationMethod = 'BIQUINTIC'
     topo.latFilename = latname
     topo.lonFilename = lonname
+    topo.heightFilename = hgtname
+    topo.losFilename = losname
+    topo.maskFilename = maskname
+    topo.incFilename = incname
     topo.topo()
 
     return
