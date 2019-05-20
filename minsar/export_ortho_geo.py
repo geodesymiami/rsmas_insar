@@ -7,6 +7,7 @@ import sys
 import s1a_isce_utils as ut
 import glob
 from isceobj.Planet.Planet import Planet
+from minsar.objects import message_rsmas
 from zerodop.topozero import createTopozero
 from isceobj.Util.ImageUtil import ImageLib as IML
 from minsar.objects.auto_defaults import PathFind
@@ -218,6 +219,8 @@ def multilook_images(inps):
 
 def main(iargs=None):
     """ create ortho and geo rectifying run jobs and submit them. """
+
+    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     inps = cmdLineParse()
 

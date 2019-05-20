@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-''' Utility to count the number of bursts based on lat*.rdr files'''
+# Utility to count the number of bursts based on lat*.rdr files
 
 
 import sys
 import argparse
 import glob
 import minsar.utils.process_utilities as putils
+from minsar.objects import message_rsmas
 
 inps = None
+
 
 def create_parser():
     """ Creates command line argument parser object. """
@@ -17,13 +19,17 @@ def create_parser():
 
     return parser
 
+
 def command_line_parse(args):
     """ Parses command line agurments into inps variable. """
 
     parser = create_parser()
     return parser.parse_args(args)
 
+
 if __name__ == "__main__":
+
+    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
     inps = command_line_parse(sys.argv[1:])
 
     inps.project_name = putils.get_project_name(custom_template_file=inps.template)

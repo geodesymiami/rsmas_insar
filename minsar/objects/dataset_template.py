@@ -1,4 +1,6 @@
 import os
+import sys
+
 
 class Template:
     """ Template object encapsulates a dictionary of template options.

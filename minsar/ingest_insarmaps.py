@@ -18,9 +18,7 @@ from minsar.utils.process_utilities import create_or_update_template
 from minsar.utils.process_utilities import get_work_directory, get_project_name, send_logger
 import minsar.job_submission as js
 
-
-logger  = send_logger()
-
+logger = send_logger()
 
 ##############################################################################
 EXAMPLE = """example:
@@ -48,6 +46,8 @@ def command_line_parse(args):
 
 
 if __name__ == "__main__":
+
+    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     inps = command_line_parse(sys.argv[1:])
     inps.project_name = get_project_name(inps.custom_template_file)
@@ -96,7 +96,6 @@ if __name__ == "__main__":
         logger.log(loglevel.ERROR, 'ERROR in hdfeos5_2json_mbtiles.py')
         raise Exception('ERROR in hdfeos5_2json_mbtiles.py')
 
-
     # TODO: Change subprocess call to get back error code and send error code to logger
     logger.log(loglevel.INFO, command2)
     message_rsmas.log(command2)
@@ -105,6 +104,5 @@ if __name__ == "__main__":
     if status is not 0:
         logger.log(loglevel.ERROR, 'ERROR in json_mbtiles2insarmaps.py')
         raise Exception('ERROR in json_mbtiles2insarmaps.py')
-
 
     logger.log(loglevel.INFO, "-----------------Done ingesting insarmaps-------------------")

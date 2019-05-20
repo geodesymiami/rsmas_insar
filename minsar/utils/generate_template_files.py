@@ -9,6 +9,7 @@ import time
 from datetime import datetime
 from minsar.objects.rsmas_logging import RsmasLogger, loglevel
 from minsar.objects.auto_defaults import PathFind
+from minsar.objects import message_rsmas
 
 
 pathObj = PathFind()
@@ -220,5 +221,8 @@ def main(args):
 
 # TODO: Properly name variables
 # If output and input directories are declared, use them
+
+
 if __name__ == "__main__":
+    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
     main(sys.argv[1:])

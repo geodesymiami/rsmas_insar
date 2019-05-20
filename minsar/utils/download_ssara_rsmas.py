@@ -11,7 +11,6 @@ from minsar.objects.rsmas_logging import RsmasLogger, loglevel
 from minsar.objects import message_rsmas
 from minsar.utils import process_utilities as putils
 from minsar.objects.auto_defaults import PathFind
-sys.path.insert(0, os.getenv('SSARAHOME'))
 import minsar.job_submission as js
 
 
@@ -68,6 +67,7 @@ def check_downloads(inps, run_number, args):
             return
 
     logger.log(loglevel.INFO, "Everything is there!")
+
 
 def run_ssara(template, delta_lat, run_number=1):
     """ Runs ssara_federated_query-cj.py and checks for download issues.
@@ -154,6 +154,7 @@ def run_ssara(template, delta_lat, run_number=1):
 
     return 0
 
+
 def get_ssara_kml_and_listing(ssaraopt):
     """download the ssara kml file and generate a file listing of granules to be downloaded"""
 
@@ -173,6 +174,7 @@ def get_ssara_kml_and_listing(ssaraopt):
 
     return None
 
+
 def add_polygon_to_ssaraopt(dataset_template, ssaraopt, delta_lat ):
     """calculates intersectsWith polygon from bbox and replace frame in ssaraopt if give"""
     bbox_list = dataset_template['topsStack.boundingBox'][1:-1].split(' ')
@@ -191,7 +193,11 @@ def add_polygon_to_ssaraopt(dataset_template, ssaraopt, delta_lat ):
 
     return ssaraopt
 
+
 if __name__ == "__main__":
+
+    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+
     inps = command_line_parse(sys.argv[1:])
 
     inps.project_name = putils.get_project_name(custom_template_file=inps.template)

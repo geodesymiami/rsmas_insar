@@ -4,12 +4,14 @@
 ############################################################
 import numpy as np
 import os
+import sys
 import gdal
 import osr
 import argparse
 import glob
 from minsar.objects.auto_defaults import PathFind
 from minsar.utils.process_utilities import xmlread
+from minsar.objects import message_rsmas
 
 pathObj = PathFind()
 ########################################
@@ -23,6 +25,8 @@ def main(iargs=None):
     """
     Crops SLC images from Isce merged/SLC directory and creates georectified and orthorectified products.
     """
+
+    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     inps = command_line_parse(iargs)
     project_name = os.path.basename(inps.custom_template_file).partition('.')[0]
@@ -133,6 +137,8 @@ def raster2geotiff(newRasterfn, gtransform, array, metadata):
     outRaster.SetProjection(outRasterSRS.ExportToWkt())
     outband.FlushCache()
 
+    return
+
 
 def geocode_file(slc, bbox, geo_master_dir):
     """
@@ -151,6 +157,11 @@ def geocode_file(slc, bbox, geo_master_dir):
     lat_south = np.float(bbox[0])
     lat_north = np.float(bbox[1])
 
+    data = gdal.Open(slc + '.slc.ml', gdal.GA_ReadOnly)
+    transform = data.GetGeoTransform()
+
+
+
     command_geocode = "geocodeGdal.py -l {a} -L {b} -f {c} --bbox '{l1} {l2} {L1} {L2}' -x {X} -y {Y}".format(
         a=geo_master_dir + '/lat.rdr',
         b=geo_master_dir + '/lon.rdr',
@@ -165,6 +176,8 @@ def geocode_file(slc, bbox, geo_master_dir):
     print(command_geocode)
 
     os.system(command_geocode)
+    import pdb; pdb.set_trace()
+    return
 
 
 if __name__ == '__main__':

@@ -9,10 +9,7 @@ from minsar.objects.rsmas_logging import RsmasLogger, loglevel
 from minsar.objects import message_rsmas
 from minsar.utils import process_utilities as putils
 import minsar.job_submission as js
-
 import glob
-
-sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
 
 logfile_name = os.getenv('OPERATIONS') + '/LOGS/asfserial_rsmas.log'

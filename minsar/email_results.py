@@ -12,6 +12,7 @@ import subprocess
 from mintpy.utils import readfile
 from minsar.utils.process_utilities import remove_directories
 from minsar.objects.auto_defaults import PathFind
+from minsar.objects import message_rsmas
 
 ###############################################################################
 pathObj = PathFind()
@@ -107,7 +108,9 @@ def email_mintpy_results(custom_template):
 ###########################################################################################
 def main(iargs=None):
     """ email mintpy or insarmap results """
-     
+
+    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+
     inps = command_line_parse(iargs)
 
     custom_template = readfile.read_template(inps.template_file)

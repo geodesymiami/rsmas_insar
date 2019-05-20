@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
-"""This script converts boundingBox coordinates from ASF vertex to topsStack format
-   Author: Falk Amelung
-      Created:5/2019
-"""
-
-EXAMPLE = """example:
-  convert_boundingbox.py 103.2,30.95,103.85,30.95,103.85,31.54,103.2,31.54,103.2,30.95
-  convert_boundingbox.py '39.46 39.82 118.2 118.9'
-"""
+# This script converts boundingBox coordinates from ASF vertex to topsStack format
+# Author: Falk Amelung
+# Created:5/2019
+#######################################
 
 import sys
 import argparse
 from minsar import message_rsmas
 
 inps = None
+
+
+EXAMPLE = """example:
+  convert_boundingbox.py 103.2,30.95,103.85,30.95,103.85,31.54,103.2,31.54,103.2,30.95
+  convert_boundingbox.py '39.46 39.82 118.2 118.9'
+"""
+
 
 def create_parser():
     """ Creates command line argument parser object. """
@@ -26,10 +28,12 @@ def create_parser():
 
     return parser
 
+
 def command_line_parse(args):
     """ Parses command line agurments into inps variable. """
     parser = create_parser()
     return parser.parse_args(args)
+
 
 def run_convert_boundingbox(input):
     """ converts
@@ -72,7 +76,9 @@ def run_convert_boundingbox(input):
 
 ###########################################################################################
 
+
 if __name__ == '__main__':
+    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
     inps = command_line_parse(sys.argv[1:])
     run_convert_boundingbox(sys.argv[1:])
 
