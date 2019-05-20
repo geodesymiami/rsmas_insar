@@ -110,14 +110,9 @@ def create_geotiff (obj, data, outfile, type, work_dir):
     srs.ImportFromEPSG(4326)
     ds.SetProjection(srs.ExportToWkt())
     ds.SetGeoTransform(gt)
-<<<<<<< HEAD
-    
-    xmlfile = glob.glob(os.path.join(project_dir, pathObj.masterdir, '*.xml'))[0]
-=======
 
     # metadata consistent with Backscatter products:
     xmlfile = glob.glob(os.path.join(work_dir, pathObj.masterdir, '*.xml'))[0]
->>>>>>> made metadata consistent with other hazard products
     attributes = putils.xmlread(xmlfile)
     Metadata = {'SAT': attributes['missionname'], 'Mode': attributes['passdirection'],
                 'Image_Type': 'ortho_{}'.format(type),
