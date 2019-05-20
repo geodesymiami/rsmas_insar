@@ -55,7 +55,7 @@ def main(iargs=None):
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)
     try:
-        file = glob.glob(work_dir + '/MINTPY/INPUTS/ifgramStack.h5')[0]
+        file = glob.glob(work_dir + '/mintpy/inputs/ifgramStack.h5')[0]
     except:
         raise Exception('ERROR in ' + os.path.basename(__file__) + ': file ifgramStack.h5 not found') 
 
@@ -68,8 +68,8 @@ def main(iargs=None):
         os.makedirs('GEOCODE')
 
     # geocode ifgramStack
-    geo_file = os.path.dirname( os.path.dirname(file)) + '/GEOCODE/geo_' + os.path.basename(file)
-    lookup_file = os.path.dirname( os.path.dirname(file)) + '/INPUTS/geometryRadar.h5'
+    geo_file = os.path.dirname( os.path.dirname(file)) + '/geocode/geo_' + os.path.basename(file)
+    lookup_file = os.path.dirname( os.path.dirname(file)) + '/inputs/geometryRadar.h5'
     template_file = os.path.dirname(os.path.dirname(file)) + '/smallbaselineApp_template.txt'
     arg_string = file + ' -t ' + template_file + ' -l ' + lookup_file + ' -o ' + geo_file
     print('geocode.py', arg_string)
