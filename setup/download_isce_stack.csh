@@ -9,3 +9,5 @@ mkdir -p $PARENTDIR/sources/isceStack
 
 cp -r $DOWNLOAD_DIR/isce2/contrib/stack/topsStack $PARENTDIR/sources/isceStack
 cp -r $DOWNLOAD_DIR/isce2/contrib/stack/stripmapStack $PARENTDIR/sources/isceStack
+
+rm -rf $DOWNLOAD_DIR/isce2
