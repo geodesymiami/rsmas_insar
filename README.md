@@ -49,15 +49,18 @@ cd ../3rdparty
 cd ../3rdparty/pykml
 ../../3rdparty/miniconda3/bin/python setup.py build
 ../../3rdparty/miniconda3/bin/python setup.py install
-mkdir -p ~/insarlab/OPERATIONS/LOGS
 
+mkdir -p $SENTINEL_ORBITS;
+mkdir -p $SENTINEL_AUX;
+mkdir -p ~/insarlab/OPERATIONS/LOGS
 cd ../..
 source default_isce22.bash;
-[ -f ~/.config/dask/dask_mintpy.yaml ] || echo "dask_mintpy.yaml not found; copying..."; cp ../sources/MintPy/mintpy/defaults/dask_mintpy.yaml ~/.config/dask/
-cd setup
-git clone https://github.com/geodesymiami/accounts ../../accounts ;
-./install_credential_files.csh;
 echo DONE WITH CRITICAL CODE ;
+
+
+echo Install credentials and some code for insarmaps ingestion;
+git clone https://github.com/geodesymiami/accounts ../accounts ;
+./setup/install_credential_files.csh;
 
 cd ..
 cd 3rdparty
@@ -68,10 +71,7 @@ make install PREFIX=$PWD
 
 cd ../../sources;
 git clone https://github.com/geodesymiami/rsmas_tools.git ; 
-mkdir -p $SENTINEL_ORBITS;
-mkdir -p $SENTINEL_AUX;
 echo DONE;
-
 ```
 
 The rsmas_tools clone gives you the python scripts plus notebooks from other group members. Put all your code into these directories and occasionaly push to github so that they will be available to others. We also share all other input files through github:
@@ -94,13 +94,7 @@ echo DONE;
 If you keep your *template files in this default location (e.g. /nethome/famelung/insarlab/infiles/famelung/TEMPLATES) they will be available to others. We also would like to share other input files (geodmod, coulomb, comsol through this directory).
 
 ### Orbits and aux files
-You need to specify a directory for the orbits for Sentinel-1 (`$SENTINEL_ORBITS`). You can say `setenv SENTINEL_ORBITS ./orbits`  but it would download the orbits again and again.  It is unclear what the aux files do (`SENTINEL_AUX`)
-
-(from Emre: aux files are IPF calibration files. They can be downloaded from this website:
-
-https://qc.sentinel1.eo.esa.int/aux_cal/
-
-The orbits can be downloaded automatically using dloadOrbits.py which is included in the first version we were using through Shimon’s account.)
+You need to specify a directory for the orbits for Sentinel-1 (`$SENTINEL_ORBITS`). You can say `setenv SENTINEL_ORBITS ./orbits`  but it would download the orbits again and again. The orbits can be downloaded into `$SENTINEL_ORBITS` using `dloadOrbits.py`. The aux files (`SENTINEL_AUX`) are IPF calibration files. They can be downloaded from: https://qc.sentinel1.eo.esa.int/aux_cal/
 
 
 ### Next steps and possible problems
