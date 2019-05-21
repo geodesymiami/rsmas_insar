@@ -29,6 +29,7 @@ git clone https://github.com/AngeliqueBenoit/pyaps3.git
 
 cd ../setup;
 ./install_miniconda3_bare.csh
+./download_isce_stack.csh
 ../3rdparty/miniconda3/bin/conda install isce2 -c piyushrpt --yes
 ../3rdparty/miniconda3/bin/conda install --yes --file conda.txt
 ../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MintPy/docs/conda.txt
