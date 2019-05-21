@@ -35,6 +35,7 @@ chmod 755 $miniconda_version
 ./$miniconda_version -b -p ../3rdparty/miniconda3
 cp condarc ../3rdparty/miniconda3/.condarc
 
+./download_isce_stack.csh
 ../3rdparty/miniconda3/bin/conda install isce2 -c piyushrpt --yes
 ../3rdparty/miniconda3/bin/conda install --yes --file conda.txt
 ../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MintPy/docs/conda.txt

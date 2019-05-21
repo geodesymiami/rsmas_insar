@@ -26,11 +26,14 @@
 #        http://bulk-download.asf.alaska.edu/help
 #
 
-import sys, csv
-import os, os.path
-import tempfile, shutil
+import sys
+import csv
+import os
+import os.path
+import tempfile
+import shutil
 import re
-
+from minsar.objects import message_rsmas
 import base64
 import time
 import ssl
@@ -57,6 +60,7 @@ except ImportError as e:
 
    from http.cookiejar import MozillaCookieJar
    from io import StringIO
+
 
 class bulk_downloader:
     def __init__(self):
@@ -588,6 +592,7 @@ class bulk_downloader:
         
 
 if __name__ == "__main__":
+    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
     downloader = bulk_downloader()
     downloader.download_files()
     downloader.print_summary()

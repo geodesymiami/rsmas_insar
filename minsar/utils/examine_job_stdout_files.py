@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
-"""This script summarizes information from job runs
-   Author: Falk Amelung
-      Created:5/2019
-"""
-
-EXAMPLE = """example:
-  examine_job_stdout_files.py run_*.o 
-"""
-
+# This script summarizes information from job runs
+# Author: Falk Amelung
+# Created:5/2019
+#######################################
 
 import sys
 import argparse
 import glob
 import datetime
 from natsort import natsorted
+from minsar.objects import message_rsmas
+
+
+EXAMPLE = """example:
+  examine_job_stdout_files.py run_*.o 
+"""
 
 inps = None
+
 
 def create_parser():
     """ Creates command line argument parser object. """
@@ -30,10 +32,12 @@ def create_parser():
 
     return parser
 
+
 def command_line_parse(args):
     """ Parses command line agurments into inps variable. """
     parser = create_parser()
     return parser.parse_args(args)
+
 
 def run_examine_job_stdout_files(pattern):
     """ generate job output statistics
@@ -75,7 +79,9 @@ def run_examine_job_stdout_files(pattern):
 
 ###########################################################################################
 
+
 if __name__ == '__main__':
+    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
     inps = command_line_parse(sys.argv[1:])
     #run_examine_job_stdout_files(sys.argv[1:])
     run_examine_job_stdout_files(inps.pattern)

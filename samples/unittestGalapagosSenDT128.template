@@ -8,6 +8,8 @@ ssaraopt.startDate                = 20160601
 ssaraopt.endDate                  = 20160831
 demMethod                         = boundingBox
 hazard_products_flag              = True
+insarmap_flag                     = False
+
 ######################################################
 
 topsStack.boundingBox             = '-1 -0.6 -91.7 -90.9' # '-1 0.15 -91.6 -90.9'

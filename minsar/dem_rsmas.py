@@ -38,6 +38,9 @@ EXAMPLE = '''
 
 
 def main(args):
+
+    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+
     command = os.path.basename(__file__) + ' ' + ' '.join(args[1:])
     message_rsmas.log(command)
 

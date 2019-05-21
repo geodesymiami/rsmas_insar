@@ -18,7 +18,6 @@ import shutil
 from mintpy.defaults.auto_path import autoPath
 from minsar.objects.rsmas_logging import RsmasLogger, loglevel
 from minsar.objects.dataset_template import Template
-from minsar.objects import message_rsmas
 from minsar.objects.auto_defaults import PathFind
 
 ###############################################################################
@@ -186,30 +185,6 @@ def update_template_file(TEMP_FILE, custom_templateObj):
             fileText = fileText + "{:<38}".format(key) + "{:<15}".format("= {}".format(value.strip("'"))) + '\n'
 
     return fileText
-
-#########################################################################
-
-
-def create_or_copy_dem(work_dir, template, custom_template_file):
-    """ Downloads a DEM file or copies an existing one."""
-
-    # if inps.flag_dem:
-    dem_dir = work_dir + '/DEM'
-    if os.path.isdir(dem_dir) and len(os.listdir(dem_dir)) == 0:
-        os.rmdir(dem_dir)
-
-    if not os.path.isdir(dem_dir):
-        if 'topsStack.demDir' in list(template.keys()) and template['topsStack.demDir'] != str('auto'):
-            shutil.copytree(template['topsStack.demDir'], dem_dir)
-        else:
-            # TODO: Change subprocess call to get back error code and send error code to logger
-            command = 'dem_rsmas.py ' + custom_template_file
-            print(command)
-            message_rsmas.log(command)
-            status = subprocess.Popen(command, shell=True).wait()
-            if status is not 0:
-                raise Exception('ERROR while making DEM')
-    return dem_dir
 
 ##########################################################################
 
