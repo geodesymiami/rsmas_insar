@@ -28,7 +28,13 @@ git clone https://github.com/bakerunavco/SSARA.git
 git clone https://github.com/AngeliqueBenoit/pyaps3.git
 
 cd ../setup;
-./install_miniconda3_bare.csh
+rm -r ../3rdparty/miniconda3
+miniconda_version=Miniconda3-4.5.12-Linux-x86_64.sh
+wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate #; if ($? != 0) exit; 
+chmod 755 $miniconda_version
+./$miniconda_version -b -p ../3rdparty/miniconda3
+cp condarc ../3rdparty/miniconda3/.condarc
+
 ../3rdparty/miniconda3/bin/conda install isce2 -c piyushrpt --yes
 ../3rdparty/miniconda3/bin/conda install --yes --file conda.txt
 ../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MintPy/docs/conda.txt
@@ -47,11 +53,10 @@ mkdir -p ~/insarlab/OPERATIONS/LOGS
 
 cd ../..
 source default_isce22.bash;
-cd setup
-git clone https://github.com/geodesymiami/accounts ;
-./install_credential_files.csh;
-./download_sentinelstack.py ;
 [ -f ~/.config/dask/dask_mintpy.yaml ] || echo "dask_mintpy.yaml not found; copying..."; cp ../sources/MintPy/mintpy/defaults/dask_mintpy.yaml ~/.config/dask/
+cd setup
+git clone https://github.com/geodesymiami/accounts ../../accounts ;
+./install_credential_files.csh;
 echo DONE WITH CRITICAL CODE ;
 
 cd ..
