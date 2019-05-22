@@ -26,6 +26,7 @@ class PathFind:
         self.stackdir = 'stack'
         self.tiffdir = 'hazard_products'
         self.daskconfig = os.path.expandvars('${RSMAS_INSAR}/minsar/defaults/dask/dask.yaml')
+        self.auto_template = self.defaultdir + '/stack_template.txt'
         return
 
     def set_isce_defaults(self, inps):
@@ -49,11 +50,11 @@ class PathFind:
     def grab_cropbox(inps):
         try:
             if inps.template['processingMethod'] == 'smallbaseline':
-                subset = inps['template']['mintpy.subset.lalo']
+                subset = inps.template['mintpy.subset.lalo']
             else:
                 subset = inps.template['minopy.subset']
-            cropbox = '{} {} {} {}'.format(subset[0], subset[1].split(',')[0], subset[1].split(',')[1],
-                                                     subset[2])
+            subset = subset.split(':')
+            cropbox = '{} {} {} {}'.format(subset[0], subset[1].split(',')[0], subset[1].split(',')[1], subset[2])
         except:
             cropbox = inps.template['topsStack.boundingBox']
 

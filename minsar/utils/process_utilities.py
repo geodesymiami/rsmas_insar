@@ -111,8 +111,10 @@ def create_default_template(temp_inps):
 
     inps = temp_inps
 
-    inps.template_file = os.path.join(inps.work_dir, os.path.basename(inps.customTemplateFile))
+    inps.customTemplateFile = os.path.abspath(inps.customTemplateFile)
 
+    inps.template_file = os.path.join(inps.work_dir, os.path.basename(inps.customTemplateFile))
+    
     # read custom template from file
     custom_tempObj = Template(os.path.abspath(inps.customTemplateFile))
 
@@ -129,7 +131,7 @@ def create_default_template(temp_inps):
     inps.ssaraopt = custom_tempObj.generate_ssaraopt_string()
 
     # find default values from template_defaults.cfg to assign to default_tempObj
-    default_tempObj = Template(pathObj.defaultdir + '/stack_template.txt')
+    default_tempObj = Template(pathObj.auto_template)
     config_template = get_config_defaults(config_file='template_defaults.cfg')
     for each_section in config_template.sections():
         for (each_key, each_val) in config_template.items(each_section):
