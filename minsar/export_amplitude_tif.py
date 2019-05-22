@@ -176,7 +176,6 @@ def geocode_file(slc, bbox, geo_master_dir):
     print(command_geocode)
 
     os.system(command_geocode)
-    import pdb; pdb.set_trace()
     return
 
 
