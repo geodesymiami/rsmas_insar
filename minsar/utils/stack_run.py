@@ -33,7 +33,7 @@ def run_download(inps):
     i = 0
     runObj = rsmasRun()
     runObj.configure(inps, 'run_' + str(i) + "_download_data_and_dem")
-    runObj.downloadDataDEM(inps)
+    runObj.downloadDataDEM()
     runObj.finalize()
 
     return
@@ -152,7 +152,7 @@ class CreateRun:
         if inps.hazard_products_flag == 'True':
             runObj = rsmasRun()
             runObj.configure(inps, 'run_' + str(i) + "_hazard_products")
-            runObj.generateHazardProducts(inps)
+            runObj.generateHazardProducts()
             runObj.finalize()
 
             i += 1
@@ -161,14 +161,14 @@ class CreateRun:
 
             runObj = rsmasRun()
             runObj.configure(inps, 'run_' + str(i) + "_ingest_insarmaps")
-            runObj.ingestInsarmaps(inps)
+            runObj.ingestInsarmaps()
             runObj.finalize()
 
             i += 1
     
         runObj = rsmasRun()
         runObj.configure(inps, 'run_' + str(i) + "_email_results")
-        runObj.emailResults(inps)
+        runObj.emailResults()
         runObj.finalize()
 
         self.iter = i
@@ -185,7 +185,7 @@ class CreateRun:
 
             runObj = rsmasRun()
             runObj.configure(inps, 'run_' + str(i) + "_mintpy_small_baseline")
-            runObj.mintpySB(inps)
+            runObj.mintpySB()
             runObj.finalize()
 
             self.iter = i
@@ -200,19 +200,19 @@ class CreateRun:
 
             runObj = rsmasRun()
             runObj.configure(inps, 'run_' + str(i) + "_crop_merged_slc")
-            runObj.cropMergedSlc(inps)
+            runObj.cropMergedSlc()
             runObj.finalize()
 
             i += 1
             runObj = rsmasRun()
             runObj.configure(inps, 'run_' + str(i) + "_create_patch")
-            runObj.createPatch(inps)
+            runObj.createPatch()
             runObj.finalize()
 
             i += 1
             runObj = rsmasRun()
             runObj.configure(inps, 'run_' + str(i) + "_phase_linking")
-            runObj.phaseLinking(inps)
+            runObj.phaseLinking()
             runObj.finalize()
 
             i += 1
@@ -230,7 +230,7 @@ class CreateRun:
             i += 1
             runObj = rsmasRun()
             runObj.configure(inps, 'run_' + str(i) + "_corrections_and_velocity")
-            runObj.mintpyCorrections(inps)
+            runObj.mintpyCorrections()
             runObj.finalize()
 
             self.iter = i
