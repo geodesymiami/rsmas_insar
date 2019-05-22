@@ -120,7 +120,10 @@ class rsmasRun(object):
 
         self.runf = open(self.run_outname, 'w')
 
-        self.insarmap_flag = inps.insarmap_flag
+        try:
+            self.insarmap_flag = inps.insarmap_flag
+        except:
+            self.insarmap_flag = inps.template['insarmap_flag']
 
     def downloadDataDEM(self):
         self.runf.write('download_rsmas.py ' + self.customTemplateFile + '\n')
