@@ -22,6 +22,14 @@ def main(iargs=None):
     start_time = time.time()
     inps = command_line_parse(iargs)
 
+    inps.project_name = get_project_name(inps.customTemplateFile)
+    inps.work_dir = get_work_directory(None, inps.project_name)
+    os.chdir(inps.work_dir)
+
+    command_line = os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1:])
+    message_rsmas.log('##### NEW RUN #####')
+    message_rsmas.log(command_line)
+
     #########################################
     # Submit job
     #########################################
@@ -32,13 +40,12 @@ def main(iargs=None):
         inps.work_dir = get_work_directory(None, inps.project_name)
 
         job = js.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir, inps.wall_time)
+        # run_operations.py needs this print statement for now.
+        # This is not for debugging purposes.
+        # DO NOT REMOVE.
+        print(job)
 
     else:
-
-        command_line = os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1:])
-        message_rsmas.log('##### NEW RUN #####')
-        message_rsmas.log(command_line)
-
         objInsar = RsmasInsar(inps)
         objInsar.run(steps=inps.runSteps)
 
