@@ -9,8 +9,9 @@ import gdal
 import osr
 import argparse
 import glob
+from minsar.objects.dataset_template import Template
 from minsar.objects.auto_defaults import PathFind
-from minsar.utils.process_utilities import xmlread
+from minsar.utils.process_utilities import xmlread, create_or_update_template
 from minsar.objects import message_rsmas
 
 pathObj = PathFind()
@@ -29,10 +30,12 @@ def main(iargs=None):
     message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     inps = command_line_parse(iargs)
-    project_name = os.path.basename(inps.custom_template_file).partition('.')[0]
+    project_name = os.path.basename(inps.customTemplateFile).partition('.')[0]
     project_dir = os.getenv('SCRATCHDIR') + '/' + project_name
     slave_dir = os.path.join(project_dir, pathObj.mergedslcdir)
     pic_dir = os.path.join(project_dir, pathObj.tiffdir)
+    inps = create_or_update_template(inps)
+
     os.chdir(slave_dir)
 
     slc = inps.inputfile
@@ -44,7 +47,7 @@ def main(iargs=None):
 
 
     try:
-        os.system('rm ' + inps.inputfile + '/geo*')
+        os.system('rm '+inps.inputfile + '/geo*')
     except:
         print('geocoding ...')
 
@@ -53,7 +56,7 @@ def main(iargs=None):
 
     os.chdir(os.path.join(slave_dir, inps.inputfile))
 
-    geocode_file(inps.inputfile, inps.bbox, geo_master_dir)
+    geocode_file(inps.inputfile, inps.cropbox, geo_master_dir, inps.latStep, inps.lonStep)
 
     gfile = 'geo_' + slc + '.slc.ml'
     ds = gdal.Open(gfile + '.vrt', gdal.GA_ReadOnly)
@@ -92,11 +95,13 @@ def create_parser():
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, epilog=EXAMPLE)
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
-    parser.add_argument('custom_template_file', nargs='?',
+    parser.add_argument('customTemplateFile', nargs='?',
                         help='custom template with option settings.\n')
     parser.add_argument('-f', '--file', dest='inputfile', type=str, required=True, help='Input SLC')
-    parser.add_argument('-b', '--bbox', dest='bbox', type=str, default='',
-                        help="Bounding box (SNWE) ex: '20 21 110 111'")
+    parser.add_argument('-y', '--lat-step', dest='latStep', type=float,
+                        help='output pixel size in degree in latitude.')
+    parser.add_argument('-x', '--lon-step', dest='lonStep', type=float,
+                        help='output pixel size in degree in longitude.')
     parser.add_argument('-t', '--type', dest='imtype', type=str, default='ortho',
                         help="ortho, geo")
 
@@ -140,7 +145,7 @@ def raster2geotiff(newRasterfn, gtransform, array, metadata):
     return
 
 
-def geocode_file(slc, bbox, geo_master_dir):
+def geocode_file(slc, bbox, geo_master_dir, latStep, lonStep):
     """
     Geocodes the input file
     :param slc: input file
@@ -148,33 +153,15 @@ def geocode_file(slc, bbox, geo_master_dir):
     :param geo_master_dir: where the geometry files are located
     """
 
-    bbox = [val for val in bbox.split()]
-    if len(bbox) != 4:
-        raise Exception('Bbox should contain 4 floating point values')
-
-    lon_west = np.float(bbox[2])
-    lon_east = np.float(bbox[3])
-    lat_south = np.float(bbox[0])
-    lat_north = np.float(bbox[1])
-
-    data = gdal.Open(slc + '.slc.ml', gdal.GA_ReadOnly)
-    transform = data.GetGeoTransform()
-
-
-
-    command_geocode = "geocodeGdal.py -l {a} -L {b} -f {c} --bbox '{l1} {l2} {L1} {L2}' -x {X} -y {Y}".format(
+    command_geocode = "geocodeGdal.py -l {a} -L {b} -f {c} --bbox '{box}' -x {X} -y {Y}".format(
         a=geo_master_dir + '/lat.rdr',
         b=geo_master_dir + '/lon.rdr',
         c=slc + '.slc.ml',
-        l1=lat_south,
-        l2=lat_north,
-        L1=lon_west,
-        L2=lon_east,
-        X=0.0001,
-        Y=0.0001)
+        box=bbox,
+        X=latStep,
+        Y=lonStep)
 
     print(command_geocode)
-
     os.system(command_geocode)
     return
 
