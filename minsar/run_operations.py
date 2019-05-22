@@ -9,7 +9,7 @@ import time
 
 from minsar.utils import generate_template_files
 from minsar.objects.rsmas_logging import RsmasLogger, loglevel
-from minsar.pbjects import dataset_template
+from minsar.objects import dataset_template
 import minsar.utils.process_utilities as putils
 
 
