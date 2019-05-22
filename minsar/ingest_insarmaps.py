@@ -12,6 +12,8 @@ import shutil
 import argparse
 from minsar.objects.rsmas_logging import loglevel
 from minsar.objects import message_rsmas
+
+sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
 
 from minsar.utils.process_utilities import create_or_update_template
