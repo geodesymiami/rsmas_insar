@@ -13,6 +13,7 @@ from minsar.objects.dataset_template import Template
 from minsar.objects.auto_defaults import PathFind
 from minsar.utils.process_utilities import xmlread, create_or_update_template
 from minsar.objects import message_rsmas
+import geocodeGdal as gg
 
 pathObj = PathFind()
 ########################################
@@ -35,28 +36,27 @@ def main(iargs=None):
     slave_dir = os.path.join(project_dir, pathObj.mergedslcdir)
     pic_dir = os.path.join(project_dir, pathObj.tiffdir)
     inps = create_or_update_template(inps)
-
     os.chdir(slave_dir)
 
-    slc = inps.inputfile
+    slc = inps.prodlist
 
     if inps.imtype == 'ortho':
-        geo_master_dir = os.path.join(project_dir, pathObj.geomasterdir)
+        inps.geo_master_dir = os.path.join(project_dir, pathObj.geomasterdir)
     else:
-        geo_master_dir = os.path.join(project_dir, pathObj.geomlatlondir)
+        inps.geo_master_dir = os.path.join(project_dir, pathObj.geomlatlondir)
 
 
     try:
-        os.system('rm '+inps.inputfile + '/geo*')
+        os.system('rm '+inps.prodlist + '/geo*')
     except:
         print('geocoding ...')
 
     if not os.path.exists(pic_dir):
         os.mkdir(pic_dir)
 
-    os.chdir(os.path.join(slave_dir, inps.inputfile))
+    os.chdir(os.path.join(slave_dir, inps.prodlist))
 
-    geocode_file(inps.inputfile, inps.cropbox, geo_master_dir, inps.latStep, inps.lonStep)
+    geocode_file(inps)
 
     gfile = 'geo_' + slc + '.slc.ml'
     ds = gdal.Open(gfile + '.vrt', gdal.GA_ReadOnly)
@@ -64,7 +64,7 @@ def main(iargs=None):
     del ds
 
     ##
-    array = np.where(array > 0, 10.0 * np.log10(pow(array,2)) - 83.0, array)
+    array = np.where(array > 0, 10.0 * np.log10(pow(array, 2)) - 83.0, array)
 
     if inps.imtype == 'ortho':
         dst_file = 'orthorectified_' + slc + '_backscatter.tif'
@@ -97,11 +97,21 @@ def create_parser():
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
     parser.add_argument('customTemplateFile', nargs='?',
                         help='custom template with option settings.\n')
-    parser.add_argument('-f', '--file', dest='inputfile', type=str, required=True, help='Input SLC')
+    parser.add_argument('-f', '--file', dest='prodlist', type=str, required=True, help='Input SLC')
+    parser.add_argument('-l', '--lat', dest='latFile', type=str,
+                        default='lat.rdr', help='latitude file in radar coordinate')
+    parser.add_argument('-L', '--lon', dest='lonFile', type=str,
+                        default='lon.rdr', help='longitude file in radar coordinate')
     parser.add_argument('-y', '--lat-step', dest='latStep', type=float,
                         help='output pixel size in degree in latitude.')
     parser.add_argument('-x', '--lon-step', dest='lonStep', type=float,
                         help='output pixel size in degree in longitude.')
+    parser.add_argument('-o', '--xoff', dest='xOff', type=int, default=0,
+                        help='Offset from the begining of geometry files in x direction. Default 0.0')
+    parser.add_argument('-p', '--yoff', dest='yOff', type=int, default=0,
+                        help='Offset from the begining of geometry files in y direction. Default 0.0')
+    parser.add_argument('-r', '--resampling_method', dest='resamplingMethod', type=str, default='near',
+                        help='Resampling method (gdalwarp resamplin methods)')
     parser.add_argument('-t', '--type', dest='imtype', type=str, default='ortho',
                         help="ortho, geo")
 
@@ -145,24 +155,41 @@ def raster2geotiff(newRasterfn, gtransform, array, metadata):
     return
 
 
-def geocode_file(slc, bbox, geo_master_dir, latStep, lonStep):
+def geocode_file(inps):
     """
     Geocodes the input file
-    :param slc: input file
-    :param bbox: bounding box to crop the output file
-    :param geo_master_dir: where the geometry files are located
+    :param inps: input name space
     """
 
-    command_geocode = "geocodeGdal.py -l {a} -L {b} -f {c} --bbox '{box}' -x {X} -y {Y}".format(
-        a=geo_master_dir + '/lat.rdr',
-        b=geo_master_dir + '/lon.rdr',
-        c=slc + '.slc.ml',
-        box=bbox,
-        X=latStep,
-        Y=lonStep)
+    inps.cropbox = [val for val in inps.cropbox.split()]
+    if len(inps.cropbox) != 4:
+        raise Exception('Bbox should contain 4 floating point values')
 
-    print(command_geocode)
-    os.system(command_geocode)
+    inps.latFile = os.path.abspath(os.path.join(inps.geo_master_dir, inps.latFile))
+    inps.lonFile = os.path.abspath(os.path.join(inps.geo_master_dir, inps.lonFile))
+    inps.prodlist = [inps.prodlist + '.slc.ml']
+
+    WSEN = str(inps.cropbox[2]) + ' ' + str(inps.cropbox[0]) + ' ' + str(inps.cropbox[3]) + ' ' + str(inps.cropbox[1])
+    latFile, lonFile = gg.prepare_lat_lon(inps)
+
+    gg.getBound(latFile, float(inps.cropbox[0]), float(inps.cropbox[1]), 'lat')
+    gg.getBound(lonFile, float(inps.cropbox[2]), float(inps.cropbox[3]), 'lon')
+
+    for infile in inps.prodlist:
+        infile = os.path.abspath(infile)
+        print('geocoding ' + infile)
+        outFile = os.path.join(os.path.dirname(infile), "geo_" + os.path.basename(infile))
+        gg.writeVRT(infile, latFile, lonFile)
+
+        cmd = 'gdalwarp -of ENVI -geoloc  -te ' + WSEN + ' -tr ' + str(inps.latStep) + ' ' + str(
+            inps.lonStep) + ' -srcnodata 0 -dstnodata 0 ' + ' -r ' + inps.resamplingMethod + ' -co INTERLEAVE=BIL ' + infile + '.vrt ' + outFile
+        print(cmd)
+        os.system(cmd)
+
+        # write_xml(outFile)
+        cmd = "gdal2isce_xml.py -i " + outFile
+        os.system(cmd)
+
     return
 
 
