@@ -181,8 +181,9 @@ def geocode_file(inps):
         outFile = os.path.join(os.path.dirname(infile), "geo_" + os.path.basename(infile))
         gg.writeVRT(infile, latFile, lonFile)
 
-        cmd = 'gdalwarp -of ENVI -geoloc  -te ' + WSEN + ' -tr ' + str(inps.latStep) + ' ' + str(
-            inps.lonStep) + ' -srcnodata 0 -dstnodata 0 ' + ' -r ' + inps.resamplingMethod + ' -co INTERLEAVE=BIL ' + infile + '.vrt ' + outFile
+        cmd = 'gdalwarp -of ENVI -geoloc  -te ' + WSEN + ' -tr ' + str(inps.latStep) + ' ' + \
+              str(inps.lonStep) + ' -srcnodata 0 -dstnodata 0 ' + ' -r ' + inps.resamplingMethod + \
+              ' -co INTERLEAVE=BIL ' + infile + '.vrt ' + outFile
         print(cmd)
         os.system(cmd)
 
