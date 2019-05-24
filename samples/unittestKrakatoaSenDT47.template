@@ -14,7 +14,7 @@ ssaraopt.parallel                   = 20
 processor                           = isce                                                                                                
 cleanopt                            = 0
 hazard_products_flag                = True
-insarmap_flag                       = False
+insarmaps_flag                       = False
 demMethod                           = boundingBox                                        # '20141007,20141031'
 
 ####################

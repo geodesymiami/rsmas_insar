@@ -121,9 +121,9 @@ class rsmasRun(object):
         self.runf = open(self.run_outname, 'w')
 
         try:
-            self.insarmap_flag = inps.insarmap_flag
+            self.insarmaps_flag = inps.insarmaps_flag
         except:
-            self.insarmap_flag = inps.template['insarmap_flag']
+            self.insarmaps_flag = inps.template['insarmaps_flag']
 
     def downloadDataDEM(self):
         self.runf.write('download_rsmas.py ' + self.customTemplateFile + '\n')
@@ -205,7 +205,7 @@ class rsmasRun(object):
 
     def emailResults(self):
         self.runf.write(self.text_cmd + 'email_results.py ' + self.customTemplateFile + '\n')
-        if self.insarmap_flag == 'True':
+        if self.insarmaps_flag == 'True':
             self.runf.write(self.text_cmd + 'email_results.py ' + self.customTemplateFile + ' --insarmap\n')
 
     def finalize(self):

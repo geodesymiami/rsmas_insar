@@ -8,7 +8,7 @@ ssaraopt.startDate                = 20160601
 ssaraopt.endDate                  = 20160831
 demMethod                         = boundingBox
 hazard_products_flag              = True
-insarmap_flag                     = False
+insarmaps_flag                     = False
 
 ######################################################
 

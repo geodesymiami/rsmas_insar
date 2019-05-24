@@ -14,7 +14,7 @@ ssaraopt.parallel                   = 20
 processor                           = isce                                                                                                
 cleanopt                            = 0
 hazard_products_flag                = True
-insarmap_flag                       = False
+insarmaps_flag                       = False
 
 ####################
 topsStack.boundingBox               = '-6.201 -6.001 105.101 106.101'                            # '-1 0.15 -91.6 -90.9'

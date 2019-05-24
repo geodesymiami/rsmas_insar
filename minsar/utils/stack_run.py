@@ -157,7 +157,7 @@ class CreateRun:
 
             i += 1
 
-        if inps.insarmap_flag == 'True':
+        if inps.insarmaps_flag == 'True':
 
             runObj = rsmasRun()
             runObj.configure(inps, 'run_' + str(i) + "_ingest_insarmaps")
