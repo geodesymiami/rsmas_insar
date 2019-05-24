@@ -10,7 +10,7 @@
 import os
 import argparse
 import shutil
-import minsar
+from minsar import create_runfiles, execute_runfiles
 from minsar.utils.process_utilities import get_project_name, get_work_directory
 from minsar.utils.process_utilities import remove_directories, create_or_update_template
 from minsar.objects.auto_defaults import PathFind
@@ -179,8 +179,8 @@ class RsmasInsar:
         1- images
         2- DEM
         """
-        minsar.create_runfiles.main([self.customTemplateFile, '--step', 'download'])
-        minsar.execute_runfiles.main([self.customTemplateFile, '0', '0'])
+        create_runfiles.main([self.customTemplateFile, '--step', 'download'])
+        execute_runfiles.main([self.customTemplateFile, '0', '0'])
         return
 
     def run_process(self, step_name):
@@ -188,8 +188,8 @@ class RsmasInsar:
         1. create run_files
         2. execute run_files
         """
-        minsar.create_runfiles.main([self.customTemplateFile, '--step', 'process'])
-        minsar.execute_runfiles.main([self.customTemplateFile])
+        create_runfiles.main([self.customTemplateFile, '--step', 'process'])
+        execute_runfiles.main([self.customTemplateFile])
         return
 
     def run(self, steps=STEP_LIST):
