@@ -57,14 +57,15 @@ mkdir -p ~/insarlab/OPERATIONS/LOGS
 cd ../..
 source default_isce22.bash;
 echo DONE WITH CRITICAL CODE ;
+echo ########################
 
-
-echo Install credentials and some code for insarmaps ingestion;
+echo Install credentials and  code for insarmaps ingestion;
 git clone https://github.com/geodesymiami/accounts ../accounts ;
-./setup/install_credential_files.csh;
+cd setup; 
+./install_credential_files.csh;
 
-cd ..
-cd 3rdparty
+cd ../3rdparty
+# gcc 4.9.1 or younger is required for the tippecanoe installation
 module load gcc/4.9.4
 git clone https://github.com/mapbox/tippecanoe.git;
 cd tippecanoe
