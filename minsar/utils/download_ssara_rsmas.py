@@ -87,7 +87,8 @@ def run_ssara(template, delta_lat, run_number=1):
     # Compute SSARA options to use
 
     dataset_template = Template(template)
-
+    dataset_template.options.update(pathObj.correct_for_ssara_date_format(dataset_template.options))
+    
     ssaraopt = dataset_template.generate_ssaraopt_string()
     ssaraopt = ssaraopt.split(' ')
     logger.log(loglevel.INFO, "GENERATED SSARAOPT STRING")
