@@ -15,6 +15,8 @@ cd ~/test/test1
 
 ```
 bash
+[ -f ~/local_git/miniconda3/bin/git ] && alias git=~/local_git/miniconda3/bin/git	
+
 git clone https://github.com/geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
 
@@ -36,16 +38,17 @@ chmod 755 $miniconda_version
 cp condarc ../3rdparty/miniconda3/.condarc
 
 ./download_isce_stack.csh
-../3rdparty/miniconda3/bin/conda install isce2 -c piyushrpt --yes
 ../3rdparty/miniconda3/bin/conda install --yes --file conda.txt
 ../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MintPy/docs/conda.txt
+../3rdparty/miniconda3/bin/conda install isce2 -c piyushrpt --yes
 ../3rdparty/miniconda3/bin/pip install --upgrade pip
 ../3rdparty/miniconda3/bin/pip install opencv-python
 ../3rdparty/miniconda3/bin/pip install geocoder
 
 cd ../3rdparty
-./miniconda3/bin/git clone https://github.com/yunjunz/PyAPS.git
 ./miniconda3/bin/git clone https://github.com/yunjunz/pykml.git
+mkdir -p PyAPS; cd PyAPS
+../miniconda3/bin/git clone https://github.com/yunjunz/pyaps3.git
 
 cd ../3rdparty/pykml
 ../../3rdparty/miniconda3/bin/python setup.py build
