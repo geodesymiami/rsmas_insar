@@ -119,18 +119,10 @@ def create_geotiff (obj, data, outfile, type, work_dir):
                 'Date': obj.get_metadata()['START_DATE'] + '-' + obj.get_metadata()['END_DATE']}
     ds.SetMetadata(Metadata)
 
-    ## TODO: Need to add metadata data_content: 'coherence' (use variable type)
-    ## NEED HELP: I could not figure it out
-
-    if type == 'coherence':
-        outband = ds.GetRasterBand(1)
-    if type == 'interferogram':
-        outband = ds.GetRasterBand(1)
-
-    plt.imshow(data)
-    plt.savefig( outfile )
-    #outband.SetStatistics(np.min(data), np.max(data), np.average(data), np.std(data))
+    outband = ds.GetRasterBand(1)
     outband.WriteArray(data)
+    outband.FlushCache()
+
     ds = None
     return 
 ###########################################################################################
