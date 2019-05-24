@@ -8,7 +8,7 @@ ssaraopt.parallel                   = 20
 processor                           = isce
 demMethod                           = boundingBox
 hazard_products_flag                = False
-insarmap_flag                       = False
+insarmaps_flag                       = False
 
 #topsStack.demDir                   = /nethome/famelung/insarlab/DEMDIR/Sentinel/GalapagosSenDT128/DEM
 topsStack.boundingBox               = '-1 -0.6 -91.7 -90.9' # '-1 0.15 -91.6 -90.9'
