@@ -12,7 +12,6 @@ import subprocess
 
 from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
-from minsar.objects.dataset_template import Template
 import minsar.job_submission as js
 
 ###############################################################################
@@ -118,10 +117,7 @@ def main(iargs=None):
     # if satellite is not Sentinel (not tried yet)
     if 'SenDT' not in inps.project_name and 'SenAT' not in inps.project_name:
 
-        dataset_template = Template(inps.customTemplateFile)
-
-        ssaraopt = dataset_template.generate_ssaraopt_string()
-        ssara_call = ['ssara_federated_query.py'] + ssaraopt + ['--print', '--download']
+        ssara_call = ['ssara_federated_query.py'] + inps.ssaraopt + ['--print', '--download']
         ssara_process = subprocess.Popen(ssara_call, shell=True).wait()
         completion_status = ssara_process.poll()
 

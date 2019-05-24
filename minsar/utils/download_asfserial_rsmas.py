@@ -10,6 +10,7 @@ from minsar.objects import message_rsmas
 from minsar.utils import process_utilities as putils
 import minsar.job_submission as js
 import glob
+from minsar.objects.auto_defaults import PathFind
 import password_config as password
 
 logfile_name = os.getenv('OPERATIONS') + '/LOGS/asfserial_rsmas.log'
@@ -41,6 +42,7 @@ def generate_files_csv():
     """
 
     dataset_template = Template(inps.template)
+    dataset_template.options.update(PathFind.correct_for_ssara_date_format(dataset_template.options))
     ssaraopt = dataset_template.generate_ssaraopt_string()
     ssaraopt = ssaraopt.split(' ')
     filecsv_options = ['ssara_federated_query.py'] + ssaraopt + ['--print', '|', 'awk',
