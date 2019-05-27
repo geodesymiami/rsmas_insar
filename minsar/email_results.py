@@ -48,7 +48,7 @@ def email_insarmaps_results(custom_template):
 
     cwd = os.getcwd()
 
-    hdfeos_file = glob.glob('./MINTPY/S1*.he5')
+    hdfeos_file = glob.glob('./mintpy/S1*.he5')
     hdfeos_file = hdfeos_file[0]
     hdfeos_name = os.path.splitext(os.path.basename(hdfeos_file))[0]
 
@@ -78,10 +78,10 @@ def email_mintpy_results(custom_template):
 
     file_list = pathObj.get_email_file_list()
 
-    if os.path.isdir('MINTPY/PIC'):
-        prefix = 'MINTPY/PIC'
+    if os.path.isdir('mintpy/PIC'):
+        prefix = 'mintpy/PIC'
 
-    template_file = glob.glob('MINTPY/INPUTS/*.template')[0]
+    template_file = glob.glob('mintpy/INPUTS/*.template')[0]
 
     i = 0
     for fileList in file_list:

@@ -69,11 +69,11 @@ if __name__ == "__main__":
 
     os.chdir(inps.work_dir)
 
-    hdfeos_file = glob.glob(inps.work_dir + '/MINTPY/S1*.he5')
-    hdfeos_file.append(glob.glob(inps.work_dir +'/MINTPY/SUBSET_*/S1*.he5'))
+    hdfeos_file = glob.glob(inps.work_dir + '/mintpy/S1*.he5')
+    hdfeos_file.append(glob.glob(inps.work_dir +'/mintpy/SUBSET_*/S1*.he5'))
     hdfeos_file = hdfeos_file[0]
 
-    json_folder = inps.work_dir + '/MINTPY/JSON'
+    json_folder = inps.work_dir + '/mintpy/JSON'
     mbtiles_file = json_folder + '/' + os.path.splitext(os.path.basename(hdfeos_file))[0] + '.mbtiles'
 
     if os.path.isdir(json_folder):
@@ -85,7 +85,7 @@ if __name__ == "__main__":
                'insarmaps.miami.edu -P rsmastest -U rsmas\@gmail.com --json_folder ' + \
                json_folder + ' --mbtiles_file ' + mbtiles_file + ' |& tee -a out_insarmaps.log'
 
-    with open(inps.work_dir + '/MINTPY/run_insarmaps', 'w') as f:
+    with open(inps.work_dir + '/mintpy/run_insarmaps', 'w') as f:
         f.write(command1 + '\n')
         f.write(command2 + '\n')
 
