@@ -126,10 +126,6 @@ def create_default_template(temp_inps):
             logger.log(loglevel.ERROR, '{} is required'.format(template_key))
             raise Exception('ERROR: {0} is required'.format(template_key))
 
-    # build ssaraopt string from ssara options
-    custom_tempObj.options.update(pathObj.correct_for_ssara_date_format(custom_tempObj.options))
-    inps.ssaraopt = custom_tempObj.generate_ssaraopt_string()
-
     # find default values from template_defaults.cfg to assign to default_tempObj
     default_tempObj = Template(pathObj.auto_template)
     config_template = get_config_defaults(config_file='template_defaults.cfg')
@@ -162,6 +158,10 @@ def create_default_template(temp_inps):
         file.write(new_file)
 
     inps.cropbox = pathObj.grab_cropbox(inps)
+
+    # build ssaraopt string from ssara options
+    custom_tempObj.options.update(pathObj.correct_for_ssara_date_format(custom_tempObj.options))
+    inps.ssaraopt = custom_tempObj.generate_ssaraopt_string()
 
     return inps
 
