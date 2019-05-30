@@ -20,7 +20,7 @@ class PathFind:
         self.mergedslcdir = 'merged/SLC'
         self.mergedintdir = 'merged/interferograms'
         self.geomlatlondir = 'geom_master_noDEM'
-        self.wrappercommandtops = 'topsWrapper.py -c '
+        self.wrappercommandtops = 'SentinelWrapper.py -c '
         self.wrappercommandstripmap = 'stripmapWrapper.py -c '
         self.masterdir = 'master'
         self.stackdir = 'stack'

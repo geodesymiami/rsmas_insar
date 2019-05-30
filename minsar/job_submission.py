@@ -148,7 +148,6 @@ def write_single_job_file(job_name, job_file_name, command_line, work_dir, email
     # get lines to write in job file
     job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler, memory, walltime, queue)
     job_file_lines.append("\nfree")
-    job_file_lines.append("\ncd " + work_dir)
     job_file_lines.append("\n" + command_line + "\n")
 
     # write lines to .job file
