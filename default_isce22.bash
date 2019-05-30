@@ -52,6 +52,7 @@ export CONDA_PREFIX=${PARENTDIR}/3rdparty/miniconda3
 export PROJ_LIB=${CONDA_PREFIX}/share/proj
 export GDAL_DATA=${PYTHON3DIR}/share/gdal
 export DASK_CONFIG=${RSMAS_INSAR}/minsar/defaults/dask
+export DASK_CONFIG=${RSMAS_INSAR}/sources/MintPy/mintpy/defaults
 
 export PYTHONPATH=${PYTHONPATH-""}
 export PYTHONPATH=${PYTHONPATH}:${MINTPY_HOME}
