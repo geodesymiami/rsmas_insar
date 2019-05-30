@@ -307,11 +307,12 @@ def remove_last_job_running_products(run_file):
 
 ##########################################################################
 
-def move_stdout_files(run_file):
+
+def move_out_job_files_to_stdout(run_file):
     """move the error file into stdout_files directory"""
 
     job_files = glob.glob(run_file + '*.job')
-    stdout_files  = glob.glob(run_file + '*.o')
+    stdout_files = glob.glob(run_file + '*.o')
     dir_name = os.path.dirname(stdout_files[0])
     out_folder = dir_name + '/stdout_' + os.path.basename(run_file)
     if not os.path.isdir(out_folder):
@@ -420,22 +421,5 @@ def walltime_adjust(inps, default_time):
 
 
 ############################################################################
-
-
-def copy_dask_config(inps):
-    """ Copy dask.yaml in project directory """
-
-    os.environ['DASK_CONFIG'] = os.path.join(inps.work_dir, 'dask')
-    inps.dask_config_dir = os.environ['DASK_CONFIG']
-    prj_config_file = os.path.join(inps.dask_config_dir, 'dask.yaml')
-    if not os.path.exists(inps.dask_config_dir):
-        os.mkdir(inps.dask_config_dir)
-    if not os.path.isfile(prj_config_file):
-        shutil.copyfile(pathObj.daskconfig, prj_config_file)
-    return
-
-##########################################################################
-
-
 
 
