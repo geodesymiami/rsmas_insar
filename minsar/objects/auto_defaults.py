@@ -15,6 +15,7 @@ class PathFind:
         self.auxdir = os.path.expandvars('$SENTINEL_AUX')
         self.geomasterdir = 'merged/geom_master'
         self.minopydir = 'minopy'
+        self.mintpydir = 'mintpy'
         self.rundir = 'run_files'
         self.configdir = 'configs'
         self.mergedslcdir = 'merged/SLC'
@@ -49,12 +50,15 @@ class PathFind:
     @staticmethod
     def grab_cropbox(inps):
         try:
-            if inps.template['processingMethod'] == 'smallbaseline':
-                subset = inps.template['mintpy.subset.lalo']
-            else:
+            if inps.template['processingMethod'] == 'minopy':
                 subset = inps.template['minopy.subset']
+
+                if subset == 'None':
+                    subset = inps.template['mintpy.subset.lalo']
+
             subset = subset.split(':')
             cropbox = '{} {} {} {}'.format(subset[0], subset[1].split(',')[0], subset[1].split(',')[1], subset[2])
+
         except:
             cropbox = inps.template['topsStack.boundingBox']
 

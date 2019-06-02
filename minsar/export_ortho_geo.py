@@ -227,14 +227,13 @@ def make_run_list_amplitude(inps):
     run_amplitude_geo = os.path.join(inps.work_dir, pathObj.rundir, 'run_amplitude_geo')
     slc_list = os.listdir(os.path.join(inps.work_dir, pathObj.mergedslcdir))
 
-    lat_ds = gdal.Open(inps.geom_masterDir + '/lat.rdr', gdal.GA_ReadOnly)
+    lat_ds = gdal.Open(inps.geom_masterDir + '/lat.rdr.ml', gdal.GA_ReadOnly)
     latstep = abs(
         (np.nanmin(lat_ds.GetVirtualMemArray()) - np.nanmax(lat_ds.GetVirtualMemArray())) / (lat_ds.RasterYSize - 1))
 
-    lon_ds = gdal.Open(inps.geom_masterDir + '/lon.rdr', gdal.GA_ReadOnly)
+    lon_ds = gdal.Open(inps.geom_masterDir + '/lon.rdr.ml', gdal.GA_ReadOnly)
     lonstep = abs(
         (np.nanmin(lon_ds.GetVirtualMemArray()) - np.nanmax(lon_ds.GetVirtualMemArray())) / (lon_ds.RasterXSize - 1))
-
 
     with open(run_amplitude_ortho, 'w') as f:
         for item in slc_list:
@@ -266,6 +265,16 @@ def multilook_images(inps):
     for slc_full, slc_ml in zip(full_slc_list, multilooked_slc):
         if not os.path.exists(slc_ml):
             mb.multilook(slc_full, slc_ml, azimuth_looks, range_looks, multilook_tool="gdal")
+
+    full_geometry_list = [os.path.join(inps.work_dir, pathObj.geom_masterDir, x) for x in
+                          ['lat.rdr.full', 'lon.rdr.full']]
+
+    multilooked_geometry = [x.split('.full')[0] + '.ml' for x in full_geometry_list]
+
+    for geo_full, geo_ml in zip(full_geometry_list, multilooked_geometry):
+        if not os.path.exists(geo_ml):
+            mb.multilook(geo_full, geo_ml, azimuth_looks, range_looks, multilook_tool="gdal")
+
     return
 
 
