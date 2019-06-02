@@ -29,14 +29,12 @@ topsStack.slcDir                    = $TESTDATA_ISCE/unittestKrakatoaSenAT171/SL
 
 ####################
 mintpy.reference.lalo                = -6.09366, 105.4218                                #
-mintpy.reference.maskFile = no
 mintpy.troposphericDelay.method      = no                                                #[pyaps / height_correlation / base_trop_cor / no], auto for pyaps
-mintpy.network.coherenceBased        = auto                                              #[yes / no], auto for no, exclude interferograms with coherence < minCoherence
-mintpy.network.minCoherence          = auto                                              # 0.63 #[0.0-1.0], auto for 0.7
-mintpy.networkInversion.weightFunc   = fim                                               # [fim / variance / coherence / no], auto for no
 mintpy.network.startDate             = auto                                              # [20090101 / no], auto for no
 mintpy.network.endDate               = auto                                              # [20090101 / no], auto for no
 mintpy.subset.lalo                   = -6.112:-6.089,105.414:105.436                     #[31.5:32.5,130.5:131.0 / no], auto for no
+mintpy.networkInversion.parallel     = yes                                               #[yes / no], auto for no, parallel processing using dask
+mintpy.networkInversion.walltime     = 00:30                                             #[yes / no], auto for no, parallel processing using dask
 mintpy.save.hdfEos5                  = yes                                               # [yes / update / no], auto for no, save timeseries to UNAVCO InSAR Archive format
 mintpy.save.hdfEos5.update           = yes                                               # [yes / no], auto for no, put XXXXXXXX as endDate in output filename
 mintpy.save.kml                      = yes                                               # [yes / no], auto for yes, save geocoded velocity to Google Earth KMZ file
