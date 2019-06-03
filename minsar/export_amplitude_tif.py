@@ -99,9 +99,9 @@ def create_parser():
                         help='custom template with option settings.\n')
     parser.add_argument('-f', '--file', dest='prodlist', type=str, required=True, help='Input SLC')
     parser.add_argument('-l', '--lat', dest='latFile', type=str,
-                        default='lat.rdr', help='latitude file in radar coordinate')
+                        default='lat.rdr.ml', help='latitude file in radar coordinate')
     parser.add_argument('-L', '--lon', dest='lonFile', type=str,
-                        default='lon.rdr', help='longitude file in radar coordinate')
+                        default='lon.rdr.ml', help='longitude file in radar coordinate')
     parser.add_argument('-y', '--lat-step', dest='latStep', type=float,
                         help='output pixel size in degree in latitude.')
     parser.add_argument('-x', '--lon-step', dest='lonStep', type=float,

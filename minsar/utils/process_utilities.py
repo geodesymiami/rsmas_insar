@@ -144,12 +144,12 @@ def create_default_template(temp_inps):
 
     if os.path.exists(inps.template_file):
         if not os.path.samefile(inps.customTemplateFile, inps.template_file):
-            logger.log(loglevel.INFO, 'generate template file: {}'.format(inps.template_file))
+            print('generate template file: {}'.format(inps.template_file))
             shutil.copyfile(inps.customTemplateFile, inps.template_file)
         else:
-            logger.log(loglevel.INFO, 'template file exists: {}'.format(inps.template_file))
+            print('template file exists: {}'.format(inps.template_file))
     else:
-        logger.log(loglevel.INFO, 'generate template file: {}'.format(inps.template_file))
+        print('generate template file: {}'.format(inps.template_file))
         shutil.copyfile(inps.customTemplateFile, inps.template_file)
 
     # updates tempDefault dictionary with the given templateObj adding new keys
