@@ -64,6 +64,7 @@ export PYTHONPATH=${PYTHONPATH}:${RSMAS_INSAR}
 export PYTHONPATH=${PYTHONPATH}:${PARENTDIR}/sources/rsmas_tools
 export PYTHONPATH=${PYTHONPATH}:${PARENTDIR}/3rdparty/PyAPS
 export PYTHONPATH=${PYTHONPATH}:${ISCE_STACK}
+export PYTHONPATH=${PYTHONPATH}:${RSMAS_INSAR}/sources      # needed for mimt. Need to talk to Sara on how to do this smarter
 export PYTHONPATH_RSMAS=${PYTHONPATH}
 
 ######### Ignore warnings ############
@@ -85,6 +86,7 @@ export PATH=${PYTHON3DIR}/bin:${PATH}
 export PATH=${PATH}:${PROJ_LIB}
 export PATH=${PATH}:${PARENTDIR}/3rdparty/tippecanoe/bin
 export PATH=${PATH}:${DASK_CONFIG}
+export PATH=${PATH}:${PARENTDIR}/sources/mimt
 
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH-""}
 export LD_LIBRARY_PATH=${PYTHON3DIR}/lib

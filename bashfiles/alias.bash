@@ -72,7 +72,7 @@ alias mailssarakml='echo " " | mail -a *.kml -s ssara_kml_file ${NOTIFICATIONEMA
 ###### geodmod #######################
 ######################################
 alias cdg='cd ${GEODMODHOME}'
-alias cdm='cd ${GEODMOD_WORKDIR}'
+alias cdm='cd ${MINTPY_HOME}/mintpy'
 alias cdgs='cd ${GEODMODHOME}/examples'
 alias cdge='cd ${GEODMODHOME}/examples'
 alias cdgp='cd ${GEODMODHOME}/preparelib'
