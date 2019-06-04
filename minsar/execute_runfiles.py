@@ -46,10 +46,11 @@ def command_line_parse(iargs=None):
 
 def main(iargs=None):
 
-    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
-
     inps = command_line_parse(iargs)
     inps = putils.create_or_update_template(inps)
+
+    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+
     os.chdir(inps.work_dir)
 
     #########################################

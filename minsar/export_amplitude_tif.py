@@ -28,22 +28,22 @@ def main(iargs=None):
     Crops SLC images from Isce merged/SLC directory and creates georectified and orthorectified products.
     """
 
-    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
-
     inps = command_line_parse(iargs)
-    project_name = os.path.basename(inps.customTemplateFile).partition('.')[0]
-    project_dir = os.getenv('SCRATCHDIR') + '/' + project_name
-    slave_dir = os.path.join(project_dir, pathObj.mergedslcdir)
-    pic_dir = os.path.join(project_dir, pathObj.tiffdir)
     inps = create_or_update_template(inps)
+
+    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+
+    slave_dir = os.path.join(inps.work_dir, pathObj.mergedslcdir)
+    pic_dir = os.path.join(inps.work_dir, pathObj.tiffdir)
+
     os.chdir(slave_dir)
 
     slc = inps.prodlist
 
     if inps.imtype == 'ortho':
-        inps.geo_master_dir = os.path.join(project_dir, pathObj.geomasterdir)
+        inps.geo_master_dir = os.path.join(inps.work_dir, pathObj.geomasterdir)
     else:
-        inps.geo_master_dir = os.path.join(project_dir, pathObj.geomlatlondir)
+        inps.geo_master_dir = os.path.join(inps.work_dir, pathObj.geomlatlondir)
 
 
     try:
@@ -75,7 +75,7 @@ def main(iargs=None):
     transform = data.GetGeoTransform()
 
     ##
-    xmlfile = glob.glob(os.path.join(project_dir, pathObj.masterdir, '*.xml'))[0]
+    xmlfile = glob.glob(os.path.join(inps.work_dir, pathObj.masterdir, '*.xml'))[0]
     attributes = xmlread(xmlfile)
     Metadata = {'SAT': attributes['missionname'], 'Mode': attributes['passdirection'],
                 'Image_Type': '{}_BackScatter'.format(inps.imtype), 'Date': slc}

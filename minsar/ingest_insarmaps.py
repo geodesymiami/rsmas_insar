@@ -49,12 +49,10 @@ def command_line_parse(args):
 
 if __name__ == "__main__":
 
-    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
-
     inps = command_line_parse(sys.argv[1:])
-    inps.project_name = get_project_name(inps.custom_template_file)
-    inps.work_dir = get_work_directory(None, inps.project_name)
     inps = create_or_update_template(inps)
+
+    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     #########################################
     # Submit job
@@ -91,7 +89,7 @@ if __name__ == "__main__":
 
     out_file = 'out_insarmaps'
     logger.log(loglevel.INFO, command1)
-    message_rsmas.log(command1)
+    message_rsmas.log(inps.work_dir, command1)
     command1 = '('+command1+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
     status = subprocess.Popen(command1, shell=True).wait()
     if status is not 0:
@@ -100,7 +98,7 @@ if __name__ == "__main__":
 
     # TODO: Change subprocess call to get back error code and send error code to logger
     logger.log(loglevel.INFO, command2)
-    message_rsmas.log(command2)
+    message_rsmas.log(inps.work_dir, command2)
     command2 = '('+command2+' | tee -a '+out_file+'.o) 3>&1 1>&2 2>&3 | tee -a '+out_file+'.e'
     status = subprocess.Popen(command2, shell=True).wait()
     if status is not 0:

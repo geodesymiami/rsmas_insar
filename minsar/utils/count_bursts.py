@@ -29,11 +29,12 @@ def command_line_parse(args):
 
 if __name__ == "__main__":
 
-    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
     inps = command_line_parse(sys.argv[1:])
 
     inps.project_name = putils.get_project_name(custom_template_file=inps.template)
     inps.work_dir = putils.get_work_directory(None, inps.project_name)
+
+    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     itotal = 0
     lat_files = glob.glob(inps.work_dir + '/geom_master/IW1/lat_*.rdr')
