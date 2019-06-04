@@ -49,7 +49,10 @@ def main(iargs=None):
     inps = command_line_parse(iargs)
     inps = putils.create_or_update_template(inps)
 
-    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+    if not iargs is None:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+    else:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     os.chdir(inps.work_dir)
 
