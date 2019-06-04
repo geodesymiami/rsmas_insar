@@ -27,8 +27,8 @@ def main(iargs=None):
     os.chdir(inps.work_dir)
 
     command_line = os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1:])
-    message_rsmas.log(inps.work_dir, '##### NEW RUN #####')
-    message_rsmas.log(inps.work_dir, command_line)
+    message_rsmas.log('##### NEW RUN #####')
+    message_rsmas.log(command_line)
 
     #########################################
     # Submit job

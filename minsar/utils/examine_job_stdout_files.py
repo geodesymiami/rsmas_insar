@@ -81,10 +81,7 @@ def run_examine_job_stdout_files(pattern):
 
 
 if __name__ == '__main__':
-    work_dir = os.path.join(os.getenv('SCRATCHDIR'),
-                            os.path.abspath(os.getcwd()).
-                            split(os.path.basename(os.getenv('SCRATCHDIR')))[1].split('/')[1])
-    message_rsmas.log(work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
     inps = command_line_parse(sys.argv[1:])
     #run_examine_job_stdout_files(sys.argv[1:])
     run_examine_job_stdout_files(inps.pattern)

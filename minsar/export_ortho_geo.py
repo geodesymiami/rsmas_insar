@@ -27,8 +27,9 @@ pathObj = PathFind()
 def main(iargs=None):
     """ create orth and geo rectifying run jobs and submit them. """
 
+    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+
     inps = cmdLineParse()
-    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     if inps.submit_flag:
         job_file_name = 'export_ortho_geo'

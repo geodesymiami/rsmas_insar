@@ -10,7 +10,7 @@ import glob
 import argparse
 import subprocess
 from mintpy.utils import readfile
-from minsar.utils.process_utilities import remove_directories, get_project_name, get_work_directory
+from minsar.utils.process_utilities import remove_directories
 from minsar.objects.auto_defaults import PathFind
 from minsar.objects import message_rsmas
 
@@ -32,7 +32,7 @@ def create_parser():
     """ Creates command line argument parser object. """
     parser = argparse.ArgumentParser(description='Email results (by default mintpy results)',
                                      formatter_class=argparse.RawTextHelpFormatter, epilog=EXAMPLE)
-    parser.add_argument('customTemplateFile', help='template file containing ssaraopt field')
+    parser.add_argument('template_file', help='template file containing ssaraopt field')
     parser.add_argument('--insarmap', action='store_true', dest='insarmap', default=False,
                     help = 'Email insarmap results')
     return parser
@@ -109,13 +109,11 @@ def email_mintpy_results(custom_template):
 def main(iargs=None):
     """ email mintpy or insarmap results """
 
+    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+
     inps = command_line_parse(iargs)
-    project_name = get_project_name(inps.customTemplateFile)
-    work_dir = get_work_directory(None, project_name)
 
-    message_rsmas.log(work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
-
-    custom_template = readfile.read_template(inps.customTemplateFile)
+    custom_template = readfile.read_template(inps.template_file)
 
     if inps.insarmap:
         email_insarmaps_results(custom_template)

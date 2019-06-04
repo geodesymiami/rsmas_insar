@@ -37,7 +37,7 @@ def command_line_parse(args):
     inps = parser.parse_args(args)
 
 
-def generate_files_csv(work_dir):
+def generate_files_csv():
     """ Generates a csv file of the files to download serially.
     Uses the `awk` command to generate a csv file containing the data files to be download
     serially. The output csv file is then sent through the `sed` command to remove the first five
@@ -55,7 +55,7 @@ def generate_files_csv(work_dir):
     filecsv_options = ['ssara_federated_query.py']+ssaraopt+['--print', '|', 'awk', "'BEGIN{FS=\",\"; ORS=\",\"}{ print $14}'", '>', 'files.csv']
 
     csv_command = ' '.join(filecsv_options)
-    message_rsmas.log(work_dir, csv_command)
+    message_rsmas.log(csv_command)
     subprocess.Popen(csv_command, shell=True).wait()
     sed_command = "sed 's/^.\{5\}//' files.csv > new_files.csv"
     subprocess.Popen(sed_command, shell=True).wait()
@@ -142,14 +142,14 @@ if __name__ == "__main__":
         js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
 
     os.chdir(inps.work_dir)
-    message_rsmas.log(inps.work_dir, os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1::]))
+    message_rsmas.log(os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1::]))
     os.chdir(inps.slcDir)
     try:
         os.remove(os.path.expanduser('~') + '/.bulk_download_cookiejar.txt')
     except OSError:
         pass
 
-    generate_files_csv(inps.work_dir)
+    generate_files_csv()
     succesful = run_download_asf_serial()
     change_file_permissions()
     logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))

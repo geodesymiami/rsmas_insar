@@ -12,7 +12,6 @@ import subprocess
 import argparse
 import time
 from minsar.objects import message_rsmas
-from minsar.utils.process_utilities import get_project_name, get_work_directory
 
 
 def create_argument_parser():
@@ -54,9 +53,6 @@ def parse_arguments(args):
             job_submission_params.queue = "general"
         if scheduler == "PBS":
             job_submission_params.queue = "batch"
-
-    project_name = get_project_name(inps.template)
-    job_submission_params.work_dir = get_work_directory(None, project_name)
 
     return job_submission_params
 
@@ -297,5 +293,5 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime, email_notif
 
 if __name__ == "__main__":
     PARAMS = parse_arguments(sys.argv[1::])
-    message_rsmas.log(PARAMS.work_dir, os.path.basename(sys.argv[0]) + " " + " ".join(sys.argv[1::]))
+    message_rsmas.log(os.path.basename(sys.argv[0]) + " " + " ".join(sys.argv[1::]))
     submit_batch_jobs(PARAMS.file, PARAMS.outdir, memory=PARAMS.memory, walltime=PARAMS.wall, queue=PARAMS.queue)
