@@ -52,7 +52,7 @@ if __name__ == "__main__":
     inps = command_line_parse(sys.argv[1:])
     inps = create_or_update_template(inps)
 
-    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1]))
 
     #########################################
     # Submit job

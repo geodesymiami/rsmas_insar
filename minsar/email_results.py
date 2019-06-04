@@ -113,7 +113,7 @@ def main(iargs=None):
     project_name = get_project_name(inps.customTemplateFile)
     work_dir = get_work_directory(None, project_name)
 
-    message_rsmas.log(work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+    message_rsmas.log(work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
 
     custom_template = readfile.read_template(inps.customTemplateFile)
 

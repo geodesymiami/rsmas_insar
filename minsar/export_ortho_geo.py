@@ -28,7 +28,7 @@ def main(iargs=None):
     """ create orth and geo rectifying run jobs and submit them. """
 
     inps = cmdLineParse()
-    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
 
     if inps.submit_flag:
         job_file_name = 'export_ortho_geo'

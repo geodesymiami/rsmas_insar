@@ -287,7 +287,7 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime, email_notif
         if os.path.isfile(work_dir):
             os.remove(work_dir)
         os.makedirs(work_dir)
-
+        
     command_line = os.path.basename(argv[0]) + " "
     command_line += " ".join(flag for flag in argv[1:] if flag != "--submit")
     write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
