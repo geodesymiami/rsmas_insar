@@ -82,10 +82,11 @@ def download(script_name, customTemplateFile, slc_dir, outnum):
 def main(iargs=None):
     """Downloads data with ssara and asfserial scripts."""
 
-    command = os.path.basename(__file__) + ' ' + iargs[0]
-    message_rsmas.log(command)
-
     inps = command_line_parse(iargs)
+    inps = putils.create_or_update_template(inps)
+
+    command = os.path.basename(__file__) + ' ' + iargs[0]
+    message_rsmas.log(inps.work_dir, command)
 
     #########################################
     # Submit job
@@ -99,7 +100,7 @@ def main(iargs=None):
         js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
         sys.exit(0)
 
-    inps = putils.create_or_update_template(inps)
+
 
     if not inps.template['topsStack.slcDir'] is None:
         slc_dir = inps.template['topsStack.slcDir']

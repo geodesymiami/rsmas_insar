@@ -592,7 +592,11 @@ class bulk_downloader:
         
 
 if __name__ == "__main__":
-    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+    work_dir = os.path.join(os.getenv('SCRATCHDIR'),
+                            os.path.abspath(os.getcwd()).
+                            split(os.path.basename(os.getenv('SCRATCHDIR')))[1].split('/')[1])
+    
+    message_rsmas.log(work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
     downloader = bulk_downloader()
     downloader.download_files()
     downloader.print_summary()

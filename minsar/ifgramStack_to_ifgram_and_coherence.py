@@ -46,11 +46,12 @@ def create_parser():
 def main(iargs=None):
     """ generates interferograms and coherence images in GeoTiff format """
 
-    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
-
     inps = command_line_parse(iargs)
     project_name = putils.get_project_name(custom_template_file=inps.template_file)
     work_dir = putils.get_work_directory(None, project_name)
+    
+    message_rsmas.log(work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+
     out_dir = work_dir + '/' + inps.out_dir
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)
