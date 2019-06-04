@@ -46,3 +46,12 @@ then
   export SCRATCHDIR=/data1/Projects/insar/data
   export TESTDATA_ISCE=/data1/Projects/insar/data/TESTDATA_ISCE
 fi
+###############################################
+if [[ ${HOST} =~ glic ]]
+then
+  export PLATFORM=$HOST
+  export JOBSCHEDULER=LSF
+  export QUEUENAME=serial
+  export SCRATCHDIR=/data/scratch/${USER}
+  export TESTDATA_ISCE=/data/Projects/insar/data/TESTDATA_ISCE
+fi
