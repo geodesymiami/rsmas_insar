@@ -13,7 +13,6 @@ from minsar.utils import process_utilities as putils
 from minsar.objects.auto_defaults import PathFind
 import minsar.job_submission as js
 
-
 pathObj = PathFind()
 inps = None
 
@@ -25,8 +24,8 @@ def create_parser():
     """ Creates command line argument parser object. """
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('template', metavar="FILE", help='template file to use.')
-    parser.add_argument( '--submit', dest='submit_flag', action='store_true', help='submits job')
+    parser.add_argument('customTemplateFile', metavar="FILE", help='template file to use.')
+    parser.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
     parser.add_argument('--delta_lat', dest='delta_lat', default='0.0', type=float,
                         help='delta to add to latitude from boundingBox field, default is 0.0')
 
@@ -63,13 +62,13 @@ def check_downloads(inps, run_number, args):
     for f in files_to_check:
         if not os.path.isfile(str(os.getcwd()) + "/" + str(f)):
             logger.log(loglevel.WARNING, "The file, %s, didn't download correctly. Running ssara again.")
-            run_ssara(inps.template, delta_lat, run_number + 1)
+            run_ssara(inps.work_dir, inps.customTemplateFile, delta_lat, run_number + 1)
             return
 
     logger.log(loglevel.INFO, "Everything is there!")
 
 
-def run_ssara(template, delta_lat, run_number=1):
+def run_ssara(work_dir, template, delta_lat, run_number=1):
     """ Runs ssara_federated_query-cj.py and checks for download issues.
         Runs ssara_federated_query-cj.py and checks continuously for whether the data download has hung without
         comleting or exited with an error code. If either of the above occur, the function is run again, for a
@@ -88,7 +87,7 @@ def run_ssara(template, delta_lat, run_number=1):
 
     dataset_template = Template(template)
     dataset_template.options.update(pathObj.correct_for_ssara_date_format(dataset_template.options))
-    
+
     ssaraopt = dataset_template.generate_ssaraopt_string()
     ssaraopt = ssaraopt.split(' ')
     logger.log(loglevel.INFO, "GENERATED SSARAOPT STRING")
@@ -97,12 +96,12 @@ def run_ssara(template, delta_lat, run_number=1):
     ssaraopt = add_polygon_to_ssaraopt(dataset_template.get_options(), ssaraopt.copy(), delta_lat)
 
     # get kml file and create listing
-    get_ssara_kml_and_listing(ssaraopt = ssaraopt)
+    get_ssara_kml_and_listing(work_dir, ssaraopt=ssaraopt)
 
     # Runs ssara_federated_query-cj.py with proper options
-    ssara_call    = ['ssara_federated_query-cj.py'] + ssaraopt + ['--print', '--download']
+    ssara_call = ['ssara_federated_query-cj.py'] + ssaraopt + ['--print', '--download']
     print('Download data using:\n' + ' '.join(ssara_call))
-    message_rsmas.log(' '.join(ssara_call))
+    message_rsmas.log(work_dir, ' '.join(ssara_call))
     ssara_process = subprocess.Popen(' '.join(ssara_call), shell=True)
 
     logger.log(loglevel.INFO, "STARTED PROCESS")
@@ -128,7 +127,7 @@ def run_ssara(template, delta_lat, run_number=1):
             hang_status = True
             logger.log(loglevel.WARNING, "SSARA Hung")
             ssara_process.terminate()  # teminate the process beacause download hung
-            break;  # break the completion loop
+            break  # break the completion loop
 
         prev_size = curr_size  # store current size for comparison after waiting
 
@@ -151,12 +150,12 @@ def run_ssara(template, delta_lat, run_number=1):
         if hang_status:
             logger.log(loglevel.WARNING, "Hanging, running again")
 
-        run_ssara(template, delta_lat,  run_number=run_number + 1)
+        run_ssara(template, delta_lat, run_number=run_number + 1)
 
     return 0
 
 
-def get_ssara_kml_and_listing(ssaraopt):
+def get_ssara_kml_and_listing(work_dir, ssaraopt):
     """download the ssara kml file and generate a file listing of granules to be downloaded"""
 
     ssaraopt_kml = ['--kml' if x.startswith('--parallel') else x for x in ssaraopt]
@@ -164,67 +163,69 @@ def get_ssara_kml_and_listing(ssaraopt):
     ssaraopt_print.append('>')
     ssaraopt_print.append('ssara_listing.txt')
 
-    ssara_call    = ['ssara_federated_query.py'] + ssaraopt_kml
+    ssara_call = ['ssara_federated_query.py'] + ssaraopt_kml
     print('Get KML using:\n' + ' '.join(ssara_call))
-    message_rsmas.log(' '.join(ssara_call))
+    message_rsmas.log(work_dir, ' '.join(ssara_call))
     ssara_process = subprocess.run(' '.join(ssara_call), shell=True)
-    ssara_call    = ['ssara_federated_query.py'] + ssaraopt_print
+    ssara_call = ['ssara_federated_query.py'] + ssaraopt_print
     print('Get listing using:\n' + ' '.join(ssara_call))
-    message_rsmas.log(' '.join(ssara_call))
+    message_rsmas.log(work_dir, ' '.join(ssara_call))
     ssara_process = subprocess.run(' '.join(ssara_call), shell=True)
 
     return None
 
 
-def add_polygon_to_ssaraopt(dataset_template, ssaraopt, delta_lat ):
+def add_polygon_to_ssaraopt(dataset_template, ssaraopt, delta_lat):
     """calculates intersectsWith polygon from bbox and replace frame in ssaraopt if give"""
     bbox_list = dataset_template['topsStack.boundingBox'][1:-1].split(' ')
-    delta_lon = delta_lat*0.2
-    min_lat = float( bbox_list[0] ) - delta_lat
-    max_lat = float( bbox_list[1] ) + delta_lat
-    min_lon = float( bbox_list[2] ) - delta_lon
-    max_lon = float( bbox_list[3] ) + delta_lon
+    delta_lon = delta_lat * 0.2
+    min_lat = float(bbox_list[0]) - delta_lat
+    max_lat = float(bbox_list[1]) + delta_lat
+    min_lon = float(bbox_list[2]) - delta_lon
+    max_lon = float(bbox_list[3]) + delta_lon
 
-    polygon = '--intersectsWith=\'Polygon(({:.2f} {:.2f}, {:.2f} {:.2f}, {:.2f} {:.2f}, {:.2f} {:.2f}, {:.2f} {:.2f}))\'' .format(
-        min_lon, min_lat, min_lon, max_lat, max_lon, max_lat, max_lon, min_lat, min_lon, min_lat)
+    polygon = '--intersectsWith=\'Polygon(({:.2f} {:.2f}, {:.2f} {:.2f}, {:.2f} {:.2f}, {:.2f} {:.2f}, ' \
+              '{:.2f} {:.2f}))\''.format(min_lon, min_lat, min_lon, max_lat, max_lon, max_lat, max_lon, min_lat,
+                                         min_lon, min_lat)
 
     # add --polygon and remove --frame option
-    ssaraopt.insert(2,polygon)
-    ssaraopt = [ x for x in ssaraopt if not x[0:7]=='--frame']
+    ssaraopt.insert(2, polygon)
+    ssaraopt = [x for x in ssaraopt if not x[0:7] == '--frame']
 
     return ssaraopt
 
 
 if __name__ == "__main__":
 
-    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
-
     inps = command_line_parse(sys.argv[1:])
 
-    inps.project_name = putils.get_project_name(custom_template_file=inps.template)
-    inps.work_dir = putils.get_work_directory(None, inps.project_name)
-    inps.slc_dir = inps.work_dir + "/SLC"
+    inps = putils.create_or_update_template(inps)
+
+    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+
+    if not inps.template['topsStack.slcDir'] is None:
+        inps.slc_dir = inps.template['topsStack.slcDir']
+    else:
+        inps.slc_dir = os.path.join(inps.work_dir, 'SLC')
 
     #########################################
     # Submit job
     #########################################
     if inps.submit_flag:
         job_file_name = 'download_ssara_rsmas'
-        job_name = inps.template.split(os.sep)[-1].split('.')[0]
+        job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
         work_dir = inps.work_dir
         wall_time = '24:00'
 
         js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
         sys.exit(0)
 
-    os.chdir(inps.work_dir)
-    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
     if not os.path.isdir(inps.slc_dir):
         os.makedirs(inps.slc_dir)
     os.chdir(inps.slc_dir)
 
-    logger.log(loglevel.INFO, "DATASET: %s", str(inps.template.split('/')[-1].split(".")[0]))
+    logger.log(loglevel.INFO, "DATASET: %s", str(inps.customTemplateFile.split('/')[-1].split(".")[0]))
     logger.log(loglevel.INFO, "DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
-    succesful = run_ssara(inps.template, inps.delta_lat)
+    succesful = run_ssara(inps.work_dir, inps.customTemplateFile, inps.delta_lat)
     logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
     logger.log(loglevel.INFO, "------------------------------------")

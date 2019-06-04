@@ -78,7 +78,7 @@ def run_convert_boundingbox(input):
 
 
 if __name__ == '__main__':
-    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+    message_rsmas.log('.', os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
     inps = command_line_parse(sys.argv[1:])
     run_convert_boundingbox(sys.argv[1:])
 
