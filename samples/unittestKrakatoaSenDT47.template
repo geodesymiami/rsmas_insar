@@ -26,7 +26,7 @@ topsStack.azimuthLooks              = 2                                         
 topsStack.rangeLooks                = 6                                                # comment
 topsStack.filtStrength              = 0.2                                              # comment
 topsStack.unwMethod                 = snaphu                                           # comment
-topsStack.coregistration            = auto                                             # [NESD geometry], auto for NESD
+topsStack.coregistration            = geometry                                             # [NESD geometry], auto for NESD
 topsStack.slcDir                    = $TESTDATA_ISCE/unittestKrakatoaSenDT47/SLC
 
 ####################
