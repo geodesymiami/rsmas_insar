@@ -31,12 +31,12 @@ def Message(msg):
         raise Exception("Unrecognized date format. Only string and list supported.")
     f.close()
 
-def log(logdir, msg):
-    f = open(os.path.join(logdir, 'log'), 'a')
+def log(msg):
+    f = open('log','a')
     callingFunction  = os.path.basename(inspect.stack()[1][1])
     dateStr=datetime.datetime.strftime(datetime.datetime.now(), '%Y%m%d:%H%M%S') 
     #dateStr=datetime.datetime.now() 
-    string = dateStr + " * " + msg
+    string = dateStr + " * " +  msg  
     print(string)
     f.write(string + "\n")
     f.close()

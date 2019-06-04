@@ -22,6 +22,7 @@ import re
 import subprocess
 from minsar.objects import message_rsmas
 from minsar.utils.download_ssara_rsmas import add_polygon_to_ssaraopt
+from minsar.utils.process_utilities import get_project_name, get_work_directory
 from minsar.utils.process_utilities import create_or_update_template
 
 EXAMPLE = '''
@@ -38,12 +39,17 @@ EXAMPLE = '''
 
 def main(args):
 
+    message_rsmas.log(os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+
+    command = os.path.basename(__file__) + ' ' + ' '.join(args[1:])
+    message_rsmas.log(command)
+
     # set defaults: ssara=True is set in dem_parser, use custom_pemp[late field if given
     inps = dem_parser()
     inps = create_or_update_template(inps)
-
-    command = os.path.basename(__file__) + ' ' + ' '.join(args[1:])
-    message_rsmas.log(inps.work_dir, command)
+    inps.template = inps.template
+    project_name = get_project_name(inps.customTemplateFile)
+    work_dir = get_work_directory(None, project_name)
 
     if 'demMethod' in list(inps.template.keys()):
         if inps.template['demMethod'] == 'ssara':
@@ -56,7 +62,7 @@ def main(args):
     # print( 'flag_ssara: ' +str(inps.flag_ssara))
     # print( 'flag_boundingBox : ' + str(inps.flag_boundingBox))
 
-    cwd = make_dem_dir(inps.work_dir)
+    cwd = make_dem_dir(work_dir)
 
     if inps.flag_ssara:
 
@@ -79,7 +85,7 @@ def main(args):
 
         demBbox = str(int(south)) + ' ' + str(int(north)) + ' ' + str(int(west)) + ' ' + str(int(east))
         cmd = 'dem.py -a stitch -b ' + demBbox + ' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
-        message_rsmas.log(inps.work_dir, cmd)
+        message_rsmas.log(cmd)
 
         try:
             output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True, universal_newlines=True)
