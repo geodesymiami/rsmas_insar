@@ -32,7 +32,7 @@ def create_parser():
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, epilog=EXAMPLE)
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
-    parser.add_argument('custom_template_file', nargs='?',
+    parser.add_argument('customTemplateFile', nargs='?',
                         help='custom template with option settings.\n')
     parser.add_argument( '--submit', dest='submit_flag', action='store_true', help='submits job')
 
