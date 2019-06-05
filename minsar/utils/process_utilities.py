@@ -264,15 +264,15 @@ def concatenate_error_files(run_file):
                     outfile.write(infile.read())
                 os.remove(fname)
 
-        out_folder = os.path.dirname(run_file) + '/stderr_' + os.path.basename(run_file)
+        #out_folder = os.path.dirname(run_file) + '/stderr_' + os.path.basename(run_file)
 
-        if not os.path.exists(out_folder):
-            os.mkdir(out_folder)
-        else:
-            shutil.rmtree(out_folder)
-            os.mkdir(out_folder)
+        #if not os.path.exists(out_folder):
+        #    os.mkdir(out_folder)
+        #else:
+        #    shutil.rmtree(out_folder)
+        #    os.mkdir(out_folder)
 
-        shutil.move(out_name, out_folder)
+        #shutil.move(out_name, out_folder)
     return None
 
 ###############################################################################

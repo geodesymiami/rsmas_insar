@@ -68,7 +68,7 @@ def check_downloads(inps, run_number, args):
     logger.log(loglevel.INFO, "Everything is there!")
 
 
-def run_ssara(work_dir, template, delta_lat, run_number=1):
+def run_ssara(slc_dir, template, delta_lat, run_number=1):
     """ Runs ssara_federated_query-cj.py and checks for download issues.
         Runs ssara_federated_query-cj.py and checks continuously for whether the data download has hung without
         comleting or exited with an error code. If either of the above occur, the function is run again, for a
@@ -96,12 +96,12 @@ def run_ssara(work_dir, template, delta_lat, run_number=1):
     ssaraopt = add_polygon_to_ssaraopt(dataset_template.get_options(), ssaraopt.copy(), delta_lat)
 
     # get kml file and create listing
-    get_ssara_kml_and_listing(work_dir, ssaraopt=ssaraopt)
+    get_ssara_kml_and_listing(slc_dir, ssaraopt=ssaraopt)
 
     # Runs ssara_federated_query-cj.py with proper options
     ssara_call = ['ssara_federated_query-cj.py'] + ssaraopt + ['--print', '--download']
     print('Download data using:\n' + ' '.join(ssara_call))
-    message_rsmas.log(work_dir, ' '.join(ssara_call))
+    message_rsmas.log(slc_dir, ' '.join(ssara_call))
     ssara_process = subprocess.Popen(' '.join(ssara_call), shell=True)
 
     logger.log(loglevel.INFO, "STARTED PROCESS")
@@ -155,21 +155,21 @@ def run_ssara(work_dir, template, delta_lat, run_number=1):
     return 0
 
 
-def get_ssara_kml_and_listing(work_dir, ssaraopt):
+def get_ssara_kml_and_listing(slc_dir, ssaraopt):
     """download the ssara kml file and generate a file listing of granules to be downloaded"""
 
     ssaraopt_kml = ['--kml' if x.startswith('--parallel') else x for x in ssaraopt]
     ssaraopt_print = ['--print' if x.startswith('--parallel') else x for x in ssaraopt]
     ssaraopt_print.append('>')
-    ssaraopt_print.append('ssara_listing.txt')
+    ssaraopt_print.append(os.path.join(slc_dir, 'ssara_listing.txt'))
 
     ssara_call = ['ssara_federated_query.py'] + ssaraopt_kml
     print('Get KML using:\n' + ' '.join(ssara_call))
-    message_rsmas.log(work_dir, ' '.join(ssara_call))
+    message_rsmas.log(slc_dir, ' '.join(ssara_call))
     ssara_process = subprocess.run(' '.join(ssara_call), shell=True)
     ssara_call = ['ssara_federated_query.py'] + ssaraopt_print
     print('Get listing using:\n' + ' '.join(ssara_call))
-    message_rsmas.log(work_dir, ' '.join(ssara_call))
+    message_rsmas.log(slc_dir, ' '.join(ssara_call))
     ssara_process = subprocess.run(' '.join(ssara_call), shell=True)
 
     return None
@@ -208,6 +208,7 @@ if __name__ == "__main__":
     else:
         inps.slc_dir = os.path.join(inps.work_dir, 'SLC')
 
+    project_slc_dir = os.path.join(inps.work_dir, 'SLC')
     #########################################
     # Submit job
     #########################################
@@ -220,12 +221,12 @@ if __name__ == "__main__":
         js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
         sys.exit(0)
 
-    if not os.path.isdir(inps.slc_dir):
-        os.makedirs(inps.slc_dir)
+    if not os.path.isdir(project_slc_dir):
+        os.makedirs(project_slc_dir)
     os.chdir(inps.slc_dir)
 
     logger.log(loglevel.INFO, "DATASET: %s", str(inps.customTemplateFile.split('/')[-1].split(".")[0]))
     logger.log(loglevel.INFO, "DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
-    succesful = run_ssara(inps.work_dir, inps.customTemplateFile, inps.delta_lat)
+    succesful = run_ssara(project_slc_dir, inps.customTemplateFile, inps.delta_lat)
     logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
     logger.log(loglevel.INFO, "------------------------------------")

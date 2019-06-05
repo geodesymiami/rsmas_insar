@@ -22,7 +22,7 @@ inps = None
 
 def create_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('template', metavar="FILE", help='template file to use.')
+    parser.add_argument('customTemplateFile', metavar="FILE", help='template file to use.')
     parser.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
     parser.add_argument('--delta_lat', dest='delta_lat', default='0.0', type=float,
                          help='delta to add to latitude from boundingBox field, default is 0.0')
@@ -37,14 +37,14 @@ def command_line_parse(args):
     inps = parser.parse_args(args)
 
 
-def generate_files_csv(work_dir):
+def generate_files_csv(slc_dir, custom_template_file):
     """ Generates a csv file of the files to download serially.
     Uses the `awk` command to generate a csv file containing the data files to be download
     serially. The output csv file is then sent through the `sed` command to remove the first five
     empty values to eliminate errors in download_ASF_serial.py.
     """
 
-    dataset_template = Template(inps.template)
+    dataset_template = Template(custom_template_file)
     dataset_template.options.update(PathFind.correct_for_ssara_date_format(dataset_template.options))
     ssaraopt = dataset_template.generate_ssaraopt_string()
     ssaraopt = ssaraopt.split(' ')
@@ -52,16 +52,19 @@ def generate_files_csv(work_dir):
     # add intersectWith to ssaraopt string
     ssaraopt = add_polygon_to_ssaraopt(dataset_template.get_options(), ssaraopt.copy(), inps.delta_lat)
 
-    filecsv_options = ['ssara_federated_query.py']+ssaraopt+['--print', '|', 'awk', "'BEGIN{FS=\",\"; ORS=\",\"}{ print $14}'", '>', 'files.csv']
+    filecsv_options = ['ssara_federated_query.py']+ssaraopt+['--print', '|', 'awk',
+                                                             "'BEGIN{FS=\",\"; ORS=\",\"}{ print $14}'", '>',
+                                                             os.path.join(slc_dir, 'files.csv')]
 
     csv_command = ' '.join(filecsv_options)
-    message_rsmas.log(work_dir, csv_command)
+    message_rsmas.log(slc_dir, csv_command)
     subprocess.Popen(csv_command, shell=True).wait()
-    sed_command = "sed 's/^.\{5\}//' files.csv > new_files.csv"
+    sed_command = "sed 's/^.\{5\}//' " + os.path.join(slc_dir, 'files.csv') + ' > ' + \
+                  os.path.join(slc_dir, 'new_files.csv')
     subprocess.Popen(sed_command, shell=True).wait()
 
 
-def run_download_asf_serial(run_number=1):
+def run_download_asf_serial(slc_dir, run_number=1):
     """ Runs download_ASF_serial.py with proper files.
     Runs adapted download_ASF_serial.py with a CLI username and password and a csv file containing
     the the files needed to be downloaded (provided by ssara_federated_query.py --print)
@@ -72,7 +75,7 @@ def run_download_asf_serial(run_number=1):
         return 0
 
     asfserial_process = subprocess.Popen(
-        ['download_ASF_serial.py', '-username', password.asfuser, '-password', password.asfpass, 'new_files.csv'])
+        ['download_ASF_serial.py', '-username', password.asfuser, '-password', password.asfpass, slc_dir + '/new_files.csv'])
 
     completion_status = asfserial_process.poll()  # the completion status of the process
     hang_status = False  # whether or not the download has hung
@@ -110,7 +113,7 @@ def run_download_asf_serial(run_number=1):
     # If the exit code is one that signifies an error, rerun the entire command
     if exit_code in bad_codes or hang_status:
         logger.log(loglevel.WARNING, "Something went wrong, running again")
-        run_download_asf_serial(run_number=run_number + 1)
+        run_download_asf_serial(slc_dir, run_number=run_number + 1)
 
     return exit_code
 
@@ -126,16 +129,15 @@ def change_file_permissions():
 if __name__ == "__main__":
 
     command_line_parse(sys.argv[1:])
-    inps.project_name = putils.get_project_name(custom_template_file=inps.template)
-    inps.work_dir = putils.get_work_directory(None, inps.project_name)
-    inps.slcDir = inps.work_dir + "/SLC"
+    inps = putils.create_or_update_template(inps)
+    inps.slc_dir = inps.work_dir + "/SLC"
 
     #########################################
     # Submit job
     #########################################
     if inps.submit_flag:
         job_file_name = 'download_asfserial_rsmas'
-        job_name = inps.template.split(os.sep)[-1].split('.')[0]
+        job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
         work_dir = inps.work_dir
         wall_time = '24:00'
 
@@ -143,14 +145,23 @@ if __name__ == "__main__":
 
     os.chdir(inps.work_dir)
     message_rsmas.log(inps.work_dir, os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1::]))
-    os.chdir(inps.slcDir)
+
+    if not inps.template['topsStack.slcDir'] is None:
+        inps.slc_dir = inps.template['topsStack.slcDir']
+    else:
+        inps.slc_dir = os.path.join(inps.work_dir, 'SLC')
+
+    project_slc_dir = os.path.join(inps.work_dir, 'SLC')
+
+    os.chdir(inps.slc_dir)
+
     try:
         os.remove(os.path.expanduser('~') + '/.bulk_download_cookiejar.txt')
     except OSError:
         pass
 
-    generate_files_csv(inps.work_dir)
-    succesful = run_download_asf_serial()
+    generate_files_csv(project_slc_dir, inps.customTemplateFile)
+    succesful = run_download_asf_serial(project_slc_dir)
     change_file_permissions()
     logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
     logger.log(loglevel.INFO, "------------------------------------")
