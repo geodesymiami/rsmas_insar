@@ -24,7 +24,7 @@ STEP_LIST = [
 
 STEP_HELP = """Command line options for steps processing with names are chosen from the following list:
 {}
-In order to use either --start or --dostep, it is necessary that a
+In order to use either --start or --step, it is necessary that a
 previous run was done using one of the steps options to process at least
 through the step immediately preceding the starting step of the current run.
 """.format(STEP_LIST[0:2])
@@ -35,8 +35,8 @@ EXAMPLE = """example:
   process_rsmas.py  -h / --help                       #help
   process_rsmas.py -g                                 #generate default template (if it does not exist)
   process_rsmas.py -H                                 #print    default template options
-  # Run with --start/stop/dostep options
-  process_rsmas.py GalapagosSenDT128.template --dostep download    #run at step 'download' only
+  # Run with --start/stop/step options
+  process_rsmas.py GalapagosSenDT128.template --step download    #run at step 'download' only
   process_rsmas.py GalapagosSenDT128.template --end    process  #end after step 'process'
 """
 
@@ -86,12 +86,12 @@ def create_process_rsmas_parser():
         default='48:00',
         help='walltime, e.g. 2:00 (default: 48:00)')
 
-    step = parser.add_argument_group('steps processing (start/end/dostep)', STEP_HELP)
+    step = parser.add_argument_group('steps processing (start/end/step)', STEP_HELP)
     step.add_argument('--start', dest='startStep', metavar='STEP', default=STEP_LIST[0],
                       help='start processing at the named step, default: {}'.format(STEP_LIST[0]))
     step.add_argument('--end', dest='endStep', metavar='STEP', default=STEP_LIST[-1],
                       help='end processing at the named step, default: {}'.format(STEP_LIST[-1]))
-    step.add_argument('--dostep', dest='doStep', metavar='STEP',
+    step.add_argument('--step', dest='step', metavar='STEP',
                       help='run processing at the named step only')
     return parser
 
@@ -124,18 +124,18 @@ def command_line_parse(iargs=None):
     if not os.path.isdir(inps.slc_dir):
         os.makedirs(inps.slc_dir)
  
-    # check input --start/end/dostep
-    for key in ['startStep', 'endStep', 'doStep']:
+    # check input --start/end/step
+    for key in ['startStep', 'endStep', 'step']:
         value = vars(inps)[key]
         if value and value not in STEP_LIST:
             msg = 'Input step not found: {}'.format(value)
             msg += '\nAvailable steps: {}'.format(STEP_LIST)
             raise ValueError(msg)
 
-    # ignore --start/end input if --dostep is specified
-    if inps.doStep:
-        inps.startStep = inps.doStep
-        inps.endStep = inps.doStep
+    # ignore --start/end input if --step is specified
+    if inps.step:
+        inps.startStep = inps.step
+        inps.endStep = inps.step
 
     # get list of steps to run
     idx0 = STEP_LIST.index(inps.startStep)
