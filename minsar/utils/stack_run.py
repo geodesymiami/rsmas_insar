@@ -88,17 +88,7 @@ class CreateRun:
             print('')
             print('Updating an existing stack ...')
             print('')
-            if inps.template['force']:
-                print('')
-                print('Force connections using all dates...')
-                print('')
-                print(self.allSLCs)
-                self.pairs = selectNeighborPairs(self.allSLCs, inps.template['num_connections'], self.updateStack)  # based on stackSentinel.py
-            else:
-                print('')
-                print('Connections using only new dates...')
-                print('')
-                self.pairs = selectNeighborPairs(self.slaveDates, inps.template['num_connections'], self.updateStack)  # based on stackSentinel.py
+            self.pairs = selectNeighborPairs(self.slaveDates, inps.template['num_connections'], self.updateStack)  # based on stackSentinel.py
         else:
             self.pairs = selectNeighborPairs(self.acquisitionDates, inps.template['num_connections'], self.updateStack)
 
