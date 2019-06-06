@@ -55,7 +55,7 @@ def parse_arguments(args):
         if scheduler == "PBS":
             job_submission_params.queue = "batch"
 
-    project_name = get_project_name(inps.template)
+    project_name = get_project_name(job_submission_params.template)
     job_submission_params.work_dir = get_work_directory(None, project_name)
 
     return job_submission_params
@@ -175,14 +175,14 @@ def write_batch_job_files(batch_file, out_dir, email_notif=False, scheduler=None
     if not scheduler:
         scheduler=os.getenv("JOBSCHEDULER")
 
-    project_name = batch_file.split(os.sep)[-3]
+    project_name = os.path.abspath(batch_file).split(os.sep)[-3]
     work_dir = os.path.join(os.environ["SCRATCHDIR"], project_name, out_dir)
 
     with open(batch_file) as input_file:
         job_list = input_file.readlines()
     job_files = []
     for i, command_line in enumerate(job_list):
-        job_file_name = batch_file.split(os.sep)[-1] + "_" + str(i)
+        job_file_name = os.path.abspath(batch_file).split(os.sep)[-1] + "_" + str(i)
         write_single_job_file(job_file_name, job_file_name, command_line, work_dir, email_notif,
                               scheduler, memory, walltime, queue)
         job_files.append("{0}.job".format(job_file_name))
@@ -243,7 +243,7 @@ def submit_batch_jobs(batch_file, out_dir, memory, walltime, queue, scheduler=No
     if not scheduler:
         scheduler=os.getenv("JOBSCHEDULER")
 
-    work_dir = os.path.join(os.environ["SCRATCHDIR"], batch_file.split(os.sep)[-3], out_dir)
+    work_dir = os.path.join(os.environ["SCRATCHDIR"], os.path.abspath(batch_file).split(os.sep)[-3], out_dir)
     os.chdir(work_dir)
 
     files = []
@@ -254,7 +254,7 @@ def submit_batch_jobs(batch_file, out_dir, memory, walltime, queue, scheduler=No
         files.append("{}_{}.o".format(job_file_name, job_number))
         # files.append("{}_{}.e".format(job_file_name, job_number))
         if len(job_files) < 100 or i == 0 or i % 50 == 49:
-            print("Submitting from {0}: job #{1} of {2} jobs".format(batch_file.split(os.sep)[-1], i+1, len(job_files)))
+            print("Submitting from {0}: job #{1} of {2} jobs".format(os.path.abspath(batch_file).split(os.sep)[-1], i+1, len(job_files)))
 
     # check if output files exist
     i = 0
