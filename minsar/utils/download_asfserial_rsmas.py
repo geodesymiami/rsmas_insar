@@ -24,6 +24,7 @@ def create_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('customTemplateFile', metavar="FILE", help='template file to use.')
     parser.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
+    parser.add_argument('--walltime', dest='wall_time', type=str, default='12:00', help='submits job')
     parser.add_argument('--delta_lat', dest='delta_lat', default='0.0', type=float,
                          help='delta to add to latitude from boundingBox field, default is 0.0')
 
@@ -53,15 +54,30 @@ def generate_files_csv(slc_dir, custom_template_file):
     ssaraopt = add_polygon_to_ssaraopt(dataset_template.get_options(), ssaraopt.copy(), inps.delta_lat)
 
     filecsv_options = ['ssara_federated_query.py']+ssaraopt+['--print', '|', 'awk',
-                                                             "'BEGIN{FS=\",\"; ORS=\",\"}{ print $14}'", '>',
+                                                             "'BEGIN{FS=\",\"; ORS=\",\"}{ print $14}'", ' > ',
                                                              os.path.join(slc_dir, 'files.csv')]
 
     csv_command = ' '.join(filecsv_options)
     message_rsmas.log(slc_dir, csv_command)
     subprocess.Popen(csv_command, shell=True).wait()
-    sed_command = "sed 's/^.\{5\}//' " + os.path.join(slc_dir, 'files.csv') + ' > ' + \
-                  os.path.join(slc_dir, 'new_files.csv')
-    subprocess.Popen(sed_command, shell=True).wait()
+
+    with open(os.path.join(slc_dir, 'files.csv'), 'r') as rfile:
+        file_read = rfile.readlines()
+        lines = file_read[0].split(',')[5:-1]
+
+    SAFE_files = glob.glob('S1*_IW_SLC*')
+    files_to_download = []
+
+    if not len(SAFE_files) == 0:
+        for line in lines:
+            item = line.split('/')[-1]
+            if not item in SAFE_files:
+                files_to_download.append(line)
+
+    files_to_download = ','.join(files_to_download)
+
+    with open(os.path.join(slc_dir, 'new_files.csv'), 'w') as wfile:
+        wfile.writelines(files_to_download)
 
 
 def run_download_asf_serial(slc_dir, run_number=1):
@@ -74,10 +90,9 @@ def run_download_asf_serial(slc_dir, run_number=1):
     if run_number > 10:
         return 0
 
-    asfserial_process = subprocess.Popen(
-        ['download_ASF_serial.py', '-username', password.asfuser, '-password', password.asfpass, slc_dir + '/new_files.csv'])
+    completion_status = subprocess.Popen(' '.join(['download_ASF_serial.py', '-username', password.asfuser, '-password',
+                                                   password.asfpass, slc_dir + '/new_files.csv']), shell=True).wait()
 
-    completion_status = asfserial_process.poll()  # the completion status of the process
     hang_status = False  # whether or not the download has hung
     wait_time = 6  # wait time in 'minutes' to determine hang status
     prev_size = -1  # initial download directory size
@@ -121,16 +136,18 @@ def run_download_asf_serial(slc_dir, run_number=1):
 def change_file_permissions():
     """ changes the permissions of downloaded files to 755 """
 
-    zip_files = glob.glob('S1*.zip')
-    for file in zip_files:
-        os.chmod(file, 0o666)
+    os.system('chmod g+rw *')
+    os.system('chmod o+r *')
+
+    #zip_files = glob.glob('S1*.zip')
+    #for file in zip_files:
+    #    os.chmod(file, 0o666)  ---> does not work
 
 
 if __name__ == "__main__":
 
     command_line_parse(sys.argv[1:])
     inps = putils.create_or_update_template(inps)
-    inps.slc_dir = inps.work_dir + "/SLC"
 
     #########################################
     # Submit job
@@ -139,9 +156,8 @@ if __name__ == "__main__":
         job_file_name = 'download_asfserial_rsmas'
         job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
         work_dir = inps.work_dir
-        wall_time = '24:00'
 
-        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
+        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, inps.wall_time)
 
     os.chdir(inps.work_dir)
     message_rsmas.log(inps.work_dir, os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1::]))

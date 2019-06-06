@@ -100,8 +100,6 @@ def main(iargs=None):
         js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
         sys.exit(0)
 
-
-
     if not inps.template['topsStack.slcDir'] is None:
         slc_dir = inps.template['topsStack.slcDir']
     else:
@@ -113,7 +111,7 @@ def main(iargs=None):
     if not os.path.isdir(slc_dir):
         os.makedirs(slc_dir)
 
-    os.chdir(inps.work_dir)
+    os.chdir(slc_dir)
 
     # if satellite is not Sentinel (not tried yet)
     if 'SenDT' not in inps.project_name and 'SenAT' not in inps.project_name:
