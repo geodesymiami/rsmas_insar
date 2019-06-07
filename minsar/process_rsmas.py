@@ -16,7 +16,9 @@ from minsar.objects import message_rsmas
 from minsar.utils.process_steps import RsmasInsar, command_line_parse
 from minsar.utils.process_utilities import get_work_directory, get_project_name
 import minsar.job_submission as js
+
 ###############################################################################
+
 
 def main(iargs=None):
     start_time = time.time()

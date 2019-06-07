@@ -150,7 +150,7 @@ class CreateRun:
         if inps.insarmaps_flag == 'True':
 
             runObj = rsmasRun()
-            runObj.configure(inps, 'run_' + str(i) + "_ingest_insarmaps")
+            runObj.configure(inps, 'run_' + str(i) + "_insarmaps")
             runObj.ingestInsarmaps()
             runObj.finalize()
 
@@ -174,7 +174,7 @@ class CreateRun:
             i = self.iter
 
             runObj = rsmasRun()
-            runObj.configure(inps, 'run_' + str(i) + "_mintpy_small_baseline")
+            runObj.configure(inps, 'run_' + str(i) + "_smallbaseline")
             runObj.mintpySB()
             runObj.finalize()
 
@@ -189,7 +189,7 @@ class CreateRun:
             i = self.iter 
 
             runObj = rsmasRun()
-            runObj.configure(inps, 'run_' + str(i) + "_crop_merged_slc")
+            runObj.configure(inps, 'run_' + str(i) + "_crop_slc")
             runObj.cropMergedSlc()
             runObj.finalize()
 
@@ -207,7 +207,7 @@ class CreateRun:
 
             i += 1
             runObj = rsmasRun()
-            runObj.configure(inps, 'run_' + str(i) + "_generate_interferogram_and_coherence")
+            runObj.configure(inps, 'run_' + str(i) + "_single_master_interferograms")
             runObj.generateIfg(inps, self.pairs_sm)
             runObj.finalize()
 

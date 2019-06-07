@@ -2,7 +2,7 @@
 """
 Functions related to batch job submission.
 Should be run with a file containing jobs to submit as a batch.
-Optional parameters for job submission are --template, --memory, --walltime, and --queuename.
+Optional parameters for job submission are, --memory, --walltime, and --queuename.
 Generates job scripts, runs them, and waits for output files to be written before exiting.
 """
 
@@ -12,7 +12,6 @@ import subprocess
 import argparse
 import time
 from minsar.objects import message_rsmas
-from minsar.utils.process_utilities import get_project_name, get_work_directory
 
 
 def create_argument_parser():
@@ -26,7 +25,6 @@ def create_argument_parser():
 
     group = parser.add_argument_group("Input File", "File/Dataset to display")
     group.add_argument("file", type=str, help="The file to batch create")
-    group.add_argument("--template", dest="template", metavar="TEMPLATE FILE", help="The template file with options")
     group.add_argument("--memory", dest="memory", default=3600, metavar="MEMORY (KB)",
                        help="Amount of memory to allocate, specified in kilobytes")
     group.add_argument("--walltime", dest="wall", default="4:00", metavar="WALLTIME (HH:MM)",
@@ -45,20 +43,24 @@ def parse_arguments(args):
     :return: Namespace with submission parameters (from command line arguments or defaults)
     """
     parser = create_argument_parser()
-    job_submission_params = parser.parse_args(args)
+    job_params = parser.parse_args(args)
     scheduler = os.getenv("JOBSCHEDULER")
 
     # default queue name is based on scheduler
-    if not job_submission_params.queue:
+    if not job_params.queue:
         if scheduler == "LSF":
-            job_submission_params.queue = "general"
+            job_params.queue = "general"
         if scheduler == "PBS":
-            job_submission_params.queue = "batch"
+            job_params.queue = "batch"
 
-    project_name = get_project_name(job_submission_params.template)
-    job_submission_params.work_dir = get_work_directory(None, project_name)
+    job_params.file = os.path.abspath(job_params.file)
+    job_params.work_dir = os.path.join(os.getenv('SCRATCHDIR'),
+                               job_params.file.rsplit(os.path.basename(os.getenv('SCRATCHDIR')))[1].split('/')[1])
 
-    return job_submission_params
+    if job_params.outdir == 'run_files':
+        job_params.outdir = os.path.join(job_params.work_dir, job_params.outdir)
+
+    return job_params
 
 
 def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler=None, memory=3600, walltime="4:00", queue=None):
@@ -175,15 +177,12 @@ def write_batch_job_files(batch_file, out_dir, email_notif=False, scheduler=None
     if not scheduler:
         scheduler=os.getenv("JOBSCHEDULER")
 
-    project_name = os.path.abspath(batch_file).split(os.sep)[-3]
-    work_dir = os.path.join(os.environ["SCRATCHDIR"], project_name, out_dir)
-
     with open(batch_file) as input_file:
         job_list = input_file.readlines()
     job_files = []
     for i, command_line in enumerate(job_list):
         job_file_name = os.path.abspath(batch_file).split(os.sep)[-1] + "_" + str(i)
-        write_single_job_file(job_file_name, job_file_name, command_line, work_dir, email_notif,
+        write_single_job_file(job_file_name, job_file_name, command_line, out_dir, email_notif,
                               scheduler, memory, walltime, queue)
         job_files.append("{0}.job".format(job_file_name))
 
@@ -227,7 +226,7 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
     return job_number
 
 
-def submit_batch_jobs(batch_file, out_dir, memory, walltime, queue, scheduler=None):
+def submit_batch_jobs(batch_file, out_dir, work_dir, memory, walltime, queue, scheduler=None):
     """
     Submit a batch of jobs (to bsub or qsub) and wait for output files to exist before exiting.
     :param batch_file: File containing jobs that we are submitting.
@@ -238,18 +237,20 @@ def submit_batch_jobs(batch_file, out_dir, memory, walltime, queue, scheduler=No
     :param queue: Name of the queue to which the job is to be submitted. Default is set based on the scheduler.
     """
 
+    message_rsmas.log(work_dir, 'job_submission.py {a} --memory {b} --walltime {c} --queuename {d} --outdir {e}'
+                      .format(a=batch_file, b=memory, c=walltime, d=queue, e=out_dir))
+
     job_files = write_batch_job_files(batch_file, out_dir, memory=memory, walltime=walltime, queue=queue)
 
     if not scheduler:
-        scheduler=os.getenv("JOBSCHEDULER")
+        scheduler = os.getenv("JOBSCHEDULER")
 
-    work_dir = os.path.join(os.environ["SCRATCHDIR"], os.path.abspath(batch_file).split(os.sep)[-3], out_dir)
-    os.chdir(work_dir)
+    os.chdir(out_dir)
 
     files = []
 
     for i, job in enumerate(job_files):
-        job_number = submit_single_job(job, work_dir, scheduler)
+        job_number = submit_single_job(job, out_dir, scheduler)
         job_file_name = job.split(".")[0]
         files.append("{}_{}.o".format(job_file_name, job_number))
         # files.append("{}_{}.e".format(job_file_name, job_number))
@@ -297,5 +298,5 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime, email_notif
 
 if __name__ == "__main__":
     PARAMS = parse_arguments(sys.argv[1::])
-    message_rsmas.log(PARAMS.work_dir, os.path.basename(sys.argv[0]) + " " + " ".join(sys.argv[1::]))
-    submit_batch_jobs(PARAMS.file, PARAMS.outdir, memory=PARAMS.memory, walltime=PARAMS.wall, queue=PARAMS.queue)
+    submit_batch_jobs(PARAMS.file, PARAMS.outdir, PARAMS.work_dir, memory=PARAMS.memory,
+                      walltime=PARAMS.wall, queue=PARAMS.queue)
