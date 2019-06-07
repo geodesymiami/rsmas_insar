@@ -49,11 +49,6 @@ def main(iargs=None):
     inps = command_line_parse(iargs)
     inps = putils.create_or_update_template(inps)
 
-    if not iargs is None:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
-    else:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
-
     os.chdir(inps.work_dir)
 
     #########################################
@@ -86,6 +81,15 @@ def main(iargs=None):
         if not 'run_0_' in run_file_list[0]:
            inps.stop = inps.stop - 1
 
+    if not 'run_0_' in run_file_list[0]:
+        message_rsmas.log(inps.work_dir, 'execute_runfiles.py {a} {b} {c}'.format(a=inps.customTemplateFile,
+                                                                                  b=inps.start + 1,
+                                                                                  c=inps.stop + 1))
+    else:
+        message_rsmas.log(inps.work_dir, 'execute_runfiles.py {a} {b} {c}'.format(a=inps.customTemplateFile,
+                                                                                  b=inps.start,
+                                                                                  c=inps.stop))
+
     config = putils.get_config_defaults(config_file='job_defaults.cfg')
 
     run_file_list = run_file_list[inps.start:inps.stop + 1]
@@ -107,7 +111,7 @@ def main(iargs=None):
             walltimelimit = config['DEFAULT']['walltime']
 
         queuename = os.getenv('QUEUENAME')
-        
+
         putils.remove_last_job_running_products(run_file=item)
 
         jobs = js.submit_batch_jobs(batch_file=item, out_dir=os.path.join(inps.work_dir, 'run_files'),
