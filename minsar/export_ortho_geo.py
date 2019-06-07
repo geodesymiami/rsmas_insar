@@ -72,7 +72,8 @@ def main(iargs=None):
 
         jobs = js.submit_batch_jobs(batch_file=item,
                                     out_dir=os.path.join(inps.work_dir, 'run_files'),
-                                    memory=memorymax, walltime=walltimelimit, queue=queuename)
+                                    work_dir=inps.work_dir, memory=memorymax,
+                                    walltime=walltimelimit, queue=queuename)
 
         putils.remove_zero_size_or_length_error_files(run_file=item)
         putils.raise_exception_if_job_exited(run_file=item)
