@@ -120,7 +120,7 @@ def main(iargs=None):
 
         putils.remove_zero_size_or_length_error_files(run_file=item)
         putils.raise_exception_if_job_exited(run_file=item)
-        putils.concatenate_error_files(run_file=item, work_dir=inps.work_dir)
+        putils.concatenate_error_files(run_file=item)
         putils.move_out_job_files_to_stdout(run_file=item)
 
     return None
