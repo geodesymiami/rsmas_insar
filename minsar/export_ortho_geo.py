@@ -28,7 +28,11 @@ def main(iargs=None):
     """ create orth and geo rectifying run jobs and submit them. """
 
     inps = cmdLineParse()
-    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+
+    if not iargs is None:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+    else:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     if inps.submit_flag:
         job_file_name = 'export_ortho_geo'
@@ -77,7 +81,7 @@ def main(iargs=None):
 
         putils.remove_zero_size_or_length_error_files(run_file=item)
         putils.raise_exception_if_job_exited(run_file=item)
-        putils.concatenate_error_files(run_file=item)
+        putils.concatenate_error_files(run_file=item, work_dir=inps.work_dir)
         putils.move_out_job_files_to_stdout(run_file=item)
     return
 
@@ -159,6 +163,8 @@ def create_georectified_lat_lon(swathList, master, outdir, demZero):
 
             latname = os.path.join(dirname, 'lat_%02d.rdr' % (ind + 1))
             lonname = os.path.join(dirname, 'lon_%02d.rdr' % (ind + 1))
+            hgtname = os.path.join(dirname, 'hgt_%02d.rdr' % (ind + 1))
+            losname = os.path.join(dirname, 'los_%02d.rdr' % (ind + 1))
 
             if not (os.path.exists(latname + '.xml') or os.path.exists(lonname + '.xml')):
 
@@ -181,6 +187,8 @@ def create_georectified_lat_lon(swathList, master, outdir, demZero):
                 topo.demInterpolationMethod = 'BIQUINTIC'
                 topo.latFilename = latname
                 topo.lonFilename = lonname
+                topo.heightFilename = hgtname
+                topo.losFilename = losname
                 topo.topo()
     return
 
@@ -266,8 +274,10 @@ def multilook_images(inps):
         if not os.path.exists(slc_ml):
             mb.multilook(slc_full, slc_ml, azimuth_looks, range_looks, multilook_tool="gdal")
 
-    full_geometry_list = [os.path.join(inps.work_dir, pathObj.geom_masterDir, x) for x in
-                          ['lat.rdr.full', 'lon.rdr.full']]
+    full_geometry_list = [os.path.join(inps.work_dir, pathObj.geomlatlondir, x)
+                          for x in ['lat.rdr.full', 'lon.rdr.full']] \
+                         + [os.path.join(inps.work_dir, pathObj.geomasterdir, x)
+                            for x in ['lat.rdr.full', 'lon.rdr.full']]
 
     multilooked_geometry = [x.split('.full')[0] + '.ml' for x in full_geometry_list]
 
