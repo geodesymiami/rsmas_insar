@@ -44,6 +44,7 @@ import xml.etree.ElementTree as ET
 # This next block is a bunch of Python 2/3 compatability
 
 try:
+    # Python 2.x Libs
     from urllib2 import build_opener, install_opener, Request, urlopen, HTTPError
     from urllib2 import URLError, HTTPSHandler, HTTPHandler, HTTPCookieProcessor
 
@@ -65,7 +66,7 @@ class bulk_downloader:
     def __init__(self):
         # List of files to download
         self.files = [
-            "https://datapool.asf.alaska.edu/SLC/SB/S1B_IW_SLC__1SDV_20180707T114940_20180707T115004_011704_01587A_AA26.zip",
+            "https://datapool.asf.alaska.edu/SLC/SB/                                   S1B_IW_SLC__1SDV_20180707T114940_20180707T115004_011704_01587A_AA26.zip",
             "https://datapool.asf.alaska.edu/SLC/SB/S1B_IW_SLC__1SDV_20180707T114912_20180707T114942_011704_01587A_4B42.zip",
             "https://datapool.asf.alaska.edu/SLC/SA/S1A_IW_SLC__1SDV_20170629T215253_20170629T215322_017254_01CCAD_8B5A.zip",
             "https://datapool.asf.alaska.edu/SLC/SA/S1A_IW_SLC__1SDV_20170605T215251_20170605T215320_016904_01C204_B139.zip",
@@ -116,8 +117,9 @@ class bulk_downloader:
                         else:
                             new_files = self.process_csv(arg)
 
+                        # print(new_files)
                         if new_files is not None:
-                            for file_url in new_files:
+                            for file_url in (new_files):
                                 download_files.append(file_url)
                     else:
                         print(" > I cannot find the input file you specified: {0}".format(arg))
@@ -130,8 +132,9 @@ class bulk_downloader:
                                                                                       len(input_files)))
                     self.files = download_files
                 else:
-                    print(" > I see you asked me to download files from {0} input files, but they had no downloads!"
-                          .format(len(input_files)))
+                    print(
+                        " > I see you asked me to download files from {0} input files, but they had no downloads!".format(
+                            len(input_files)))
                     print(" > I'm super confused and exiting.")
                     exit(-1)
 
@@ -201,8 +204,8 @@ class bulk_downloader:
             # If we ge this error, again, it likely means the user has not agreed to current EULA
             print("\nIMPORTANT: ")
             print("Your user appears to lack permissions to download data from the ASF Datapool.")
-            print("\n\nNew users: you must first log into Vertex and accept the EULA. In addition, "
-                  "your Study Area must be set at Earthdata https://urs.earthdata.nasa.gov")
+            print(
+                "\n\nNew users: you must first log into Vertex and accept the EULA. In addition, your Study Area must be set at Earthdata https://urs.earthdata.nasa.gov")
             exit(-1)
 
         # This return codes indicate the USER has not been approved to download the data
@@ -213,7 +216,7 @@ class bulk_downloader:
                 redir_url = response.getheader('Location')
 
             # Funky Test env:
-            if "vertex.daac.asf.alaska.edu" in redir_url and "test" in self.asf_urs4['redir']:
+            if ("vertex.daac.asf.alaska.edu" in redir_url and "test" in self.asf_urs4['redir']):
                 print("Cough, cough. It's dusty in this test env!")
                 return True
 
@@ -267,8 +270,8 @@ class bulk_downloader:
                 # If an error happens here, the user most likely has not confirmed EULA.
                 print("\nIMPORTANT: There was an error obtaining a download cookie!")
                 print("Your user appears to lack permission to download data from the ASF Datapool.")
-                print("\n\nNew users: you must first log into Vertex and accept the EULA. In addition, "
-                      "your Study Area must be set at Earthdata https://urs.earthdata.nasa.gov")
+                print(
+                    "\n\nNew users: you must first log into Vertex and accept the EULA. In addition, your Study Area must be set at Earthdata https://urs.earthdata.nasa.gov")
                 exit(-1)
         except URLError as e:
             print("\nIMPORTANT: There was a problem communicating with URS, unable to obtain cookie. ")
@@ -284,13 +287,12 @@ class bulk_downloader:
         # if we aren't successful generating the cookie, nothing will work. Stop here!
         print("WARNING: Could not generate new cookie! Cannot proceed. Please try Username and Password again.")
         print("Response was {0}.".format(response.getcode()))
-        print("\n\nNew users: you must first log into Vertex and accept the EULA. In addition, "
-              "your Study Area must be set at Earthdata https://urs.earthdata.nasa.gov")
+        print(
+            "\n\nNew users: you must first log into Vertex and accept the EULA. In addition, your Study Area must be set at Earthdata https://urs.earthdata.nasa.gov")
         exit(-1)
 
     # make sure we're logged into URS
-    @staticmethod
-    def check_cookie_is_logged_in(cj):
+    def check_cookie_is_logged_in(self, cj):
         for cookie in cj:
             if cookie.name == 'urs_user_already_logged':
                 # Only get this cookie if we logged in successfully!
@@ -312,14 +314,14 @@ class bulk_downloader:
                 # Check that we were able to derive a size.
                 if remote_size:
                     local_size = os.path.getsize(download_file)
-                    if (local_size + (local_size * .01)) > remote_size > (local_size - (local_size * .01)):
-                        print(" > Download file {0} exists! \n > Skipping download of {1}. "
-                              .format(download_file, url))
-                    return None, None
-                # partial file size wasn't full file size, lets blow away the chunk and start again
-                print(" > Found {0} but it wasn't fully downloaded. Removing file and downloading again.".format(
-                    download_file))
-                os.remove(download_file)
+                    if remote_size < (local_size + (local_size * .01)) and remote_size > (
+                            local_size - (local_size * .01)):
+                        print(" > Download file {0} exists! \n > Skipping download of {1}. ".format(download_file, url))
+                        return None, None
+                    # partial file size wasn't full file size, lets blow away the chunk and start again
+                    print(" > Found {0} but it wasn't fully downloaded. Removing file and downloading again.".format(
+                        download_file))
+                    os.remove(download_file)
 
             except ssl.CertificateError as e:
                 print(" > ERROR: {0}".format(e))
@@ -418,15 +420,13 @@ class bulk_downloader:
                 print(" > You MAY need to log in this app and agree to a EULA. ")
 
             return False, None
-
         except Exception as e:
             return False, None
-
         except URLError as e:
             print("URL Error (from GET): {0}, {1}, {2}".format(e, e.reason, url))
             if "ssl.c" in "{0}".format(e.reason):
-                print("IMPORTANT: Remote location may not be accepting your SSL configuration. "
-                      "This is a terminal error.")
+                print(
+                    "IMPORTANT: Remote location may not be accepting your SSL configuration. This is a terminal error.")
             return False, None
 
         except ssl.CertificateError as e:
@@ -444,8 +444,7 @@ class bulk_downloader:
             file_size = actual_size
         return actual_size, file_size
 
-    @staticmethod
-    def get_redirect_url_from_error(error):
+    def get_redirect_url_from_error(self, error):
         find_redirect = re.compile(r"id=\"redir_link\"\s+href=\"(\S+)\"")
         print("error file was: {}".format(error))
         redirect_url = find_redirect.search(error)
@@ -456,8 +455,7 @@ class bulk_downloader:
         return None
 
     #  chunk_report taken from http://stackoverflow.com/questions/2028517/python-urllib2-progress-hook
-    @staticmethod
-    def chunk_report(bytes_so_far, file_size):
+    def chunk_report(self, bytes_so_far, file_size):
         if file_size is not None:
             percent = float(bytes_so_far) / file_size
             percent = round(percent * 100, 2)
@@ -488,8 +486,7 @@ class bulk_downloader:
 
         return bytes_so_far
 
-    @staticmethod
-    def get_total_size(response):
+    def get_total_size(self, response):
         try:
             file_size = response.info().getheader('Content-Length').strip()
         except AttributeError:
@@ -497,13 +494,12 @@ class bulk_downloader:
                 file_size = response.getheader('Content-Length').strip()
             except AttributeError:
                 print("> Problem getting size")
-            return None
+                return None
 
         return int(file_size)
 
     # Get download urls from a metalink file
-    @staticmethod
-    def process_metalink(ml_file):
+    def process_metalink(self, ml_file):
         print("Processing metalink file: {0}".format(ml_file))
         with open(ml_file, 'r') as ml:
             xml = ml.read()
@@ -526,9 +522,9 @@ class bulk_downloader:
             return None
 
     # Get download urls from a csv file
-    @staticmethod
-    def process_csv(csv_file):
+    def process_csv(self, csv_file):
         print("Processing csv file: {0}".format(csv_file))
+
         dl_urls = []
         with open(csv_file, 'r') as csvf:
             try:
@@ -539,7 +535,7 @@ class bulk_downloader:
                 print("WARNING: Could not parse file %s, line %d: %s. Skipping." % (csv_file, csvr.line_num, e))
                 return None
             except KeyError as e:
-                print("WARNING: Could not find URL column in file %s. Skipping." % csv_file)
+                print("WARNING: Could not find URL column in file %s. Skipping." % (csv_file))
 
         if len(dl_urls) > 0:
             return dl_urls

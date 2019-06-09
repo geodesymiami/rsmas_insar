@@ -244,7 +244,7 @@ def raise_exception_if_job_exited(run_file):
 ##########################################################################
 
 
-def concatenate_error_files(run_file):
+def concatenate_error_files(run_file, work_dir):
     """
     Concatenate error files to one file (*.e files in run_files).
     :param directory: str
@@ -272,7 +272,7 @@ def concatenate_error_files(run_file):
         #    shutil.rmtree(out_folder)
         #    os.mkdir(out_folder)
 
-        #shutil.move(out_name, out_folder)
+        shutil.move(out_name, work_dir)
     return None
 
 ###############################################################################
