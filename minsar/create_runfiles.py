@@ -51,7 +51,6 @@ def main(iargs=None):
     inps = command_line_parse(iargs)
     inps = create_or_update_template(inps)
 
-
     if not iargs is None:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
     else:
