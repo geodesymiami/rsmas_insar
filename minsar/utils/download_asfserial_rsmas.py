@@ -53,31 +53,16 @@ def generate_files_csv(slc_dir, custom_template_file):
     # add intersectWith to ssaraopt string
     ssaraopt = add_polygon_to_ssaraopt(dataset_template.get_options(), ssaraopt.copy(), inps.delta_lat)
 
-    filecsv_options = ['ssara_federated_query.py']+ssaraopt+['--print', '|', 'awk',
-                                                             "'BEGIN{FS=\",\"; ORS=\",\"}{ print $14}'", ' > ',
-                                                             os.path.join(slc_dir, 'files.csv')]
+    filecsv_options = ['ssara_federated_query.py'] + ssaraopt + ['--print', '|', 'awk',
+                                                                 "'BEGIN{FS=\",\"; ORS=\",\"}{ print $14}'", '>',
+                                                                 os.path.join(slc_dir, 'files.csv')]
 
     csv_command = ' '.join(filecsv_options)
     message_rsmas.log(slc_dir, csv_command)
     subprocess.Popen(csv_command, shell=True).wait()
-
-    with open(os.path.join(slc_dir, 'files.csv'), 'r') as rfile:
-        file_read = rfile.readlines()
-        lines = file_read[0].split(',')[5:-1]
-
-    SAFE_files = glob.glob('S1*_IW_SLC*')
-    files_to_download = []
-
-    if not len(SAFE_files) == 0:
-        for line in lines:
-            item = line.split('/')[-1]
-            if not item in SAFE_files:
-                files_to_download.append(line)
-
-    files_to_download = ','.join(files_to_download)
-
-    with open(os.path.join(slc_dir, 'new_files.csv'), 'w') as wfile:
-        wfile.writelines(files_to_download)
+    sed_command = "sed 's/^.\{5\}//' " + os.path.join(slc_dir, 'new_files.csv') + \
+                  ">" + os.path.join(slc_dir, 'new_files.csv')
+    subprocess.Popen(sed_command, shell=True).wait()
 
 
 def run_download_asf_serial(slc_dir, run_number=1):
