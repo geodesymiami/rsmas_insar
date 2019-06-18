@@ -50,7 +50,7 @@ cd ../3rdparty
 mkdir -p PyAPS; cd PyAPS
 ../miniconda3/bin/git clone https://github.com/yunjunz/pyaps3.git
 
-cd ../3rdparty/pykml
+cd ../../3rdparty/pykml
 ../../3rdparty/miniconda3/bin/python setup.py build
 ../../3rdparty/miniconda3/bin/python setup.py install
 
