@@ -5,8 +5,9 @@
 #######################################
 
 import sys
+import os
 import argparse
-from minsar import message_rsmas
+from minsar.objects import message_rsmas
 
 inps = None
 
