@@ -12,6 +12,7 @@ import os
 import glob
 import subprocess
 import configparser
+import numpy as np
 from natsort import natsorted
 import xml.etree.ElementTree as ET
 import shutil
@@ -402,9 +403,11 @@ def walltime_adjust(inps, default_time):
     """ calculates the number of bursts based on boundingBox and returns an adjusting factor for walltimes """
 
     from minsar.objects.sentinel1_override import Sentinel1_burst_count
+    from argparse import Namespace
 
     inps_dict = inps
     pathObj.correct_for_isce_naming_convention(inps_dict)
+    inps_dict = Namespace(**inps_dict.template)
 
     if inps_dict.swath_num is None:
         swaths = [1, 2, 3]
@@ -418,9 +421,10 @@ def walltime_adjust(inps, default_time):
         obj.configure()
         number_of_bursts = number_of_bursts + obj.get_burst_num(inps_dict, swath)
 
-    default_time_hour = default_time.split(':')[0] + default_time.split(':')[1] / 60
-    hour = (default_time_hour * number_of_bursts)/60
-    minutes = np.remainder((default_time_hour * number_of_bursts), 60)
+    default_time_hour = float(default_time.split(':')[0]) + float(default_time.split(':')[1]) / 60
+    hour = (default_time_hour * number_of_bursts)*60
+    minutes = int(np.remainder(hour, 60))
+    hour = int(hour/60)
     adjusted_time = '{:02d}:{:02d}'.format(hour, minutes)
 
     return adjusted_time
