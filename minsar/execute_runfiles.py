@@ -104,7 +104,7 @@ def main(iargs=None):
 
         try:
             if config[step_name]['adjust'] == 'True':
-                walltimelimit = putils.walltime_adjust(config[step_name]['walltime'])
+                walltimelimit = putils.walltime_adjust(inps, config[step_name]['walltime'])
             else:
                 walltimelimit = config[step_name]['walltime']
         except:
