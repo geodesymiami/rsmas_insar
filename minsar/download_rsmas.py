@@ -111,8 +111,6 @@ def main(iargs=None):
     if not os.path.isdir(slc_dir):
         os.makedirs(slc_dir)
 
-    os.chdir(slc_dir)
-
     # if satellite is not Sentinel (not tried yet)
     if 'SenDT' not in inps.project_name and 'SenAT' not in inps.project_name:
 
