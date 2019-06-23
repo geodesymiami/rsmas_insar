@@ -79,7 +79,7 @@ def main(args):
 
         demBbox = str(int(south)) + ' ' + str(int(north)) + ' ' + str(int(west)) + ' ' + str(int(east))
         cmd = 'dem.py -a stitch -b ' + demBbox + ' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
-        message_rsmas.log(inps.work_dir, cmd)
+        message_rsmas.log(os.getcwd(), cmd)
 
         try:
             output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True, universal_newlines=True)
