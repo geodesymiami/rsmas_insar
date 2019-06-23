@@ -62,7 +62,7 @@ def check_downloads(inps, run_number, args):
     for f in files_to_check:
         if not os.path.isfile(str(os.getcwd()) + "/" + str(f)):
             logger.log(loglevel.WARNING, "The file, %s, didn't download correctly. Running ssara again.")
-            run_ssara(inps.work_dir, inps.customTemplateFile, delta_lat, run_number + 1)
+            run_ssara(inps.slc_dir, inps.customTemplateFile, delta_lat, run_number + 1)
             return
 
     logger.log(loglevel.INFO, "Everything is there!")
@@ -150,7 +150,7 @@ def run_ssara(slc_dir, template, delta_lat, run_number=1):
         if hang_status:
             logger.log(loglevel.WARNING, "Hanging, running again")
 
-        run_ssara(os.getcwd(),template, delta_lat, run_number=run_number + 1)
+        run_ssara(inps.slc_dir, template, delta_lat, run_number=run_number + 1)
 
     return 0
 
