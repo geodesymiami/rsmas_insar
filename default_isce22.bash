@@ -23,7 +23,7 @@ export TEMPLATES=${WORKDIR}/infiles/${USER}/TEMPLATES
 export TE=${TEMPLATES}
 
 export GEODMOD_WORKDIR=${WORKDIR}/MINDIR
-export GEODMODHOME=${PARENTDIR}/sources/geodmod
+export GEODMOD_HOME=${PARENTDIR}/sources/geodmod
 export GEODMOD_TESTDATA=${PARENTDIR}/data/testdata/geodmod
 export GEODMOD_TESTBENCH=${SCRATCHDIR}/GEODMOD_TESTBENCH
 

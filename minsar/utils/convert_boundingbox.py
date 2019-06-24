@@ -14,6 +14,7 @@ inps = None
 
 EXAMPLE = """example:
   convert_boundingbox.py 103.2,30.95,103.85,30.95,103.85,31.54,103.2,31.54,103.2,30.95
+  convert_boundingbox.py " -72.71,-41.47,-72.46,-41.47,-72.46,-41.25,-72.71,-41.25,-72.71,-41.47"
   convert_boundingbox.py '39.46 39.82 118.2 118.9'
 """
 
@@ -56,15 +57,15 @@ def run_convert_boundingbox(input):
         toks=input[0].split(' ')
 
     if len(toks) == 10:     # ASF Vertex
-        min_lon = toks[0]
-        min_lat = toks[1]
-        max_lon = toks[2]
-        max_lat = toks[5]
+        min_lon = toks[0].strip()
+        min_lat = toks[1].strip()
+        max_lon = toks[2].strip()
+        max_lat = toks[5].strip()
     elif len(toks) == 4:    # topsStack boundingBox 
-        min_lat = toks[0]
-        max_lat = toks[1]
-        min_lon = toks[2]
-        max_lon = toks[3]
+        min_lat = toks[0].strip()
+        max_lat = toks[1].strip()
+        min_lon = toks[2].strip()
+        max_lon = toks[3].strip()
 
     out_asf = min_lon + ',' + min_lat + ',' + max_lon + ',' + min_lat + ',' + max_lon + ',' + max_lat + ',' + min_lon + ',' + max_lat + ',' + min_lon + ',' + min_lat
     out_sentinel_stack = min_lat +' '+ max_lat +' '+ min_lon +' '+ max_lon 

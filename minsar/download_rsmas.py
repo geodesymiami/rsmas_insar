@@ -124,7 +124,6 @@ def main(iargs=None):
 
     download('ssara', inps.customTemplateFile, slc_dir, outnum = 1)
     #download('ssara', inps.customTemplateFile, slc_dir, outnum = 2)
-    download('asfserial', inps.customTemplateFile, slc_dir, outnum = 1)
     #download('asfserial', inps.customTemplateFile, slc_dir, outnum = 1)
 
 ###########################################################################################
