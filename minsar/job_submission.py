@@ -226,11 +226,13 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
     return job_number
 
 
-def submit_batch_jobs(batch_file, out_dir, work_dir, memory, walltime, queue, scheduler=None):
+def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory='4000', walltime='2:00',
+                      queue='general', scheduler=None):
     """
     Submit a batch of jobs (to bsub or qsub) and wait for output files to exist before exiting.
     :param batch_file: File containing jobs that we are submitting.
     :param out_dir: Output directory for run files.
+    :param work_dir: project directory
     :param memory: Amount of memory to use. Defaults to 3600 KB.
     :param walltime: Walltime for the job. Defaults to 4 hours.
     :param scheduler: Job scheduler to use for running jobs. Defaults based on environment variable JOBSCHEDULER.

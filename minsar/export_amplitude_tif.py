@@ -31,15 +31,23 @@ def main(iargs=None):
     inps = command_line_parse(iargs)
     inps = create_or_update_template(inps)
 
-    if not iargs is None:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
-    else:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
-
     slave_dir = os.path.join(inps.work_dir, pathObj.mergedslcdir)
     pic_dir = os.path.join(inps.work_dir, pathObj.tiffdir)
 
+    if not os.path.exists(pic_dir):
+        os.mkdir(pic_dir)
+
+    if not iargs is None:
+        message_rsmas.log(pic_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+    else:
+        message_rsmas.log(pic_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+
     os.chdir(slave_dir)
+
+    try:
+        os.system('rm '+inps.prodlist + '/geo*')
+    except:
+        print('geocoding ...')
 
     slc = inps.prodlist
 
@@ -47,15 +55,6 @@ def main(iargs=None):
         inps.geo_master_dir = os.path.join(inps.work_dir, pathObj.geomasterdir)
     else:
         inps.geo_master_dir = os.path.join(inps.work_dir, pathObj.geomlatlondir)
-
-
-    try:
-        os.system('rm '+inps.prodlist + '/geo*')
-    except:
-        print('geocoding ...')
-
-    if not os.path.exists(pic_dir):
-        os.mkdir(pic_dir)
 
     os.chdir(os.path.join(slave_dir, inps.prodlist))
 
