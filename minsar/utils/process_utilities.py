@@ -268,7 +268,9 @@ def concatenate_error_files(run_file, work_dir):
                 with open(fname) as infile:
                     outfile.write(infile.read())
                 os.remove(fname)
+                
         shutil.move(os.path.abspath(out_name), os.path.abspath(work_dir))
+
     return None
 
 ###############################################################################
