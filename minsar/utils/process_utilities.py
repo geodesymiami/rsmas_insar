@@ -253,6 +253,10 @@ def concatenate_error_files(run_file, work_dir):
     :return: None
     """
 
+    out_file = os.path.abspath(work_dir) + '/out_' + run_file.split('/')[-1] + '.e'
+    if os.path.isfile(out_file):
+        os.remove(out_file)
+
     out_name = os.path.dirname(run_file) + '/out_' + run_file.split('/')[-1] + '.e'
     error_files = glob.glob(run_file + '*.e')
     if not len(error_files) == 0:
@@ -264,12 +268,9 @@ def concatenate_error_files(run_file, work_dir):
                 with open(fname) as infile:
                     outfile.write(infile.read())
                 os.remove(fname)
+                
+        shutil.move(os.path.abspath(out_name), os.path.abspath(work_dir))
 
-    out_file = os.path.abspath(work_dir) + '/out_' + run_file.split('/')[-1] + '.e'
-    if os.path.isfile(out_file):
-        os.remove(out_file)
-
-    shutil.move(os.path.abspath(out_name), os.path.abspath(work_dir))
     return None
 
 ###############################################################################
