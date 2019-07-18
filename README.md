@@ -36,6 +36,7 @@ wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificat
 chmod 755 $miniconda_version
 ./$miniconda_version -b -p ../3rdparty/miniconda3
 cp condarc ../3rdparty/miniconda3/.condarc
+#cp condarc_china ../3rdparty/miniconda3/.condarc
 
 ./download_isce_stack.csh
 ../3rdparty/miniconda3/bin/conda install --yes --file conda.txt
