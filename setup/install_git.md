@@ -6,5 +6,6 @@ wget --no-check-certificate http://repo.continuum.io/miniconda/Miniconda3-latest
 chmod +x ./Miniconda3-latest-Linux-x86_64.sh
 ./Miniconda3-latest-Linux-x86_64.sh -b -p ./miniconda3
 miniconda3/bin/conda install git --yes 
+miniconda3/bin/conda update conda --yes
 alias git='~/local_git/miniconda3/bin/git'
 ```
