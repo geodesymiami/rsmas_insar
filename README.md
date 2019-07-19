@@ -30,7 +30,7 @@ git clone https://github.com/bakerunavco/SSARA.git
 git clone https://github.com/AngeliqueBenoit/pyaps3.git
 
 cd ../setup;
-rm -r ../3rdparty/miniconda3
+rm -rf ../3rdparty/miniconda3
 miniconda_version=Miniconda3-4.5.12-Linux-x86_64.sh
 wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate #; if ($? != 0) exit; 
 chmod 755 $miniconda_version
@@ -39,6 +39,7 @@ cp condarc ../3rdparty/miniconda3/.condarc
 #cp condarc_china ../3rdparty/miniconda3/.condarc
 
 ./download_isce_stack.csh
+../3rdparty/miniconda3/bin/conda update conda --yes
 ../3rdparty/miniconda3/bin/conda install --yes --file conda.txt
 ../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MintPy/docs/conda.txt
 ../3rdparty/miniconda3/bin/conda install isce2 -c piyushrpt --yes
