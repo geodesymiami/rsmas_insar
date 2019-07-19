@@ -233,13 +233,10 @@ def raise_exception_if_job_exited(run_file):
     files = natsorted(files)
     for file in files:
         with open(file) as fr:
-            if search_string in fr.read(): 
-               raise Exception("ERROR: {0}/{1} exited,  contains: {2}".format(run_file, os.path.basename(file), search_string))
-        # FA 5/2019: attempt to generate more meaningful exut messages. Did not work
-        #with open(file, 'r') as efile:
-        #    for line in efile.readlines():
-        #        if search_string in line: 
-        #           raise Exception("ERROR: {0}/{1} exited,  contains: \n  {2}".format(run_file, os.path.basename(file), line))
+            lines = fr.readlines()
+            for line in lines:
+                if search_string in line: 
+                   raise Exception("ERROR: {0} exited; contains: {1}".format(file, line))
 
 
 ##########################################################################

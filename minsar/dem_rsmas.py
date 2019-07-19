@@ -20,6 +20,7 @@ import argparse
 import shutil
 import re
 import subprocess
+import math
 from minsar.objects import message_rsmas
 from minsar.utils.download_ssara_rsmas import add_polygon_to_ssaraopt
 from minsar.utils.process_utilities import create_or_update_template
@@ -72,10 +73,10 @@ def main(args):
         west = bbox[2]
         east = bbox[3].split('\'')[0]
 
-        south = round(float(south) - 0.5)
-        north = round(float(north) + 0.5)
-        west = round(float(west) - 0.5)
-        east = round(float(east) + 0.5)
+        south = math.floor(float(south) - 0.5)
+        north = math.ceil(float(north) + 0.5)
+        west = math.floor(float(west) - 0.5)
+        east = math.ceil(float(east) + 0.5 )
 
         demBbox = str(int(south)) + ' ' + str(int(north)) + ' ' + str(int(west)) + ' ' + str(int(east))
         cmd = 'dem.py -a stitch -b ' + demBbox + ' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
