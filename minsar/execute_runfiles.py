@@ -51,6 +51,9 @@ def main(iargs=None):
 
     os.chdir(inps.work_dir)
 
+    command_line = os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1:])
+    message_rsmas.log(inps.work_dir, command_line)
+
     #########################################
     # Submit job
     #########################################
