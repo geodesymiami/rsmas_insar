@@ -15,6 +15,7 @@ EXAMPLE = """example:
   execute_runfiles.py LombokSenAT156VV.template 
 """
 
+
 def create_parser():
     """ Creates command line argument parser object. """
 
@@ -27,8 +28,6 @@ def create_parser():
     parser.add_argument('stop', nargs='?', type=int,
                         help='stopping run file number.\n')
     parser.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
-    parser.add_argument('--walltime', dest='wall_time', type=str, default='2:00',
-                        help='walltime, e.g. 2:00 (default: 2:00)')
 
     return parser
 
@@ -53,6 +52,8 @@ def main(iargs=None):
 
     command_line = os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1:])
     message_rsmas.log(inps.work_dir, command_line)
+    
+    config = putils.get_config_defaults(config_file='job_defaults.cfg')
 
     #########################################
     # Submit job
@@ -60,6 +61,7 @@ def main(iargs=None):
 
     if inps.submit_flag:
         job_file_name = 'execute_runfiles'
+        inps.wall_time = config[job_file_name]['walltime']
         work_dir = os.getcwd()
         job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
 
@@ -92,8 +94,6 @@ def main(iargs=None):
         message_rsmas.log(inps.work_dir, 'execute_runfiles.py {a} {b} {c}'.format(a=inps.customTemplateFile,
                                                                                   b=inps.start,
                                                                                   c=inps.stop))
-
-    config = putils.get_config_defaults(config_file='job_defaults.cfg')
 
     run_file_list = run_file_list[inps.start:inps.stop + 1]
 

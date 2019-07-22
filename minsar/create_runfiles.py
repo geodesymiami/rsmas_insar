@@ -7,14 +7,12 @@ import os
 import sys
 import glob
 import argparse
-from minsar.objects.rsmas_logging import loglevel
 from minsar.objects import message_rsmas
 from minsar.objects.auto_defaults import PathFind
 from minsar.utils.stack_run import CreateRun, run_download
 from minsar.utils.process_utilities import create_or_update_template
-from minsar.utils.process_utilities import make_run_list, send_logger
+from minsar.utils.process_utilities import make_run_list
 
-logger = send_logger()
 pathObj = PathFind()
 ##############################################################################
 EXAMPLE = """example:
@@ -51,7 +49,6 @@ def main(iargs=None):
     inps = command_line_parse(iargs)
     inps = create_or_update_template(inps)
 
-
     if not iargs is None:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
     else:
@@ -80,8 +77,6 @@ def main(iargs=None):
     with open(inps.work_dir + '/run_files_list', 'w') as run_file:
         for item in run_file_list:
             run_file.writelines(item + '\n')
-
-    logger.log(loglevel.INFO, "-----------------Done making Run files-------------------")
 
 ###########################################################################################
 

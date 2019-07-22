@@ -14,7 +14,7 @@ import sys
 import time
 from minsar.objects import message_rsmas
 from minsar.utils.process_steps import RsmasInsar, command_line_parse
-from minsar.utils.process_utilities import get_work_directory, get_project_name
+from minsar.utils.process_utilities import get_work_directory, get_project_name, get_config_defaults
 import minsar.job_submission as js
 
 ###############################################################################
@@ -32,11 +32,14 @@ def main(iargs=None):
     message_rsmas.log(inps.work_dir, '##### NEW RUN #####')
     message_rsmas.log(inps.work_dir, command_line)
 
+    config = get_config_defaults(config_file='job_defaults.cfg')
+
     #########################################
     # Submit job
     #########################################
     if inps.submit_flag:
         job_file_name = 'process_rsmas'
+        inps.wall_time = config[job_file_name]['walltime']
 
         job = js.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir, inps.wall_time)
         # run_operations.py needs this print statement for now.
