@@ -106,3 +106,8 @@ if __name__ == "__main__":
         raise Exception('ERROR in json_mbtiles2insarmaps.py')
 
     logger.log(loglevel.INFO, "-----------------Done ingesting insarmaps-------------------")
+
+    command_email = 'email_results.py ' + inps.customTemplateFile + ' --insarmap'
+
+    os.system(command_email)
+
