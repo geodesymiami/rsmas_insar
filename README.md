@@ -22,6 +22,7 @@ cd rsmas_insar
 
 cd sources ;
 git clone https://github.com/insarlab/MintPy.git ;
+git checkout 37863c7aee7390abd083caca7f5baef616244d80; cd ..
 git clone https://github.com/falkamelung/geodmod.git ;
 
 mkdir ../3rdparty
