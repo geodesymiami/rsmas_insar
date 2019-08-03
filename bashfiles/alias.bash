@@ -147,7 +147,7 @@ function rmswp() { rm \."$@".swp ; }
 function rmb() { mv "$@" tmp_remove_"$@" ; sleep 60 ; rm -r tmp_remove_"$@" & }    # remove in background - use for large directories
 alias xterm='xterm -sb &'
 alias rmtopsStack='rm -rf run_files configs baselines coarse_interferograms coreg_slaves ESD geom_master interferograms master merged misreg slaves stack orbits hazard_products geom_master_noDEM'
-alias rmtopsStack='rm -rf run_files configs baselines coarse_interferograms coreg_slaves ESD geom_master interferograms master merged misreg slaves stack orbits hazard_products geom_master_noDEM'
+alias rmltopsStack='rm -rf run_files configs baselines coarse_interferograms coreg_slaves ESD interferograms merged misreg slaves stack hazard_products geom_master_noDEM'
 alias rmltopsStack='rm -rf run_files configs baselines coarse_interferograms coreg_slaves ESD interferograms merged misreg slaves stack hazard_products geom_master_noDEM'
 alias rmoperations='rm -r ${OPERATIONS} &'
 alias lloperations='ls -l ${OPERATIONS}/LOGS/*out'
