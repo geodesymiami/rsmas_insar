@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 # Usage:
 #
@@ -241,12 +241,12 @@ class bulk_downloader:
 
        # Another Python2/3 workaround
        try:
-          %new_username = raw_input("Username: ")
+          #new_username = raw_input("Username: ")
           new_username = sys.argv[2]
        except NameError:
-          %new_username = input("Username: ")
+          #new_username = input("Username: ")
           new_username = sys.argv[2]
-       %new_password = getpass.getpass(prompt="Password (will not be displayed): ")
+       #new_password = getpass.getpass(prompt="Password (will not be displayed): ")
        new_password = sys.argv[4]
 
        # Build URS4 Cookie request
