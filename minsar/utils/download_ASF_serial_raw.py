@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # Usage:
 #
@@ -39,6 +39,8 @@ import signal
 
 import xml.etree.ElementTree as ET
 
+from minsar.objects import message_rsmas
+
 #############
 # This next block is a bunch of Python 2/3 compatability
 
@@ -75,9 +77,19 @@ def signal_handler(sig, frame):
 class bulk_downloader:
     def __init__(self):
         # List of files to download
-        self.files = [ 
-                                                                                                                                        ]
-
+        self.files = [
+            "https://datapool.asf.alaska.edu/SLC/SB/S1B_IW_SLC__1SDV_20180707T114940_20180707T115004_011704_01587A_AA26.zip",
+            "https://datapool.asf.alaska.edu/SLC/SB/S1B_IW_SLC__1SDV_20180707T114912_20180707T114942_011704_01587A_4B42.zip",
+            "https://datapool.asf.alaska.edu/SLC/SA/S1A_IW_SLC__1SDV_20170629T215253_20170629T215322_017254_01CCAD_8B5A.zip",
+            "https://datapool.asf.alaska.edu/SLC/SA/S1A_IW_SLC__1SDV_20170605T215251_20170605T215320_016904_01C204_B139.zip",
+            "https://datapool.asf.alaska.edu/SLC/SA/S1A_IW_SLC__1SDV_20170524T215250_20170524T215319_016729_01BC8E_E6AD.zip",
+            "https://datapool.asf.alaska.edu/SLC/SA/S1A_IW_SLC__1SDV_20170512T215250_20170512T215319_016554_01B72B_A208.zip",
+            "https://datapool.asf.alaska.edu/SLC/SA/S1A_IW_SLC__1SDV_20170430T215249_20170430T215318_016379_01B1DF_F670.zip",
+            "https://datapool.asf.alaska.edu/SLC/SA/S1A_IW_SLC__1SDV_20170418T215249_20170418T215318_016204_01AC92_F2B1.zip",
+            "https://datapool.asf.alaska.edu/SLC/SA/S1A_IW_SLC__1SDV_20170406T215248_20170406T215317_016029_01A730_08DA.zip",
+            "https://datapool.asf.alaska.edu/SLC/SA/S1A_IW_SLC__1SDV_20170325T215248_20170325T215317_015854_01A1FC_6DB3.zip",
+            "https://datapool.asf.alaska.edu/SLC/SA/S1A_IW_SLC__1SDV_20170313T215247_20170313T215316_015679_019CCC_6A05.zip"]
+         
         # Local stash of cookies so we don't always have to ask
         self.cookie_jar_path = os.path.join( os.path.expanduser('~'), ".bulk_download_cookiejar.txt")
         self.cookie_jar = None
@@ -229,10 +241,13 @@ class bulk_downloader:
 
        # Another Python2/3 workaround
        try:
-          new_username = raw_input("Username: ")
+          %new_username = raw_input("Username: ")
+          new_username = sys.argv[2]
        except NameError:
-          new_username = input("Username: ")
-       new_password = getpass.getpass(prompt="Password (will not be displayed): ")
+          %new_username = input("Username: ")
+          new_username = sys.argv[2]
+       %new_password = getpass.getpass(prompt="Password (will not be displayed): ")
+       new_password = sys.argv[4]
 
        # Build URS4 Cookie request
        auth_cookie_url = self.asf_urs4['url'] + '?client_id=' + self.asf_urs4['client'] + '&redirect_uri=' + self.asf_urs4['redir'] + '&response_type=code&state='
@@ -588,6 +603,8 @@ class bulk_downloader:
         
 
 if __name__ == "__main__":
+    message_rsmas.log('.', os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+
     # Setup a signal trap for SIGINT (Ctrl+C)
     signal.signal(signal.SIGINT, signal_handler)
 
