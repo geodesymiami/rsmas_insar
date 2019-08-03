@@ -8,7 +8,7 @@
 # Notes for refactoring:
 #   - use topsStack defaults (scurrently 'ssara' is given but ignored
 #   - use datast_template
-#   - for bounddingBox create a call_isce_dem function
+#   - for boundingBox create a call_isce_dem function
 #   - in ssara part, use GDAL class instead of  parsing the gdalinfo output
 
 ###############################################################################
@@ -24,6 +24,7 @@ import math
 from minsar.objects import message_rsmas
 from minsar.utils.download_ssara_rsmas import add_polygon_to_ssaraopt
 from minsar.utils.process_utilities import create_or_update_template
+from minsar.download_rsmas import ssh_with_commands
 
 EXAMPLE = '''
   example:
@@ -57,11 +58,11 @@ def main(args):
     # print( 'flag_ssara: ' +str(inps.flag_ssara))
     # print( 'flag_boundingBox : ' + str(inps.flag_boundingBox))
 
-    cwd = make_dem_dir(inps.work_dir)
+    dem_dir = make_dem_dir(inps.work_dir)
 
     if inps.flag_ssara:
 
-        call_ssara_dem(inps, cwd)
+        call_ssara_dem(inps, dem_dir)
 
         print('You have finished SSARA!')
     elif inps.flag_boundingBox:
@@ -79,25 +80,42 @@ def main(args):
         east = math.ceil(float(east) + 0.5 )
 
         demBbox = str(int(south)) + ' ' + str(int(north)) + ' ' + str(int(west)) + ' ' + str(int(east))
-        cmd = 'dem.py -a stitch -b ' + demBbox + ' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
-        message_rsmas.log(os.getcwd(), cmd)
+        command = 'dem.py -a stitch -b ' + demBbox + ' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
+        message_rsmas.log(os.getcwd(), command)
 
-        try:
-            output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True, universal_newlines=True)
-        except subprocess.CalledProcessError as exc:
-            print("Command failed. Exit code, StdErr:", exc.returncode, exc.output)
-            sys.exit('Error produced by dem.py')
+        #import pdb; pdb.set_trace()
+        if os.getenv('DOWNLOADHOST') == 'local':
+            try:
+                proc = subprocess.Popen(command,  stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True, universal_newlines=True)
+                output, error = proc.communicate()
+                if proc.returncode is not 0:
+                    raise Exception('ERROR starting dem.py subprocess')   # FA 8/19: I don't think this happens, errors are is output
+            except subprocess.CalledProcessError as exc:
+                print("Command failed. Exit code, StdErr:", exc.returncode, exc.output)
+                sys.exit('Error produced by dem.py')
+            else:
+                if 'Could not create a stitched DEM. Some tiles are missing' in output:
+                    os.chdir('..')
+                    shutil.rmtree('DEM')
+                    sys.exit('Error in dem.py: Tiles are missing. Ocean???')
         else:
-            if 'Could not create a stitched DEM. Some tiles are missing' in output:
-                os.chdir('..')
-                shutil.rmtree('DEM')
-                sys.exit('Error in dem.py: Tiles are missing. Ocean???')
+            dem_dir = os.getcwd()
+            ssh_command_list = ['s.bgood', 'cd {0}'.format(dem_dir), command]
+            host = os.getenv('DOWNLOADHOST')
+            try:
+                status = ssh_with_commands(host, ssh_command_list)
+            except subprocess.CalledProcessError as exc:
+                print("Command failed. Exit code, StdErr:", exc.returncode, exc.output)
+                sys.exit('Error produced by dem.py using ' + host)
+
+        #print('Exit status from dem.py: {0}'.format(status))
 
         xmlFile = glob.glob('demLat_*.wgs84.xml')[0]
+
         fin = open(xmlFile, 'r')
         fout = open("tmp.txt", "wt")
         for line in fin:
-            fout.write(line.replace('demLat', cwd + '/demLat'))
+            fout.write(line.replace('demLat', dem_dir + '/demLat'))
         fin.close()
         fout.close()
         os.rename('tmp.txt', xmlFile)
@@ -111,7 +129,7 @@ def main(args):
 
 
 def call_ssara_dem(inps, cwd):
-    print('DEM generation using SSARA')
+    print('DEM generation using SSARA'); sys.stdout.flush()
     out_file = 'ssara_dem.log'
 
     # need to refactor so that Josh's dataset_template will be used throughout
@@ -120,11 +138,34 @@ def call_ssara_dem(inps, cwd):
     ssaraopt_list = add_polygon_to_ssaraopt(dataset_template=inps.template, ssaraopt=ssaraopt_list.copy(), delta_lat=0)
     ssaraopt_string = ' '.join(ssaraopt_list)
 
-    command = 'ssara_federated_query.py {ssaraopt} --dem >& {outfile}'.format(ssaraopt=ssaraopt_string,
-                                                                              outfile=out_file)
-    print('command currently executing: ' + command)
-    subprocess.Popen(command, shell=True).wait()
-    print('downloaded dem.grd')
+    out_file = 'out_ssara_dem'
+    command = 'ssara_federated_query.py {ssaraopt} --dem '.format(ssaraopt=ssaraopt_string)
+    message_rsmas.log(os.getcwd(), command)
+    command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
+    print('command currently executing: ' + command); sys.stdout.flush()
+    if os.getenv('DOWNLOADHOST') == 'local':
+        print('Command: ' + command ); sys.stdout.flush()
+        try:
+            proc = subprocess.Popen(command,  stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True, universal_newlines=True)
+            error, output = proc.communicate() # FA 8/19 error, output works better here than output, error. Could be that stderr and stdout are switched .
+            if proc.returncode is not 0:
+                raise Exception('ERROR starting dem.py subprocess')   # FA 8/19: I don't think this happens, errors are is output
+        except subprocess.CalledProcessError as exc:
+            print("Command failed. Exit code, StdErr:", exc.returncode, exc.output)
+            sys.exit('Error produced by ssara_federated_query.py')
+        else:
+            if not 'Downloading DEM' in output:
+                os.chdir('..')
+                shutil.rmtree('DEM')
+                sys.exit('Error in dem.py: Tiles are missing. Ocean???')
+    else:
+        dem_dir = os.getcwd()
+        ssh_command_list = ['s.bgood', 'cd {0}'.format(cwd), command]
+        host = os.getenv('DOWNLOADHOST')
+        status = ssh_with_commands(host, ssh_command_list)
+        print('status from ssh_with_commands:' + str(status)); sys.stdout.flush()
+
+    print('Done downloading dem.grd'); sys.stdout.flush()
     grd_to_envi_and_vrt()
     grd_to_xml(cwd)
 
