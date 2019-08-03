@@ -25,6 +25,10 @@ git clone https://github.com/insarlab/MintPy.git ;
 git clone https://github.com/falkamelung/geodmod.git ;
 
 cd ../setup;
+git clone https://github.com/bakerunavco/SSARA.git ../3rdparty/SSARA
+git clone https://github.com/yunjunz/pyaps3.git ../3rdparty/PyAPS/pyaps3
+
+cd ../setup;
 rm -r ../3rdparty/miniconda3
 miniconda_version=Miniconda3-4.5.12-Linux-x86_64.sh
 miniconda_version=Miniconda3-4.6.14-Linux-x86_64.sh
@@ -41,11 +45,8 @@ mkdir -p ../3rdparty
 ../3rdparty/miniconda3/bin/pip install opencv-python
 ../3rdparty/miniconda3/bin/pip install geocoder
 
-../3rdparty/miniconda3/bin/git clone https://github.com/bakerunavco/SSARA.git ../3rdparty/SSARA
-../3rdparty/miniconda3/bin/git clone https://github.com/yunjunz/pyaps3.git ../3rdparty/PyAPS/pyaps3
-
-#../3rdparty/miniconda3/bin/pip install git+https://github.com/matplotlib/basemap.git#egg=mpl_toolkits!
- ../3rdparty/miniconda3/bin/conda install basemap --yes
+../3rdparty/miniconda3/bin/pip install git+https://github.com/matplotlib/basemap.git#egg=mpl_toolkits
+#../3rdparty/miniconda3/bin/conda install basemap --yes
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
 
 ../setup/download_isce_stack.csh
@@ -54,7 +55,7 @@ mkdir -p $SENTINEL_ORBITS;
 mkdir -p $SENTINEL_AUX;
 mkdir -p ~/insarlab/OPERATIONS/LOGS
 
-cd ../..
+cd ..
 source default_isce22.bash;
 echo DONE WITH CRITICAL CODE ;
 echo ########################
