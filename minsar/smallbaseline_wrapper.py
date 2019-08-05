@@ -14,6 +14,7 @@ import time
 import minsar.job_submission as js
 from minsar import email_results
 from mintpy import smallbaselineApp
+import contextlib
 
 pathObj = PathFind()
 
@@ -48,7 +49,15 @@ def main(iargs=None):
 
     os.chdir(inps.work_dir)
 
-    smallbaselineApp.main([inps.customTemplateFile])
+    try:
+        with open('out_mintpy.o', 'w') as f:
+            with contextlib.redirect_stdout(f):
+                smallbaselineApp.main([inps.customTemplateFile])
+    except:
+        with open('out_mintpy.e', 'w') as g:
+            with contextlib.redirect_stderr(g):
+                smallbaselineApp.main([inps.customTemplateFile])
+
 
     # Email Mintpy results
     if inps.email:

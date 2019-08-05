@@ -51,11 +51,11 @@ class CreateRun:
         message_rsmas.log(self.work_dir, 'stackSentinel.py' + ' ' + ' '.join(self.command_options))
 
         try:
-            with open('create_runfiles.o', 'w') as f:
+            with open('out_create_runfiles.o', 'w') as f:
                 with contextlib.redirect_stdout(f):
                     stackSentinel.main(self.command_options)
         except:
-            with open('create_runfiles.e', 'w') as g:
+            with open('out_create_runfiles.e', 'w') as g:
                 with contextlib.redirect_stderr(g):
                     stackSentinel.main(self.command_options)
 
