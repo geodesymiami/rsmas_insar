@@ -125,29 +125,29 @@ class rsmasRun(object):
             configObj.sqDir = os.path.join(self.work_dir, pathObj.minopydir)
             configObj.ifgDir = os.path.join(ifgram_dir, '{}_{}'.format(ifg[0], ifg[1]))
             configObj.ifgIndex = str(pairs.index(ifg))
-            configObj.rangeWindow = inps.__dict__['minopy.range_window']
-            configObj.azimuthWindow = inps.__dict__['minopy.azimuth_window']
+            configObj.rangeWindow = inps.template['minopy.range_window']
+            configObj.azimuthWindow = inps.template['minopy.azimuth_window']
             configObj.acq_num = str(len(pairs) + 1)
-            configObj.rangeLooks = inps.rangeLooks
-            configObj.azimuthLooks = inps.azimuthLooks
+            configObj.rangeLooks = inps.template['topsStack.rangeLooks']
+            configObj.azimuthLooks = inps.template['topsStack.azimuthLooks']
             configObj.generate_igram('[Function-1]')
             configObj.finalize()
-            self.runf.write(self.text_cmd + pathObj.wrappercommandtops + configName + '\n')
+            self.runf.write(inps.template['topsStack.textCmd'] + pathObj.wrappercommandtops + configName + '\n')
         configName = os.path.join(self.config_path, 'config_generate_quality_map')
         configObj = rsmasConfig(self.config_path, configName)
         configObj.configure(self)
         configObj.sqDir = os.path.join(self.work_dir, pathObj.minopydir)
         configObj.ifgDir = os.path.join(self.work_dir, pathObj.geomasterdir)
         configObj.ifgIndex = str(0)
-        configObj.rangeWindow = inps.__dict__['minopy.range_window']
-        configObj.azimuthWindow = inps.__dict__['minopy.azimuth_window']
+        configObj.rangeWindow = inps.template['minopy.range_window']
+        configObj.azimuthWindow = inps.template['minopy.azimuth_window']
         configObj.acq_num = str(len(pairs) + 1)
-        configObj.rangeLooks = inps.rangeLooks
-        configObj.azimuthLooks = inps.azimuthLooks
-        configObj.plmethod = inps.__dict__['minopy.plmethod']
+        configObj.rangeLooks = inps.template['topsStack.rangeLooks']
+        configObj.azimuthLooks = inps.template['topsStack.azimuthLooks']
+        configObj.plmethod = inps.template['minopy.plmethod']
         configObj.generate_igram('[Function-1]')
         configObj.finalize()
-        self.runf.write(self.text_cmd + pathObj.wrappercommandtops + configName + '\n')
+        self.runf.write(inps.template['topsStack.textCmd'] + pathObj.wrappercommandtops + configName + '\n')
 
     def unwrap(self, inps, pairs):
         for pair in pairs:
@@ -163,10 +163,12 @@ class rsmasRun(object):
             configObj.noMCF = noMCF
             configObj.master = os.path.join(self.work_dir, 'master')
             configObj.defoMax = defoMax
-            configObj.unwMethod = inps.unwMethod
+            configObj.unwMethod = inps.template['topsStack.unwMethod']
+            configObj.rangeLooks = inps.template['topsStack.rangeLooks']
+            configObj.azimuthLooks = inps.template['topsStack.azimuthLooks']
             configObj.unwrap('[Function-1]')
             configObj.finalize()
-            self.runf.write(self.text_cmd + pathObj.wrappercommandtops + configName + '\n')
+            self.runf.write(inps.template['topsStack.textCmd'] + pathObj.wrappercommandtops + configName + '\n')
 
     def finalize(self):
         self.runf.close()

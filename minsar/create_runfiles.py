@@ -50,7 +50,7 @@ def main(iargs=None):
         print('DEM not exists!')
         sys.exit(1)
 
-    pathObj.correct_for_isce_naming_convention(inps)
+    inps.topsStack_template = pathObj.correct_for_isce_naming_convention(inps)
     runObj = CreateRun(inps)
     runObj.run_stack_workflow()
 
@@ -60,7 +60,7 @@ def main(iargs=None):
         for item in run_file_list:
             run_file.writelines(item + '\n')
 
-    if inps.template['workflow'] in ['interferogram', 'slc']:
+    if inps.template['topsStack.workflow'] in ['interferogram', 'slc']:
         runObj.run_post_stack()
 
     return None
