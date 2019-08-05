@@ -36,16 +36,6 @@ class rsmasConfig(object):
         self.no_data_value = None
         self.cleanup = None
 
-
-    def phase_link(self, function):
-        self.f.write('###################################' + '\n')
-        self.f.write(function + '\n')
-        self.f.write('phase_linking_app : ' + '\n')
-        self.f.write('patch_dir : ' + self.patchDir + '\n')
-        self.f.write('range_window : ' + self.rangeWindow + '\n')
-        self.f.write('azimuth_window : ' + self.azimuthWindow + '\n')
-        self.f.write('plmethod : ' + self.plmethod + '\n')
-
     def generate_igram(self, function):
         self.f.write('###################################' + '\n')
         self.f.write(function + '\n')
@@ -126,19 +116,6 @@ class rsmasRun(object):
         except:
             self.insarmaps_flag = inps.template['insarmaps_flag']
 
-    def downloadDataDEM(self):
-        self.runf.write('download_rsmas.py ' + self.customTemplateFile + '\n')
-        self.runf.write('dem_rsmas.py ' + self.customTemplateFile + '\n')
-
-    def cropMergedSlc(self):
-        self.runf.write(self.text_cmd + 'crop_sentinel.py ' + self.customTemplateFile + '\n')
-
-    def createPatch(self):
-        self.runf.write(self.text_cmd + 'create_patch.py ' + self.customTemplateFile + '\n')
-
-    def phaseLinking(self):
-        self.runf.write(self.text_cmd + 'phase_linking_app.py ' + self.customTemplateFile + '\n')
-
     def generateIfg(self, inps, pairs):
         ifgram_dir = os.path.dirname(self.slcDir) + '/interferograms'
         for ifg in pairs:
@@ -190,24 +167,6 @@ class rsmasRun(object):
             configObj.unwrap('[Function-1]')
             configObj.finalize()
             self.runf.write(self.text_cmd + pathObj.wrappercommandtops + configName + '\n')
-
-    def mintpyCorrections(self):
-        self.runf.write(self.text_cmd + 'timeseries_corrections.py ' + self.customTemplateFile + '\n')
-
-    def mintpySB(self):
-        self.runf.write(self.text_cmd + 'smallbaselineApp.py ' + self.customTemplateFile + '\n')
-
-    def generateHazardProducts(self):
-        self.runf.write(self.text_cmd + 'export_ortho_geo.py ' + self.customTemplateFile + '\n')
-        self.runf.write(self.text_cmd + 'ifgramStack_to_ifgram_and_coherence.py ' + self.customTemplateFile + '\n')
- 
-    def ingestInsarmaps(self):
-        self.runf.write(self.text_cmd + 'ingest_insarmaps.py ' + self.customTemplateFile + '\n')
-
-    def emailResults(self):
-        self.runf.write(self.text_cmd + 'email_results.py ' + self.customTemplateFile + '\n')
-        if self.insarmaps_flag == 'True':
-            self.runf.write(self.text_cmd + 'email_results.py ' + self.customTemplateFile + ' --insarmap\n')
 
     def finalize(self):
         self.runf.close()

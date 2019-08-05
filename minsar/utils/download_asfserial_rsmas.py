@@ -17,25 +17,44 @@ import password_config as password
 logfile_name = os.getenv('OPERATIONS') + '/LOGS/asfserial_rsmas.log'
 logger = RsmasLogger(file_name=logfile_name)
 
-inps = None
 
+def main(iargs=None):
+    inps = putils.cmd_line_parse(iargs)
 
-def create_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('customTemplateFile', metavar="FILE", help='template file to use.')
-    parser.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
-    parser.add_argument('--walltime', dest='wall_time', type=str, default='12:00', help='submits job')
-    parser.add_argument('--delta_lat', dest='delta_lat', default='0.0', type=float,
-                         help='delta to add to latitude from boundingBox field, default is 0.0')
+    #########################################
+    # Submit job
+    #########################################
+    if inps.submit_flag:
+        job_file_name = 'download_asfserial_rsmas'
+        job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
+        work_dir = inps.work_dir
 
-    return parser
+        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, inps.wall_time)
 
+    os.chdir(inps.work_dir)
+    message_rsmas.log(inps.work_dir, os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1::]))
 
-def command_line_parse(args):
-    global inps
+    if not inps.template['topsStack.slcDir'] is None:
+        inps.slc_dir = inps.template['topsStack.slcDir']
+    else:
+        inps.slc_dir = os.path.join(inps.work_dir, 'SLC')
 
-    parser = create_parser()
-    inps = parser.parse_args(args)
+    project_slc_dir = os.path.join(inps.work_dir, 'SLC')
+
+    os.chdir(inps.slc_dir)
+
+    try:
+        os.remove(os.path.expanduser('~') + '/.bulk_download_cookiejar.txt')
+    except OSError:
+        pass
+
+    generate_files_csv(project_slc_dir, inps.customTemplateFile)
+    succesful = run_download_asf_serial(project_slc_dir)
+    change_file_permissions()
+    logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
+    logger.log(loglevel.INFO, "------------------------------------")
+
+    return None
 
 
 def generate_files_csv(slc_dir, custom_template_file):
@@ -130,39 +149,4 @@ def change_file_permissions():
 
 
 if __name__ == "__main__":
-
-    command_line_parse(sys.argv[1:])
-    inps = putils.create_or_update_template(inps)
-
-    #########################################
-    # Submit job
-    #########################################
-    if inps.submit_flag:
-        job_file_name = 'download_asfserial_rsmas'
-        job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
-        work_dir = inps.work_dir
-
-        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, inps.wall_time)
-
-    os.chdir(inps.work_dir)
-    message_rsmas.log(inps.work_dir, os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1::]))
-
-    if not inps.template['topsStack.slcDir'] is None:
-        inps.slc_dir = inps.template['topsStack.slcDir']
-    else:
-        inps.slc_dir = os.path.join(inps.work_dir, 'SLC')
-
-    project_slc_dir = os.path.join(inps.work_dir, 'SLC')
-
-    os.chdir(inps.slc_dir)
-
-    try:
-        os.remove(os.path.expanduser('~') + '/.bulk_download_cookiejar.txt')
-    except OSError:
-        pass
-
-    generate_files_csv(project_slc_dir, inps.customTemplateFile)
-    succesful = run_download_asf_serial(project_slc_dir)
-    change_file_permissions()
-    logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
-    logger.log(loglevel.INFO, "------------------------------------")
+    main(sys.argv[1:])

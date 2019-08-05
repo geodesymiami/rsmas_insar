@@ -15,26 +15,59 @@ import minsar.utils.process_utilities as putils
 import minsar.job_submission as js
 
 ###############################################################################
-EXAMPLE = '''example:
-  download_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template
-'''
 
 
-def command_line_parse(iargs=None):
-    """Command line parser."""
-    parser = create_parser()
-    inps = parser.parse_args(args=iargs)
-    return inps
+def main(iargs=None):
+    """Downloads data with ssara and asfserial scripts."""
 
-def create_parser():
-    """ Creates command line argument parser object. """
-    parser = argparse.ArgumentParser(description='Downloads SAR data using a variety of scripts',
-                                     formatter_class=argparse.RawTextHelpFormatter, epilog=EXAMPLE)
-    parser.add_argument('customTemplateFile', help='template file containing ssaraopt field')
-    parser.add_argument( '--submit', dest='submit_flag', action='store_true', help='submits job')
+    inps = putils.cmd_line_parse(iargs, script='download_rsmas')
 
-    # parser.add_argument('customTemplateFile', help='template file containing ssaraopt field', nargs='?')
-    return parser
+    command = os.path.basename(__file__) + ' ' + iargs[0]
+    message_rsmas.log(inps.work_dir, command)
+
+    config = putils.get_config_defaults(config_file='job_defaults.cfg')
+
+    #########################################
+    # Submit job
+    #########################################
+    if inps.submit_flag:
+        job_file_name = 'download_rsmas'
+        work_dir = os.getcwd()
+        job_name = job_file_name
+        if inps.wall_time == 'None':
+            inps.wall_time = config[job_file_name]['walltime']
+
+        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, inps.wall_time)
+        sys.exit(0)
+
+    if not inps.template['topsStack.slcDir'] is None:
+        slc_dir = inps.template['topsStack.slcDir']
+    else:
+        slc_dir = os.path.join(inps.work_dir, 'SLC')
+
+    if not os.path.isdir(inps.work_dir):
+        os.makedirs(inps.work_dir)
+
+    if not os.path.isdir(slc_dir):
+        os.makedirs(slc_dir)
+
+    # if satellite is not Sentinel (not tried yet)
+    if 'SenDT' not in inps.project_name and 'SenAT' not in inps.project_name:
+
+        ssara_call = ['ssara_federated_query.py'] + inps.ssaraopt + ['--print', '--download']
+        ssara_process = subprocess.Popen(ssara_call, shell=True).wait()
+        completion_status = ssara_process.poll()
+
+        return
+
+    download('ssara', inps.customTemplateFile, slc_dir, outnum=1)
+    #download('ssara', inps.customTemplateFile, slc_dir, outnum = 2)
+    #download('asfserial', inps.customTemplateFile, slc_dir, outnum = 1)
+
+    return None
+
+###########################################################################################
+
 
 def ssh_with_commands(hostname, command_list):
     """
@@ -49,6 +82,7 @@ def ssh_with_commands(hostname, command_list):
         ssh_proc.stdin.write('\n'.encode('utf8'))
     ssh_proc.communicate()
     return ssh_proc.returncode
+
 
 def download(script_name, customTemplateFile, slc_dir, outnum):
     """
@@ -78,53 +112,6 @@ def download(script_name, customTemplateFile, slc_dir, outnum):
     print('Exit status from download_{0}_rsmas.py: {1}'.format(script_name, status))
 
 ###############################################################################
-
-def main(iargs=None):
-    """Downloads data with ssara and asfserial scripts."""
-
-    inps = command_line_parse(iargs)
-    inps = putils.create_or_update_template(inps)
-
-    command = os.path.basename(__file__) + ' ' + iargs[0]
-    message_rsmas.log(inps.work_dir, command)
-
-    #########################################
-    # Submit job
-    #########################################
-    if inps.submit_flag:
-        job_file_name = 'download_rsmas'
-        work_dir = os.getcwd()
-        job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
-        wall_time = '24:00'
-
-        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
-        sys.exit(0)
-
-    if not inps.template['topsStack.slcDir'] is None:
-        slc_dir = inps.template['topsStack.slcDir']
-    else:
-        slc_dir = os.path.join(inps.work_dir, 'SLC')
-
-    if not os.path.isdir(inps.work_dir):
-        os.makedirs(inps.work_dir)
-
-    if not os.path.isdir(slc_dir):
-        os.makedirs(slc_dir)
-
-    # if satellite is not Sentinel (not tried yet)
-    if 'SenDT' not in inps.project_name and 'SenAT' not in inps.project_name:
-
-        ssara_call = ['ssara_federated_query.py'] + inps.ssaraopt + ['--print', '--download']
-        ssara_process = subprocess.Popen(ssara_call, shell=True).wait()
-        completion_status = ssara_process.poll()
-
-        return
-
-    download('ssara', inps.customTemplateFile, slc_dir, outnum = 1)
-    #download('ssara', inps.customTemplateFile, slc_dir, outnum = 2)
-    #download('asfserial', inps.customTemplateFile, slc_dir, outnum = 1)
-
-###########################################################################################
 
 
 if __name__ == '__main__':

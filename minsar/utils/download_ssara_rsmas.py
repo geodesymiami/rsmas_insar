@@ -20,23 +20,41 @@ logfile_name = pathObj.logdir + '/ssara_rsmas.log'
 logger = RsmasLogger(file_name=logfile_name)
 
 
-def create_parser():
-    """ Creates command line argument parser object. """
+def main(iargs=None):
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('customTemplateFile', metavar="FILE", help='template file to use.')
-    parser.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
-    parser.add_argument('--delta_lat', dest='delta_lat', default='0.0', type=float,
-                        help='delta to add to latitude from boundingBox field, default is 0.0')
+    inps = putils.cmd_line_parse(iargs)
 
-    return parser
+    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
+    if not inps.template['topsStack.slcDir'] is None:
+        inps.slc_dir = inps.template['topsStack.slcDir']
+    else:
+        inps.slc_dir = os.path.join(inps.work_dir, 'SLC')
 
-def command_line_parse(args):
-    """ Parses command line agurments into inps variable. """
+    project_slc_dir = os.path.join(inps.work_dir, 'SLC')
+    #########################################
+    # Submit job
+    #########################################
+    if inps.submit_flag:
+        job_file_name = 'download_ssara_rsmas'
+        job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
+        work_dir = inps.work_dir
+        wall_time = '24:00'
 
-    parser = create_parser()
-    return parser.parse_args(args)
+        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
+        sys.exit(0)
+
+    if not os.path.isdir(project_slc_dir):
+        os.makedirs(project_slc_dir)
+    os.chdir(inps.slc_dir)
+
+    logger.log(loglevel.INFO, "DATASET: %s", str(inps.customTemplateFile.split('/')[-1].split(".")[0]))
+    logger.log(loglevel.INFO, "DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
+    succesful = run_ssara(project_slc_dir, inps.customTemplateFile, inps.delta_lat)
+    logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
+    logger.log(loglevel.INFO, "------------------------------------")
+
+    return None
 
 
 def check_downloads(inps, run_number, args):
@@ -196,37 +214,4 @@ def add_polygon_to_ssaraopt(dataset_template, ssaraopt, delta_lat):
 
 
 if __name__ == "__main__":
-
-    inps = command_line_parse(sys.argv[1:])
-
-    inps = putils.create_or_update_template(inps)
-
-    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
-
-    if not inps.template['topsStack.slcDir'] is None:
-        inps.slc_dir = inps.template['topsStack.slcDir']
-    else:
-        inps.slc_dir = os.path.join(inps.work_dir, 'SLC')
-
-    project_slc_dir = os.path.join(inps.work_dir, 'SLC')
-    #########################################
-    # Submit job
-    #########################################
-    if inps.submit_flag:
-        job_file_name = 'download_ssara_rsmas'
-        job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
-        work_dir = inps.work_dir
-        wall_time = '24:00'
-
-        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
-        sys.exit(0)
-
-    if not os.path.isdir(project_slc_dir):
-        os.makedirs(project_slc_dir)
-    os.chdir(inps.slc_dir)
-
-    logger.log(loglevel.INFO, "DATASET: %s", str(inps.customTemplateFile.split('/')[-1].split(".")[0]))
-    logger.log(loglevel.INFO, "DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
-    succesful = run_ssara(project_slc_dir, inps.customTemplateFile, inps.delta_lat)
-    logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
-    logger.log(loglevel.INFO, "------------------------------------")
+    main(sys.argv[1:])

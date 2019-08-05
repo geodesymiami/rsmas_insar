@@ -10,41 +10,42 @@ import glob
 import argparse
 import subprocess
 from mintpy.utils import readfile
-from minsar.utils.process_utilities import remove_directories, get_project_name, get_work_directory
+import minsar.utils.process_utilities as putils
 from minsar.objects.auto_defaults import PathFind
 from minsar.objects import message_rsmas
 
-###############################################################################
 pathObj = PathFind()
 
-EXAMPLE = '''example:
-  email_results.py 
-  email_results.py $SAMPLESDIR/GalapagosSenDT128.template --insarmap
-'''
 
-def command_line_parse(iargs=None):
-    """Command line parser."""
-    parser = create_parser()
-    inps = parser.parse_args(args=iargs)
-    return inps
+###########################################################################################
 
-def create_parser():
-    """ Creates command line argument parser object. """
-    parser = argparse.ArgumentParser(description='Email results (by default mintpy results)',
-                                     formatter_class=argparse.RawTextHelpFormatter, epilog=EXAMPLE)
-    parser.add_argument('customTemplateFile', help='template file containing ssaraopt field')
-    parser.add_argument('--insarmap', action='store_true', dest='insarmap', default=False,
-                    help = 'Email insarmap results')
-    return parser
 
+def main(iargs=None):
+    """ email mintpy or insarmap results """
+
+    inps = putils.cmd_line_parse(iargs, script='email_results')
+
+    email_address = os.getenv('NOTIFICATIONEMAIL')
+
+    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+
+    if inps.insarmaps:
+        email_insarmaps_results(email_address)
+
+        if int(inps.template['cleanopt']) == 4:
+            cleanlist = pathObj.isce_clean_list
+            putils.remove_directories(cleanlist[4])
+
+    else:
+        email_mintpy_results(email_address)
+
+    return None
 
 ###################################################
 
-def email_insarmaps_results(custom_template):
-    """ email link to insarmaps.miami.edu """
 
-    if 'email_insarmaps' not in custom_template:
-        return
+def email_insarmaps_results(email_address):
+    """ email link to insarmaps.miami.edu """
 
     cwd = os.getcwd()
 
@@ -54,8 +55,7 @@ def email_insarmaps_results(custom_template):
 
     textStr = 'http://insarmaps.miami.edu/start/-0.008/-78.0/7"\?"startDataset=' + hdfeos_name
 
-    mailCmd = 'echo \"' + textStr + '\" | mail -s Miami_InSAR_results:_' + os.path.basename(cwd) + ' ' + \
-              custom_template['email_insarmaps']
+    mailCmd = 'echo \"' + textStr + '\" | mail -s Miami_InSAR_results:_' + os.path.basename(cwd) + ' ' + email_address
     command = 'ssh pegasus.ccs.miami.edu \" ' + mailCmd + '\"'
 
     print(command)
@@ -66,22 +66,19 @@ def email_insarmaps_results(custom_template):
     return
 
 
-def email_mintpy_results(custom_template):
+def email_mintpy_results(email_address):
     """ email mintpy results """
 
     textStr = 'email mintpy results'
-
-    if 'email_mintpy' not in custom_template:
-        return
 
     cwd = os.getcwd()
 
     file_list = pathObj.get_email_file_list()
 
-    if os.path.isdir('mintpy/PIC'):
-        prefix = 'mintpy/PIC'
+    if os.path.isdir('mintpy/pic'):
+        prefix = 'mintpy/pic'
 
-    template_file = glob.glob('mintpy/INPUTS/*.template')[0]
+    template_file = glob.glob('mintpy/inputs/*.template')[0]
 
     i = 0
     for fileList in file_list:
@@ -95,39 +92,17 @@ def email_mintpy_results(custom_template):
         if i == 1 and len(template_file) > 0:
             attachmentStr = attachmentStr + ' -a ' + template_file
 
-        mailCmd = 'echo \"' + textStr + '\" | mail -s ' + cwd + ' ' + attachmentStr + ' ' + custom_template[
-            'email_mintpy']
-        command = 'ssh pegasus.ccs.miami.edu \"cd ' + cwd + '; ' + mailCmd + '\"'
-        print(command)
-        status = subprocess.Popen(command, shell=True).wait()
-        if status is not 0:
-            sys.exit('Error in email_mintpy_results')
+    mailCmd = 'echo \"' + textStr + '\" | mail -s ' + cwd + ' ' + attachmentStr + ' ' + email_address
+    command = 'ssh pegasus.ccs.miami.edu \"cd ' + cwd + '; ' + mailCmd + '\"'
+    print(command)
+    status = subprocess.Popen(command, shell=True).wait()
+    if status is not 0:
+        sys.exit('Error in email_mintpy_results')
 
     return
 
 ###########################################################################################
-def main(iargs=None):
-    """ email mintpy or insarmap results """
-
-    inps = command_line_parse(iargs)
-    project_name = get_project_name(inps.customTemplateFile)
-    work_dir = get_work_directory(None, project_name)
-
-    message_rsmas.log(work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
-
-    custom_template = readfile.read_template(inps.customTemplateFile)
-
-    if inps.insarmap:
-        email_insarmaps_results(custom_template)
-
-        if int(custom_template['cleanopt']) == 4:
-            cleanlist = pathObj.isce_clean_list
-            remove_directories(cleanlist[4])
-
-    else:
-        email_mintpy_results(custom_template)
 
 
-###########################################################################################
 if __name__ == '__main__':
     main(sys.argv[1:])

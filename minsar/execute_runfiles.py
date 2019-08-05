@@ -11,42 +11,11 @@ import minsar.utils.process_utilities as putils
 import minsar.job_submission as js
 
 ##############################################################################
-EXAMPLE = """example:
-  execute_runfiles.py LombokSenAT156VV.template 
-"""
-
-
-def create_parser():
-    """ Creates command line argument parser object. """
-
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, epilog=EXAMPLE)
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
-    parser.add_argument('customTemplateFile', nargs='?',
-                        help='custom template with option settings.\n')
-    parser.add_argument('start', nargs='?', type=int,
-                        help='starting run file number (default = 1).\n')
-    parser.add_argument('stop', nargs='?', type=int,
-                        help='stopping run file number.\n')
-    parser.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
-
-    return parser
-
-
-def command_line_parse(iargs=None):
-    """ Parses command line agurments into inps variable. """
-
-    parser = create_parser()
-    inps = parser.parse_args(args=iargs)
-
-    return inps
-
-##############################################################################
 
 
 def main(iargs=None):
 
-    inps = command_line_parse(iargs)
-    inps = putils.create_or_update_template(inps)
+    inps = putils.cmd_line_parse(iargs, script='execute_runfiles')
 
     os.chdir(inps.work_dir)
 
@@ -61,41 +30,24 @@ def main(iargs=None):
 
     if inps.submit_flag:
         job_file_name = 'execute_runfiles'
-        inps.wall_time = config[job_file_name]['walltime']
+        if inps.wall_time == 'None':
+            inps.wall_time = config[job_file_name]['walltime']
+
         work_dir = os.getcwd()
-        job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
+        job_name = job_file_name
 
         js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, inps.wall_time)
         sys.exit(0)
 
     run_file_list = putils.read_run_list(inps.work_dir)
 
-    if inps.start is None:
-        if 'run_0_' in run_file_list[0]:
-            inps.start = 1
-        else:
-            inps.start = 0
-    else:
-        if not 'run_0_' in run_file_list[0]:
-            inps.start = inps.start - 1
+    if inps.endrun == 0:
+        inps.endrun = len(run_file_list)
 
-    if inps.stop is None:
-        inps.stop = len(run_file_list)
+    if not inps.startrun == 0:
+        inps.startrun = inps.startrun - 1
 
-    else:
-        if not 'run_0_' in run_file_list[0]:
-           inps.stop = inps.stop - 1
-
-    if not 'run_0_' in run_file_list[0]:
-        message_rsmas.log(inps.work_dir, 'execute_runfiles.py {a} {b} {c}'.format(a=inps.customTemplateFile,
-                                                                                  b=inps.start + 1,
-                                                                                  c=inps.stop + 1))
-    else:
-        message_rsmas.log(inps.work_dir, 'execute_runfiles.py {a} {b} {c}'.format(a=inps.customTemplateFile,
-                                                                                  b=inps.start,
-                                                                                  c=inps.stop))
-
-    run_file_list = run_file_list[inps.start:inps.stop + 1]
+    run_file_list = run_file_list[inps.startrun:inps.endrun]
 
     for item in run_file_list:
         step_name = '_'

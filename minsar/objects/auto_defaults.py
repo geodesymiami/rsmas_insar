@@ -138,4 +138,88 @@ class PathFind:
 
         return
 
+    @staticmethod
+    def process_rsmas_help():
+        
+        STEP_LIST = [
+            'download',
+            'dem',
+            'ifgrams',
+            'mintpy',
+            'insarmaps',
+            'geocode']
+
+        STEP_HELP = """Command line options for steps processing with names are chosen from the following list:
+            {}
+            In order to use either --start or --step, it is necessary that a
+            previous run was done using one of the steps options to process at least
+            through the step immediately preceding the starting step of the current run.
+
+            example: 
+              process_rsmas.py  <customTemplateFile>              # run with default and custom templates
+              process_rsmas.py  <customTemplateFile>  --submit    # submit as job
+              process_rsmas.py  -h / --help                       # help 
+              process_rsmas.py  -H                                # print    default template options
+              # Run with --start/stop/step options
+              process_rsmas.py GalapagosSenDT128.template --step  download        # run the step 'download' only
+              process_rsmas.py GalapagosSenDT128.template --start download        # start from the step 'download' 
+              process_rsmas.py GalapagosSenDT128.template --stop  ifgrams         # end after step 'interferogram'
+
+            """.format(STEP_LIST[0:6])
+
+        return STEP_LIST, STEP_HELP
+
+    @staticmethod
+    def minopy_help():
+
+        STEP_LIST = [
+            'crop',
+            'patch',
+            'inversion',
+            'ifgrams',
+            'unwrap',
+            'mintpy',
+            'email']
+
+        STEP_HELP = """Command line options for steps processing with names are chosen from the following list:
+                {}
+                In order to use either --start or --step, it is necessary that a
+                previous run was done using one of the steps options to process at least
+                through the step immediately preceding the starting step of the current run.
+
+                example: 
+                  minopy_wrapper.py  <customTemplateFile>              # run with default and custom templates
+                  minopy_wrapper.py  <customTemplateFile>  --submit    # submit as job
+                  minopy_wrapper.py  -h / --help                       # help 
+                  minopy_wrapper.py  -H                                # print    default template options
+                  # Run with --start/stop/step options
+                  minopy_wrapper.py GalapagosSenDT128.template --step  crop         # run the step 'download' only
+                  minopy_wrapper.py GalapagosSenDT128.template --start crop         # start from the step 'download' 
+                  minopy_wrapper.py GalapagosSenDT128.template --stop  unwrap       # end after step 'interferogram'
+
+                """.format(STEP_LIST[0:7])
+
+        return STEP_LIST, STEP_HELP
+
+    @staticmethod
+    def minopy_corrections():
+
+        runSteps = ['load_data',
+                    'modify_network',
+                    'reference_point',
+                    'stack_interferograms',
+                    'correct_unwrap_error',
+                    'correct_troposphere',
+                    'deramp',
+                    'correct_topography',
+                    'residual_RMS',
+                    'reference_date',
+                    'velocity',
+                    'geocode',
+                    'google_earth',
+                    'hdfeos5']
+
+        return runSteps
+
+
 
