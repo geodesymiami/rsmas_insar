@@ -37,17 +37,19 @@ EXAMPLE = '''
 '''
 
 
-def main(args):
+def main(iargs=None):
 
     # set defaults: ssara=True is set in dem_parser, use custom_pemp[late field if given
-    inps = cmd_line_parse(args, script='dem_rsmas')
+    inps = cmd_line_parse(iargs, script='dem_rsmas')
 
     # switch off ssara (default) if boundingBox is selected
     if inps.flag_boundingBox:
         inps.flag_ssara = False
 
-    command = os.path.basename(__file__) + ' ' + ' '.join(args[1:])
-    message_rsmas.log(inps.work_dir, command)
+    if not iargs is None:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+    else:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     if 'demMethod' in list(inps.template.keys()):
         if inps.template['demMethod'] == 'ssara':
@@ -337,5 +339,5 @@ vrttext = '''
 
 ###########################################################################################
 if __name__ == '__main__':
-    main(sys.argv[:])
+    main()
 
