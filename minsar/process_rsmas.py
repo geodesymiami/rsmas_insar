@@ -12,13 +12,14 @@ from __future__ import print_function
 import os
 import sys
 import time
+import minsar
+import minsar.workflow
 from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
 import minsar.job_submission as js
 from minsar.objects.auto_defaults import PathFind
-
-from minsar import download_rsmas, dem_rsmas, create_runfiles, execute_runfiles, smallbaseline_wrapper
-from minsar import ingest_insarmaps, export_ortho_geo
+#import minopy
+#import minopy.workflow
 
 pathObj = PathFind()
 step_list, step_help = pathObj.process_rsmas_help()
@@ -30,6 +31,7 @@ def main(iargs=None):
     start_time = time.time()
 
     inps = putils.cmd_line_parse(iargs, script='process_rsmas')
+    import pdb; pdb.set_trace()
 
     template_file = pathObj.auto_template
 
@@ -133,6 +135,7 @@ class RsmasInsar:
         self.customTemplateFile = inps.customTemplateFile
         self.work_dir = inps.work_dir
         self.project_name = inps.project_name
+        self.template = inps.template
 
         if 'demMethod' in inps.template and inps.template['demMethod'] == 'boundingBox':
             self.dem_flag = '--boundingBox'
@@ -151,18 +154,18 @@ class RsmasInsar:
         """
 
         clean_list = pathObj.isce_clean_list()
-        for item in clean_list[0:int(inps.template['cleanopt'])]:
+        for item in clean_list[0:int(self.template['cleanopt'])]:
             for directory in item:
                 if os.path.isdir(os.path.join(self.work_dir, directory)):
                     shutil.rmtree(os.path.join(self.work_dir, directory))
 
-        download_rsmas.main([self.customTemplateFile])
+        minsar.download_rsmas.main([self.customTemplateFile])
         return
 
     def run_download_dem(self):
         """ Downloading DEM using dem_rsmas.py script.
         """
-        dem_rsmas.main([self.customTemplateFile, self.dem_flag])
+        minsar.dem_rsmas.main([self.customTemplateFile, self.dem_flag])
         return
 
     def run_interferogram(self):
@@ -170,29 +173,29 @@ class RsmasInsar:
         1. create run_files
         2. execute run_files
         """
-        create_runfiles.main([self.customTemplateFile])
-        execute_runfiles.main([self.customTemplateFile])
+        minsar.create_runfiles.main([self.customTemplateFile])
+        minsar.execute_runfiles.main([self.customTemplateFile])
         return
 
     def run_mintpy(self):
         """ Process smallbaseline using MintPy or non-linear inversion using MiNoPy and email results
         """
         if self.method == 'mintpy':
-            smallbaseline_wrapper.main([self.customTemplateFile])
+            minsar.smallbaseline_wrapper.main([self.customTemplateFile, '--email'])
         else:
-            minopy_wrapper.main([self.customTemplateFile])
+            minopy.minopy_wrapper.main([self.customTemplateFile])
         return
 
     def run_insarmaps(self):
         """ prepare outputs for insarmaps website.
         """
-        ingest_insarmaps.main([self.customTemplateFile])
+        minsar.ingest_insarmaps.main([self.customTemplateFile, '--email'])
         return
 
     def run_geocode(self):
         """ create ortho/geo-rectified products.
         """
-        export_ortho_geo.main([self.customTemplateFile])
+        minsar.export_ortho_geo.main([self.customTemplateFile])
         return
 
     def run(self, steps=step_list):
