@@ -16,15 +16,15 @@ import minsar.job_submission as js
 pathObj = PathFind()
 inps = None
 
-logfile_name = pathObj.logdir + '/ssara_rsmas.log'
-logger = RsmasLogger(file_name=logfile_name)
-
 
 def main(iargs=None):
 
     inps = putils.cmd_line_parse(iargs, script='download_rsmas')
 
     message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+
+    logfile_name = pathObj.logdir + '/ssara_rsmas.log'
+    logger = RsmasLogger(file_name=logfile_name)
 
     if not inps.template['topsStack.slcDir'] is None:
         inps.slc_dir = inps.template['topsStack.slcDir']
@@ -50,14 +50,14 @@ def main(iargs=None):
 
     logger.log(loglevel.INFO, "DATASET: %s", str(inps.customTemplateFile.split('/')[-1].split(".")[0]))
     logger.log(loglevel.INFO, "DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
-    succesful = run_ssara(project_slc_dir, inps.customTemplateFile, inps.delta_lat)
+    succesful = run_ssara(project_slc_dir, inps.customTemplateFile, inps.delta_lat, logger)
     logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
     logger.log(loglevel.INFO, "------------------------------------")
 
     return None
 
 
-def check_downloads(inps, run_number, args):
+def check_downloads(inps, run_number, args, logger):
     """ Checks if all of the ssara files to be dwonloaded actually exist.
 
         Checks if the files to be downloaded actually exist or not on the system as a means of validating
@@ -80,13 +80,13 @@ def check_downloads(inps, run_number, args):
     for f in files_to_check:
         if not os.path.isfile(str(os.getcwd()) + "/" + str(f)):
             logger.log(loglevel.WARNING, "The file, %s, didn't download correctly. Running ssara again.")
-            run_ssara(inps.slc_dir, inps.customTemplateFile, delta_lat, run_number + 1)
+            run_ssara(inps.slc_dir, inps.customTemplateFile, delta_lat, logger, run_number + 1)
             return
 
     logger.log(loglevel.INFO, "Everything is there!")
 
 
-def run_ssara(slc_dir, template, delta_lat, run_number=1):
+def run_ssara(slc_dir, template, delta_lat, logger, run_number=1):
     """ Runs ssara_federated_query-cj.py and checks for download issues.
         Runs ssara_federated_query-cj.py and checks continuously for whether the data download has hung without
         comleting or exited with an error code. If either of the above occur, the function is run again, for a
@@ -168,7 +168,7 @@ def run_ssara(slc_dir, template, delta_lat, run_number=1):
         if hang_status:
             logger.log(loglevel.WARNING, "Hanging, running again")
 
-        run_ssara(slc_dir, template, delta_lat, run_number=run_number + 1)
+        run_ssara(slc_dir, template, delta_lat, logger, run_number=run_number + 1)
 
     return 0
 
