@@ -168,7 +168,7 @@ def run_ssara(slc_dir, template, delta_lat, run_number=1):
         if hang_status:
             logger.log(loglevel.WARNING, "Hanging, running again")
 
-        run_ssara(inps.slc_dir, template, delta_lat, run_number=run_number + 1)
+        run_ssara(slc_dir, template, delta_lat, run_number=run_number + 1)
 
     return 0
 
