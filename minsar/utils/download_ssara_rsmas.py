@@ -22,7 +22,7 @@ logger = RsmasLogger(file_name=logfile_name)
 
 def main(iargs=None):
 
-    inps = putils.cmd_line_parse(iargs)
+    inps = putils.cmd_line_parse(iargs, script='download_rsmas')
 
     message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
