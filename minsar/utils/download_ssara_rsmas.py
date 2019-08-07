@@ -28,7 +28,7 @@ def main(iargs=None):
     else:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
-    logfile_name = pathObj.logdir + '/ssara_rsmas.log'
+    logfile_name = inps.work_dir + '/ssara_rsmas.log'
     logger = RsmasLogger(file_name=logfile_name)
 
     if not inps.template['topsStack.slcDir'] is None:

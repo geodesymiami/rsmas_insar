@@ -14,12 +14,9 @@ import glob
 from minsar.objects.auto_defaults import PathFind
 import password_config as password
 
-logfile_name = os.getenv('OPERATIONS') + '/LOGS/asfserial_rsmas.log'
-logger = RsmasLogger(file_name=logfile_name)
-
 
 def main(iargs=None):
-    
+
     inps = putils.cmd_line_parse(iargs, script='download_rsmas')
 
     config = putils.get_config_defaults(config_file='job_defaults.cfg')
@@ -28,6 +25,9 @@ def main(iargs=None):
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
     else:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+
+    logfile_name = inps.work_dir + '/asfserial_rsmas.log'
+    logger = RsmasLogger(file_name=logfile_name)
 
     #########################################
     # Submit job
@@ -59,7 +59,7 @@ def main(iargs=None):
         pass
 
     generate_files_csv(project_slc_dir, inps.customTemplateFile)
-    succesful = run_download_asf_serial(project_slc_dir)
+    succesful = run_download_asf_serial(project_slc_dir, logger)
     change_file_permissions()
     logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
     logger.log(loglevel.INFO, "------------------------------------")
@@ -94,7 +94,7 @@ def generate_files_csv(slc_dir, custom_template_file):
     subprocess.Popen(sed_command, shell=True).wait()
 
 
-def run_download_asf_serial(slc_dir, run_number=1):
+def run_download_asf_serial(slc_dir, logger, run_number=1):
     """ Runs download_ASF_serial.py with proper files.
     Runs adapted download_ASF_serial.py with a CLI username and password and a csv file containing
     the the files needed to be downloaded (provided by ssara_federated_query.py --print)
@@ -142,7 +142,7 @@ def run_download_asf_serial(slc_dir, run_number=1):
     # If the exit code is one that signifies an error, rerun the entire command
     if exit_code in bad_codes or hang_status:
         logger.log(loglevel.WARNING, "Something went wrong, running again")
-        run_download_asf_serial(slc_dir, run_number=run_number + 1)
+        run_download_asf_serial(slc_dir, logger, run_number=run_number + 1)
 
     return exit_code
 
