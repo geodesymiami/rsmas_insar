@@ -9,7 +9,6 @@ import os
 import sys
 import argparse
 import glob
-import matplotlib.pyplot as plt
 from osgeo import gdal, osr, ogr
 import mintpy
 import mintpy.workflow  # dynamic import for modules used by smallbaselineApp workflow
