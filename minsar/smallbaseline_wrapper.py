@@ -58,7 +58,6 @@ def main(iargs=None):
             with contextlib.redirect_stderr(g):
                 smallbaselineApp.main([inps.customTemplateFile])
 
-
     # Email Mintpy results
     if inps.email:
         email_results.main([inps.customTemplateFile])
