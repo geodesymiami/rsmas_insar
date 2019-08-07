@@ -22,8 +22,10 @@ def main(iargs=None):
 
     inps = putils.cmd_line_parse(iargs, script='download_rsmas')
 
-    command = os.path.basename(__file__) + ' ' + iargs[0]
-    message_rsmas.log(inps.work_dir, command)
+    if not iargs is None:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+    else:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     config = putils.get_config_defaults(config_file='job_defaults.cfg')
 
@@ -115,4 +117,4 @@ def download(script_name, customTemplateFile, slc_dir, outnum):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    main()

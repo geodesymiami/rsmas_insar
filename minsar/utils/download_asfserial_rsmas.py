@@ -19,7 +19,15 @@ logger = RsmasLogger(file_name=logfile_name)
 
 
 def main(iargs=None):
+    
     inps = putils.cmd_line_parse(iargs, script='download_rsmas')
+
+    config = putils.get_config_defaults(config_file='job_defaults.cfg')
+
+    if not iargs is None:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+    else:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     #########################################
     # Submit job
@@ -29,10 +37,12 @@ def main(iargs=None):
         job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
         work_dir = inps.work_dir
 
+        if inps.wall_time == 'None':
+            inps.wall_time = config['download_rsmas']['walltime']
+
         js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, inps.wall_time)
 
     os.chdir(inps.work_dir)
-    message_rsmas.log(inps.work_dir, os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1::]))
 
     if not inps.template['topsStack.slcDir'] is None:
         inps.slc_dir = inps.template['topsStack.slcDir']
@@ -149,4 +159,4 @@ def change_file_permissions():
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()

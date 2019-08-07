@@ -21,7 +21,12 @@ def main(iargs=None):
 
     inps = putils.cmd_line_parse(iargs, script='download_rsmas')
 
-    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+    config = putils.get_config_defaults(config_file='job_defaults.cfg')
+
+    if not iargs is None:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+    else:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     logfile_name = pathObj.logdir + '/ssara_rsmas.log'
     logger = RsmasLogger(file_name=logfile_name)
@@ -38,10 +43,11 @@ def main(iargs=None):
     if inps.submit_flag:
         job_file_name = 'download_ssara_rsmas'
         job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
-        work_dir = inps.work_dir
-        wall_time = '24:00'
 
-        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
+        if inps.wall_time == 'None':
+            inps.wall_time = config['download_rsmas']['walltime']
+
+        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, inps.wall_time)
         sys.exit(0)
 
     if not os.path.isdir(project_slc_dir):
@@ -214,4 +220,4 @@ def add_polygon_to_ssaraopt(dataset_template, ssaraopt, delta_lat):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()
