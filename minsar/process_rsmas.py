@@ -31,7 +31,6 @@ def main(iargs=None):
     start_time = time.time()
 
     inps = putils.cmd_line_parse(iargs, script='process_rsmas')
-    import pdb; pdb.set_trace()
 
     template_file = pathObj.auto_template
 
