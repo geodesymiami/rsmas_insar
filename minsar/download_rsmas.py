@@ -9,7 +9,7 @@ import os
 import sys
 import argparse
 import subprocess
-
+import time
 from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
 import minsar.job_submission as js
@@ -30,17 +30,19 @@ def main(iargs=None):
 
     config = putils.get_config_defaults(config_file='job_defaults.cfg')
 
+    job_file_name = 'download_rsmas'
+    work_dir = os.getcwd()
+    job_name = job_file_name
+    if inps.wall_time == 'None':
+        inps.wall_time = config[job_file_name]['walltime']
+
+    wait_seconds, new_wall_time = putils.add_pause_to_walltime(inps.wall_time, inps.wait_time)
+
     #########################################
     # Submit job
     #########################################
     if inps.submit_flag:
-        job_file_name = 'download_rsmas'
-        work_dir = os.getcwd()
-        job_name = job_file_name
-        if inps.wall_time == 'None':
-            inps.wall_time = config[job_file_name]['walltime']
-
-        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, inps.wall_time)
+        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, new_wall_time)
         sys.exit(0)
 
     if not inps.template['topsStack.slcDir'] is None:
@@ -53,6 +55,8 @@ def main(iargs=None):
 
     if not os.path.isdir(slc_dir):
         os.makedirs(slc_dir)
+
+    time.sleep(wait_seconds)
 
     # if satellite is not Sentinel (not tried yet)
     if 'SenDT' not in inps.project_name and 'SenAT' not in inps.project_name:

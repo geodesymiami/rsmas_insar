@@ -9,6 +9,7 @@ import os
 import sys
 import argparse
 import glob
+import time
 from osgeo import gdal, osr, ogr
 import mintpy
 import mintpy.workflow  # dynamic import for modules used by smallbaselineApp workflow
@@ -17,6 +18,7 @@ from mintpy.objects import ifgramStack
 import minsar.utils.process_utilities as putils
 from minsar.objects import message_rsmas
 from minsar.objects.auto_defaults import PathFind
+import minsar.job_submission as js
 
 pathObj = PathFind()
 
@@ -32,17 +34,22 @@ def main(iargs=None):
 
     config = putils.get_config_defaults(config_file='job_defaults.cfg')
 
+    job_file_name = 'ifgramStack_to_ifgram_and_coherence'
+    job_name = job_file_name
+    if inps.wall_time == 'None':
+        inps.wall_time = config[job_file_name]['walltime']
+
+    wait_seconds, new_wall_time = putils.add_pause_to_walltime(inps.wall_time, inps.wait_time)
+
     #########################################
     # Submit job
     #########################################
     if inps.submit_flag:
-        job_file_name = 'ifgramStack_to_ifgram_and_coherence'
-        job_name = job_file_name
-        if inps.wall_time == 'None':
-            inps.wall_time = config[job_file_name]['walltime']
 
-        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, inps.wall_time)
+        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, new_wall_time)
         sys.exit(0)
+
+    time.sleep(wait_seconds)
 
     out_dir = inps.work_dir + '/' + inps.out_dir
     if not os.path.isdir(out_dir):
@@ -72,7 +79,7 @@ def main(iargs=None):
     obj = ifgramStack(geo_file)
     obj.open()
     date12_list = obj.get_date12_list()
-    #dummy_data, atr = readfile.read(geo_file)
+    # dummy_data, atr = readfile.read(geo_file)
 
     for i in range(len(date12_list)):
         date_str = date12_list[i]

@@ -7,10 +7,12 @@ import os
 import sys
 import glob
 import argparse
+import time
 from minsar.objects import message_rsmas
 from minsar.objects.auto_defaults import PathFind
 from minsar.utils.stack_run import CreateRun
 import minsar.utils.process_utilities as putils
+import minsar.job_submission as js
 
 pathObj = PathFind()
 
@@ -30,25 +32,28 @@ def main(iargs=None):
 
     os.chdir(inps.work_dir)
 
+    job_file_name = 'create_runfiles'
+    job_name = job_file_name
+    if inps.wall_time == 'None':
+        inps.wall_time = config[job_file_name]['walltime']
+
+    wait_seconds, new_wall_time = putils.add_pause_to_walltime(inps.wall_time, inps.wait_time)
+
     #########################################
     # Submit job
     #########################################
     if inps.submit_flag:
-        job_file_name = 'create_runfiles'
-        job_name = job_file_name
-        if inps.wall_time == 'None':
-            inps.wall_time = config[job_file_name]['walltime']
 
-        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, inps.wall_time)
+        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, new_wall_time)
         sys.exit(0)
-
 
     try:
         dem_file = glob.glob('DEM/*.wgs84')[0]
         inps.template['topsStack.demDir'] = dem_file
     except:
-        print('DEM not exists!')
-        sys.exit(1)
+        raise SystemExit('DEM does not exist')
+
+    time.sleep(wait_seconds)
 
     inps.topsStack_template = pathObj.correct_for_isce_naming_convention(inps)
     runObj = CreateRun(inps)

@@ -32,22 +32,27 @@ def main(iargs=None):
     else:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
+    job_file_name = 'smallbaseline_wrapper'
+
+    if inps.wall_time == 'None':
+        inps.wall_time = config[job_file_name]['walltime']
+
+    job_name = job_file_name
+
+    wait_seconds, new_wall_time = putils.add_pause_to_walltime(inps.wall_time, inps.wait_time)
+
     #########################################
     # Submit job
     #########################################
 
     if inps.submit_flag:
-        job_file_name = 'smallbaseline_wrapper'
 
-        if inps.wall_time == 'None':
-            inps.wall_time = config[job_file_name]['walltime']
-
-        job_name = job_file_name
-
-        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, inps.wall_time)
+        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, new_wall_time)
         sys.exit(0)
 
     os.chdir(inps.work_dir)
+
+    time.sleep(wait_seconds)
 
     try:
         with open('out_mintpy.o', 'w') as f:

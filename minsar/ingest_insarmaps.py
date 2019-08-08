@@ -8,6 +8,7 @@ import os
 import subprocess
 import sys
 import glob
+import time
 import shutil
 import argparse
 from minsar.objects.rsmas_logging import loglevel
@@ -30,20 +31,24 @@ def main(iargs=None):
 
     config = putils.get_config_defaults(config_file='job_defaults.cfg')
 
+    job_file_name = 'ingest_insarmaps'
+    job_name = job_file_name
+    work_dir = inps.work_dir
+
+    if inps.wall_time == 'None':
+        inps.wall_time = config[job_file_name]['walltime']
+
+    wait_seconds, new_wall_time = putils.add_pause_to_walltime(inps.wall_time, inps.wait_time)
+
     #########################################
     # Submit job
     #########################################
     if inps.submit_flag:
-        job_file_name = 'ingest_insarmaps'
-        job_name = job_file_name
-        work_dir = inps.work_dir
-
-        if inps.wall_time == 'None':
-            inps.wall_time = config[job_file_name]['walltime']
-
-        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir,inps. wall_time)
+        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, new_wall_time)
 
     os.chdir(inps.work_dir)
+
+    time.sleep(wait_seconds)
 
     hdfeos_file = glob.glob(inps.work_dir + '/mintpy/S1*.he5')
     hdfeos_file.append(glob.glob(inps.work_dir +'/mintpy/SUBSET_*/S1*.he5'))
