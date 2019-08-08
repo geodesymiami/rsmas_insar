@@ -7,10 +7,10 @@ import os
 import sys
 import glob
 import argparse
+import time
 from minsar.objects import message_rsmas
 from minsar.objects.auto_defaults import PathFind
 import minsar.utils.process_utilities as putils
-import time
 import minsar.job_submission as js
 from minsar import email_results
 from mintpy import smallbaselineApp
