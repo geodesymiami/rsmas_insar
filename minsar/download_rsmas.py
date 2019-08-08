@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 """This script downloads SAR data and deals with various errors produced by download clients
-   Author: Falk Amelung
+   Author: Falk Amelung, Sara Mirzaee
    Created:12/2018
 """
 ###############################################################################
@@ -13,7 +13,8 @@ import subprocess
 from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
 import minsar.job_submission as js
-
+from minsar.utils import download_ssara_rsmas, download_asfserial_rsmas
+import contextlib
 ###############################################################################
 
 
@@ -96,6 +97,27 @@ def download(script_name, customTemplateFile, slc_dir, outnum):
     if script_name not in {'ssara', 'asfserial'}:
         print('{} download not supported'.format(script_name))
 
+    if script_name == 'ssara':
+        try:
+            with open('out_download_ssara.o', 'w') as f:
+                with contextlib.redirect_stdout(f):
+                    download_ssara_rsmas.main([customTemplateFile])
+        except:
+            with open('out_download_ssara.e', 'w') as g:
+                with contextlib.redirect_stderr(g):
+                    download_ssara_rsmas.main([customTemplateFile])
+
+    else:
+        try:
+            with open('out_download_asfserial.o', 'w') as f:
+                with contextlib.redirect_stdout(f):
+                    download_asfserial_rsmas.main([customTemplateFile])
+        except:
+            with open('out_download_asfserial.e', 'w') as g:
+                with contextlib.redirect_stderr(g):
+                    download_asfserial_rsmas.main([customTemplateFile])
+
+    '''
     out_file = os.path.join(os.getcwd(), 'out_download_{0}{1}'.format(script_name, outnum))
     command = 'download_{0}_rsmas.py {1}'.format(script_name, customTemplateFile)
     command = '({0} > {1}.o) >& {1}.e'.format(command, out_file)
@@ -110,8 +132,10 @@ def download(script_name, customTemplateFile, slc_dir, outnum):
         ssh_command_list = ['s.bgood', 'cd {0}'.format(slc_dir), command]
         host = os.getenv('DOWNLOADHOST')
         status = ssh_with_commands(host, ssh_command_list)
+        
+    '''
 
-    print('Exit status from download_{0}_rsmas.py: {1}'.format(script_name, status))
+    # print('Exit status from download_{0}_rsmas.py: {1}'.format(script_name, status))
 
 ###############################################################################
 
