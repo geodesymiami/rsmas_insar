@@ -19,8 +19,8 @@ from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
 import minsar.job_submission as js
 from minsar.objects.auto_defaults import PathFind
-#import minopy
-#import minopy.workflow
+import minopy
+import minopy.workflow
 
 pathObj = PathFind()
 step_list, step_help = pathObj.process_rsmas_help()

@@ -178,20 +178,10 @@ class PathFind:
 
         STEP_HELP = """Command line options for steps processing with names are chosen from the following list:
                 {}
+                
                 In order to use either --start or --step, it is necessary that a
                 previous run was done using one of the steps options to process at least
                 through the step immediately preceding the starting step of the current run.
-
-                example: 
-                  minopy_wrapper.py  <customTemplateFile>              # run with default and custom templates
-                  minopy_wrapper.py  <customTemplateFile>  --submit    # submit as job
-                  minopy_wrapper.py  -h / --help                       # help 
-                  minopy_wrapper.py  -H                                # print    default template options
-                  # Run with --start/stop/step options
-                  minopy_wrapper.py GalapagosSenDT128.template --step  crop         # run the step 'download' only
-                  minopy_wrapper.py GalapagosSenDT128.template --start crop         # start from the step 'download' 
-                  minopy_wrapper.py GalapagosSenDT128.template --stop  unwrap       # end after step 'interferogram'
-
                 """.format(STEP_LIST[0:7])
 
         return STEP_LIST, STEP_HELP
