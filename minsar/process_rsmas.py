@@ -12,6 +12,7 @@ from __future__ import print_function
 import os
 import sys
 import time
+import argparse
 import minsar
 import minsar.workflow
 from minsar.objects import message_rsmas
@@ -25,12 +26,38 @@ pathObj = PathFind()
 step_list, step_help = pathObj.process_rsmas_help()
 ###############################################################################
 
+EXAMPLE = """example:
+      process_rsmas.py  <customTemplateFile>              # run with default and custom templates
+      process_rsmas.py  <customTemplateFile>  --submit    # submit as job
+      process_rsmas.py  -h / --help                       # help 
+      process_rsmas.py  -H                                # print    default template options
+      # Run with --start/stop/step options
+      process_rsmas.py GalapagosSenDT128.template --step  download        # run the step 'download' only
+      process_rsmas.py GalapagosSenDT128.template --start download        # start from the step 'download' 
+      process_rsmas.py GalapagosSenDT128.template --stop  ifgrams         # end after step 'interferogram'
+    """
+
+
+def process_rsmas_cmd_line_parse(iargs=None):
+    """ Creates command line argument parser object. """
+
+    parser = argparse.ArgumentParser(description='Process Rsmas Routine InSAR Time Series Analysis',
+                                     formatter_class=argparse.RawTextHelpFormatter,
+                                     epilog=EXAMPLE)
+
+    parser = putils.add_common_parser(parser)
+    parser = putils.add_process_rsmas(parser)
+    inps = parser.parse_args(args=iargs)
+    inps = putils.create_or_update_template(inps)
+
+    return inps
+
 
 def main(iargs=None):
 
     start_time = time.time()
 
-    inps = putils.cmd_line_parse(iargs, script='process_rsmas')
+    inps = process_rsmas_cmd_line_parse(iargs)
 
     template_file = pathObj.auto_template
 

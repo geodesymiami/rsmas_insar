@@ -143,31 +143,23 @@ class PathFind:
 
     @staticmethod
     def process_rsmas_help():
-        
+
         STEP_LIST = [
             'download',
             'dem',
             'ifgrams',
             'mintpy',
             'insarmaps',
-            'geocode']
+            'geocode',
+        ]
 
         STEP_HELP = """Command line options for steps processing with names are chosen from the following list:
             {}
+
             In order to use either --start or --step, it is necessary that a
             previous run was done using one of the steps options to process at least
             through the step immediately preceding the starting step of the current run.
-
-            example: 
-              process_rsmas.py  <customTemplateFile>              # run with default and custom templates
-              process_rsmas.py  <customTemplateFile>  --submit    # submit as job
-              process_rsmas.py  -h / --help                       # help 
-              process_rsmas.py  -H                                # print    default template options
-              # Run with --start/stop/step options
-              process_rsmas.py GalapagosSenDT128.template --step  download        # run the step 'download' only
-              process_rsmas.py GalapagosSenDT128.template --start download        # start from the step 'download' 
-              process_rsmas.py GalapagosSenDT128.template --stop  ifgrams         # end after step 'interferogram'
-
+            
             """.format(STEP_LIST[0:6])
 
         return STEP_LIST, STEP_HELP

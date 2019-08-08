@@ -28,16 +28,11 @@ pathObj = PathFind()
 
 
 def cmd_line_parse(iargs=None, script=None):
+    """Command line parser."""
 
-    parser = argparse.ArgumentParser(description='MinSAR scripts common parser')
-    parser.add_argument('customTemplateFile', nargs='?', help='custom template with option settings.\n')
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
-    parser.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
-    parser.add_argument('--walltime', dest='wall_time', default='None',
-                        help='walltime for submitting the script as a job')
+    parser = argparse.ArgumentParser(description='MinSAR scripts parser')
+    parser = add_common_parser(parser)
 
-    if script == 'process_rsmas':
-        parser = add_process_rsmas(parser)
     if script == 'download_rsmas':
         parser = add_download_data(parser)
     if script == 'dem_rsmas':
@@ -50,10 +45,22 @@ def cmd_line_parse(iargs=None, script=None):
         parser = add_email_args(parser)
     if script == 'smallbaseline_wrapper' or script == 'ingest_insarmaps':
         parser = add_notification(parser)
+
     inps = parser.parse_args(args=iargs)
     inps = create_or_update_template(inps)
 
     return inps
+
+
+def add_common_parser(parser):
+
+    commonp = parser.add_argument_group('General options:')
+    commonp.add_argument('customTemplateFile', nargs='?', help='custom template with option settings.\n')
+    commonp.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
+    commonp.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
+    commonp.add_argument('--walltime', dest='wall_time', default='None',
+                        help='walltime for submitting the script as a job')
+    return parser
 
 
 def add_download_data(parser):
@@ -118,6 +125,22 @@ def add_export_amplitude(parser):
     return parser
 
 
+def add_email_args(parser):
+
+    em = parser.add_argument_group('Option for emailing insarmaps result.')
+    em.add_argument('--insarmaps', action='store_true', dest='insarmaps', default=False,
+                        help='Email insarmap results')
+    return parser
+
+
+def add_notification(parser):
+
+    NO = parser.add_argument_group('Flags for emailing results.')
+    NO.add_argument('--email', action='store_true', dest='email', default=False,
+                        help='opt to email results')
+    return parser
+
+
 def add_process_rsmas(parser):
 
     STEP_LIST, STEP_HELP = pathObj.process_rsmas_help()
@@ -137,22 +160,6 @@ def add_process_rsmas(parser):
     prs.add_argument('--insarmap', action='store_true', dest='insarmap', default=False,
                         help='Email insarmap results')
 
-    return parser
-
-
-def add_email_args(parser):
-
-    em = parser.add_argument_group('Option for emailing insarmaps result.')
-    em.add_argument('--insarmaps', action='store_true', dest='insarmaps', default=False,
-                        help='Email insarmap results')
-    return parser
-
-
-def add_notification(parser):
-
-    NO = parser.add_argument_group('Flags for emailing results.')
-    NO.add_argument('--email', action='store_true', dest='email', default=False,
-                        help='opt to email results')
     return parser
 
 ##########################################################################
