@@ -8,64 +8,48 @@ import os
 import subprocess
 import sys
 import glob
+import time
 import shutil
 import argparse
 from minsar.objects.rsmas_logging import loglevel
 from minsar.objects import message_rsmas
+import minsar.utils.process_utilities as putils
+import minsar.job_submission as js
+from minsar import email_results
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
 
-from minsar.utils.process_utilities import create_or_update_template
-from minsar.utils.process_utilities import get_work_directory, get_project_name, send_logger
-import minsar.job_submission as js
-
-logger = send_logger()
 
 ##############################################################################
-EXAMPLE = """example:
-  ingest_insarmaps.py LombokSenAT156VV.template 
-"""
-
-def create_parser():
-    """ Creates command line argument parser object. """
-
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, epilog=EXAMPLE)
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
-    parser.add_argument('customTemplateFile', nargs='?',
-                        help='custom template with option settings.\n')
-    parser.add_argument( '--submit', dest='submit_flag', action='store_true', help='submits job')
-
-    return parser
 
 
-def command_line_parse(args):
-    """ Parses command line agurments into inps variable. """
+def main(iargs=None):
 
-    parser = create_parser()
-    inps = parser.parse_args(args)
-    return inps
-
-
-if __name__ == "__main__":
-
-    inps = command_line_parse(sys.argv[1:])
-    inps = create_or_update_template(inps)
+    inps = putils.cmd_line_parse(iargs, script='ingest_insarmaps')
 
     message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ''.join(sys.argv[1]))
+
+    config = putils.get_config_defaults(config_file='job_defaults.cfg')
+
+    job_file_name = 'ingest_insarmaps'
+    job_name = job_file_name
+    work_dir = inps.work_dir
+
+    if inps.wall_time == 'None':
+        inps.wall_time = config[job_file_name]['walltime']
+
+    wait_seconds, new_wall_time = putils.add_pause_to_walltime(inps.wall_time, inps.wait_time)
 
     #########################################
     # Submit job
     #########################################
     if inps.submit_flag:
-        job_file_name = 'ingest_insarmaps'
-        job_name = inps.project_name
-        work_dir = inps.work_dir
-        wall_time = '24:00'
-
-        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
+        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, new_wall_time)
 
     os.chdir(inps.work_dir)
+
+    time.sleep(wait_seconds)
 
     hdfeos_file = glob.glob(inps.work_dir + '/mintpy/S1*.he5')
     hdfeos_file.append(glob.glob(inps.work_dir +'/mintpy/SUBSET_*/S1*.he5'))
@@ -75,7 +59,6 @@ if __name__ == "__main__":
     mbtiles_file = json_folder + '/' + os.path.splitext(os.path.basename(hdfeos_file))[0] + '.mbtiles'
 
     if os.path.isdir(json_folder):
-        logger.log(loglevel.INFO, 'Removing directory: {}'.format(json_folder))
         shutil.rmtree(json_folder)
 
     command1 = 'hdfeos5_2json_mbtiles.py ' + hdfeos_file + ' ' + json_folder + ' |& tee out_insarmaps.log'
@@ -88,21 +71,25 @@ if __name__ == "__main__":
         f.write(command2 + '\n')
 
     out_file = 'out_insarmaps'
-    logger.log(loglevel.INFO, command1)
     message_rsmas.log(inps.work_dir, command1)
     command1 = '('+command1+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
     status = subprocess.Popen(command1, shell=True).wait()
     if status is not 0:
-        logger.log(loglevel.ERROR, 'ERROR in hdfeos5_2json_mbtiles.py')
         raise Exception('ERROR in hdfeos5_2json_mbtiles.py')
 
     # TODO: Change subprocess call to get back error code and send error code to logger
-    logger.log(loglevel.INFO, command2)
     message_rsmas.log(inps.work_dir, command2)
     command2 = '('+command2+' | tee -a '+out_file+'.o) 3>&1 1>&2 2>&3 | tee -a '+out_file+'.e'
     status = subprocess.Popen(command2, shell=True).wait()
     if status is not 0:
-        logger.log(loglevel.ERROR, 'ERROR in json_mbtiles2insarmaps.py')
         raise Exception('ERROR in json_mbtiles2insarmaps.py')
 
-    logger.log(loglevel.INFO, "-----------------Done ingesting insarmaps-------------------")
+    # Email insarmaps results:
+    if inps.email:
+        email_results.main([inps.customTemplateFile, '--insarmap'])
+
+    return None
+
+
+if __name__ == "__main__":
+    main()

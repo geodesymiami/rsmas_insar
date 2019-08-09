@@ -107,12 +107,15 @@ class PathFind:
     @staticmethod
     def correct_for_isce_naming_convention(inps):
 
-        inps_dict = vars(inps)
+        inps_dict = {}
+        for item in inps.template:
+            if item.startswith('topsStack'):
+                inps_dict[item] = inps.template[item]
 
-        isceKey = ['slc_dirname', 'orbit_dirname', 'aux_dirname', 'work_dir', 'dem', 'master_date', 'num_connections',
+        isceKey = ['slc_directory', 'orbit_directory', 'aux_directory', 'working_directory', 'dem', 'master_date', 'num_connections',
                    'num_overlap_connections', 'swath_num', 'bbox', 'text_cmd', 'exclude_dates', 'include_dates',
-                   'azimuthLooks', 'rangeLooks', 'filtStrength', 'esdCoherenceThreshold', 'snrThreshold', 'unwMethod',
-                   'polarization', 'coregistration', 'workflow', 'startDate', 'stopDate', 'useGPU']
+                   'azimuth_looks', 'range_looks', 'filter_strength', 'esd_coherence_threshold', 'snr_misreg_threshold', 'unw_method',
+                   'polarization', 'coregistration', 'workflow', 'start_date', 'stop_date', 'useGPU']
 
         templateKey = ['slcDir', 'orbitDir', 'auxDir', 'workingDir', 'demDir', 'master', 'numConnections',
                        'numOverlapConnections', 'subswath', 'boundingBox', 'textCmd', 'excludeDates', 'includeDates',
@@ -123,19 +126,85 @@ class PathFind:
         templateKey = [stackprefix + '.' + x for x in templateKey]
 
         for old_key, new_key in zip(templateKey, isceKey):
-            inps_dict['template'][new_key] = inps_dict['template'].pop(old_key)
-            if inps_dict['template'][new_key] == 'None':
-                inps_dict['template'][new_key] = None
+            inps_dict[new_key] = inps_dict.pop(old_key)
+            if inps_dict[new_key] == 'None':
+                inps_dict[new_key] = None
 
-        if not inps_dict['template']['startDate'] in [None, 'auto']:
-            print(inps_dict['template']['startDate'])
-            inps_dict['template']['startDate'] = datetime.datetime.strptime(inps_dict['template']['startDate'],
+        if not inps_dict['start_date'] in [None, 'auto']:
+            print(inps_dict['start_date'])
+            inps_dict['start_date'] = datetime.datetime.strptime(inps_dict['start_date'],
                                                                             '%Y%m%d').strftime('%Y-%m-%d')
 
-        if not inps_dict['template']['stopDate'] in [None, 'auto']:
-            inps_dict['template']['stopDate'] = datetime.datetime.strptime(inps_dict['template']['stopDate'],
+        if not inps_dict['stop_date'] in [None, 'auto']:
+            inps_dict['stop_date'] = datetime.datetime.strptime(inps_dict['stop_date'],
                                                                            '%Y%m%d').strftime('%Y-%m-%d')
 
-        return
+        return inps_dict
+
+    @staticmethod
+    def process_rsmas_help():
+
+        STEP_LIST = [
+            'download',
+            'dem',
+            'ifgrams',
+            'mintpy',
+            'insarmaps',
+            'geocode',
+        ]
+
+        STEP_HELP = """Command line options for steps processing with names are chosen from the following list:
+            {}
+
+            In order to use either --start or --step, it is necessary that a
+            previous run was done using one of the steps options to process at least
+            through the step immediately preceding the starting step of the current run.
+            
+            """.format(STEP_LIST[0:6])
+
+        return STEP_LIST, STEP_HELP
+
+    @staticmethod
+    def minopy_help():
+
+        STEP_LIST = [
+            'crop',
+            'patch',
+            'inversion',
+            'ifgrams',
+            'unwrap',
+            'mintpy',
+            'email']
+
+        STEP_HELP = """Command line options for steps processing with names are chosen from the following list:
+                {}
+                
+                In order to use either --start or --step, it is necessary that a
+                previous run was done using one of the steps options to process at least
+                through the step immediately preceding the starting step of the current run.
+                """.format(STEP_LIST[0:7])
+
+        return STEP_LIST, STEP_HELP
+
+    @staticmethod
+    def minopy_corrections():
+
+        runSteps = ['load_data',
+                    'modify_network',
+                    'reference_point',
+                    'stack_interferograms',
+                    'correct_unwrap_error',
+                    'correct_troposphere',
+                    'deramp',
+                    'correct_topography',
+                    'residual_RMS',
+                    'reference_date',
+                    'velocity',
+                    'geocode',
+                    'google_earth',
+                    'hdfeos5']
+
+        return runSteps
+
 
 

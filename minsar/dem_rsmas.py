@@ -23,8 +23,9 @@ import subprocess
 import math
 from minsar.objects import message_rsmas
 from minsar.utils.download_ssara_rsmas import add_polygon_to_ssaraopt
-from minsar.utils.process_utilities import create_or_update_template
+from minsar.utils.process_utilities import cmd_line_parse
 from minsar.download_rsmas import ssh_with_commands
+
 
 EXAMPLE = '''
   example:
@@ -38,14 +39,19 @@ EXAMPLE = '''
 '''
 
 
-def main(args):
+def main(iargs=None):
 
     # set defaults: ssara=True is set in dem_parser, use custom_pemp[late field if given
-    inps = dem_parser()
-    inps = create_or_update_template(inps)
+    inps = cmd_line_parse(iargs, script='dem_rsmas')
 
-    command = os.path.basename(__file__) + ' ' + ' '.join(args[1:])
-    message_rsmas.log(inps.work_dir, command)
+    # switch off ssara (default) if boundingBox is selected
+    if inps.flag_boundingBox:
+        inps.flag_ssara = False
+
+    if not iargs is None:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+    else:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     if 'demMethod' in list(inps.template.keys()):
         if inps.template['demMethod'] == 'ssara':
@@ -127,6 +133,8 @@ def main(args):
     print('End of dem_rsmas.py')
     print('################################################\n')
 
+    return None
+
 
 def call_ssara_dem(inps, cwd):
     print('DEM generation using SSARA'); sys.stdout.flush()
@@ -168,33 +176,6 @@ def call_ssara_dem(inps, cwd):
     print('Done downloading dem.grd'); sys.stdout.flush()
     grd_to_envi_and_vrt()
     grd_to_xml(cwd)
-
-
-def dem_parser():
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
-                                     description='Options dem geneation method: SSARA or BBOX (ISCE).',
-                                     epilog=EXAMPLE)
-    parser.add_argument('customTemplateFile',
-                        nargs='?',
-                        help='custom template with option settings.\n')
-    parser.add_argument('--ssara',
-                        dest='flag_ssara',
-                        action='store_true',
-                        default=True,
-                        help='run ssara_federated_query w/ grd output file, set as default')
-    parser.add_argument('--boundingBox',
-                        dest='flag_boundingBox',
-                        action='store_true',
-                        default=False,
-                        help='run dem.py from isce using boundingBox as lat/long bounding box')
-
-    inps = parser.parse_args()
-
-    # switch off ssara (default) if boundingBox is selected
-    if inps.flag_boundingBox:
-        inps.flag_ssara = False
-
-    return inps
 
 
 def make_dem_dir(work_dir):
@@ -400,5 +381,5 @@ vrttext = '''
 
 ###########################################################################################
 if __name__ == '__main__':
-    main(sys.argv[:])
+    main()
 

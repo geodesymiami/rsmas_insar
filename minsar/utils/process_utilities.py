@@ -12,6 +12,7 @@ import os
 import glob
 import subprocess
 import configparser
+import argparse
 import numpy as np
 from natsort import natsorted
 import xml.etree.ElementTree as ET
@@ -21,16 +22,147 @@ from minsar.objects.rsmas_logging import RsmasLogger, loglevel
 from minsar.objects.dataset_template import Template
 from minsar.objects.auto_defaults import PathFind
 
-###############################################################################
 pathObj = PathFind()
-logfile_name = pathObj.logdir + '/process_rsmas.log'
-logger = RsmasLogger(file_name=logfile_name)
 
 ##########################################################################
 
 
-def send_logger():
-    return logger
+def cmd_line_parse(iargs=None, script=None):
+    """Command line parser."""
+
+    parser = argparse.ArgumentParser(description='MinSAR scripts parser')
+    parser = add_common_parser(parser)
+
+    if script == 'download_rsmas':
+        parser = add_download_data(parser)
+    if script == 'dem_rsmas':
+        parser = add_download_dem(parser)
+    if script == 'execute_runfiles':
+        parser = add_execute_runfiles(parser)
+    if script == 'export_amplitude_tif':
+        parser = add_export_amplitude(parser)
+    if script =='email_results':
+        parser = add_email_args(parser)
+    if script == 'smallbaseline_wrapper' or script == 'ingest_insarmaps':
+        parser = add_notification(parser)
+
+    inps = parser.parse_args(args=iargs)
+    inps = create_or_update_template(inps)
+
+    return inps
+
+
+def add_common_parser(parser):
+
+    commonp = parser.add_argument_group('General options:')
+    commonp.add_argument('customTemplateFile', nargs='?', help='custom template with option settings.\n')
+    commonp.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
+    commonp.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
+    commonp.add_argument('--walltime', dest='wall_time', default='None',
+                        help='walltime for submitting the script as a job')
+    commonp.add_argument('--wait', dest='wait_time', default='00:00', metavar="Wait time (hh:mm)",
+                       help="wait time to submit a job")
+    return parser
+
+
+def add_download_data(parser):
+
+    flag_parser = parser.add_argument_group('Download data options:')
+    flag_parser.add_argument('--delta_lat', dest='delta_lat', default='0.0', type=float,
+                        help='delta to add to latitude from boundingBox field, default is 0.0')
+
+    return parser
+
+
+def add_download_dem(parser):
+
+    flag_parser = parser.add_argument_group('Download DEM flags:')
+    flag_parser.add_argument('--ssara',
+                        dest='flag_ssara',
+                        action='store_true',
+                        default=True,
+                        help='run ssara_federated_query w/ grd output file, set as default [option for dem_rsmas.py]')
+    flag_parser.add_argument('--boundingBox',
+                        dest='flag_boundingBox',
+                        action='store_true',
+                        default=False,
+                        help='run dem.py from isce using boundingBox as lat/long bounding box [option for dem_rsmas.py]')
+
+    return parser
+
+
+def add_execute_runfiles(parser):
+
+    run_parser = parser.add_argument_group('Steps of ISCE run files')
+    run_parser.add_argument('--start', dest='startrun', default=0, type=int,
+                        help='starting run file number (default = 1).\n')
+    run_parser.add_argument('--stop', dest='endrun', default=0, type=int,
+                        help='stopping run file number.\n')
+
+    return parser
+
+
+def add_export_amplitude(parser):
+
+    products = parser.add_argument_group('Options for exporting geo/ortho-rectified products')
+    products.add_argument('-f', '--file', dest='prodlist', type=str, help='Input SLC')
+    products.add_argument('-l', '--lat', dest='latFile', type=str,
+                        default='lat.rdr.ml', help='latitude file in radar coordinate')
+    products.add_argument('-L', '--lon', dest='lonFile', type=str,
+                        default='lon.rdr.ml', help='longitude file in radar coordinate')
+    products.add_argument('-y', '--lat-step', dest='latStep', type=float,
+                        help='output pixel size in degree in latitude.')
+    products.add_argument('-x', '--lon-step', dest='lonStep', type=float,
+                        help='output pixel size in degree in longitude.')
+    products.add_argument('-o', '--xoff', dest='xOff', type=int, default=0,
+                        help='Offset from the begining of geometry files in x direction. Default 0.0')
+    products.add_argument('-p', '--yoff', dest='yOff', type=int, default=0,
+                        help='Offset from the begining of geometry files in y direction. Default 0.0')
+    products.add_argument('-r', '--resampling_method', dest='resamplingMethod', type=str, default='near',
+                        help='Resampling method (gdalwarp resamplin methods)')
+    products.add_argument('-t', '--type', dest='imtype', type=str, default='ortho',
+                        help="ortho, geo")
+    products.add_argument('--outdir', dest='out_dir', default='hazard_products', help='output directory.')
+
+    return parser
+
+
+def add_email_args(parser):
+
+    em = parser.add_argument_group('Option for emailing insarmaps result.')
+    em.add_argument('--insarmaps', action='store_true', dest='insarmaps', default=False,
+                        help='Email insarmap results')
+    return parser
+
+
+def add_notification(parser):
+
+    NO = parser.add_argument_group('Flags for emailing results.')
+    NO.add_argument('--email', action='store_true', dest='email', default=False,
+                        help='opt to email results')
+    return parser
+
+
+def add_process_rsmas(parser):
+
+    STEP_LIST, STEP_HELP = pathObj.process_rsmas_help()
+
+    prs = parser.add_argument_group('Process Rsmas Routine InSAR Time Series Analysis. '
+                                    'steps processing (start/end/step):', STEP_HELP)
+    prs.add_argument('-H', dest='print_template', action='store_true',
+                        help='print the default template file and exit.')
+    prs.add_argument('--remove_project_dir', dest='remove_project_dir', action='store_true',
+                     help='remove directory before download starts')
+    prs.add_argument('--start', dest='startStep', metavar='STEP', default=STEP_LIST[0],
+                      help='start processing at the named step, default: {}'.format(STEP_LIST[0]))
+    prs.add_argument('--stop', dest='endStep', metavar='STEP', default=STEP_LIST[-1],
+                      help='end processing at the named step, default: {}'.format(STEP_LIST[-1]))
+    prs.add_argument('--step', dest='step', metavar='STEP',
+                      help='run processing at the named step only')
+    prs.add_argument('--insarmap', action='store_true', dest='insarmap', default=False,
+                        help='Email insarmap results')
+
+    return parser
 
 ##########################################################################
 
@@ -95,11 +227,14 @@ def create_or_update_template(inps_dict):
     inps.work_dir = get_work_directory(None, inps.project_name)
     print("Work Dir: ", inps.work_dir)
 
+    if not os.path.exists(inps.work_dir):
+        os.mkdir(inps.work_dir)
+
     # Creates default Template
     inps = create_default_template(inps)
 
-
     return inps
+
 
 #########################################################################
 
@@ -124,7 +259,6 @@ def create_default_template(temp_inps):
 
     for template_key in required_template_keys:
         if not template_key in custom_tempObj.options:
-            logger.log(loglevel.ERROR, '{} is required'.format(template_key))
             raise Exception('ERROR: {0} is required'.format(template_key))
 
     # find default values from template_defaults.cfg to assign to default_tempObj
@@ -427,3 +561,32 @@ def walltime_adjust(inps, default_time):
 ############################################################################
 
 
+def add_pause_to_walltime(wall_time, wait_time):
+
+    wall_parts = [int(s) for s in wall_time.split(':')]
+    wait_parts = [int(s) for s in wait_time.split(':')]
+
+    minutes = wall_parts[1] + wait_parts[1]
+    hours = wall_parts[0] + wait_parts[0] + int(minutes/60)
+    minutes = int(np.remainder(float(minutes), 60))
+
+    wait_seconds = (wait_parts[0] * 60 + wait_parts[1]) * 60
+
+    new_wall_time = '{:02d}:{:02d}'.format(hours, minutes)
+
+    return wait_seconds, new_wall_time
+
+############################################################################
+
+
+def set_permission_dask_files(directory):
+
+    workers = glob.glob(directory + '/worker*')
+    workers_out = glob.glob(directory + '/worker*o')
+    workers_err = glob.glob(directory + '/worker*e')
+    workers = np.setdiff1d(workers, workers_err)
+    workers = np.setdiff1d(workers, workers_out)
+    if not len(workers)==0:
+        os.system('chmod -R 0755 {}'.format(workers))
+
+    return

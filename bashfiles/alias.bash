@@ -159,17 +159,15 @@ alias gthumbf='I*/filt*int.bthumb.jpg'
 #alias ls='ls -F'
 alias ll='ls -l'
 alias llh='ls -lh'
-function lst() { ls -tlro "$@" | tail -15 ; }
 alias llrmswp='llrm *m~ */*m~ */*/*m~ */*/*/*m~ .*.swp */.*.swp */*/.*.swp */*/*/.*.swp'
 alias llrmq='llrm q qq q1 q.m qq.m q1.m q.pl qq.pl q1.pl  */q */qq */q1 */q.m */qq.m */q1.m */q.pl */qq.pl */q1.pl */*/q */*/qq */*/q1 */*/q.m */*/qq.m */*/q1.m */*/q.pl */*/qq.pl */*/q1.pl'
-function lstt() { ls -tro "$@" | tail -30 ; }
-function lsttt() { ls -tro "$@" | tail -100 ; }
 alias lsd='/bin/ls -F | grep \/'
 alias lstd='/bin/ls -Flrt | grep \/'
+function lst() { ls -tlro "$@" | tail -15 ; }
+function lstt() { ls -tro "$@" | tail -30 ; }
+function lsttt() { ls -tro "$@" | tail -100 ; }
 function lstdg() { /bin/ls -Flrt | grep \/ | grep "$@" ; }
 function lstdg2() { /bin/ls -Flrt | grep \/ | grep "$1" | grep "$2" ; }
-function lstdg2() { /bin/ls -Flrt | grep \/ | grep "$1" | grep "$2" | awk '{print $"BASH_ARGV[8]"}' ; }
-function lstdg2() { /bin/ls -Flrt | grep \/ | grep "$1" | grep "$2" | awk '{print $"BASH_ARGV[8]"}' | awk 'BEGIN{FS="/"}{printf $"BASH_ARGV[1]" " "}' ; }
 function lst1() { ls -tro "$@" | tail -2 ; }
 function lstttt() { ls -tro --full-time "$@" | tail -100 ; }
 alias lsrun='ls run_*_*{master,baseline,overlaps,resample,misreg,region,igram,coherence,slc,unwrap}'
@@ -190,17 +188,6 @@ alias duvu='du -sh --total /projects/scratch/vdm/${USER}'              # prints 
 alias dui='du -s --block-size=1G --total /projects/scratch/insarlab/* | sort -nr'   # sorts sizes of directories in SCRATCH (FA 4/17)
 alias duiu='du -sh --total /projects/scratch/insarlab/${USER}'     # prints size of USER directory in SCRATCH
 function dug() { du -s --block-size=1G "$1" | sort -nr | head -20 ; }    # prints 20 biggest (FA 5/17)
-alias cleani7='find /scratch/projects/insarlab  -type f -mtime +7 -exec rm -f {} \;'     # removes files last modified more than 7 days
-alias cleani5='find /scratch/projects/insarlab  -type f -mtime +5 -exec rm -f {} \;'     # 
-alias cleani3='find /scratch/projects/insarlab  -type f -mtime +3 -exec rm -f {} \;'     # 
-alias cleani1='find /scratch/projects/insarlab  -type f -mtime +1 -exec rm -f {} \;'     # 
-alias cleaniu7='find /scratch/projects/insarlab/${USER}  -type f -mtime +7 -exec rm -f {} \;'     # removes files last modified more than 7 days
-alias cleaniu5='find /scratch/projects/insarlab/${USER}  -type f -mtime +5 -exec rm -f {} \;'     # 
-alias cleaniu3='find /scratch/projects/insarlab/${USER}  -type f -mtime +3 -exec rm -f {} \;'     # 
-alias cleaniu1='find /scratch/projects/insarlab/${USER}  -type f -mtime +1 -exec rm -f {} \;'     # 
-alias cleanvu21='find /scratch/projects/vdm/${USER} -type f -mtime +21 -exec rm -f {} \;'     # removes files last modified more than 7 days
-alias cleanvu7='find /scratch/projects/vdm/${USER} -type f -mtime +7 -exec rm -f {} \;'     # removes files last modified more than 7 days
-alias cleanvu5='find /scratch/projects/vdm/${USER} -type f -mtime +5 -exec rm -f {} \;'     # 
 alias cleanvu3='find /scratch/projects/vdm/${USER} -type f -mtime +3 -exec rm -f {} \;'     # 
 alias cleanvu1='find /scratch/projects/vdm/${USER} -type f -mtime +1 -exec rm -f {} \;'     # 
 alias display='/usr/bin/display'   

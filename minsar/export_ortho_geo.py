@@ -11,6 +11,7 @@ import shutil
 import s1a_isce_utils as ut
 import glob
 import gdal
+import time
 from minsar.objects import message_rsmas
 from isceobj.Planet.Planet import Planet
 from zerodop.topozero import createTopozero
@@ -27,19 +28,46 @@ pathObj = PathFind()
 def main(iargs=None):
     """ create orth and geo rectifying run jobs and submit them. """
 
-    inps = cmdLineParse()
+    inps = putils.cmd_line_parse(iargs)
+
+    inps.geom_masterDir = os.path.join(inps.work_dir, pathObj.geomlatlondir)
+    inps.master = os.path.join(inps.work_dir, pathObj.masterdir)
+
+    try:
+        inps.dem = glob.glob('{}/DEM/*.wgs84'.format(inps.work_dir))[0]
+    except:
+        print('DEM not exists!')
+        sys.exit(1)
+
+    if not os.path.exists(inps.geom_masterDir):
+        os.mkdir(inps.geom_masterDir)
 
     if not iargs is None:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
     else:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
+    config = putils.get_config_defaults(config_file='job_defaults.cfg')
+
+    job_file_name = 'export_ortho_geo'
+    work_dir = os.getcwd()
+    job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
+
+    if inps.wall_time == 'None':
+        inps.wall_time = config[job_file_name]['walltime']
+
+    wait_seconds, new_wall_time = putils.add_pause_to_walltime(inps.wall_time, inps.wait_time)
+
+    #########################################
+    # Submit job
+    #########################################
+
     if inps.submit_flag:
-        job_file_name = 'export_ortho_geo'
-        work_dir = os.getcwd()
-        job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
-        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, inps.wall_time)
+
+        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, new_wall_time)
         sys.exit(0)
+
+    time.sleep(wait_seconds)
 
     demZero = create_demZero(inps.dem, inps.geom_masterDir)
 
@@ -52,8 +80,6 @@ def main(iargs=None):
     multilook_images(inps)
 
     run_file_list = make_run_list_amplitude(inps)
-
-    config = putils.get_config_defaults(config_file='job_defaults.cfg')
 
     for item in run_file_list:
         step_name = 'amplitude_ortho_geo'
@@ -84,42 +110,6 @@ def main(iargs=None):
         putils.concatenate_error_files(run_file=item, work_dir=inps.work_dir)
         putils.move_out_job_files_to_stdout(run_file=item)
     return
-
-
-def createParser():
-    """ Creates command line argument parser object. """
-
-    parser = argparse.ArgumentParser( description='Generates lat/lon for each pixel')
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
-    parser.add_argument('customTemplateFile', nargs='?',
-                        help='custom template with option settings.\n')
-    parser.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
-    parser.add_argument('--walltime', dest='wall_time', type=str, default='2:00',
-                        help='walltime, e.g. 2:00 (default: 2:00)')
-
-    return parser
-
-
-def cmdLineParse(iargs=None):
-    """ Parses command line agurments into inps variable. """
-
-    parser = createParser()
-    inps = parser.parse_args(args=iargs)
-
-    inps = putils.create_or_update_template(inps)
-    inps.geom_masterDir = os.path.join(inps.work_dir, pathObj.geomlatlondir)
-    inps.master = os.path.join(inps.work_dir, pathObj.masterdir)
-
-    try:
-        inps.dem = glob.glob('{}/DEM/*.wgs84'.format(inps.work_dir))[0]
-    except:
-        print('DEM not exists!')
-        sys.exit(1)
-
-    if not os.path.exists(inps.geom_masterDir):
-        os.mkdir(inps.geom_masterDir)
-
-    return inps
 
 
 def create_demZero(dem, outdir):

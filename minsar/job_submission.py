@@ -196,6 +196,8 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
     :param scheduler: Job scheduler to use for running jobs. Defaults based on environment variable JOBSCHEDULER.
     :return: Job number of submission
     """
+
+
     if not scheduler:
         scheduler=os.getenv("JOBSCHEDULER")
     

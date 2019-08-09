@@ -34,15 +34,18 @@ rm -rf 3rdparty/isce2
 #cd 3rdparty; ln -s /nethome/famelung/MINICONDA3_GOOD miniconda3; cd ..; 
 cd setup;
 rm -r ../3rdparty/miniconda3
+
 miniconda_version=Miniconda3-4.5.12-Linux-x86_64.sh
 miniconda_version=Miniconda3-4.6.14-Linux-x86_64.sh
 wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate #; if ($? != 0) exit; 
 chmod 755 $miniconda_version
 mkdir -p ../3rdparty
 ./$miniconda_version -b -p ../3rdparty/miniconda3
+
 #cp condarc ../3rdparty/miniconda3/.condarc
 ../3rdparty/miniconda3/bin/conda config --add channels conda-forge
 ../3rdparty/miniconda3/bin/conda install isce2 -c conda-forge --yes
+
 ../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MintPy/docs/conda.txt
 ../3rdparty/miniconda3/bin/conda install --yes --file conda.txt
 ../3rdparty/miniconda3/bin/pip install --upgrade pip

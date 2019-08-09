@@ -10,9 +10,11 @@ import argparse
 import time
 from minsar.objects import message_rsmas
 from minsar.objects.auto_defaults import PathFind
-from minsar.utils.stack_run import CreateRun
 import minsar.utils.process_utilities as putils
 import minsar.job_submission as js
+from minsar import email_results
+from mintpy import smallbaselineApp
+import contextlib
 
 pathObj = PathFind()
 
@@ -21,52 +23,52 @@ pathObj = PathFind()
 
 def main(iargs=None):
 
-    inps = putils.cmd_line_parse(iargs)
+    inps = putils.cmd_line_parse(iargs, script='smallbaseline_wrapper')
+
+    config = putils.get_config_defaults(config_file='job_defaults.cfg')
 
     if not iargs is None:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
     else:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
-    config = putils.get_config_defaults(config_file='job_defaults.cfg')
+    job_file_name = 'smallbaseline_wrapper'
 
-    os.chdir(inps.work_dir)
-
-    job_file_name = 'create_runfiles'
-    job_name = job_file_name
     if inps.wall_time == 'None':
         inps.wall_time = config[job_file_name]['walltime']
+
+    job_name = job_file_name
 
     wait_seconds, new_wall_time = putils.add_pause_to_walltime(inps.wall_time, inps.wait_time)
 
     #########################################
     # Submit job
     #########################################
+
     if inps.submit_flag:
 
         js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, new_wall_time)
         sys.exit(0)
 
-    try:
-        dem_file = glob.glob('DEM/*.wgs84')[0]
-        inps.template['topsStack.demDir'] = dem_file
-    except:
-        raise SystemExit('DEM does not exist')
+    os.chdir(inps.work_dir)
 
     time.sleep(wait_seconds)
 
-    inps.topsStack_template = pathObj.correct_for_isce_naming_convention(inps)
-    runObj = CreateRun(inps)
-    runObj.run_stack_workflow()
+    try:
+        with open('out_mintpy.o', 'w') as f:
+            with contextlib.redirect_stdout(f):
+                smallbaselineApp.main([inps.customTemplateFile])
+    except:
+        with open('out_mintpy.e', 'w') as g:
+            with contextlib.redirect_stderr(g):
+                smallbaselineApp.main([inps.customTemplateFile])
 
-    run_file_list = putils.make_run_list(inps.work_dir)
+    inps.mintpydir = os.path.join(inps.work_dir, pathObj.mintpydir)
+    putils.set_permission_dask_files(directory=inps.mintpydir)
 
-    with open(inps.work_dir + '/run_files_list', 'w') as run_file:
-        for item in run_file_list:
-            run_file.writelines(item + '\n')
-
-    if inps.template['topsStack.workflow'] in ['interferogram', 'slc']:
-        runObj.run_post_stack()
+    # Email Mintpy results
+    if inps.email:
+        email_results.main([inps.customTemplateFile])
 
     return None
 
@@ -75,3 +77,5 @@ def main(iargs=None):
 
 if __name__ == "__main__":
     main()
+
+

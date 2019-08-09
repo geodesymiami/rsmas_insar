@@ -13,7 +13,7 @@ insarmaps_flag                     = False
 ######################################################
 
 topsStack.boundingBox             = -1 -0.6 -91.7 -90.9      # -1 0.15 -91.6 -90.9
-topsStack.boundingBox             = -0.7 -0.6 -91.7 -90.9    # -1 0.15 -91.6 -90.9
+topsStack.boundingBox             = -1 -0.6 -91.4 -90.86    # -1 0.15 -91.6 -90.9
 topsStack.subswath                = 1    # '1 2'
 topsStack.numConnections          = 5    # comment
 topsStack.azimuthLooks            = 5    # comment

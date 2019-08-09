@@ -9,54 +9,53 @@ import os
 import sys
 import argparse
 import glob
-import matplotlib.pyplot as plt
+import time
 from osgeo import gdal, osr, ogr
 import mintpy
-import mintpy.workflow  #dynamic import for modules used by smallbaselineApp workflow
+import mintpy.workflow  # dynamic import for modules used by smallbaselineApp workflow
 from mintpy.utils import readfile, writefile
 from mintpy.objects import ifgramStack
 import minsar.utils.process_utilities as putils
 from minsar.objects import message_rsmas
 from minsar.objects.auto_defaults import PathFind
+import minsar.job_submission as js
 
 pathObj = PathFind()
-###############################################################################
-EXAMPLE = '''example:
-  download_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template
-'''
-
-def command_line_parse(iargs=None):
-    """Command line parser."""
-    parser = create_parser()
-    inps = parser.parse_args(args=iargs)
-    return inps
-
-def create_parser():
-    """ Creates command line argument parser object. """
-    parser = argparse.ArgumentParser(description='Downloads SAR data using a variety of scripts',
-                                     formatter_class=argparse.RawTextHelpFormatter, epilog=EXAMPLE)
-    parser.add_argument('template_file', help='template file containing ssaraopt field')
-    parser.add_argument('--outdir', dest='out_dir', default='hazard_products', help='output directory.')
-
-    return parser
-
 
 ###############################################################################
+
 
 def main(iargs=None):
     """ generates interferograms and coherence images in GeoTiff format """
 
-    inps = command_line_parse(iargs)
-    project_name = putils.get_project_name(custom_template_file=inps.template_file)
-    work_dir = putils.get_work_directory(None, project_name)
-    
-    message_rsmas.log(work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+    inps = putils.cmd_line_parse(iargs)
 
-    out_dir = work_dir + '/' + inps.out_dir
+    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+
+    config = putils.get_config_defaults(config_file='job_defaults.cfg')
+
+    job_file_name = 'ifgramStack_to_ifgram_and_coherence'
+    job_name = job_file_name
+    if inps.wall_time == 'None':
+        inps.wall_time = config[job_file_name]['walltime']
+
+    wait_seconds, new_wall_time = putils.add_pause_to_walltime(inps.wall_time, inps.wait_time)
+
+    #########################################
+    # Submit job
+    #########################################
+    if inps.submit_flag:
+
+        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, new_wall_time)
+        sys.exit(0)
+
+    time.sleep(wait_seconds)
+
+    out_dir = inps.work_dir + '/' + inps.out_dir
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)
     try:
-        file = glob.glob(work_dir + '/mintpy/inputs/ifgramStack.h5')[0]
+        file = glob.glob(inps.work_dir + '/mintpy/inputs/ifgramStack.h5')[0]
     except:
         raise Exception('ERROR in ' + os.path.basename(__file__) + ': file ifgramStack.h5 not found') 
 
@@ -65,8 +64,8 @@ def main(iargs=None):
     print('modify_network.py', arg_string)
     mintpy.modify_network.main(arg_string.split())
 
-    if not os.path.isdir(work_dir + '/mintpy/geo'):
-        os.makedirs(work_dir + '/mintpy/geo')
+    if not os.path.isdir(inps.work_dir + '/mintpy/geo'):
+        os.makedirs(inps.work_dir + '/mintpy/geo')
 
     # geocode ifgramStack
     geo_file = os.path.dirname(os.path.dirname(file)) + '/geo/geo_' + os.path.basename(file)
@@ -80,7 +79,7 @@ def main(iargs=None):
     obj = ifgramStack(geo_file)
     obj.open()
     date12_list = obj.get_date12_list()
-    #dummy_data, atr = readfile.read(geo_file)
+    # dummy_data, atr = readfile.read(geo_file)
 
     for i in range(len(date12_list)):
         date_str = date12_list[i]
@@ -91,9 +90,10 @@ def main(iargs=None):
         fname_coh = out_dir + '/coherence_' + date_str + '.tif'
         fname_unw = out_dir + '/interferogram_' + date_str + '.tif'
 
-        create_geotiff(obj, data=data_coh, outfile=fname_coh, type='coherence', work_dir=work_dir)
-        create_geotiff(obj, data=data_unw, outfile=fname_unw, type='interferogram', work_dir=work_dir)
+        create_geotiff(obj, data=data_coh, outfile=fname_coh, type='coherence', work_dir=inps.work_dir)
+        create_geotiff(obj, data=data_unw, outfile=fname_unw, type='interferogram', work_dir=inps.work_dir)
     return
+
 
 def create_geotiff (obj, data, outfile, type, work_dir):
     ''' creates a geo_tiff '''
@@ -127,6 +127,7 @@ def create_geotiff (obj, data, outfile, type, work_dir):
     ds = None
     return 
 ###########################################################################################
+
 
 if __name__ == '__main__':
     main(sys.argv[1:])
