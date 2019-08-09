@@ -8,7 +8,6 @@ import sys
 import glob
 import argparse
 import time
-
 import minopy
 import minopy.workflow
 import minopy_utilities as mnp
@@ -56,25 +55,29 @@ def main(iargs=None):
 
     configs = putils.get_config_defaults(config_file='job_defaults.cfg')
 
-    if not iargs is None:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
-    else:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+    job_file_name = 'minopy_wrapper'
+    job_name = job_file_name
+
+    if inps.wall_time == 'None':
+        inps.wall_time = configs[job_file_name]['walltime']
+
+    wait_seconds, new_wall_time = putils.add_pause_to_walltime(inps.wall_time, inps.wait_time)
 
     #########################################
     # Submit job
     #########################################
 
     if inps.submit_flag:
-        job_file_name = 'minopy_wrapper'
 
-        if inps.wall_time == 'None':
-            inps.wall_time = configs[job_file_name]['walltime']
-
-        job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
-
-        js.submit_script(job_name, job_file_name, sys.argv[:], inp.work_dir, inps.wall_time)
+        js.submit_script(job_name, job_file_name, sys.argv[:], inp.work_dir, new_wall_time)
         sys.exit(0)
+
+    time.sleep(wait_seconds)
+
+    if not iargs is None:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+    else:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     os.chdir(inps.work_dir)
 
