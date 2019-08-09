@@ -576,3 +576,17 @@ def add_pause_to_walltime(wall_time, wait_time):
 
     return wait_seconds, new_wall_time
 
+############################################################################
+
+
+def set_permission_dask_files(directory):
+
+    workers = glob.glob(directory + '/worker*')
+    workers_out = glob.glob(directory + '/worker*o')
+    workers_err = glob.glob(directory + '/worker*e')
+    workers = np.setdiff1d(workers, workers_err)
+    workers = np.setdiff1d(workers, workers_out)
+    if not len(workers)==0:
+        os.system('chmod -R 0755 {}'.format(workers))
+
+    return

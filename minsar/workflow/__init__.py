@@ -13,6 +13,7 @@ mpl_logger.setLevel(logging.WARNING)
 # expose the following modules
 __all__ = [
     'dem_rsmas',
+    'minopy_wrapper',
     'download_rsmas',
     'create_runfiles',
     'email_results',

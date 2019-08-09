@@ -63,6 +63,9 @@ def main(iargs=None):
             with contextlib.redirect_stderr(g):
                 smallbaselineApp.main([inps.customTemplateFile])
 
+    inps.mintpydir = os.path.join(inps.work_dir, pathObj.mintpydir)
+    putils.set_permission_dask_files(directory=inps.mintpydir)
+
     # Email Mintpy results
     if inps.email:
         email_results.main([inps.customTemplateFile])
