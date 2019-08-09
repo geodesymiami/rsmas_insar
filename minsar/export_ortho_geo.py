@@ -42,16 +42,10 @@ def main(iargs=None):
     if not os.path.exists(inps.geom_masterDir):
         os.mkdir(inps.geom_masterDir)
 
-    if not iargs is None:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
-    else:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
-
     config = putils.get_config_defaults(config_file='job_defaults.cfg')
 
     job_file_name = 'export_ortho_geo'
-    work_dir = os.getcwd()
-    job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
+    job_name = job_file_name
 
     if inps.wall_time == 'None':
         inps.wall_time = config[job_file_name]['walltime']
@@ -64,10 +58,15 @@ def main(iargs=None):
 
     if inps.submit_flag:
 
-        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, new_wall_time)
+        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, new_wall_time)
         sys.exit(0)
 
     time.sleep(wait_seconds)
+
+    if not iargs is None:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+    else:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     demZero = create_demZero(inps.dem, inps.geom_masterDir)
 

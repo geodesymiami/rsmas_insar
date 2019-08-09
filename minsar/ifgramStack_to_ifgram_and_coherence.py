@@ -30,12 +30,11 @@ def main(iargs=None):
 
     inps = putils.cmd_line_parse(iargs)
 
-    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
-
     config = putils.get_config_defaults(config_file='job_defaults.cfg')
 
     job_file_name = 'ifgramStack_to_ifgram_and_coherence'
     job_name = job_file_name
+    
     if inps.wall_time == 'None':
         inps.wall_time = config[job_file_name]['walltime']
 
@@ -50,6 +49,8 @@ def main(iargs=None):
         sys.exit(0)
 
     time.sleep(wait_seconds)
+
+    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
 
     out_dir = inps.work_dir + '/' + inps.out_dir
     if not os.path.isdir(out_dir):

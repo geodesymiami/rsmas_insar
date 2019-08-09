@@ -23,11 +23,6 @@ def main(iargs=None):
 
     inps = putils.cmd_line_parse(iargs)
 
-    if not iargs is None:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
-    else:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
-
     config = putils.get_config_defaults(config_file='job_defaults.cfg')
 
     os.chdir(inps.work_dir)
@@ -47,13 +42,18 @@ def main(iargs=None):
         js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, new_wall_time)
         sys.exit(0)
 
+    time.sleep(wait_seconds)
+
+    if not iargs is None:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+    else:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+
     try:
         dem_file = glob.glob('DEM/*.wgs84')[0]
         inps.template['topsStack.demDir'] = dem_file
     except:
         raise SystemExit('DEM does not exist')
-
-    time.sleep(wait_seconds)
 
     inps.topsStack_template = pathObj.correct_for_isce_naming_convention(inps)
     runObj = CreateRun(inps)

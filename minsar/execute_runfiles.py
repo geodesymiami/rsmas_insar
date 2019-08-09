@@ -19,23 +19,16 @@ def main(iargs=None):
     inps = putils.cmd_line_parse(iargs, script='execute_runfiles')
 
     os.chdir(inps.work_dir)
-
-    command_line = os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1:])
-    message_rsmas.log(inps.work_dir, command_line)
     
     config = putils.get_config_defaults(config_file='job_defaults.cfg')
 
     job_file_name = 'execute_runfiles'
+    job_name = job_file_name
+
     if inps.wall_time == 'None':
         inps.wall_time = config[job_file_name]['walltime']
 
-    work_dir = os.getcwd()
-    job_name = job_file_name
-
     wait_seconds, new_wall_time = putils.add_pause_to_walltime(inps.wall_time, inps.wait_time)
-
-    command_line = os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1:])
-    message_rsmas.log(inps.work_dir, command_line)
 
     #########################################
     # Submit job
@@ -43,10 +36,13 @@ def main(iargs=None):
 
     if inps.submit_flag:
 
-        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, new_wall_time)
+        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, new_wall_time)
         sys.exit(0)
 
     time.sleep(wait_seconds)
+
+    command_line = os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1:])
+    message_rsmas.log(inps.work_dir, command_line)
 
     run_file_list = putils.read_run_list(inps.work_dir)
 
