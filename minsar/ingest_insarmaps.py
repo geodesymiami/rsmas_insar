@@ -28,13 +28,10 @@ def main(iargs=None):
 
     inps = putils.cmd_line_parse(iargs, script='ingest_insarmaps')
 
-    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ''.join(sys.argv[1]))
-
     config = putils.get_config_defaults(config_file='job_defaults.cfg')
 
     job_file_name = 'ingest_insarmaps'
     job_name = job_file_name
-    work_dir = inps.work_dir
 
     if inps.wall_time == 'None':
         inps.wall_time = config[job_file_name]['walltime']
@@ -45,11 +42,13 @@ def main(iargs=None):
     # Submit job
     #########################################
     if inps.submit_flag:
-        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, new_wall_time)
+        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, new_wall_time)
+
+    time.sleep(wait_seconds)
 
     os.chdir(inps.work_dir)
 
-    time.sleep(wait_seconds)
+    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ''.join(sys.argv[1]))
 
     hdfeos_file = glob.glob(inps.work_dir + '/mintpy/S1*.he5')
     hdfeos_file.append(glob.glob(inps.work_dir +'/mintpy/SUBSET_*/S1*.he5'))
