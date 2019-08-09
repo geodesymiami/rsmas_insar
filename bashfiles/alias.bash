@@ -46,6 +46,10 @@ alias NOTESTBENCH='cd $PARENTDIR; source bashfiles/platforms.bash; source bashfi
 alias ITESTBENCH1='cd ${PARENTDIR}; source default.bash; source custom.bash; cd -; export SCRATCHDIR=/scratch/projects/insarlab/${USER}/TESTBENCH1;  echo "SCRATCHDIR:   "${SCRATCHDIR}'
 alias ITESTBENCH2='cd ${PARENTDIR}; source default.bash; source custom.bash; cd -; export SCRATCHDIR=/scratch/projects/insarlab/${USER}/TESTBENCH2;  echo "SCRATCHDIR:   "${SCRATCHDIR}'
 alias ITESTBENCH3='cd ${PARENTDIR}; source default.bash; source custom.bash; cd -; export SCRATCHDIR=/scratch/projects/insarlab/${USER}/TESTBENCH3;  echo "SCRATCHDIR:   "${SCRATCHDIR}'
+#alias setfamelung='export SCRATCHDIR=$(dirname "${SCRATCHDIR}")"/famelung"'
+#alias setfamelung='export TEMPLATES=$(dirname $(dirname $(dirname $(dirname $(dirname "${TEMPLATES}")))))"/famelung/insarlab/infiles/famelung/TEMPLATES"'
+alias setfamelung='export SCRATCHDIR=$(dirname "${SCRATCHDIR}")"/famelung"; export TEMPLATES=$(dirname $(dirname $(dirname $(dirname $(dirname "${TEMPLATES}")))))"/famelung/insarlab/infiles/famelung/TEMPLATES"'
+alias setsxm1611='export SCRATCHDIR=$(dirname "${SCRATCHDIR}")"/sxm1611"; export TEMPLATES=$(dirname $(dirname $(dirname $(dirname $(dirname "${TEMPLATES}")))))"/sxm1611/insarlab/infiles/sxm1611/TEMPLATES"'
 alias TESTBENCHBIGEND='export SCRATCHDIR=${SCRATCHDIR_ORIG}/TESTBENCHBIGEND; echo "SCRATCHDIR:   "${SCRATCHDIR}'
 alias TESTBENCHLITEND='export SCRATCHDIR=${SCRATCHDIR_ORIG}/TESTBENCHLITEND; echo "SCRATCHDIR:   "${SCRATCHDIR}'
 alias TESTBENCHBINARY='export SCRATCHDIR=${SCRATCHDIR_ORIG}/TESTBENCHBINARY; echo "SCRATCHDIR:   "${SCRATCHDIR}'
@@ -140,11 +144,15 @@ function mwhich() { m `which "$@" | grep "$@"` ; }
 function ff() { find . -name \*"$@"\* -print ; }
 alias rm0='find . -size 0c  -exec rm {} \;'
 alias rm1544='find . -size 1544c  -exec rm {} \;'
-alias rmbulk='rm ~/.bulk_download_cookiejar.txt'
+alias rm1568='find . -size 1568c  -exec rm {} \;' 
+#alias rm0l='find . -type f | xargs -i bash -c 'if [ $(wc -l {}|cut -d" " -f1) -lt 200 ]; then rm -f {}; fi''
+alias rm1544='find . -size 1544c  -exec rm {} \;'
 function rmswp() { rm \."$@".swp ; }
 function rmb() { mv "$@" tmp_remove_"$@" ; sleep 60 ; rm -r tmp_remove_"$@" & }    # remove in background - use for large directories
 alias xterm='xterm -sb &'
-alias rmsentinelStack='rm -rf run_files configs baselines coarse_interferograms coreg_slaves ESD geom_master interferograms master merged misreg slaves stack orbits hazard_products geom_master_noDEM'
+alias rmtopsStack='rm -rf run_files configs baselines coarse_interferograms coreg_slaves ESD geom_master interferograms master merged misreg slaves stack orbits hazard_products geom_master_noDEM'
+alias rmltopsStack='rm -rf run_files configs baselines coarse_interferograms coreg_slaves ESD interferograms merged misreg slaves stack hazard_products geom_master_noDEM'
+alias rmltopsStack='rm -rf run_files configs baselines coarse_interferograms coreg_slaves ESD interferograms merged misreg slaves stack hazard_products geom_master_noDEM'
 alias rmoperations='rm -r ${OPERATIONS} &'
 alias lloperations='ls -l ${OPERATIONS}/LOGS/*out'
 alias gthumbf='I*/filt*int.bthumb.jpg'

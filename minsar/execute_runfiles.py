@@ -34,6 +34,9 @@ def main(iargs=None):
 
     wait_seconds, new_wall_time = putils.add_pause_to_walltime(inps.wall_time, inps.wait_time)
 
+    command_line = os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1:])
+    message_rsmas.log(inps.work_dir, command_line)
+
     #########################################
     # Submit job
     #########################################

@@ -20,47 +20,47 @@ bash
 git clone https://github.com/geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
 
-cd sources ;
-git clone https://github.com/insarlab/MintPy.git ;
-git clone https://github.com/falkamelung/geodmod.git ;
+git clone https://github.com/insarlab/MintPy.git sources/MintPy ;
+git clone https://github.com/falkamelung/geodmod.git sources/geodmod;
+git clone https://github.com/bakerunavco/SSARA.git 3rdparty/SSARA
+git clone https://github.com/yunjunz/pyaps3.git 3rdparty/PyAPS/pyaps3
 
-mkdir ../3rdparty
-cd ../3rdparty
-git clone https://github.com/bakerunavco/SSARA.git
-git clone https://github.com/AngeliqueBenoit/pyaps3.git
+git clone https://github.com/isce-framework/isce2.git 3rdparty/isce2
+mkdir -p sources/isceStack
+cp -r 3rdparty/isce2/contrib/stack/topsStack sources/isceStack
+cp -r 3rdparty/isce2/contrib/stack/stripmapStack sources/isceStack
+rm -rf 3rdparty/isce2
 
-cd ../setup;
-rm -rf ../3rdparty/miniconda3
+#cd 3rdparty; ln -s /nethome/famelung/MINICONDA3_GOOD miniconda3; cd ..; 
+cd setup;
+rm -r ../3rdparty/miniconda3
+
 miniconda_version=Miniconda3-4.5.12-Linux-x86_64.sh
+miniconda_version=Miniconda3-4.6.14-Linux-x86_64.sh
 wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate #; if ($? != 0) exit; 
 chmod 755 $miniconda_version
+mkdir -p ../3rdparty
 ./$miniconda_version -b -p ../3rdparty/miniconda3
-cp condarc ../3rdparty/miniconda3/.condarc
-#cp condarc_china ../3rdparty/miniconda3/.condarc
 
-./download_isce_stack.csh
-../3rdparty/miniconda3/bin/conda update conda --yes
-../3rdparty/miniconda3/bin/conda install --yes --file conda.txt
+#cp condarc ../3rdparty/miniconda3/.condarc
+../3rdparty/miniconda3/bin/conda config --add channels conda-forge
+../3rdparty/miniconda3/bin/conda install isce2 -c conda-forge --yes
+
 ../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MintPy/docs/conda.txt
-../3rdparty/miniconda3/bin/conda install isce2 -c piyushrpt --yes
+../3rdparty/miniconda3/bin/conda install --yes --file conda.txt
 ../3rdparty/miniconda3/bin/pip install --upgrade pip
 ../3rdparty/miniconda3/bin/pip install opencv-python
 ../3rdparty/miniconda3/bin/pip install geocoder
+#../3rdparty/miniconda3/bin/pip install git+https://github.com/matplotlib/basemap.git#egg=mpl_toolkits. #needed for ARIA products
+../3rdparty/miniconda3/bin/conda install basemap --yes
+../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
+cd ..
 
-cd ../3rdparty
-./miniconda3/bin/git clone https://github.com/yunjunz/pykml.git
-mkdir -p PyAPS; cd PyAPS
-../miniconda3/bin/git clone https://github.com/yunjunz/pyaps3.git
-
-cd ../../3rdparty/pykml
-../../3rdparty/miniconda3/bin/python setup.py build
-../../3rdparty/miniconda3/bin/python setup.py install
-
+source default_isce22.bash;
 mkdir -p $SENTINEL_ORBITS;
 mkdir -p $SENTINEL_AUX;
 mkdir -p ~/insarlab/OPERATIONS/LOGS
-cd ../..
-source default_isce22.bash;
+
 echo DONE WITH CRITICAL CODE ;
 echo ########################
 
