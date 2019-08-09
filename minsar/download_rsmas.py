@@ -86,27 +86,39 @@ def download(script_name, customTemplateFile, slc_dir, outnum):
     if script_name not in {'ssara', 'asfserial'}:
         print('{} download not supported'.format(script_name))
 
-    if script_name == 'ssara':
-        try:
-            with open('out_download_ssara.o', 'w') as f:
-                with contextlib.redirect_stdout(f):
-                    download_ssara_rsmas.main([customTemplateFile])
-        except:
-            with open('out_download_ssara.e', 'w') as g:
-                with contextlib.redirect_stderr(g):
-                    download_ssara_rsmas.main([customTemplateFile])
+    out_file = os.path.join(os.getcwd(), 'out_download_{0}{1}'.format(script_name, outnum))
+    command = 'download_{0}_rsmas.py {1}'.format(script_name, customTemplateFile)
+    command = '({0} > {1}.o) >& {1}.e'.format(command, out_file)
 
-    elif script_name == 'asfserial':
-        try:
-            with open('out_download_asfserial.o', 'w') as f:
-                with contextlib.redirect_stdout(f):
-                    download_asfserial_rsmas.main([customTemplateFile])
-        except:
-            with open('out_download_asfserial.e', 'w') as g:
-                with contextlib.redirect_stderr(g):
-                    download_asfserial_rsmas.main([customTemplateFile])
+    if os.getenv('DOWNLOADHOST') == 'local':
+        print('Command: ' + command)
+        proc = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+        output, error = proc.communicate()
+        if proc.returncode is not 0:
+            raise Exception('ERROR downloading using: download_{0}_rsmas.py'.format(script_name))
+    else:
+        ssh_command_list = ['s.bgood', 'cd {0}'.format(slc_dir), command]
+        host = os.getenv('DOWNLOADHOST')
+        status = ssh_with_commands(host, ssh_command_list)
 
-    # print('Exit status from download_{0}_rsmas.py: {1}'.format(script_name, status))
+    print('Exit status from download_{0}_rsmas.py: {1}'.format(script_name, status))
+
+###############################################################################
+
+
+def ssh_with_commands(hostname, command_list):
+    """
+    Uses subprocess to ssh into a specified host and run the given commands.
+    :param hostname: Name of host to ssh to.
+    :param command_list: List of commands to run after connecting via ssh.
+    :return: Exit status from subprocess.
+    """
+    ssh_proc = subprocess.Popen(['ssh', hostname, 'bash -s -l'], stdin=subprocess.PIPE)
+    for cmd in command_list:
+        ssh_proc.stdin.write(cmd.encode('utf8'))
+        ssh_proc.stdin.write('\n'.encode('utf8'))
+    ssh_proc.communicate()
+    return ssh_proc.returncode
 
 ###############################################################################
 
