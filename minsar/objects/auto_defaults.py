@@ -49,19 +49,10 @@ class PathFind:
 
     @staticmethod
     def grab_cropbox(inps):
-        try:
-            if inps.template['processingMethod'] == 'minopy':
-                subset = inps.template['minopy.subset']
-
-                if subset == 'None':
-                    subset = inps.template['mintpy.subset.lalo']
-
-            subset = subset.split(':')
-            cropbox = '{} {} {} {}'.format(subset[0], subset[1].split(',')[0], subset[1].split(',')[1], subset[2])
-
-        except:
+        if not inps.template['minopy.subset'] == 'None':
+                cropbox = inps.template['minopy.subset']
+        else:
             cropbox = inps.template['topsStack.boundingBox']
-
         return cropbox
 
     @staticmethod
