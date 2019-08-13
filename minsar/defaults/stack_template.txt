@@ -29,7 +29,7 @@ topsStack.master                      = auto         # [Master acquisition]
 topsStack.numConnections              = auto         # number of interferograms with each image and next acquisitions, auto for 3
 topsStack.numOverlapConnections       = auto         # [N of overlap Ifgrams for NESD. Default : 3]
 topsStack.subswath                    = auto         # [List of swaths. Default : '1 2 3']
-topsStack.boundingBox                 = None         # [ '-1 0.15 -91.7 -90.9'] required
+topsStack.boundingBox                 = None         # [ -1 0.15 -91.7 -90.9] required
 topsStack.textCmd                     = auto         # [eg: source ~/.bashrc]
 topsStack.excludeDates                = auto         # [20080520,20090817 / no], auto for no
 topsStack.includeDates                = auto         # [20080520,20090817 / no], auto for all
@@ -52,6 +52,6 @@ minopy.plmethod                       = auto         # [EVD, EMI, PTA, sequentia
 minopy.patch_size                     = auto         # patch size to divide the image for parallel processing, auto for 300
 minopy.range_window                   = auto         # range window size for synthetic multilook, auto for 21
 minopy.azimuth_window                 = auto         # azimuth window size for synthetic multilook, auto for 15
-minopy.subset                         = None         # [ '-1:0.15,-91.7:-90.9'] required [S:N,W:E]
+minopy.subset                         = None         # [ -1 0.15 -91.7 -90.9] required [S N W E]
 
 
