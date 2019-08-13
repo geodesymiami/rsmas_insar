@@ -82,12 +82,12 @@ export PATH=${PATH}:${PARENTDIR}/minsar
 export PATH=${PATH}:${PARENTDIR}/setup/accounts
 export PATH=${PATH}:${PARENTDIR}/sources/rsmas_tools/SAR:${PARENTDIR}/sources/rsmas_tools/GPS:${PARENTDIR}/sources/rsmas_tools/notebooks
 export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${ISCE_STACK}:${PATH}
+export PATH=${PATH}:${RSMAS_INSAR}/sources/MimtPy
 export PATH=${PATH}:${MINTPY_HOME}/mintpy:${MINTPY_HOME}/sh
 export PATH=${PYTHON3DIR}/bin:${PATH}
 export PATH=${PATH}:${PROJ_LIB}
 export PATH=${PATH}:${PARENTDIR}/3rdparty/tippecanoe/bin
 export PATH=${PATH}:${DASK_CONFIG}
-export PATH=${PATH}:${PARENTDIR}/sources/mimt
 
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH-""}
 export LD_LIBRARY_PATH=${PYTHON3DIR}/lib

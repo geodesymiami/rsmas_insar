@@ -211,7 +211,7 @@ class RsmasInsar:
         if self.method == 'mintpy':
             minsar.smallbaseline_wrapper.main([self.customTemplateFile, '--email'])
         else:
-            import minopy.minopy_wrapper as minopy_wrapper
+            import minsar.minopy_wrapper as minopy_wrapper
             minopy_wrapper.main([self.customTemplateFile])
         return
 
