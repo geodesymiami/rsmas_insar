@@ -5,7 +5,6 @@
 
 import os
 import sys
-import argparse
 import time
 from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
@@ -54,34 +53,43 @@ def main(iargs=None):
 
     run_file_list = run_file_list[inps.startrun:inps.endrun]
 
-    for item in run_file_list:
-        step_name = '_'
-        step_name = step_name.join(item.split('_')[3::])
-        try:
-            memorymax = config[step_name]['memory']
-        except:
-            memorymax = config['DEFAULT']['memory']
+    if os.getenv('JOBSCHEDULER') == 'LSF' or os.getenv('JOBSCHEDULER') == 'PBS':
 
-        try:
-            if config[step_name]['adjust'] == 'True':
-                walltimelimit = putils.walltime_adjust(inps, config[step_name]['walltime'])
-            else:
-                walltimelimit = config[step_name]['walltime']
-        except:
-            walltimelimit = config['DEFAULT']['walltime']
+        for item in run_file_list:
+            step_name = '_'
+            step_name = step_name.join(item.split('_')[3::])
+            try:
+                memorymax = config[step_name]['memory']
+            except:
+                memorymax = config['DEFAULT']['memory']
 
-        queuename = os.getenv('QUEUENAME')
+            try:
+                if config[step_name]['adjust'] == 'True':
+                    walltimelimit = putils.walltime_adjust(inps, config[step_name]['walltime'])
+                else:
+                    walltimelimit = config[step_name]['walltime']
+            except:
+                walltimelimit = config['DEFAULT']['walltime']
 
-        putils.remove_last_job_running_products(run_file=item)
+            queuename = os.getenv('QUEUENAME')
 
-        jobs = js.submit_batch_jobs(batch_file=item, out_dir=os.path.join(inps.work_dir, 'run_files'),
-                                    work_dir=inps.work_dir, memory=memorymax, walltime=walltimelimit,
-                                    queue=queuename)
+            putils.remove_last_job_running_products(run_file=item)
 
-        putils.remove_zero_size_or_length_error_files(run_file=item)
-        putils.raise_exception_if_job_exited(run_file=item)
-        putils.concatenate_error_files(run_file=item, work_dir=inps.work_dir)
-        putils.move_out_job_files_to_stdout(run_file=item)
+            jobs = js.submit_batch_jobs(batch_file=item, out_dir=os.path.join(inps.work_dir, 'run_files'),
+                                        work_dir=inps.work_dir, memory=memorymax, walltime=walltimelimit,
+                                        queue=queuename)
+
+            putils.remove_zero_size_or_length_error_files(run_file=item)
+            putils.raise_exception_if_job_exited(run_file=item)
+            putils.concatenate_error_files(run_file=item, work_dir=inps.work_dir)
+            putils.move_out_job_files_to_stdout(run_file=item)
+
+    else:
+        for item in run_file_list:
+            with open(item, 'r') as f:
+                command_lines = f.readlines()
+                for command_line in command_lines:
+                    os.system(command_line)
 
     return None
 
