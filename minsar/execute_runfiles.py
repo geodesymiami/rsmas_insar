@@ -40,9 +40,6 @@ def main(iargs=None):
 
     time.sleep(wait_seconds)
 
-    command_line = os.path.basename(sys.argv[0]) + ' ' + ' '.join(sys.argv[1:])
-    message_rsmas.log(inps.work_dir, command_line)
-
     run_file_list = putils.read_run_list(inps.work_dir)
 
     if inps.endrun == 0:
@@ -50,6 +47,11 @@ def main(iargs=None):
 
     if not inps.startrun == 0:
         inps.startrun = inps.startrun - 1
+
+    if not iargs is None:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+    else:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     run_file_list = run_file_list[inps.startrun:inps.endrun]
 

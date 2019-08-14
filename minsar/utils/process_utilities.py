@@ -10,7 +10,6 @@
 from __future__ import print_function
 import os
 import glob
-import subprocess
 import configparser
 import argparse
 import numpy as np
@@ -18,7 +17,6 @@ from natsort import natsorted
 import xml.etree.ElementTree as ET
 import shutil
 from mintpy.defaults.auto_path import autoPath
-from minsar.objects.rsmas_logging import RsmasLogger, loglevel
 from minsar.objects.dataset_template import Template
 from minsar.objects.auto_defaults import PathFind
 
