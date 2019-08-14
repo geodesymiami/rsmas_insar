@@ -50,7 +50,10 @@ def main(iargs=None):
 
     time.sleep(wait_seconds)
 
-    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+    if not iargs is None:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+    else:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     out_dir = inps.work_dir + '/' + inps.out_dir
     if not os.path.isdir(out_dir):

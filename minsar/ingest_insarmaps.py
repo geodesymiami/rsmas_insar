@@ -48,7 +48,10 @@ def main(iargs=None):
 
     os.chdir(inps.work_dir)
 
-    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ''.join(sys.argv[1]))
+    if not iargs is None:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+    else:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     hdfeos_file = glob.glob(inps.work_dir + '/mintpy/S1*.he5')
     hdfeos_file.append(glob.glob(inps.work_dir +'/mintpy/SUBSET_*/S1*.he5'))

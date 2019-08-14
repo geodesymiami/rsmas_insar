@@ -201,7 +201,10 @@ class RsmasInsar:
         1. create run_files
         2. execute run_files
         """
-        minsar.create_runfiles.main([self.customTemplateFile])
+        try:
+            minsar.create_runfiles.main([self.customTemplateFile])
+        except:
+            print('Skip creating run files ...')
         minsar.execute_runfiles.main([self.customTemplateFile])
         return
 

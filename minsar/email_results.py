@@ -27,7 +27,10 @@ def main(iargs=None):
 
     email_address = os.getenv('NOTIFICATIONEMAIL')
 
-    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+    if not iargs is None:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+    else:
+        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     if inps.insarmaps:
         email_insarmaps_results(email_address)
