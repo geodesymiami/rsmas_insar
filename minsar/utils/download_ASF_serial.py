@@ -84,7 +84,7 @@ class bulk_downloader:
 
         self.asf_urs4 = {'url': 'https://urs.earthdata.nasa.gov/oauth/authorize',
                          'client': 'BO_n7nTIlMljdvU6kRRB3g',
-                         'redir': 'https://vertex.daac.asf.alaska.edu/services/urs4_token_request'}
+                         'redir': 'https://vertex-retired.daac.asf.alaska.edu/services/urs4_token_request'}
 
         # Make sure we can write it our current directory
         if os.access(os.getcwd(), os.W_OK) is False:
@@ -216,7 +216,7 @@ class bulk_downloader:
                 redir_url = response.getheader('Location')
 
             # Funky Test env:
-            if ("vertex.daac.asf.alaska.edu" in redir_url and "test" in self.asf_urs4['redir']):
+            if ("vertex-retired.daac.asf.alaska.edu" in redir_url and "test" in self.asf_urs4['redir']):
                 print("Cough, cough. It's dusty in this test env!")
                 return True
 
