@@ -55,3 +55,12 @@ then
   export SCRATCHDIR=/data/scratch/${USER}
   export TESTDATA_ISCE=/data/Projects/insar/data/TESTDATA_ISCE
 fi
+###############################################
+if [[ ${HOST} =~ mefe ]]
+then
+  export PLATFORM=$HOST
+  export JOBSCHEDULER=PBS
+  export QUEUENAME=batch
+  export SCRATCHDIR=/misc/zs4
+  export TESTDATA_ISCE=/misc/zs4/TESTDATA_ISCE
+fi
