@@ -15,10 +15,9 @@ processor                           = isce
 cleanopt                            = 0
 hazard_products_flag                = True
 insarmaps_flag                      = False
-demMethod                           = boundingBox                                        # '20141007,20141031'
+demMethod                           = ssara                                           # '20141007,20141031'
 
 ####################
-topsStack.excludeDate               = 20160318                                         # 20141007,20141031
 topsStack.boundingBox               = -6.4 -6.0 105.1 106.1                            # -1 0.15 -91.6 -90.9
 topsStack.subswath                  = 3                                                # 1 2
 topsStack.numConnections            = 3                                                # comment

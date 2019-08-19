@@ -13,6 +13,7 @@ ssaraopt.endDate                    = 20181221
 ssaraopt.parallel                   = 20
 processor                           = isce
 cleanopt                            = 0
+demMethod                           = ssara
 hazard_products_flag                = True
 insarmaps_flag                       = False
 
