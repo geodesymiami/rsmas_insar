@@ -157,7 +157,7 @@ def add_process_rsmas(parser):
                       help='end processing at the named step, default: {}'.format(STEP_LIST[-1]))
     prs.add_argument('--step', dest='step', metavar='STEP',
                       help='run processing at the named step only')
-    prs.add_argument('--insarmap', action='store_true', dest='insarmap', default=False,
+    prs.add_argument('--insarmaps', action='store_true', dest='insarmap', default=False,
                         help='Email insarmap results')
 
     return parser
