@@ -55,7 +55,7 @@ def main(iargs=None):
     else:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
-    out_dir = inps.work_dir + '/' + inps.out_dir
+    out_dir = inps.work_dir + '/' + pathObj.tiffdir
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)
     try:
