@@ -145,8 +145,7 @@ def add_process_rsmas(parser):
 
     STEP_LIST, STEP_HELP = pathObj.process_rsmas_help()
 
-    prs = parser.add_argument_group('Process Rsmas Routine InSAR Time Series Analysis. '
-                                    'steps processing (start/end/step):', STEP_HELP)
+    prs = parser.add_argument_group('steps processing (start/end/step)', STEP_HELP)
     prs.add_argument('-H', dest='print_template', action='store_true',
                         help='print the default template file and exit.')
     prs.add_argument('--remove_project_dir', dest='remove_project_dir', action='store_true',
