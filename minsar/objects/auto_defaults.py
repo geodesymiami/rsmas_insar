@@ -130,6 +130,8 @@ class PathFind:
             inps_dict['stop_date'] = datetime.datetime.strptime(inps_dict['stop_date'],
                                                                            '%Y%m%d').strftime('%Y-%m-%d')
 
+        inps_dict['bbox'] = '"{}"'.format(inps_dict['bbox'])
+
         return inps_dict
 
     @staticmethod
