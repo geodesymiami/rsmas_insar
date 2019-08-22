@@ -75,7 +75,7 @@ def main(iargs=None):
 
     multilook_images(inps)
 
-    run_file_list = make_run_list_amplitude(inps)
+    run_file_list = make_run_list(inps)
 
     for item in run_file_list:
         step_name = 'amplitude_ortho_geo'
@@ -215,11 +215,11 @@ def merge_burst_lat_lon(inps):
     return
 
 
-def make_run_list_amplitude(inps):
+def make_run_list(inps):
     """ create batch job file for creating ortho and geo rectified backscatter images """
 
-    run_amplitude_ortho = os.path.join(inps.work_dir, pathObj.rundir, 'run_amplitude_ortho')
-    run_amplitude_geo = os.path.join(inps.work_dir, pathObj.rundir, 'run_amplitude_geo')
+    run_orthorectify = os.path.join(inps.work_dir, pathObj.rundir, 'run_orthorectify')
+    run_georectify = os.path.join(inps.work_dir, pathObj.rundir, 'run_georectify')
     slc_list = os.listdir(os.path.join(inps.work_dir, pathObj.mergedslcdir))
 
     lat_ds = gdal.Open(inps.geom_masterDir + '/lat.rdr.ml', gdal.GA_ReadOnly)
@@ -232,20 +232,20 @@ def make_run_list_amplitude(inps):
 
     ifgram_cmd = 'ifgramStack_to_ifgram_and_coherence.py {}'.format(inps.customTemplateFile)
 
-    with open(run_amplitude_ortho, 'w') as f:
+    with open(run_orthorectify, 'w') as f:
         for item in slc_list:
             cmd = 'export_amplitude_tif.py {a0} -f {a1} -y {a2} -x {a3}  -t ortho \n'.format(
                 a0=inps.customTemplateFile, a1=item, a2=latstep, a3=lonstep)
             f.write(cmd)
         f.write(ifgram_cmd)
 
-    with open(run_amplitude_geo, 'w') as f:
+    with open(run_georectify, 'w') as f:
         for item in slc_list:
             cmd = 'export_amplitude_tif.py {a0} -f {a1} -y {a2} -x {a3} -t geo \n'.format(
                 a0=inps.customTemplateFile, a1=item, a2=latstep, a3=lonstep)
             f.write(cmd)
 
-    run_file_list = [run_amplitude_ortho, run_amplitude_geo]
+    run_file_list = [run_orthorectify, run_georectify]
 
     return run_file_list
 
