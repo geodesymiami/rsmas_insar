@@ -64,3 +64,14 @@ then
   export SCRATCHDIR=/misc/zs4
   export TESTDATA_ISCE=/misc/zs4/TESTDATA_ISCE
 fi
+
+###############################################
+if [[ ${HOST} == *local ]]
+then
+  echo "HOST = $HOST"
+  export SCRATCHDIR=/Users/${USER}/Documents/insarlab/scratch
+  export TESTDATA_ISCE=/Users/${USER}/Documents/insarlab/TESTDATA_ISCE
+  export SENTINEL_ORBITS=/Users/${USER}/Documents/insarlab/S1orbits
+  export SENTINEL_AUX=/Users/${USER}/Documents/insarlab/S1aux
+  export WEATHER_DIR=/Users/${USER}/Documents/insarlab/WEATHER
+fi
