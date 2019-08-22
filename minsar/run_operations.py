@@ -10,8 +10,12 @@ import time
 from minsar.utils import generate_template_files
 from minsar.objects.rsmas_logging import RsmasLogger, loglevel
 from minsar.objects import dataset_template
+from minsar.objects.dataset_template import Template
 import minsar.utils.process_utilities as putils
+from minsar.objects.auto_defaults import PathFind
+from minsar.utils.download_ssara_rsmas import add_polygon_to_ssaraopt
 
+pathObj = PathFind()
 
 ############## DIRECTORY AND FILE CONSTANTS ##############
 OPERATIONS_DIRECTORY = os.getenv('OPERATIONS')
@@ -42,14 +46,12 @@ def create_run_operations_parser():
     data_args.add_argument('--sheet_id', dest="sheet_ids", metavar='SHEET ID', action='append', nargs=1, help='sheet id to use')
     data_args.add_argument('--restart', dest='restart', action='store_true', help='remove $OPERATIONS directory before starting')
 
+    # FA 8/2019: need to use --start, --end and --step as does process_rsmas.py
     process_args = parser.add_argument_group("Processing steps", "processing Steps")
     process_args.add_argument('--startssara', dest='startssara', action='store_true', help='process_rsmas.py --startssara')
     process_args.add_argument('--stopssara', dest='stopssara', action='store_true', help='stop after downloading')
-    process_args.add_argument('--startprocess', dest='startprocess', action='store_true', help='process using sentinelstack package')
-    process_args.add_argument('--stopprocess', dest='stopprocess', action='store_true', help='stop after processing')
+    process_args.add_argument('--startifgrams', dest='startifgrams', action='store_true', help='run ifgrams')
     process_args.add_argument('--startmintpy', dest='startmintpy', action='store_true', help='run mintpy')
-    process_args.add_argument('--stopmintpyload', dest='stopmintpyload', action='store_true', help='stop after loading into mintpy')
-    process_args.add_argument('--stopmintpy', dest='stopmintpy', action='store_true', help='stop after mintpy processing')
     process_args.add_argument('--startinsarmaps', dest='startinsarmaps', action='store_true', help='ingest into insarmaps')
 
     return parser
@@ -131,10 +133,20 @@ def get_newest_data_date(template_file):
     :param template_file: the template file corresponding to the dataset being obtained
     :return: the newest image date in "YYYY-MM-DD T H:M:S.00000" format
     """
-    dset_template = dataset_template.Template(template_file)
-    ssaraopt_string = dset_template.generate_ssaraopt_string()
 
-    ssaraopt_cmd = 'ssara_federated_query.py {} --print'.format(ssaraopt_string)
+    dataset_template = Template(template_file)
+    dataset_template.options.update(pathObj.correct_for_ssara_date_format(dataset_template.options))
+
+    ssaraopt = dataset_template.generate_ssaraopt_string()
+    ssaraopt = ssaraopt.split(' ')
+
+    delta_lat = 0.0   # 8/2019: this should use the same default as download_ssara_rsmas.py which I believe is set in
+                      # utils/process_utilities.py:    flag_parser.add_argument('--delta_lat', dest='delta_lat', default='0.0', type=float,
+    # add intersectWith to ssaraopt string
+    ssaraopt = add_polygon_to_ssaraopt(dataset_template.get_options(), ssaraopt.copy(), delta_lat)
+
+    ssaraopt_cmd = ['ssara_federated_query.py'] + ssaraopt + ['--print']
+    ssaraopt_cmd = ' '.join(ssaraopt_cmd[:])
 
     # Yield list of images in following format:
     # ASF,Sentinel-1A,15775,2017-03-20T11:49:56.000000,2017-03-20T11:50:25.000000,128,3592,3592,IW,NA,DESCENDING,R,VV+VH,https://datapool.asf.alaska.edu/SLC/SA/S1A_IW_SLC__1SDV_20170320T114956_20170320T115025_015775_019FA4_097A.zip
@@ -178,15 +190,18 @@ def run_process_rsmas(inps, template_file, dataset):
     print("RUNNING process_rsmas.py: " + template_file)
 
     if inps.startssara:
-        process_rsmas_options.append('--startssara')
+        process_rsmas_options.append('--start download')
+    if inps.startifgrams:
+        process_rsmas_options.append('--start ifgrams')
     if inps.startinsarmaps:
-        process_rsmas_options.append('--startinsarmaps')
+        process_rsmas_options.append('--start insarmaps')
     ''' FA 5/2019: here we used to have the same options as process_rsmas.py
         need to revisit whetehr any options are useful with the run_files'''
 
     process_rsmas_options = ' '.join(process_rsmas_options)
 
     process_rsmas_cmd = "process_rsmas.py {} {} --submit".format(template_file, process_rsmas_options)
+    print (process_rsmas_cmd)
 
     process_rsmas = subprocess.check_output(process_rsmas_cmd, shell=True).decode('utf-8')
     
