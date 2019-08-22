@@ -1,8 +1,7 @@
 process_flag                        = TRUE                                                                                                
-login                               = pegasus.ccs.miami.edu                                                                               
-user                                = famelung                                                                                            
+processor                           = isce                                                                                                
 ####################
-email_mintpy                         = famelung@rsmas.miami.edu
+email_mintpy                        = famelung@rsmas.miami.edu
 email_insarmaps                     = famelung@rsmas.miami.edu
 ####################
 every_day_flag                      = yes                                                                                                 
@@ -11,11 +10,10 @@ ssaraopt.relativeOrbit              = 47
 ssaraopt.startDate                  = 20180101 
 ssaraopt.endDate                    = 20180331 
 ssaraopt.parallel                   = 20                                                                                                  
-processor                           = isce                                                                                                
-cleanopt                            = 0
+demMethod                           = ssara                                            # [boundingBox, ssara]
 hazard_products_flag                = True
 insarmaps_flag                      = False
-demMethod                           = ssara                                           # '20141007,20141031'
+cleanopt                            = 0
 
 ####################
 topsStack.boundingBox               = -6.4 -6.0 105.1 106.1                            # -1 0.15 -91.6 -90.9

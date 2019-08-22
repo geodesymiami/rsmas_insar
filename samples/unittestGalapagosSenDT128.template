@@ -3,7 +3,6 @@ cleanopt                          = 0   # [ 0 / 1 / 2 / 3 / 4]   0,1: none 2: ke
 processor                         = isce
 ssaraopt.platform                 = SENTINEL-1A,SENTINEL-1B
 ssaraopt.relativeOrbit            = 128
-ssaraopt.frame                    = 590-593
 ssaraopt.startDate                = 20160601
 ssaraopt.endDate                  = 20160831
 demMethod                         = ssara
