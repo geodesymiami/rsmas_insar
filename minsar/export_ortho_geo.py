@@ -230,11 +230,14 @@ def make_run_list_amplitude(inps):
     lonstep = abs(
         (np.nanmin(lon_ds.GetVirtualMemArray()) - np.nanmax(lon_ds.GetVirtualMemArray())) / (lon_ds.RasterXSize - 1))
 
+    ifgram_cmd = 'ifgramStack_to_ifgram_and_coherence.py {}'.format(inps.customTemplateFile)
+
     with open(run_amplitude_ortho, 'w') as f:
         for item in slc_list:
             cmd = 'export_amplitude_tif.py {a0} -f {a1} -y {a2} -x {a3}  -t ortho \n'.format(
                 a0=inps.customTemplateFile, a1=item, a2=latstep, a3=lonstep)
             f.write(cmd)
+        f.write(ifgram_cmd)
 
     with open(run_amplitude_geo, 'w') as f:
         for item in slc_list:
@@ -242,9 +245,7 @@ def make_run_list_amplitude(inps):
                 a0=inps.customTemplateFile, a1=item, a2=latstep, a3=lonstep)
             f.write(cmd)
 
-    ifgram_cmd = 'ifgramStack_to_ifgram_and_coherence.py {}'.format(inps.customTemplateFile)
-
-    run_file_list = [run_amplitude_ortho, run_amplitude_geo, ifgram_cmd]
+    run_file_list = [run_amplitude_ortho, run_amplitude_geo]
 
     return run_file_list
 
