@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 
 import numpy as np
-import argparse
 import os
 import isce
 import isceobj
-import datetime
 import sys
-import shutil
 import s1a_isce_utils as ut
 import glob
 import gdal
@@ -245,7 +242,9 @@ def make_run_list_amplitude(inps):
                 a0=inps.customTemplateFile, a1=item, a2=latstep, a3=lonstep)
             f.write(cmd)
 
-    run_file_list = [run_amplitude_ortho, run_amplitude_geo]
+    ifgram_cmd = 'ifgramStack_to_ifgram_and_coherence.py {}'.format(inps.customTemplateFile)
+
+    run_file_list = [run_amplitude_ortho, run_amplitude_geo, ifgram_cmd]
 
     return run_file_list
 
