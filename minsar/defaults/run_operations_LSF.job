@@ -6,12 +6,12 @@
 #BSUB -n 1
 #BSUB -P insarlab
 #BSUB -q general
-#BSUB -b 12:00
+#BSUB -b 14:15
 
 s.bgood
-nohup run_operations.py &
+nohup run_operations.py --sheet_id 1zAsa5cykv-WS39ufkCZdvFvaOem3Akol8aqzANnsdhE &
 
 sleep 120
 
-bsub < $OPERATIONS/run_operations.job
+bsub < $OPERATIONS/run_operations_LSF.job
 
