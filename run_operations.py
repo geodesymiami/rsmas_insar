@@ -334,7 +334,7 @@ if __name__ == "__main__":
 		template_file = templates_directory+'/'+dataset+'.template'
 		# Generate SSARA Options to Use
 		ssaraopt = generate_ssaraopt_string(template_file=template_file)
-		ssaraopt = 'ssara_federated_query.py ' + ssaraopt + ' --print'
+		ssaraopt = 'ssara_federated_query-cj.py ' + ssaraopt + ' --print'
 		ssaraopt=ssaraopt.split(' ')
 		
 		# Run SSARA and check output	
