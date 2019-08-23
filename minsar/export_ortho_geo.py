@@ -60,6 +60,11 @@ def main(iargs=None):
 
     time.sleep(wait_seconds)
 
+    pic_dir = os.path.join(inps.work_dir, pathObj.tiffdir)
+
+    if not os.path.exists(pic_dir):
+        os.mkdir(pic_dir)
+
     if not iargs is None:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
     else:
