@@ -1,0 +1,6 @@
+git
+psycopg2
+pycurl
+natsort
+bokeh
+qt

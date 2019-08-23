@@ -1,0 +1,18 @@
+#! /bin/bash
+#BSUB -J run_operations
+#BSUB -N -u jaz101@rsmas.miami.edu
+#BSUB -o /nethome/dwg11/insarlab/OPERATIONS/LOGS/JOB_SUBMISSION_LOGS/z_autorun_%J.o
+#BSUB -e /nethome/dwg11/insarlab/OPERATIONS/LOGS/JOB_SUBMISSION_LOGS/z_autorun_%J.e
+#BSUB -n 1
+#BSUB -P insarlab
+#BSUB -q general
+#BSUB -b 16:58
+
+bash
+cd  ~/test/test1/rsmas_insar; source default_isce22.bash
+nohup run_operations.py --sheet_id 1zAsa5cykv-WS39ufkCZdvFvaOem3Akol8aqzANnsdhE  &
+
+sleep 120
+
+bsub < $OPERATIONS/run_operations.job
+

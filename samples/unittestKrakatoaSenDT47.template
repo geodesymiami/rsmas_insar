@@ -1,0 +1,37 @@
+process_flag                        = TRUE                                                                                                
+processor                           = isce                                                                                                
+####################
+email_mintpy                        = famelung@rsmas.miami.edu
+email_insarmaps                     = famelung@rsmas.miami.edu
+####################
+every_day_flag                      = yes                                                                                                 
+ssaraopt.platform                   = SENTINEL-1A,SENTINEL-1B
+ssaraopt.relativeOrbit              = 47 
+ssaraopt.startDate                  = 20180101 
+ssaraopt.endDate                    = 20180331 
+ssaraopt.parallel                   = 20                                                                                                  
+demMethod                           = ssara                                            # [boundingBox, ssara]
+hazard_products_flag                = True
+insarmaps_flag                      = False
+cleanopt                            = 0
+
+####################
+topsStack.boundingBox               = -6.4 -6.0 105.1 106.1                            # -1 0.15 -91.6 -90.9
+topsStack.subswath                  = 3                                                # 1 2
+topsStack.numConnections            = 3                                                # comment
+topsStack.azimuthLooks              = 2                                                # comment
+topsStack.rangeLooks                = 6                                                # comment
+topsStack.filtStrength              = 0.2                                              # comment
+topsStack.unwMethod                 = snaphu                                           # comment
+topsStack.coregistration            = geometry                                             # [NESD geometry], auto for NESD
+topsStack.slcDir                    = $TESTDATA_ISCE/unittestKrakatoaSenDT47/SLC
+
+####################
+mintpy.reference.lalo               = -6.09366, 105.4218                                #
+mintpy.subset.lalo                  = -6.112:-6.089,105.414:105.436    #[31.5:32.5,130.5:131.0 / no], auto for no
+mintpy.troposphericDelay.method     = no                                                #[pyaps / height_correlation / base_trop_cor / no], auto for pyaps
+mintpy.networkInversion.parallel    = yes                                               #[yes / no], auto for no, parallel processi
+mintpy.networkInversion.walltime    = 00:30                                             #[yes / no], auto for no, parallel processi
+mintpy.save.hdfEos5                 = yes                                               # [yes / update / no], auto for no, save timeseries to UNAVCO InSAR Archive format
+mintpy.save.hdfEos5.update          = no                                               # [yes / no], auto for no, put XXXXXXXX as endDate in output filename
+mintpy.save.kml                     = yes                                               # [yes / no], auto for yes, save geocoded velocity to Google Earth KMZ file
