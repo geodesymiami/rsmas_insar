@@ -100,7 +100,7 @@ def generate_template_file(names, subnames, column_vals, comments):
     base = ""
 
     # If process_flag is FALSE, don't generate a template file for that dataset
-    if column_vals[0] == "FALSE" or column_vals[0] == "False"
+    if column_vals[0] == "FALSE" or column_vals[0] == "False":
         return None
 
     for i in range(len(names)):
