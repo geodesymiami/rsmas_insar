@@ -6,7 +6,7 @@
 #BSUB -n 1
 #BSUB -P insarlab
 #BSUB -q general
-#BSUB -b 14:15
+#BSUB -b 12:00
 
 s.bgood
 nohup run_operations.py --sheet_id 1zAsa5cykv-WS39ufkCZdvFvaOem3Akol8aqzANnsdhE &
