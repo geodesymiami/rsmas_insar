@@ -134,14 +134,15 @@ def get_newest_data_date(template_file):
     :return: the newest image date in "YYYY-MM-DD T H:M:S.00000" format
     """
 
+    delta_lat = 0.0   # 8/2019: this should use the same default as download_ssara_rsmas.py which I believe is set in
+                      # utils/process_utilities.py:    flag_parser.add_argument('--delta_lat', dest='delta_lat', default='0.0', type=float,
+
     dataset_template = Template(template_file)
     dataset_template.options.update(pathObj.correct_for_ssara_date_format(dataset_template.options))
 
     ssaraopt = dataset_template.generate_ssaraopt_string()
     ssaraopt = ssaraopt.split(' ')
 
-    delta_lat = 0.0   # 8/2019: this should use the same default as download_ssara_rsmas.py which I believe is set in
-                      # utils/process_utilities.py:    flag_parser.add_argument('--delta_lat', dest='delta_lat', default='0.0', type=float,
     # add intersectWith to ssaraopt string
     ssaraopt = add_polygon_to_ssaraopt(dataset_template.get_options(), ssaraopt.copy(), delta_lat)
 
