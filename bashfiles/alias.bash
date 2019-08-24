@@ -101,7 +101,7 @@ alias killperl='kill -9 `ps uax | grep famelung | grep perl | awk '\''{printf $2
 alias killpython='kill -9 `ps uax | grep famelung | grep python | awk '\''{printf $2 " "}'\''`'
 alias killssara='kill -9 `ps uax | grep famelung | grep ssara_federated_query | awk '\''{printf $2 " "}'\''`'
 alias killwget='kill -9 `ps uax | grep famelung | grep wget | awk '\''{printf $2 " "}'\''`'
-function bkillsubmit_time() { bkill `bjobs | grep "$1" | awk '{print $"BASH_ARGV[1]" " "}'` ; }
+function bkillsubmit_time() { bkill `bjobs | grep "$1" | awk '{print $1}'` ; }
 function bbotsubmit_time() { echo `bjobs | grep "$1" | awk '{print $"{BASH_ARGV[1]" " "}'` ; }
 function qdelsubmit_time() { qdel `showq | grep "$1" | awk '{printf $"{BASH_ARGV[1]" " "}'` ; }
 alias bjobssum='bjobs | grep Sen; bjobs | grep RUN | wc -l | awk '\''{print "Running jobs:",$1}'\''; bjobs | grep PEND | wc -l | awk '\''{print "Pending jobs:",$1}'\'''
