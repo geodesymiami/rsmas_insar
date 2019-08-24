@@ -66,7 +66,7 @@ class bulk_downloader:
     def __init__(self):
         # List of files to download
         self.files = [
-            "https://datapool.asf.alaska.edu/SLC/SB/                                   S1B_IW_SLC__1SDV_20180707T114940_20180707T115004_011704_01587A_AA26.zip",
+            "https://datapool.asf.alaska.edu/SLC/SB/S1B_IW_SLC__1SDV_20180707T114940_20180707T115004_011704_01587A_AA26.zip",
             "https://datapool.asf.alaska.edu/SLC/SB/S1B_IW_SLC__1SDV_20180707T114912_20180707T114942_011704_01587A_4B42.zip",
             "https://datapool.asf.alaska.edu/SLC/SA/S1A_IW_SLC__1SDV_20170629T215253_20170629T215322_017254_01CCAD_8B5A.zip",
             "https://datapool.asf.alaska.edu/SLC/SA/S1A_IW_SLC__1SDV_20170605T215251_20170605T215320_016904_01C204_B139.zip",
