@@ -7,6 +7,8 @@ then
   export JOBSCHEDULER=LSF
   export QUEUENAME=general
   export SCRATCHDIR=/projects/scratch/insarlab/${USER}
+  export WORKDIR=~/insarlab
+  export NOTIFICATIONEMAIL=${USER}\@rsmas.miami.edu
   export TESTDATA_ISCE=/nethome/dwg11/insarlab/TESTDATA_ISCE
   export DOWNLOADHOST=visx.ccs.miami.edu
   export SENTINEL_ORBITS=/nethome/swdowinski/S1orbits
@@ -25,6 +27,8 @@ then
   export JOBSCHEDULER=PBS
   export QUEUENAME=batch
   export SCRATCHDIR=/scratch/insarlab/${USER}
+  export WORKDIR=~/insarlab
+  export NOTIFICATIONEMAIL=${USER}\@rsmas.miami.edu
 fi
 ###############################################
 if [[ ${HOST} == centos7.bogon105.com ]]
@@ -33,6 +37,8 @@ then
   export JOBSCHEDULER=PBS
   export QUEUENAME=batch
   export SCRATCHDIR=/data/rsmasdata/famelung/SCRATCHDIR
+  export WORKDIR=~/insarlab
+  export NOTIFICATIONEMAIL=${USER}\@rsmas.miami.edu
   export TESTDATA_ISCE=/data/rsmasdata/famelung/TESTDATA_ISCE
   export SENTINEL_ORBITS=/home/famelung/insarlab/S1orbits
   export SENTINEL_AUX=/home/famelung/insarlab/S1aux
@@ -44,6 +50,8 @@ then
   export JOBSCHEDULER=PBS
   export QUEUENAME=batch
   export SCRATCHDIR=/data1/Projects/insar/data
+  export WORKDIR=~/insarlab
+  export NOTIFICATIONEMAIL=${USER}\@rsmas.miami.edu  
   export TESTDATA_ISCE=/data1/Projects/insar/data/TESTDATA_ISCE
 fi
 ###############################################
@@ -53,6 +61,8 @@ then
   export JOBSCHEDULER=LSF
   export QUEUENAME=serial
   export SCRATCHDIR=/data/scratch/${USER}
+  export WORKDIR=~/insarlab
+  export NOTIFICATIONEMAIL=${USER}\@rsmas.miami.edu
   export TESTDATA_ISCE=/data/Projects/insar/data/TESTDATA_ISCE
 fi
 ###############################################
@@ -62,6 +72,8 @@ then
   export JOBSCHEDULER=PBS
   export QUEUENAME=batch
   export SCRATCHDIR=/misc/zs4
+  export WORKDIR=~/insarlab
+  export NOTIFICATIONEMAIL=${USER}\@rsmas.miami.edu
   export TESTDATA_ISCE=/misc/zs4/TESTDATA_ISCE
 fi
 
@@ -69,8 +81,18 @@ fi
 if [[ ${HOST} == *local ]]
 then
   export SCRATCHDIR=/Users/${USER}/Documents/insarlab/scratch
-  export TESTDATA_ISCE=/Users/${USER}/Documents/insarlab/TESTDATA_ISCE
-  export SENTINEL_ORBITS=/Users/${USER}/Documents/insarlab/S1orbits
-  export SENTINEL_AUX=/Users/${USER}/Documents/insarlab/S1aux
-  export WEATHER_DIR=/Users/${USER}/Documents/insarlab/WEATHER
+  export WORKDIR=/Users/${USER}/Documents/insarlab
+  export NOTIFICATIONEMAIL=${USER}\@rsmas.miami.edu
 fi
+
+###############################################
+if [[ ${HOSTNAME} == *stampede* ]]
+then
+  export SCRATCHDIR=${SCRATCH}
+  export WORKDIR=${WORK}/insarlab
+  export NOTIFICATIONEMAIL=${USER}\@rsmas.miami.edu
+fi
+
+
+
+

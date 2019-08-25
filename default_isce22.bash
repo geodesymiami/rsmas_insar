@@ -8,8 +8,6 @@ export VISUAL=/bin/vi
 export CPL_ZIP_ENCODING=UTF-8
 
 ###### for JOB SUBMISSION ###################
-export WORKDIR=~/insarlab
-export NOTIFICATIONEMAIL=${USER}\@rsmas.miami.edu
 export INT_SCR=${PARENTDIR}/sources/roipac/INT_SCR
 export DOWNLOADHOST=local
 
@@ -59,7 +57,7 @@ export PYTHONPATH=${PYTHONPATH-""}
 export PYTHONPATH=${PYTHONPATH}:${MINTPY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${INT_SCR}
 export PYTHONPATH=${PYTHONPATH}:${SSARA_ASF}
-export PYTHONPATH=${PYTHONPATH}:${PYTHON3DIR}/lib/python3.7/site-packages:${ISCE_HOME}:${ISCE_HOME}/components
+export PYTHONPATH=${PYTHONPATH}:${PYTHON3DIR}/lib/python3.6/site-packages:${ISCE_HOME}:${ISCE_HOME}/components
 export PYTHONPATH=${PYTHONPATH}:${MINOPY}
 export PYTHONPATH=${PYTHONPATH}:${RSMAS_INSAR}
 export PYTHONPATH=${PYTHONPATH}:${PARENTDIR}/sources/rsmas_tools
