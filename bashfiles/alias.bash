@@ -106,6 +106,7 @@ function bbotsubmit_time() { echo `bjobs | grep "$1" | awk '{print $"{BASH_ARGV[
 function qdelsubmit_time() { qdel `showq | grep "$1" | awk '{printf $"{BASH_ARGV[1]" " "}'` ; }
 alias bjobssum='bjobs | grep Sen; bjobs | grep RUN | wc -l | awk '\''{print "Running jobs:",$1}'\''; bjobs | grep PEND | wc -l | awk '\''{print "Pending jobs:",$1}'\'''
 alias bjobssum='bjobs | grep Sen; bjobs | grep RUN | wc -l | awk '\''{print "Running jobs:",$1}'\''; bjobs | grep UNKWN | wc -l | awk '\''{print "Unknown jobs:",$1}'\''; bjobs | grep PEND | wc -l | awk '\''{print "Pending jobs:",$1}'\'''
+alias sjobs='squeue -u ${USER}'
 ######################################
 ######## general #####################
 ######################################
