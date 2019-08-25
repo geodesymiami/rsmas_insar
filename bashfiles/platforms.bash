@@ -6,6 +6,7 @@ then
   export PLATFORM=pegasus
   export JOBSCHEDULER=LSF
   export QUEUENAME=general
+  export PROJECTNAME =insarlab
   export SCRATCHDIR=/projects/scratch/insarlab/${USER}
   export WORKDIR=~/insarlab
   export NOTIFICATIONEMAIL=${USER}\@rsmas.miami.edu
@@ -26,6 +27,7 @@ then
   export PLATFORM=$HOST
   export JOBSCHEDULER=PBS
   export QUEUENAME=batch
+  export PROJECTNAME =insarlab
   export SCRATCHDIR=/scratch/insarlab/${USER}
   export WORKDIR=~/insarlab
   export NOTIFICATIONEMAIL=${USER}\@rsmas.miami.edu
@@ -36,6 +38,7 @@ then
   export PLATFORM=$HOST
   export JOBSCHEDULER=PBS
   export QUEUENAME=batch
+  export PROJECTNAME =insarlab
   export SCRATCHDIR=/data/rsmasdata/famelung/SCRATCHDIR
   export WORKDIR=~/insarlab
   export NOTIFICATIONEMAIL=${USER}\@rsmas.miami.edu
@@ -49,6 +52,7 @@ then
   export PLATFORM=$HOST
   export JOBSCHEDULER=PBS
   export QUEUENAME=batch
+  export PROJECTNAME =insarlab
   export SCRATCHDIR=/data1/Projects/insar/data
   export WORKDIR=~/insarlab
   export NOTIFICATIONEMAIL=${USER}\@rsmas.miami.edu  
@@ -60,6 +64,7 @@ then
   export PLATFORM=$HOST
   export JOBSCHEDULER=LSF
   export QUEUENAME=serial
+  export PROJECTNAME =insarlab
   export SCRATCHDIR=/data/scratch/${USER}
   export WORKDIR=~/insarlab
   export NOTIFICATIONEMAIL=${USER}\@rsmas.miami.edu
@@ -71,6 +76,7 @@ then
   export PLATFORM=$HOST
   export JOBSCHEDULER=PBS
   export QUEUENAME=batch
+  export PROJECTNAME =insarlab
   export SCRATCHDIR=/misc/zs4
   export WORKDIR=~/insarlab
   export NOTIFICATIONEMAIL=${USER}\@rsmas.miami.edu
@@ -89,6 +95,9 @@ fi
 if [[ ${HOSTNAME} == *stampede* ]]
 then
   export SCRATCHDIR=${SCRATCH}
+  export JOBSCHEDULER=SLURM
+  export QUEUENAME=normal
+  export PROJECTNAME =TG-EAR180014
   export WORKDIR=${WORK}/insarlab
   export NOTIFICATIONEMAIL=${USER}\@rsmas.miami.edu
 fi
