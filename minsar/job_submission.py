@@ -52,6 +52,8 @@ def parse_arguments(args):
             job_params.queue = "general"
         if scheduler == "PBS":
             job_params.queue = "batch"
+        if scheduler == 'SLURM':
+            job_params.queue = "normal"
 
     job_params.file = os.path.abspath(job_params.file)
     job_params.work_dir = os.path.join(os.getenv('SCRATCHDIR'),
@@ -108,13 +110,26 @@ def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler
         walltime += ":00"
         memory_option = "-l mem={0}"
         email_option = "-m bea" + prefix + "-M {0}"
+    elif scheduler == 'SLURM':
+        prefix = "\n#SBATCH "
+        shell = "/bin/tcsh"
+        name_option = "-J {0}"
+        project_option = "-A {0}"
+        process_option = "-N {0}" + prefix + "-n {1}"
+        stdout_option = "-o {0}_%J.o"
+        stderr_option = "-e {0}_%J.e"
+        queue_option = "-p {0}"
+        if not queue:
+            queue = "normal"
+        walltime_limit_option = "-t {0}"
+        memory_option = False
     else:
         raise Exception("ERROR: scheduler {0} not supported".format(scheduler))
 
     job_file_lines = [
         "#! " + shell,
         prefix + name_option.format(job_name),
-        prefix + project_option.format("insarlab")
+        prefix + project_option.format(os.getenv('PROJECTNAME'))
     ]
     if email_notif:
         job_file_lines.append(prefix + email_option.format(os.getenv("NOTIFICATIONEMAIL")))
@@ -124,8 +139,9 @@ def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler
         prefix + stderr_option.format(os.path.join(work_dir, job_file_name)),
         prefix + queue_option.format(queue),
         prefix + walltime_limit_option.format(walltime),
-        prefix + memory_option.format(memory),
     ])
+    if memory_option:
+        job_file_lines.extend([prefix + memory_option.format(memory)], )
 
     if scheduler == "PBS":
         # export all local environment variables to job
@@ -206,6 +222,8 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
         command = "bsub < " + os.path.join(work_dir, job_file_name)
     elif scheduler == "PBS":
         command = "qsub < " + os.path.join(work_dir, job_file_name)
+    elif scheduler == 'SLURM':
+        command = "sbatch < " + os.path.join(work_dir, job_file_name)
     else:
         raise Exception("ERROR: scheduler {0} not supported".format(scheduler))
 
@@ -219,6 +237,8 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
         # extracts number from '7319.eos\n'
         job_number = output.decode("utf-8").split("\n")[0].split(".")[0]
         # uses '7319.eos\n'
+        job_number = output.decode("utf-8").split("\n")[0]
+    elif scheduler == 'SLURM':
         job_number = output.decode("utf-8").split("\n")[0]
     else:
         raise Exception("ERROR: scheduler {0} not supported".format(scheduler))

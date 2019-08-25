@@ -55,7 +55,9 @@ def main(iargs=None):
 
     run_file_list = run_file_list[inps.startrun:inps.endrun]
 
-    if os.getenv('JOBSCHEDULER') == 'LSF' or os.getenv('JOBSCHEDULER') == 'PBS':
+    supported_schedulers = ['LSF', 'PBS', 'SLURM']
+
+    if os.getenv('JOBSCHEDULER') in supported_schedulers:
 
         for item in run_file_list:
             step_name = '_'
