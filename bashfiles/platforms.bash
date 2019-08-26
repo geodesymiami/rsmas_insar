@@ -97,7 +97,7 @@ then
   export SCRATCHDIR=${SCRATCH}
   export JOBSCHEDULER=SLURM
   export QUEUENAME=normal
-  export PROJECTNAME =TG-EAR180014
+  export PROJECTNAME=TG-EAR180014
   export WORKDIR=${WORK}/insarlab
   export NOTIFICATIONEMAIL=${USER}\@rsmas.miami.edu
 fi
