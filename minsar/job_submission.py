@@ -119,6 +119,7 @@ def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler
         stdout_option = "-o {0}_%J.o"
         stderr_option = "-e {0}_%J.e"
         queue_option = "-p {0}"
+        email_option = "--mail-user={}" + prefix + "--mail-type=fail"
         if not queue:
             queue = "normal"
         walltime_limit_option = "-t {0}"
