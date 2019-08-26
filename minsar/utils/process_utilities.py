@@ -550,7 +550,7 @@ def walltime_adjust(inps, default_time):
     hour = (default_time_hour * number_of_bursts)*60
     minutes = int(np.remainder(hour, 60))
     hour = int(hour/60)
-    adjusted_time = '{:02d}:{:02d}'.format(hour, minutes)
+    adjusted_time = '{:02d}:{:02d}:{:02d}'.format(hour, minutes, 0)
 
     return adjusted_time
 
@@ -569,7 +569,7 @@ def add_pause_to_walltime(wall_time, wait_time):
 
     wait_seconds = (wait_parts[0] * 60 + wait_parts[1]) * 60
 
-    new_wall_time = '{:02d}:{:02d}'.format(hours, minutes)
+    new_wall_time = '{:02d}:{:02d}:{:02d}'.format(hours, minutes, 0)
 
     return wait_seconds, new_wall_time
 
@@ -583,7 +583,7 @@ def set_permission_dask_files(directory):
     workers_err = glob.glob(directory + '/worker*e')
     workers = np.setdiff1d(workers, workers_err)
     workers = np.setdiff1d(workers, workers_out)
-    if not len(workers)==0:
+    if not len(workers) == 0:
         os.system('chmod -R 0755 {}'.format(workers))
 
     return
