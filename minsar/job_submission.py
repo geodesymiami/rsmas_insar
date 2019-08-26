@@ -65,7 +65,7 @@ def parse_arguments(args):
     return job_params
 
 
-def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler=None, memory=3600, walltime="4:00", queue=None):
+def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler=None, memory=3600, walltime="4:00:00", queue=None):
     """
     Generates the lines of a job submission file that are based on the specified scheduler.
     :param job_name: Name of job.
@@ -119,6 +119,7 @@ def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler
         stdout_option = "-o {0}_%J.o"
         stderr_option = "-e {0}_%J.e"
         queue_option = "-p {0}"
+        email_option = "--mail-user={}" + prefix + "--mail-type=fail"
         if not queue:
             queue = "normal"
         walltime_limit_option = "-t {0}"
@@ -151,7 +152,7 @@ def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler
 
 
 def write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif, scheduler=None,
-                          memory=3600, walltime="4:00", queue=None):
+                          memory=3600, walltime="4:00:00", queue=None):
     """
     Writes a job file for a single job.
     :param job_name: Name of job.
@@ -178,7 +179,7 @@ def write_single_job_file(job_name, job_file_name, command_line, work_dir, email
         job_file.writelines(job_file_lines)
 
 
-def write_batch_job_files(batch_file, out_dir, email_notif=False, scheduler=None, memory=3600, walltime="4:00", queue=None):
+def write_batch_job_files(batch_file, out_dir, email_notif=False, scheduler=None, memory=3600, walltime="4:00:00", queue=None):
     """
     Iterates through jobs in input file and writes a job file for each job using the specified scheduler.
     :param batch_file: File containing batch of jobs for which we are creating job files.
@@ -248,7 +249,7 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
     return job_number
 
 
-def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory='4000', walltime='2:00',
+def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory='4000', walltime='2:00:00',
                       queue='general', scheduler=None):
     """
     Submit a batch of jobs (to bsub or qsub) and wait for output files to exist before exiting.
