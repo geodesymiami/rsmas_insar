@@ -18,6 +18,8 @@ import minsar.utils.process_utilities as putils
 import minsar.job_submission as js
 import mergeBursts as mb
 
+from upload_image_products import upload_to_s3
+
 pathObj = PathFind()
 #################################################################################
 
@@ -59,6 +61,11 @@ def main(iargs=None):
         sys.exit(0)
 
     time.sleep(wait_seconds)
+
+    pic_dir = os.path.join(inps.work_dir, pathObj.tiffdir)
+
+    if not os.path.exists(pic_dir):
+        os.mkdir(pic_dir)
 
     if not iargs is None:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
@@ -105,6 +112,9 @@ def main(iargs=None):
         putils.raise_exception_if_job_exited(run_file=item)
         putils.concatenate_error_files(run_file=item, work_dir=inps.work_dir)
         putils.move_out_job_files_to_stdout(run_file=item)
+
+    upload_to_s3(pathObj.tiffdir)
+
     return
 
 

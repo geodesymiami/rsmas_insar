@@ -8,8 +8,6 @@ export VISUAL=/bin/vi
 export CPL_ZIP_ENCODING=UTF-8
 
 ###### for JOB SUBMISSION ###################
-export WORKDIR=~/insarlab
-export NOTIFICATIONEMAIL=${USER}\@rsmas.miami.edu
 export INT_SCR=${PARENTDIR}/sources/roipac/INT_SCR
 export DOWNLOADHOST=local
 

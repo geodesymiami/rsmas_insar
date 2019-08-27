@@ -210,14 +210,14 @@ def grd_to_xml(cwd):
     xmlparamters = dict()
 
     xmlparamters['c1delta'] = re.findall(r'Pixel Size = \((.+),.+\)', tempstr)[0]
-    xmlparamters['c1ev'] = round(float(re.findall(r'Upper Right\s+\( (.\d+.\d+),', tempstr)[0]), 1)
+    xmlparamters['c1ev'] = round(float(re.findall(r'Upper Right\s+\(\s*(.\d+.\d+),', tempstr)[0]), 1)
     xmlparamters['c1size'] = int(re.findall(r'Size is (\d+),\s+\d+', tempstr)[0])
-    xmlparamters['c1sv'] = round(float(re.findall(r'Lower Left\s+\( (.\d+.\d+),', tempstr)[0]), 1)
+    xmlparamters['c1sv'] = round(float(re.findall(r'Lower Left\s+\(\s*(.\d+.\d+),', tempstr)[0]), 1)
 
     xmlparamters['c2delta'] = re.findall(r'Pixel Size = \(.+,(.+)\)', tempstr)[0]
-    xmlparamters['c2ev'] = round(float(re.findall(r'Lower Left\s+\( .\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0]), 1)
+    xmlparamters['c2ev'] = round(float(re.findall(r'Lower Left\s+\(\s*.\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0]), 1)
     xmlparamters['c2size'] = int(re.findall(r'Size is \d+,\s+(\d+)', tempstr)[0])
-    xmlparamters['c2sv'] = round(float(re.findall(r'Upper Right\s+\( .\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0]), 1)
+    xmlparamters['c2sv'] = round(float(re.findall(r'Upper Right\s+\(\s*.\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0]), 1)
 
     xmlparamters['numbands'] = re.findall(r'Band (\d+) \w', tempstr)[0]
     xmlparamters['ref'] = re.findall(r'GEOGCS\["(.+)",', tempstr)[0].replace(' ', '')

@@ -79,8 +79,8 @@ def generate_files_csv(slc_dir, custom_template_file):
     ssaraopt = dataset_template.generate_ssaraopt_string()
     ssaraopt = ssaraopt.split(' ')
 
-    # add intersectWith to ssaraopt string
-    ssaraopt = add_polygon_to_ssaraopt(dataset_template.get_options(), ssaraopt.copy(), inps.delta_lat)
+    # add intersectWith to ssaraopt string #FA 8/19: the delta_lat default value should come from a command_linr parse
+    ssaraopt = add_polygon_to_ssaraopt(dataset_template.get_options(), ssaraopt.copy(), delta_lat=0.0)
 
     filecsv_options = ['ssara_federated_query.py'] + ssaraopt + ['--print', '|', 'awk',
                                                                  "'BEGIN{FS=\",\"; ORS=\",\"}{ print $14}'", '>',
@@ -89,8 +89,10 @@ def generate_files_csv(slc_dir, custom_template_file):
     csv_command = ' '.join(filecsv_options)
     message_rsmas.log(slc_dir, csv_command)
     subprocess.Popen(csv_command, shell=True).wait()
-    sed_command = "sed 's/^.\{5\}//' " + os.path.join(slc_dir, 'new_files.csv') + \
+    # FA 8/2019: replaced new_files.csv by files.csv as infile argument
+    sed_command = "sed 's/^.\{5\}//' " + os.path.join(slc_dir, 'files.csv') + \
                   ">" + os.path.join(slc_dir, 'new_files.csv')
+    message_rsmas.log(slc_dir, sed_command)
     subprocess.Popen(sed_command, shell=True).wait()
 
 
@@ -104,6 +106,10 @@ def run_download_asf_serial(slc_dir, logger, run_number=1):
     if run_number > 10:
         return 0
 
+    command = ' '.join(['download_ASF_serial.py', '-username', password.asfuser, '-password', 
+                                              password.asfpass, slc_dir + '/new_files.csv'])
+
+    message_rsmas.log(os.getcwd(), command)
     completion_status = subprocess.Popen(' '.join(['download_ASF_serial.py', '-username', password.asfuser, '-password',
                                                    password.asfpass, slc_dir + '/new_files.csv']), shell=True).wait()
 
