@@ -15,7 +15,10 @@ def upload_to_s3(products_directory):
 
     products = os.listdir(products_directory)
 
+    print(products)
+
     for f in products:
-        f = os.path.abspath(f)
-        s3.upload_file(f, S3_BUCKET_NAME, f)
+        #f = os.path.abspath(f)
+        #print(f)
+        s3.upload_file(os.path.join(products_directory, f), S3_BUCKET_NAME, f)
         print("{} has been succesfully uploaded to {}".format(f, S3_BUCKET_NAME))
