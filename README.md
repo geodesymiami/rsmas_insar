@@ -26,7 +26,7 @@ git clone https://github.com/geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
 
 git clone https://github.com/insarlab/MintPy.git sources/MintPy ;
-git clone https://github.com/falkamelung/geodmod.git sources/geodmod;
+git clone https://github.com/geodesymiami/geodmod.git sources/geodmod;
 git clone https://github.com/bakerunavco/SSARA.git 3rdparty/SSARA
 git clone https://github.com/yunjunz/pyaps3.git 3rdparty/PyAPS/pyaps3
 git clone https://github.com/geodesymiami/MimtPy.git sources/MimtPy ;
