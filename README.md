@@ -36,16 +36,14 @@ mkdir -p sources/isceStack
 cp -r 3rdparty/isce2/contrib/stack/topsStack sources/isceStack
 cp -r 3rdparty/isce2/contrib/stack/stripmapStack sources/isceStack
 rm -rf 3rdparty/isce2
-
-
 ########  Done with critical code.  ########
+
 # Install tippecanoe for insarmaps (need gcc 4.9.1 or younger):
 module load gcc/4.9.4
 cd ../3rdparty
 git clone https://github.com/mapbox/tippecanoe.git;
 cd tippecanoe
 make install PREFIX=$PWD
-
 ```
 * Install your python environment:
 ```
@@ -58,8 +56,6 @@ wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificat
 chmod 755 $miniconda_version
 mkdir -p ../3rdparty
 ./$miniconda_version -b -p ../3rdparty/miniconda3
-
-#cp condarc ../3rdparty/miniconda3/.condarc
 ../3rdparty/miniconda3/bin/conda config --add channels conda-forge
 ../3rdparty/miniconda3/bin/conda install isce2 -c conda-forge --yes
 
@@ -71,44 +67,25 @@ mkdir -p ../3rdparty
 #../3rdparty/miniconda3/bin/pip install git+https://github.com/matplotlib/basemap.git#egg=mpl_toolkits. #needed for ARIA products
 ../3rdparty/miniconda3/bin/conda install basemap --yes
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
-
-# set the required enviroment variables
+```
+* set enviroment variables and create aux directories
 source ~/accounts/platforms_defaults.bash;
-
 source environment.bash;
-mkdir -p $SENTINEL_ORBITS;
-mkdir -p $SENTINEL_AUX;
-mkdir -p $OPERATIONS/LOGS;
-
-echo DONE WITH CRITICAL CODE ;
-echo ########################
-
-
-echo Install credentials and  code for insarmaps ingestion (requires ~/accounts);
-./install_credential_files.csh;
-
-cd ../3rdparty
-# gcc 4.9.1 or younger is required for the tippecanoe installation
-module load gcc/4.9.4
-git clone https://github.com/mapbox/tippecanoe.git;
-cd tippecanoe
-make install PREFIX=$PWD
-
-cd ../../sources;
-git clone https://github.com/geodesymiami/rsmas_tools.git ; 
-echo DONE;
+mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
+```
+* install credentials (requires ~/accounts; obtained using `git clone https://github.com/geodesymiami/accounts.git ~/accounts` );
+```
+./$RSMASINSAR_HOME/setup/install_credential_files.csh;
 
 ```
 * Create folders for aux data (afert sourcing environment):
 ```
-# set environment variables
 source ~/accounts/platforms_defaults.bash;
 source setup/environment.bash;
-
 mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 ```
 
-* Get your inputfiles and those from others:
+* Get your inputfiles and those from others (default location: /nethome/famelung/insarlab/infiles/famelung/TEMPLATES):
 
 ```
 cd $WORKDIR;
@@ -123,9 +100,7 @@ git clone https://github.com/geodesymiami/infiles_lvxr.git lvxr;
 echo DONE;
 ```
 
-If you keep your *template files in this default location (e.g. /nethome/famelung/insarlab/infiles/famelung/TEMPLATES) they will be available to others. We also would like to share other input files (geodmod, coulomb, comsol through this directory).
-
-* Clone the the python scripts plus notebooks from other group members. Put all your code into these directories and occasionaly push to github so that they will be available to others.
+* Get the python scripts plus notebooks from other group members. Put all your code into these directories and occasionaly push to github so that they will be available to others.
 
 ```
 cd $RSMASINSAR_HOME/sources;
@@ -134,7 +109,6 @@ git clone https://github.com/geodesymiami/rsmas_tools.git ;
 
 ### Orbits and aux files
 You need to specify a directory for the orbits for Sentinel-1 (`$SENTINEL_ORBITS`). You can say `setenv SENTINEL_ORBITS ./orbits`  but it would download the orbits again and again. The orbits can be downloaded into `$SENTINEL_ORBITS` using `dloadOrbits.py`. The aux files (`SENTINEL_AUX`) are IPF calibration files. They can be downloaded from: https://qc.sentinel1.eo.esa.int/aux_cal/
-
 
 ### Next steps and possible problems
 * To check your installation, run the testdata as explained [here](https://github.com/geodesymiami/rsmas_insar/wiki/Testing-the-code). You need to have the testdata in your `$TESTDATA_ISCE` directory.
