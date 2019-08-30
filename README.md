@@ -4,14 +4,19 @@ How to install RSMAS InSAR code.
 * Use bash shell [see here for tcsh.](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/readme_old_tcsh.md) 
 * Your [.bashrc](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/bashrc_contents.md) and [.bash_profile](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/bash_profile.md)
 
+* CLone the RSMAS accounts repo into your `$HOME` if you have access (for the contents see [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/accounts_info.md)).
+
+```
+git clone https://github.com/geodesymiami/accounts.git ~/accounts ;
+```
+
 * Go to the area where you want to install the code (e.g. ~/test/test1).
 
 ```
 cd ~/test/test1
 ```
 
-* Install the code using the commands below (you need a reasonable recent git version (the default on pegasus is too old, get a [local version](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install_git.md), or use an old rsmas_insar version). Installation takes about 10 minutes.  For the contents of the accounts repository see [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/accounts_info.md) if you don't have access.
-
+* Install the code using the commands below (you need a reasonable recent git version (the default on pegasus is too old, get a [local version](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install_git.md), or use an old rsmas_insar version). Installation takes about 10 minutes.  
 
 ```
 bash
@@ -32,10 +37,10 @@ cp -r 3rdparty/isce2/contrib/stack/topsStack sources/isceStack
 cp -r 3rdparty/isce2/contrib/stack/stripmapStack sources/isceStack
 rm -rf 3rdparty/isce2
 
-#cd 3rdparty; ln -s /nethome/famelung/MINICONDA3_GOOD miniconda3; cd ..; 
 cd setup;
-rm -r ../3rdparty/miniconda3
+#cd ../3rdparty; ln -s /nethome/famelung/MINICONDA3_GOOD miniconda3; cd ..; 
 
+rm -r ../3rdparty/miniconda3
 miniconda_version=Miniconda3-4.5.12-Linux-x86_64.sh
 miniconda_version=Miniconda3-4.6.14-Linux-x86_64.sh
 wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate #; if ($? != 0) exit; 
@@ -55,18 +60,20 @@ mkdir -p ../3rdparty
 #../3rdparty/miniconda3/bin/pip install git+https://github.com/matplotlib/basemap.git#egg=mpl_toolkits. #needed for ARIA products
 ../3rdparty/miniconda3/bin/conda install basemap --yes
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
-cd ..
 
-source default_isce22.bash;
+# set the required enviroment variables
+source default_platforms.bash;
+
+source environment.bash;
 mkdir -p $SENTINEL_ORBITS;
 mkdir -p $SENTINEL_AUX;
-mkdir -p ~/insarlab/OPERATIONS/LOGS
+mkdir -p $OPERATIONS/LOGS;
 
 echo DONE WITH CRITICAL CODE ;
 echo ########################
 
-echo Install credentials and  code for insarmaps ingestion;
-git clone https://github.com/geodesymiami/accounts ../accounts ;
+
+echo Install credentials and  code for insarmaps ingestion (requires ~/accounts);
 cd setup; 
 ./install_credential_files.csh;
 
