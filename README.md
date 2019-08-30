@@ -73,7 +73,7 @@ source ~/accounts/platforms_defaults.bash;
 source environment.bash;
 mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 ```
-* install credentials (requires ~/accounts; obtained using `git clone https://github.com/geodesymiami/accounts.git ~/accounts` );
+* install credentials (requires ~/accounts);
 ```
 ./$RSMASINSAR_HOME/setup/install_credential_files.csh;
 
