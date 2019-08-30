@@ -68,21 +68,12 @@ mkdir -p ../3rdparty
 ../3rdparty/miniconda3/bin/conda install basemap --yes
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
 ```
-* set enviroment variables and create aux directories
+* create aux directories (after sourcing environment), install credentials
+```
 source ~/accounts/platforms_defaults.bash;
 source environment.bash;
 mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
-```
-* install credentials (requires ~/accounts);
-```
 ./$RSMASINSAR_HOME/setup/install_credential_files.csh;
-
-```
-* Create folders for aux data (afert sourcing environment):
-```
-source ~/accounts/platforms_defaults.bash;
-source setup/environment.bash;
-mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 ```
 
 * Get your inputfiles and those from others (default location: /nethome/famelung/insarlab/infiles/famelung/TEMPLATES):
