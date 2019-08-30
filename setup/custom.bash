@@ -1,8 +1,5 @@
 # vim: set filetype=sh:
-echo "sourcing $PWD/bashfiles/custom.bash ..."
-
-###### MACHINE AND JOBSUBMISSION ####################################
-#export NOTIFICATIONEMAIL=f.amelung@miami.edu           # If different from the typical famelung@rsmas.miami.edu (USER=famelung)
+echo "sourcing $RSMASINSAR_HOME/setup/custom.bash ..."
 
 ###################################################
 #if [[ ${USER} == famelung ]] || [[  ${USER} == sxh733 ]]
