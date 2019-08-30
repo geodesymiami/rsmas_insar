@@ -40,10 +40,9 @@ rm -rf 3rdparty/isce2
 
 # Install tippecanoe for insarmaps (need gcc 4.9.1 or younger):
 module load gcc/4.9.4
-cd ../3rdparty
-git clone https://github.com/mapbox/tippecanoe.git;
-cd tippecanoe
-make install PREFIX=$PWD
+cd ..
+git clone https://github.com/mapbox/tippecanoe.git 3rdparty/tippecanoe
+make -C 3rdparty/tippecanoe install PREFIX=3rdparty/tippecanoe
 ```
 * Install your python environment:
 ```
