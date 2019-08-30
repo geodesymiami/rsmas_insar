@@ -11,15 +11,26 @@ modules_shell="bash"
 umask 002
 
 module purge
-module load share-rpms65
+#module load share-rpms65
 
-if  [ -n ${PARENTDIR} ] 
-then
-   export PYTHONPATH=${PYTHONPATH_RSMAS}
-fi
-alias s.bgood='s.btest1'
-alias s.btest1='cd  ~/test/test1/rsmas_insar; source default_isce22.bash; source bashfiles/platforms.bash; source bashfiles/alias.bash; source bashfiles/custom.bash; cd -;'
+#if  [ -n ${PARENTDIR} ] 
+#then
+#   export PYTHONPATH=${PYTHONPATH_RSMAS}
+#fi
+#[ -n ${PARENTDIR} ] && export PYTHONPATH=${PYTHONPATH_RSMAS}
+          
+# export the required variables (unless you use defaults_platforms.bash):
+# WORKDIR, SCRATCHDIR, JOBSCHEDULER, QUEUENAME
 
+export RSMASINSAR_HOME=~/test/operations/rsmas_insar
+alias s.bgood='cd $RSMASINSAR_HOME; source setup/environment.bash;'
+# In Miami:
+alias s.bgood='cd $RSMASINSAR_HOME; source ~/accounts/defaults_platforms.bash; source setup/environment.bash; source ~/accounts/alias.bash; cd -;'
+             
+# vim: set filetype=sh:
+export TERM=xterm
+export VISUAL=/bin/vi
+export CPL_ZIP_ENCODING=UTF-8
 export HISTSIZE=1000
 ```
 
