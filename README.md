@@ -37,10 +37,10 @@ cp -r 3rdparty/isce2/contrib/stack/topsStack sources/isceStack
 cp -r 3rdparty/isce2/contrib/stack/stripmapStack sources/isceStack
 rm -rf 3rdparty/isce2
 
-#cd 3rdparty; ln -s /nethome/famelung/MINICONDA3_GOOD miniconda3; cd ..; 
 cd setup;
-rm -r ../3rdparty/miniconda3
+#cd ../3rdparty; ln -s /nethome/famelung/MINICONDA3_GOOD miniconda3; cd ..; 
 
+rm -r ../3rdparty/miniconda3
 miniconda_version=Miniconda3-4.5.12-Linux-x86_64.sh
 miniconda_version=Miniconda3-4.6.14-Linux-x86_64.sh
 wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate #; if ($? != 0) exit; 
