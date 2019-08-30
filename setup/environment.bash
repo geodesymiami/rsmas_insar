@@ -2,10 +2,8 @@
 echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 #####################################
 # Setting the environment (don't modify) 
-# Required:  RSMASINSAR_HOME, WORKDIR, SCRATCHDIR
+# Required variables:  RSMASINSAR_HOME, WORKDIR, SCRATCHDIR
 
-# todo:
-# 
 ############ FOR PROCESSING  #########
 export SSARAHOME=${RSMASINSAR_HOME}/3rdparty/SSARA
 export SSARA_ASF=${RSMASINSAR_HOME}/sources/ssara_ASF
@@ -23,7 +21,6 @@ export OPERATIONS=${WORKDIR}/OPERATIONS
 [ -z ${TESTDATA_ISCE} ] && export TESTDATA_ISCE=${WORKDIR}/TESTDATA_ISCE
 [ -z ${DOWNLOADHOST} ] && export DOWNLOADHOST=local
 [ -z ${PROJECTNAME} ] && export PROJECTNAME=insarlab
-
 
 ############ FOR MODELLING  ###########
 export GEODMOD_INFILES=${WORKDIR}/GEODMOD_INFILES
