@@ -38,6 +38,7 @@ cp -r 3rdparty/isce2/contrib/stack/stripmapStack sources/isceStack
 rm -rf 3rdparty/isce2
 
 cd setup;
+
 #cd ../3rdparty; ln -s /nethome/famelung/MINICONDA3_GOOD miniconda3; cd ..; 
 
 rm -r ../3rdparty/miniconda3
@@ -62,7 +63,7 @@ mkdir -p ../3rdparty
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
 
 # set the required enviroment variables
-source default_platforms.bash;
+source ~/accounts/platforms_defaults.bash;
 
 source environment.bash;
 mkdir -p $SENTINEL_ORBITS;
