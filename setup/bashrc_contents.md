@@ -2,23 +2,25 @@
 
 ```
 # .bashrc
+
+# Source global definitions
 if [ -f /etc/bashrc ]; then
     . /etc/bashrc
 fi
+
+# User specific aliases and functions
 shopt -s expand_aliases
 
 modules_shell="bash"
 umask 002
 
 module purge
-module load share-rpms65
 
-if  [ -n ${PARENTDIR} ] 
-then
-   export PYTHONPATH=${PYTHONPATH_RSMAS}
-fi
-alias s.bgood='s.btest1'
-alias s.btest1='cd  ~/test/test1/rsmas_insar; source default_isce22.bash; source bashfiles/platforms.bash; source bashfiles/alias.bash; source bashfiles/custom.bash; cd -;'
+alias s.bgood='s.bnew'
+
+export RSMASINSAR_HOME=~/test/test_operations/rsmas_insar
+alias s.bnew='cd $RSMASINSAR_HOME; source ~/accounts/platforms_defaults.bash; source setup/environment.bash; source ~/accounts/alias.bash; source ~/accounts/login_alias.bash; cd -;'
+#alias s.bnew='cd $RSMASINSAR_HOME; source setup/environment.bash;'
 
 export HISTSIZE=1000
 ```
