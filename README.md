@@ -75,7 +75,6 @@ echo ########################
 
 
 echo Install credentials and  code for insarmaps ingestion (requires ~/accounts);
-cd setup; 
 ./install_credential_files.csh;
 
 cd ../3rdparty
