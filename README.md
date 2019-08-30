@@ -37,6 +37,7 @@ cp -r 3rdparty/isce2/contrib/stack/topsStack sources/isceStack
 cp -r 3rdparty/isce2/contrib/stack/stripmapStack sources/isceStack
 rm -rf 3rdparty/isce2
 
+
 ########  Done with critical code.  ########
 # Install tippecanoe for insarmaps (need gcc 4.9.1 or younger):
 module load gcc/4.9.4
@@ -70,6 +71,33 @@ mkdir -p ../3rdparty
 #../3rdparty/miniconda3/bin/pip install git+https://github.com/matplotlib/basemap.git#egg=mpl_toolkits. #needed for ARIA products
 ../3rdparty/miniconda3/bin/conda install basemap --yes
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
+
+# set the required enviroment variables
+source ~/accounts/platforms_defaults.bash;
+
+source environment.bash;
+mkdir -p $SENTINEL_ORBITS;
+mkdir -p $SENTINEL_AUX;
+mkdir -p $OPERATIONS/LOGS;
+
+echo DONE WITH CRITICAL CODE ;
+echo ########################
+
+
+echo Install credentials and  code for insarmaps ingestion (requires ~/accounts);
+./install_credential_files.csh;
+
+cd ../3rdparty
+# gcc 4.9.1 or younger is required for the tippecanoe installation
+module load gcc/4.9.4
+git clone https://github.com/mapbox/tippecanoe.git;
+cd tippecanoe
+make install PREFIX=$PWD
+
+cd ../../sources;
+git clone https://github.com/geodesymiami/rsmas_tools.git ; 
+echo DONE;
+
 ```
 * Create folders for aux data (afert sourcing environment):
 ```

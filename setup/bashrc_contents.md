@@ -22,7 +22,6 @@ export RSMASINSAR_HOME=~/test/test_operations/rsmas_insar
 alias s.bnew='cd $RSMASINSAR_HOME; source ~/accounts/platforms_defaults.bash; source setup/environment.bash; source ~/accounts/alias.bash; source ~/accounts/login_alias.bash; cd -;'
 #alias s.bnew='cd $RSMASINSAR_HOME; source setup/environment.bash;'
 
-export HISTSIZE=1000
 ```
 
 (The modules commands are only required for the pegasus system at RSMAS. The umask command gives others access to your files: everybody should be able to read/write in your scratch directory whereas nobody should be able to write in your home directory, but it is unclear whether this always works. s.cgood allows you to switch between different versions). 
