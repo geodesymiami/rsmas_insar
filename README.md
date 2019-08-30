@@ -76,7 +76,7 @@ mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 ./$RSMASINSAR_HOME/setup/install_credential_files.csh;
 ```
 
-* Get your an others inputfiles (default: ~/insarlab/infiles/famelung/TEMPLATES):
+* Get your an others inputfiles (default location: ~/insarlab/infiles/famelung/TEMPLATES) (optional):
 
 ```
 cd $WORKDIR;
@@ -91,7 +91,7 @@ git clone https://github.com/geodesymiami/infiles_lvxr.git lvxr;
 echo DONE;
 ```
 
-* Get the python scripts plus notebooks from other group members. Put all your code into these directories and occasionaly push to github so that they will be available to others.
+* Get the python scripts plus notebooks from other group members (all your code should be here) (optional) 
 
 ```
 cd $RSMASINSAR_HOME/sources;
