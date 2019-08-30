@@ -37,7 +37,8 @@ cp -r 3rdparty/isce2/contrib/stack/topsStack sources/isceStack
 cp -r 3rdparty/isce2/contrib/stack/stripmapStack sources/isceStack
 rm -rf 3rdparty/isce2
 
-# Done with critical code. Need gcc 4.9.1 or younger for tippecanoe (for insarmaps)
+########  Done with critical code.  ########
+# Install tippecanoe for insarmaps (need gcc 4.9.1 or younger):
 module load gcc/4.9.4
 cd ../3rdparty
 git clone https://github.com/mapbox/tippecanoe.git;
