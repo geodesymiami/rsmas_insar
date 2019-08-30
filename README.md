@@ -71,7 +71,7 @@ mkdir -p ../3rdparty
 ../3rdparty/miniconda3/bin/conda install basemap --yes
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
 ```
-* Create folders for aux data (afert sourcing environment:
+* Create folders for aux data (afert sourcing environment):
 ```
 # set environment variables
 source ~/accounts/platforms_defaults.bash;
@@ -80,7 +80,7 @@ source setup/environment.bash;
 mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 ```
 
-* Get your and other's infiles (optional):
+* Get your inputfiles and those from others:
 
 ```
 cd $WORKDIR;
@@ -97,7 +97,7 @@ echo DONE;
 
 If you keep your *template files in this default location (e.g. /nethome/famelung/insarlab/infiles/famelung/TEMPLATES) they will be available to others. We also would like to share other input files (geodmod, coulomb, comsol through this directory).
 
-Clone the the python scripts plus notebooks from other group members. Put all your code into these directories and occasionaly push to github so that they will be available to others.
+* Clone the the python scripts plus notebooks from other group members. Put all your code into these directories and occasionaly push to github so that they will be available to others.
 
 ```
 cd $RSMASINSAR_HOME/sources;
