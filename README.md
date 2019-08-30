@@ -55,12 +55,14 @@ mkdir -p ../3rdparty
 #../3rdparty/miniconda3/bin/pip install git+https://github.com/matplotlib/basemap.git#egg=mpl_toolkits. #needed for ARIA products
 ../3rdparty/miniconda3/bin/conda install basemap --yes
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
-cd ..
 
-source default_isce22.bash;
+# set the required enviroment variables
+source default_platforms.bash;
+
+source environment.bash;
 mkdir -p $SENTINEL_ORBITS;
 mkdir -p $SENTINEL_AUX;
-mkdir -p ~/insarlab/OPERATIONS/LOGS
+mkdir -p $OPERATIONS/LOGS;
 
 echo DONE WITH CRITICAL CODE ;
 echo ########################
