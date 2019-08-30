@@ -76,7 +76,7 @@ mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 ./$RSMASINSAR_HOME/setup/install_credential_files.csh;
 ```
 
-* Get your inputfiles and those from others (default location: /nethome/famelung/insarlab/infiles/famelung/TEMPLATES):
+* Get your an others inputfiles (default: ~/insarlab/infiles/famelung/TEMPLATES):
 
 ```
 cd $WORKDIR;
