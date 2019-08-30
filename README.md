@@ -37,8 +37,22 @@ cp -r 3rdparty/isce2/contrib/stack/topsStack sources/isceStack
 cp -r 3rdparty/isce2/contrib/stack/stripmapStack sources/isceStack
 rm -rf 3rdparty/isce2
 
-cd setup;
+# set enviroment variables
+source ~/accounts/platforms_defaults.bash;
+source setup/environment.bash;
 
+mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
+
+# Done with critical code. Need gcc 4.9.1 or younger for tippecanoe (for insarmaps)
+module load gcc/4.9.4
+cd ../3rdparty
+git clone https://github.com/mapbox/tippecanoe.git;
+cd tippecanoe
+make install PREFIX=$PWD
+
+```
+* Install your python environment:
+```
 #cd ../3rdparty; ln -s /nethome/famelung/MINICONDA3_GOOD miniconda3; cd ..; 
 
 rm -r ../3rdparty/miniconda3
@@ -61,35 +75,14 @@ mkdir -p ../3rdparty
 #../3rdparty/miniconda3/bin/pip install git+https://github.com/matplotlib/basemap.git#egg=mpl_toolkits. #needed for ARIA products
 ../3rdparty/miniconda3/bin/conda install basemap --yes
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
-
-# set the required enviroment variables
-source ~/accounts/platforms_defaults.bash;
-
-source environment.bash;
-mkdir -p $SENTINEL_ORBITS;
-mkdir -p $SENTINEL_AUX;
-mkdir -p $OPERATIONS/LOGS;
-
-echo DONE WITH CRITICAL CODE ;
-echo ########################
-
-
-echo Install credentials and  code for insarmaps ingestion (requires ~/accounts);
-./install_credential_files.csh;
-
-cd ../3rdparty
-# gcc 4.9.1 or younger is required for the tippecanoe installation
-module load gcc/4.9.4
-git clone https://github.com/mapbox/tippecanoe.git;
-cd tippecanoe
-make install PREFIX=$PWD
-
-cd ../../sources;
-git clone https://github.com/geodesymiami/rsmas_tools.git ; 
-echo DONE;
 ```
 
 The rsmas_tools clone gives you the python scripts plus notebooks from other group members. Put all your code into these directories and occasionaly push to github so that they will be available to others. We also share all other input files through github:
+
+```
+cd $RSMASINSAR_HOME/sources;
+git clone https://github.com/geodesymiami/rsmas_tools.git ; 
+```
 
 * The infiles is optional:
 
