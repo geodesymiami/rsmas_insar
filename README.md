@@ -40,16 +40,18 @@ rm -rf 3rdparty/isce2
 
 # Install tippecanoe for insarmaps (need gcc 4.9.1 or younger):
 module load gcc/4.9.4
-cd ..
 git clone https://github.com/mapbox/tippecanoe.git 3rdparty/tippecanoe
 make -C 3rdparty/tippecanoe install PREFIX=3rdparty/tippecanoe
 ```
 * Install your python environment:
 ```
+cd setup
 #cd ../3rdparty; ln -s /nethome/famelung/MINICONDA3_GOOD miniconda3; cd ..; 
 
 rm -r ../3rdparty/miniconda3
+miniconda_version=Miniconda3-4.5.12-MacOSX-x86_64.sh
 miniconda_version=Miniconda3-4.5.12-Linux-x86_64.sh
+miniconda_version=Miniconda3-4.6.14-MacOSX-x86_64.sh
 miniconda_version=Miniconda3-4.6.14-Linux-x86_64.sh
 wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate #; if ($? != 0) exit; 
 chmod 755 $miniconda_version
@@ -63,7 +65,7 @@ mkdir -p ../3rdparty
 ../3rdparty/miniconda3/bin/pip install --upgrade pip
 ../3rdparty/miniconda3/bin/pip install opencv-python
 ../3rdparty/miniconda3/bin/pip install geocoder
-#../3rdparty/miniconda3/bin/pip install git+https://github.com/matplotlib/basemap.git#egg=mpl_toolkits. #needed for ARIA products
+#../3rdparty/miniconda3/bin/pip install git+https://github.com/matplotlib/basemap.git#egg=mpl_toolkits #needed for ARIA products
 ../3rdparty/miniconda3/bin/conda install basemap --yes
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
 ```
