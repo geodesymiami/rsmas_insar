@@ -3,9 +3,10 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 #####################################
 # Setting the environment (don't modify) 
 # Required:  RSMASINSAR_HOME, WORKDIR, SCRATCHDIR
+[ -z $RSMASINSAR_HOME ] && echo ERROR: RSMASINSAR_HOME is required variable && return
+[ -z $WORKDIR ] && echo ERROR: WORKDIR is required variable && return
+[ -z $SCRATCHDIR ] && echo ERROR: SCRATCHDIR is required variable && return
 
-# todo:
-# 
 ############ FOR PROCESSING  #########
 export SSARAHOME=${RSMASINSAR_HOME}/3rdparty/SSARA
 export SSARA_ASF=${RSMASINSAR_HOME}/sources/ssara_ASF
