@@ -3,7 +3,7 @@ How to install RSMAS InSAR code.
 
 * Set the required environment variables (`$RSMASINSAR_HOME, $JOBSCHEDULER, $QUEUENAME, $SCRATCHDIR`) in your [.bashrc](https://github.com/geodesymiami/rsmas_insar/blob/master/docs/bashrc_contents.md) and [.bash_profile](https://github.com/geodesymiami/rsmas_insar/blob/master/docs/bash_profile.md). Several variables are customizable, with the defaults given [here](https://github.com/geodesymiami/rsmas_insar/blob/master/docs/custom_variables.md).
 
-* CLone the RSMAS accounts repo into your `$HOME` if you have access (for the contents see [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/accounts_info.md)).
+* Create an ~/accounts directory with your data download credentials (for contents see [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/accounts_info.md)). If you have access to the RSMAS accounts repo clone it into your `$HOME` directtory.
 
 ```
 git clone https://github.com/geodesymiami/accounts.git ~/accounts ;
