@@ -10,7 +10,7 @@ The main Developers are Sara Mirzaee and Falk Amelung with contributions of many
 
 ### 2. Running MinSAR ###
 
-MinSAR downloads a stack of SLCs, processes the interferograms and creates displacement timeseries products.
+MinSAR downloads a stack of SLC images, processes the interferograms and creates displacement timeseries products.
 
 ```
 process_rsmas.py   $SAMPLESDIR/GalapagosSenDT128.template   #run with default and custom templates    
@@ -18,5 +18,5 @@ process_rsmas.py   $SAMPLESDIR/GalapagosSenDT128.template   #run with default an
 # Run with --start/stop/dostep options
 ```
 
-#### [Example](.) for Galápagos with Sentinel-1 data ####
+#### [Example] for Galápagos with Sentinel-1 data ####
 `
