@@ -3,7 +3,6 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 #####################################
 # Setting the environment (don't modify) 
 # check for required variables 
-# should not make this chnge
 [ -z $RSMASINSAR_HOME ] && echo ERROR: RSMASINSAR_HOME is required variable && return
 [ -z $JOBSCHEDULER ] && echo ERROR: JOBSCHEDULER is required variable && return
 [ -z $QUEUENAME ] && echo ERROR: QUEUENAME is required variable && return
