@@ -47,7 +47,7 @@ make -C 3rdparty/tippecanoe install PREFIX=3rdparty/tippecanoe
 ```
 cd setup
 #cd ../3rdparty; ln -s /nethome/famelung/MINICONDA3_GOOD miniconda3; cd ..; 
-
+#../3rdparty/miniconda3/bin/conda env create -f ../docs/conda_env.yml; #works but creates minsar environment, not base
 rm -r ../3rdparty/miniconda3
 miniconda_version=Miniconda3-4.5.12-MacOSX-x86_64.sh
 miniconda_version=Miniconda3-4.5.12-Linux-x86_64.sh
@@ -69,7 +69,7 @@ mkdir -p ../3rdparty
 ../3rdparty/miniconda3/bin/conda install basemap --yes
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
 ```
-* create aux directories (after sourcing environment), install credentials
+* source environment and create aux directories, install credential files:
 ```
 source ~/accounts/platforms_defaults.bash;
 source environment.bash;
