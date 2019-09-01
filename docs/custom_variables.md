@@ -1,4 +1,4 @@
-These are the default values of the customizable environment variables:
+Defaults of customizable environment variables:
 ```
 export WORKDIR=~/insarlab
 export USER_PREFERRED=$USER
