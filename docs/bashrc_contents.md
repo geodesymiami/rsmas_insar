@@ -1,6 +1,6 @@
 .bashrc file contents:
 
-```
+```bash
 # .bashrc
 
 # Source global definitions
