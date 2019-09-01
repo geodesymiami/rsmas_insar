@@ -1,22 +1,21 @@
 # rsmas_insar
 How to install RSMAS InSAR code.
 
-* Use bash shell [see here for tcsh.](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/readme_old_tcsh.md) 
-* Your [.bashrc](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/bashrc_contents.md) and [.bash_profile](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/bash_profile.md)
+* Set the required environment variables (`$RSMASINSAR_HOME, $JOBSCHEDULER, $QUEUENAME, $SCRATCHDIR`) in your [.bashrc](https://github.com/geodesymiami/rsmas_insar/blob/master/docs/bashrc_contents.md) and [.bash_profile](https://github.com/geodesymiami/rsmas_insar/blob/master/docs/bash_profile.md). Several variables are customizable, with the defaults given [here](https://github.com/geodesymiami/rsmas_insar/blob/master/docs/custom_variables.md).
 
-* CLone the RSMAS accounts repo into your `$HOME` if you have access (for the contents see [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/accounts_info.md)).
+* Create an ~/accounts directory with your data download credentials (for contents see [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/accounts_info.md)). If you have access to the RSMAS accounts repo clone it into your `$HOME` directtory.
 
 ```
 git clone https://github.com/geodesymiami/accounts.git ~/accounts ;
 ```
 
-* Go to the area where you want to install the code (e.g. ~/test/test1).
+* Go to the area where you want to install the code:
 
 ```
 cd ~/test/test1
 ```
 
-* Install the code using the commands below (you need a reasonable recent git version (the default on pegasus is too old, get a [local version](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install_git.md), or use an old rsmas_insar version). Installation takes about 10 minutes.  
+* Install the code using the commands below (you need a reasonable recent git version (the default on pegasus is too old, get a [local version](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install_git.md), or use an old rsmas_insar version). 
 
 ```
 bash
@@ -36,20 +35,27 @@ mkdir -p sources/isceStack
 cp -r 3rdparty/isce2/contrib/stack/topsStack sources/isceStack
 cp -r 3rdparty/isce2/contrib/stack/stripmapStack sources/isceStack
 rm -rf 3rdparty/isce2
+########  Done with critical code.  ########
 
-cd setup;
-
+# Install tippecanoe for insarmaps (need gcc 4.9.1 or younger):
+module load gcc/4.9.4
+git clone https://github.com/mapbox/tippecanoe.git 3rdparty/tippecanoe
+make -C 3rdparty/tippecanoe install PREFIX=3rdparty/tippecanoe
+```
+* Install your python environment:
+```
+cd setup
 #cd ../3rdparty; ln -s /nethome/famelung/MINICONDA3_GOOD miniconda3; cd ..; 
 
 rm -r ../3rdparty/miniconda3
+miniconda_version=Miniconda3-4.5.12-MacOSX-x86_64.sh
 miniconda_version=Miniconda3-4.5.12-Linux-x86_64.sh
+miniconda_version=Miniconda3-4.6.14-MacOSX-x86_64.sh
 miniconda_version=Miniconda3-4.6.14-Linux-x86_64.sh
 wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate #; if ($? != 0) exit; 
 chmod 755 $miniconda_version
 mkdir -p ../3rdparty
 ./$miniconda_version -b -p ../3rdparty/miniconda3
-
-#cp condarc ../3rdparty/miniconda3/.condarc
 ../3rdparty/miniconda3/bin/conda config --add channels conda-forge
 ../3rdparty/miniconda3/bin/conda install isce2 -c conda-forge --yes
 
@@ -58,40 +64,19 @@ mkdir -p ../3rdparty
 ../3rdparty/miniconda3/bin/pip install --upgrade pip
 ../3rdparty/miniconda3/bin/pip install opencv-python
 ../3rdparty/miniconda3/bin/pip install geocoder
-#../3rdparty/miniconda3/bin/pip install git+https://github.com/matplotlib/basemap.git#egg=mpl_toolkits. #needed for ARIA products
+#../3rdparty/miniconda3/bin/pip install git+https://github.com/matplotlib/basemap.git#egg=mpl_toolkits #needed for ARIA products
 ../3rdparty/miniconda3/bin/conda install basemap --yes
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
-
-# set the required enviroment variables
+```
+* create aux directories (after sourcing environment), install credentials
+```
 source ~/accounts/platforms_defaults.bash;
-
 source environment.bash;
-mkdir -p $SENTINEL_ORBITS;
-mkdir -p $SENTINEL_AUX;
-mkdir -p $OPERATIONS/LOGS;
-
-echo DONE WITH CRITICAL CODE ;
-echo ########################
-
-
-echo Install credentials and  code for insarmaps ingestion (requires ~/accounts);
-./install_credential_files.csh;
-
-cd ../3rdparty
-# gcc 4.9.1 or younger is required for the tippecanoe installation
-module load gcc/4.9.4
-git clone https://github.com/mapbox/tippecanoe.git;
-cd tippecanoe
-make install PREFIX=$PWD
-
-cd ../../sources;
-git clone https://github.com/geodesymiami/rsmas_tools.git ; 
-echo DONE;
+mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
+./$RSMASINSAR_HOME/setup/install_credential_files.csh;
 ```
 
-The rsmas_tools clone gives you the python scripts plus notebooks from other group members. Put all your code into these directories and occasionaly push to github so that they will be available to others. We also share all other input files through github:
-
-* The infiles is optional:
+* Get your an others inputfiles (default location: ~/insarlab/infiles/famelung/TEMPLATES) (optional):
 
 ```
 cd $WORKDIR;
@@ -106,11 +91,15 @@ git clone https://github.com/geodesymiami/infiles_lvxr.git lvxr;
 echo DONE;
 ```
 
-If you keep your *template files in this default location (e.g. /nethome/famelung/insarlab/infiles/famelung/TEMPLATES) they will be available to others. We also would like to share other input files (geodmod, coulomb, comsol through this directory).
+* Get the python scripts plus notebooks from other group members (all your code should be here) (optional) 
+
+```
+cd $RSMASINSAR_HOME/sources;
+git clone https://github.com/geodesymiami/rsmas_tools.git ; 
+```
 
 ### Orbits and aux files
 You need to specify a directory for the orbits for Sentinel-1 (`$SENTINEL_ORBITS`). You can say `setenv SENTINEL_ORBITS ./orbits`  but it would download the orbits again and again. The orbits can be downloaded into `$SENTINEL_ORBITS` using `dloadOrbits.py`. The aux files (`SENTINEL_AUX`) are IPF calibration files. They can be downloaded from: https://qc.sentinel1.eo.esa.int/aux_cal/
-
 
 ### Next steps and possible problems
 * To check your installation, run the testdata as explained [here](https://github.com/geodesymiami/rsmas_insar/wiki/Testing-the-code). You need to have the testdata in your `$TESTDATA_ISCE` directory.

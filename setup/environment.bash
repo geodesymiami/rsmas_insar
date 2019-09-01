@@ -8,7 +8,7 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 [ -z $QUEUENAME ] && echo ERROR: QUEUENAME is required variable && return
 [ -z $SCRATCHDIR ] && echo ERROR: SCRATCHDIR is required variable && return
 
-#  set customizable variables
+#  set customizable variables to defaults if not given
 [ -z ${WORKDIR} ] && export WORKDIR=~/insarlab
 [ -z ${USER_PREFERRED} ] && export USER_PREFERRED=$USER
 [ -z ${DOWNLOADHOST} ] && export DOWNLOADHOST=local
