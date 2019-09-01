@@ -1,4 +1,4 @@
-# rsmas_insar
+# Installation guide
 How to install RSMAS InSAR code.
 
 * Set the required environment variables (`$RSMASINSAR_HOME, $JOBSCHEDULER, $QUEUENAME, $SCRATCHDIR`) in your [.bashrc](https://github.com/falkamelung/rsmas_insar/blob/master/docs/bashrc_contents.md) 
