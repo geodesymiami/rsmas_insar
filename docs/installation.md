@@ -69,7 +69,7 @@ mkdir -p ../3rdparty
 ../3rdparty/miniconda3/bin/conda install basemap --yes
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
 ```
-* source environment and create aux directories, install credential files:
+* Source the environment and create aux directories. Install credential files for data download:
 ```
 source ~/accounts/platforms_defaults.bash;
 source environment.bash;
