@@ -2,7 +2,7 @@
 How to install RSMAS InSAR code.
 
 * Set the required environment variables (`$RSMASINSAR_HOME, $JOBSCHEDULER, $QUEUENAME, $SCRATCHDIR`) in your [.bashrc](https://github.com/falkamelung/rsmas_insar/blob/master/docs/bashrc_contents.md) 
-and [.bash_profile](https://github.com/falkamelung/rsmas_insar/blob/master/docs/bash_profile.md). Several variables are customizable, with the defaults given [here](https://github.com/falkamelung/rsmas_insar/blob/master/docs/custom_variables.md).
+and [.bash_profile](https://github.com/falkamelung/rsmas_insar/blob/master/docs/bash_profile.md). There are several other customizable environment variables, defaults are given [here](https://github.com/falkamelung/rsmas_insar/blob/master/docs/custom_variables.md).
 
 * Create an ~/accounts directory with your data download credentials (for contents see [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/accounts_info.md)). If you have access to the RSMAS accounts repo clone it into your `$HOME` directtory.
 
