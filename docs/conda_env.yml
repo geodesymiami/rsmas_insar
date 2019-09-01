@@ -10,15 +10,33 @@ channels:
 dependencies:
   - python>=3.6
   - isce2
-  - cdsapi
-  - git
-  - psycopg2
-  - pycurl
-  - natsort
+  - basemap
   - bokeh
   - boto3
   - botocore
-  - basemap
+  - cdsapi
+  - git
+  - natsort
+  - psycopg2
+  - pycurl
+#### from ../sources/MintPy/docs/conda_env.yml  except basemap
+  - dask>=1.0,<2.0
+  - dask-jobqueue>=0.3,<1.0
+  - ecCodes
+  - h5py
+  - lxml
+  - matplotlib
+  - netcdf4
+  - numpy
+  - openmp
+  - pip
+  - pygrib
+  - pyhdf
+  - pykdtree
+  - pyproj
+  - pyresample
+  - scikit-image
+  - scipy
   - pip:
     - opencv-python
     - geocoder
