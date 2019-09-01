@@ -1,5 +1,5 @@
 Defaults of customizable environment variables:
-```bash
+```
 export WORKDIR=~/insarlab
 export USER_PREFERRED=$USER
 export DOWNLOADHOST=local
