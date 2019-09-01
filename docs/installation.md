@@ -2,7 +2,7 @@
 How to install RSMAS InSAR code.
 
 * Set the required environment variables (`$RSMASINSAR_HOME, $JOBSCHEDULER, $QUEUENAME, $SCRATCHDIR`) in your [.bashrc](https://github.com/falkamelung/rsmas_insar/blob/master/docs/bashrc_contents.md) 
-and [.bash_profile](https://github.com/geodesymiami/rsmas_insar/blob/master/docs/bash_profile.md). There are several other customizable environment variables. The defaults are given [here](https://github.com/geodesymiami/rsmas_insar/blob/master/docs/custom_variables.md). You may want to set your variables in an external file as we do in Miami (see [example](https://gist.github.com/falkamelung/f1281c38e301a3296ab0483f946cac4b)).
+and [.bash_profile](./bash_profile.md). There are several other customizable environment variables. The defaults are given [here](./docs/custom_variables.md). You may want to set your variables in an external file as we do in Miami (see [example](https://gist.github.com/falkamelung/f1281c38e301a3296ab0483f946cac4b)).
 
 * Create an ~/accounts directory with your data download credentials (for contents see [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/accounts_info.md)). If you have access to the RSMAS accounts repo clone it into your `$HOME` directtory.
 
@@ -16,7 +16,7 @@ git clone https://github.com/geodesymiami/accounts.git ~/accounts ;
 cd ~/test/test1
 ```
 
-* Install the code using the commands below (you need a reasonable recent git version (the default on pegasus is too old, get a [local version](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install_git.md), or use an old rsmas_insar version). 
+* Install the code using the commands below (you need a reasonable recent git version (the default on pegasus is too old, get a [local version](./install_git.md), or use an old rsmas_insar version). 
 
 ```
 bash
