@@ -28,4 +28,4 @@ alias s.bnew='cd $RSMASINSAR_HOME; source ~/accounts/platforms_defaults.bash; so
 
 ```
 
-(The `module` commands are only required for the pegasus system at RSMAS. The `umask` command gives others access to your files: everybody should be able to read/write in your scratch directory whereas nobody should be able to write in your home directory, but it is unclear whether this always works. `s.bgood` is required if your `DOWNLOADHOST` is not local (used for remote ssh)). 
+(The `module` commands are only required for the pegasus system at RSMAS. The `umask` command gives others access to your files: everybody should be able to read/write in your scratch directory whereas nobody should be able to write in your home directory, but it is unclear whether this always works. `s.bgood` is required if your `DOWNLOADHOST` is not local (it is used for login using `ssh`)). 
