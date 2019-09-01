@@ -1,5 +1,4 @@
-## RSMAS InSAR
-RSMAS InSAR  code
+### RSMAS InSAR code
 The Miami INterferometric SAR software  (MinSAR) is an open-source package for Interferometric Synthetic Aperture Radar time series analysis. It reads the stack of interferograms (coregistered and unwrapped) in [ISCE](https://github.com/isce-framework/isce2), GAMMA, [ARIA](https://github.com/aria-tools/ARIA-tools), [SNAP](http://step.esa.int/) or ROI_PAC format, and produces three dimensional (2D in space and 1D in time) ground surface displacement. It includes a routine time series analysis (`smallbaselineApp.py`) and some independent toolbox.
 
 ### 1. [Installation](./installation.md) ###
