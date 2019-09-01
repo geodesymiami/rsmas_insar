@@ -2,7 +2,21 @@
 echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 #####################################
 # Setting the environment (don't modify) 
-# Required variables:  RSMASINSAR_HOME, WORKDIR, SCRATCHDIR
+# check for required variables 
+[ -z $RSMASINSAR_HOME ] && echo ERROR: RSMASINSAR_HOME is required variable && return
+[ -z $JOBSCHEDULER ] && echo ERROR: JOBSCHEDULER is required variable && return
+[ -z $QUEUENAME ] && echo ERROR: QUEUENAME is required variable && return
+[ -z $SCRATCHDIR ] && echo ERROR: SCRATCHDIR is required variable && return
+
+#  set customizable variables to defaults if not given
+[ -z ${WORKDIR} ] && export WORKDIR=~/insarlab
+[ -z ${USER_PREFERRED} ] && export USER_PREFERRED=$USER
+[ -z ${DOWNLOADHOST} ] && export DOWNLOADHOST=local
+[ -z ${PROJECTNAME} ] && export PROJECTNAME=insarlab
+[ -z ${SENTINEL_ORBITS} ] && export SENTINEL_ORBITS=${WORKDIR}/S1orbits
+[ -z ${SENTINEL_AUX} ] && export SENTINEL_AUX=${WORKDIR}/S1aux
+[ -z ${WEATHER_DIR} ] && export WEATHER_DIR=${WORKDIR}/WEATHER
+[ -z ${TESTDATA_ISCE} ] && export TESTDATA_ISCE=${WORKDIR}/TESTDATA_ISCE
 
 ############ FOR PROCESSING  #########
 export SSARAHOME=${RSMASINSAR_HOME}/3rdparty/SSARA
@@ -13,14 +27,6 @@ export MINTPY_HOME=${RSMASINSAR_HOME}/sources/MintPy
 export MINOPY_HOME=${RSMASINSAR_HOME}/sources/minopy
 export JOBDIR=${WORKDIR}/JOBS
 export OPERATIONS=${WORKDIR}/OPERATIONS
-
-#  possibly customized variables:
-[ -z ${SENTINEL_ORBITS} ] && export SENTINEL_ORBITS=${WORKDIR}/S1orbits
-[ -z ${SENTINEL_AUX} ] && export SENTINEL_AUX=${WORKDIR}/S1aux
-[ -z ${WEATHER_DIR} ] && export WEATHER_DIR=${WORKDIR}/WEATHER
-[ -z ${TESTDATA_ISCE} ] && export TESTDATA_ISCE=${WORKDIR}/TESTDATA_ISCE
-[ -z ${DOWNLOADHOST} ] && export DOWNLOADHOST=local
-[ -z ${PROJECTNAME} ] && export PROJECTNAME=insarlab
 
 ############ FOR MODELLING  ###########
 export GEODMOD_INFILES=${WORKDIR}/GEODMOD_INFILES
