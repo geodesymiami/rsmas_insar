@@ -1,6 +1,6 @@
 .bashrc file contents:
 
-```
+```bash
 # .bashrc
 
 # Source global definitions
@@ -12,16 +12,20 @@ fi
 shopt -s expand_aliases
 
 modules_shell="bash"
+[ -n module ] && module purge
 umask 002
-
-module purge
 
 alias s.bgood='s.bnew'
 
-export RSMASINSAR_HOME=~/test/test_operations/rsmas_insar
+export RSMASINSAR_HOME=~/test/development/rsmas_insar
+
+export JOBSCHEDULER=LSF
+export QUEUENAME=general
+export SCRATCHDIR=/projects/scratch/insarlab/${USER}
+
+alias s.bnew='cd $RSMASINSAR_HOME; source setup/environment.bash;'  
 alias s.bnew='cd $RSMASINSAR_HOME; source ~/accounts/platforms_defaults.bash; source setup/environment.bash; source ~/accounts/alias.bash; source ~/accounts/login_alias.bash; cd -;'
-#alias s.bnew='cd $RSMASINSAR_HOME; source setup/environment.bash;'
 
 ```
 
-(The modules commands are only required for the pegasus system at RSMAS. The umask command gives others access to your files: everybody should be able to read/write in your scratch directory whereas nobody should be able to write in your home directory, but it is unclear whether this always works. s.cgood allows you to switch between different versions). 
+(The `module` commands are only required for the pegasus system at RSMAS. The `umask` command gives others access to your files: everybody should be able to read/write in your scratch directory whereas nobody should be able to write in your home directory, but it is unclear whether this always works. `s.bgood` is required if your `DOWNLOADHOST` is not local (it is used for login using `ssh`)). 
