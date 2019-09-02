@@ -61,7 +61,6 @@ mkdir -p ../3rdparty
 ../3rdparty/miniconda3/bin/conda install isce2 -c conda-forge --yes
 
 ../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MintPy/docs/conda.txt
-../3rdparty/miniconda3/bin/conda install --yes --file conda.txt
 ../3rdparty/miniconda3/bin/pip install --upgrade pip
 ../3rdparty/miniconda3/bin/pip install opencv-python
 ../3rdparty/miniconda3/bin/pip install geocoder
