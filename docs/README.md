@@ -16,21 +16,15 @@ The main Developers are Sara Mirzaee and Falk Amelung with contributions of many
 MinSAR downloads a stack of SLC images, downloads a DEM, processes the interferograms and creates displacement timeseries products. Optional steps are the ingestion into our [dataportal](https//:insarmaps.miami.edu) and the generation of image products that will soon be made available from another data portal.
 
 The processing is controlled by a template file which offers many different options for each processing step [see example](..samples/GalapagosSenDT128.template). The processing is executed using `process_rsmas.py` with the processing steps specified on the command line:
-
+```
 Steps: 
-
 download:   downloading data
-
 dem:        downloading DEM
-
 ifgrams:    processing interferograms starting with unpacking of the images
-
 timeseries: time series analysis based on smallbaseline method or single master interferograms (MintPy or MiNoPy)
-
 insarmaps:  uploading displacement products to insarmaps website
-
 image_products: generating and uploading image products to hazards website (amplitudes, interferograms, coherences)
-
+```
 Processing can be started at a given step using the `--start` option. The `--step`  option allows to execute only one processing step. 
 
 Example: 
@@ -47,5 +41,30 @@ Example:
 ```
 In order to use either `--start` or `--step`, it is necessary that the previous step was completed.
 
-#### [Example] for Galápagos with Sentinel-1 data ####
-`
+### 4. Example for Galápagos with Sentinel-1 data ####
+The individual processing steps can be run stepwise using
+```bash
+process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --step  download
+process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --step  dem
+process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --step  ifgrams
+process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --step  timeseries
+process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --step  insarmaps
+process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --step  image_products
+```
+
+This runs these scripts:
+```
+download_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template
+dem_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template
+create_runfiles.py $SAMPLESDIR/GalapagosSenDT128.template
+execute_runfiles.py $SAMPLESDIR/GalapagosSenDT128.template
+smallbaseline_wrapper.py $SAMPLESDIR/GalapagosSenDT128.template
+minopy_wrapper.py $SAMPLESDIR/GalapagosSenDT128.template
+ingest_insarmaps.py $SAMPLESDIR/GalapagosSenDT128.template
+export_ortho_geo.py $SAMPLESDIR/GalapagosSenDT128.template
+````
+### 5. --step ifgram:  InSAR processinng
+```
+execute_run_files.py ....
+```
+T
