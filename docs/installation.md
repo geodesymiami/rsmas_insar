@@ -61,12 +61,11 @@ mkdir -p ../3rdparty
 ../3rdparty/miniconda3/bin/conda install isce2 -c conda-forge --yes
 
 ../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MintPy/docs/conda.txt
-../3rdparty/miniconda3/bin/conda install --yes --file conda.txt
 ../3rdparty/miniconda3/bin/pip install --upgrade pip
 ../3rdparty/miniconda3/bin/pip install opencv-python
 ../3rdparty/miniconda3/bin/pip install geocoder
 #../3rdparty/miniconda3/bin/pip install git+https://github.com/matplotlib/basemap.git#egg=mpl_toolkits #needed for ARIA products
-../3rdparty/miniconda3/bin/conda install basemap --yes
+../3rdparty/miniconda3/bin/conda install basemap python=3.7 --yes
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
 ```
 * Source the environment and create aux directories. Install credential files for data download:
