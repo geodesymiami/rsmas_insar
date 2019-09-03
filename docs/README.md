@@ -63,8 +63,17 @@ minopy_wrapper.py $SAMPLESDIR/GalapagosSenDT128.template
 ingest_insarmaps.py $SAMPLESDIR/GalapagosSenDT128.template
 export_ortho_geo.py $SAMPLESDIR/GalapagosSenDT128.template
 ````
-### 5. --step ifgram:  InSAR processinng
+The different processing steps are recorded in `./log`.
+
+### 5. Download data: --step download
+text from wiki. How to properly arrange the different steps for readthedocs? 
+* Trouble shooting (need this tep for each step)
+
+### 6. Download DEM: --step dem
+Downaloading DEM from the USGS
+* Trouble shooting
+### 7. Process interferograms: --step ifgrams
+
 ```
 execute_run_files.py ....
 ```
-T
