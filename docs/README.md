@@ -3,9 +3,7 @@ The Miami INterferometric SAR software  (MinSAR) is an open-source python packag
 
 [ISCE](https://github.com/isce-framework/isce2), [MintPy](https://github.com/insarlab/MintPy), [PyAPS](https://github.com/yunjunz/pyaps3), [MiNoPy](https://github.com/geodesymiami/minopy)
 
-
 The main Developers are Sara Mirzaee and Falk Amelung with contributions of many University of Miami graduate and undergraduate students.
-
 
 ### 1. [Installation](./installation.md) ###
 

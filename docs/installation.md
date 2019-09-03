@@ -77,30 +77,8 @@ mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 ./$RSMASINSAR_HOME/setup/install_credential_files.csh;
 ```
 
-* Get your an others inputfiles (default location: ~/insarlab/infiles/famelung/TEMPLATES) (optional):
-
-```
-cd $WORKDIR;
-mkdir -p infiles;
-cd infiles;
-git clone https://github.com/geodesymiami/infiles_famelung.git famelung; 
-git clone https://github.com/geodesymiami/infiles_sxh733.git sxh733; 
-git clone https://github.com/geodesymiami/infiles_sxm1611.git sxm1611;
-git clone https://github.com/geodesymiami/infiles_yzhang1.git yzhang1 ; 
-git clone https://github.com/geodesymiami/infiles_bkv3.git bkv3;
-git clone https://github.com/geodesymiami/infiles_lvxr.git lvxr;
-echo DONE;
-```
-
-* Get the python scripts plus notebooks from other group members (all your code should be here) (optional) 
-
-```
-cd $RSMASINSAR_HOME/sources;
-git clone https://github.com/geodesymiami/rsmas_tools.git ; 
-```
-
 ### Orbits and aux files
-We have specified a directory for the orbits for Sentinel-1 (`$SENTINEL_ORBITS`). The orbits can be downloaded using `dloadOrbits.py`. The IPF calibration files (`SENTINEL_AUX`) are downloaded from: https://qc.sentinel1.eo.esa.int/aux_cal/ .
+This has created directories for the orbits for Sentinel-1 (`$SENTINEL_ORBITS`), which The can be downloaded using `dloadOrbits.py`. The IPF calibration files (`SENTINEL_AUX`) are downloaded from: https://qc.sentinel1.eo.esa.int/aux_cal/ .
 ### Next steps and possible problems
 * To check your installation, run the testdata as explained [here](https://github.com/geodesymiami/rsmas_insar/wiki/Testing-the-code). You need to have the testdata in your `$TESTDATA_ISCE` directory.
 
