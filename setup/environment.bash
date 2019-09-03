@@ -88,7 +88,7 @@ export PATH=${PYTHON3DIR}/bin:${PATH}
 export PATH=${PATH}:${PROJ_LIB}
 export PATH=${PATH}:${RSMASINSAR_HOME}/3rdparty/tippecanoe/bin
 export PATH=${PATH}:${DASK_CONFIG}
-[ -z ${MATLAB_HOME} && export PATH=${PATH}:${MATLAB_HOME}/bin
+[ -n ${MATLAB_HOME} ] && export PATH=${PATH}:${MATLAB_HOME}/bin
 
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH-""}
 export LD_LIBRARY_PATH=${PYTHON3DIR}/lib
