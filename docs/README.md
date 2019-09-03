@@ -63,7 +63,7 @@ The  processing steps are recorded in the `./log` file in your project directory
 ## 5. Processing steps
 
 ### 5.1 Download data: --step download
-This step uses `download_data.py` script. It will download data based on the `ssaraopt` parameters in the template file. It will create an `--intersectsWith={Polygon ..)` string based on `topsStack.boundingBox`
+The `download_data.py` script downloads data based on the `ssaraopt` parameters in the template file. It will create an `--intersectsWith={Polygon ..)` string based on `topsStack.boundingBox`.
 
 ```################################# ssara option Parameters #################################
 ssaraopt.platform                     = None         # platform name [SENTINEL-1A, ...]
@@ -71,20 +71,24 @@ ssaraopt.relativeOrbit                = None         # relative orbit number
 ssaraopt.startDate                    = None         # starting acquisition date [YYYYMMDD]
 ssaraopt.endDate                      = None         # ending acquisition date [YYYYMMDD]
 
-topsStack.boundingBox                 = None   # [ '-1 0.15 -91.7 -90.9'] lat_south lat_north lon_west lon_east
+topsStack.boundingBox                 = None         # [ -1 0.15 -91.7 -90.9] lat_south lat_north lon_west lon_east
 ```
-It also accepts the `ssaraopt.frame` option but this does not work very well.
+It also accepts the `ssaraopt.frame` option but this did not work very well for us.
 
-Example:
+Examples:
 ```
 download_data.py $SAMPLESDIR/GalapagosSenDT128.template
 
 # submit as a job:
 download_data.py $SAMPLESDIR/alapagosSenDT128.template --submit
 
-# Add a value of 0.1 to latitude from boundingBox field (defaultr is 0.0):       
-download_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --delta_lat 0.1  
- 
+# Add a value of 0.1 to latitude from boundingBox field (default is 0.0):       
+download_data.py $SAMPLESDIR/GalapagosSenDT128.template --delta_lat 0.1  
+ ```
+`download_data.py` calls two scripts. `download_ssara.py` and `download_asfserial.py` The first uses `ssara_federated_query-cj.py` and the second the ASF python download script.  The scripts can be called individually:
+```
+download_ssara.py $SAMPLESDIR/GalapagosSenDT128.template --delta_lat 0.1  
+download_asfserial.py $SAMPLESDIR/GalapagosSenDT128.template --delta_lat 0.1 
 ```
 * [Trouble shooting](./download_data_troubleshooting)
 
