@@ -10,7 +10,7 @@ class PathFind:
         self.logdir = os.getenv('OPERATIONS') + '/LOGS'
         self.scratchdir = os.getenv('SCRATCHDIR')
         self.required_template_options = ['topsStack.subswath', 'topsStack.boundingBox']
-        self.defaultdir = os.path.expandvars('${RSMAS_INSAR}/minsar/defaults')
+        self.defaultdir = os.path.expandvars('${RSMASINSAR_HOME}/minsar/defaults')
         self.orbitdir = os.path.expandvars('$SENTINEL_ORBITS')
         self.auxdir = os.path.expandvars('$SENTINEL_AUX')
         self.geomasterdir = 'merged/geom_master'
@@ -26,7 +26,7 @@ class PathFind:
         self.masterdir = 'master'
         self.stackdir = 'stack'
         self.tiffdir = 'hazard_products'
-        self.daskconfig = os.path.expandvars('${RSMAS_INSAR}/minsar/defaults/dask/dask.yaml')
+        self.daskconfig = os.path.expandvars('${RSMASINSAR_HOME}/minsar/defaults/dask/dask.yaml')
         self.auto_template = self.defaultdir + '/stack_template.txt'
         return
 

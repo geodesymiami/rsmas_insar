@@ -12,10 +12,10 @@ from minsar.version import *
 __version__ = release_version
 
 try:
-    os.environ['RSMAS_INSAR']
+    os.environ['RSMASINSAR_HOME']
 except KeyError:
     print('Using default MinSAR Path: %s' % (rsmasinsar_path))
-    os.environ['RSMAS_INSAR'] = rsmasinsar_path
+    os.environ['RSMASINSAR_HOME'] = rsmasinsar_path
 
 
 # logging.basicConfig(filename="example.log",
