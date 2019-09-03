@@ -90,7 +90,7 @@ download_data.py $SAMPLESDIR/GalapagosSenDT128.template --delta_lat 0.1
 download_ssara.py $SAMPLESDIR/GalapagosSenDT128.template --delta_lat 0.1  
 download_asfserial.py $SAMPLESDIR/GalapagosSenDT128.template --delta_lat 0.1 
 ```
-* [Trouble shooting](./download_data_troubleshooting)
+* [Trouble shooting](./download_data_troubleshooting.md)
 
 ### 5.2. Download DEM: --step dem
 Downaloading DEM from the USGS
