@@ -1,5 +1,5 @@
 ## Research and development workflow in Miami
-* In order to facilitate  switching between  platforms (e.g. between pegasus, stampede and your mac), it is recommended to keep all your control files (minsar, geodmod, gbis) in your infiles directory and share via github, followinhg the convention:
+* In order to facilitate  switching between  platforms (e.g. between pegasus, stampede and your mac), it is recommended to keep all your control files (minsar, geodmod, gbis) in your infiles directory and share via github, followinhg the following convention. the directory name is set using the customizable USERPREFERRED environment variable.
 ```
 $WORKDIR/infiles_famelung/TEMPLATES
 $WORKDIR/infiles_famelung/GEODMOD_INFILES
