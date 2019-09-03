@@ -15,9 +15,8 @@ The main Developers are Sara Mirzaee and Falk Amelung with contributions of many
 
 MinSAR downloads a stack of SLC images, downloads a DEM, processes the interferograms and creates displacement timeseries products. Optional steps are the ingestion into our [dataportal] (https//:insarmaps.miami.edu) and the generation of image products that will soon be made available from another data portal.
 
-The processing is controlled by a template file which offers many different options for each processing step ([see example])(../samples/GalapagosSenDT128.template). The processing is executed using `process_rsmas.py` with the processing steps specified on the command line:
+The processing is controlled by a template file which offers many different options for each processing step ([see example])(../samples/GalapagosSenDT128.template). The processing is executed using `process_rsmas.py` with the processing steps specified on the command line. Steps:
 ```
-Steps: 
 download:   downloading data
 dem:        downloading DEM
 ifgrams:    processing interferograms starting with unpacking of the images
@@ -25,9 +24,7 @@ timeseries: time series analysis based on smallbaseline method or single master 
 insarmaps:  uploading displacement products to insarmaps website
 image_products: generating and uploading image products to hazards website (amplitudes, interferograms, coherences)
 ```
-Processing can be started at a given step using the `--start` option. The `--step`  option allows to execute only one processing step. 
-
-Example: 
+Processing can be started at a given step using the `--start` option. The `--step`  option allows to execute only one processing step. Example: 
 ```bash
   process_rsmas.py  $SAMPLESDIR/GalapagosSenDT128.template             # run with default and custom templates
   process_rsmas.py  $SAMPLESDIR/GalapagosSenDT128.template  --submit   # submit as job
@@ -52,7 +49,7 @@ process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --step  insarmaps
 process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --step  image_products
 ```
 
-This runs these scripts:
+These commands runs the following scripts:
 ```
 download_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template
 dem_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template
@@ -63,7 +60,7 @@ minopy_wrapper.py $SAMPLESDIR/GalapagosSenDT128.template
 ingest_insarmaps.py $SAMPLESDIR/GalapagosSenDT128.template
 export_ortho_geo.py $SAMPLESDIR/GalapagosSenDT128.template
 ````
-The different processing steps are recorded in `./log`.
+The  processing steps are recorded in the `./log` file in your project directory.
 
 ### 5. Download data: --step download
 text from wiki. How to properly arrange the different steps for readthedocs? 
