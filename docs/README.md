@@ -72,19 +72,15 @@ ssaraopt.startDate                    = None         # starting acquisition date
 ssaraopt.endDate                      = None         # ending acquisition date [YYYYMMDD]
 
 topsStack.boundingBox                 = None   # [ '-1 0.15 -91.7 -90.9'] lat_south lat_north lon_west lon_east
-
 ```
-
 It also accepts the `ssaraopt.frame` option but this does not work very well.
-```
-```
 
 Example:
 ```
-download_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template
+download_data.py $SAMPLESDIR/GalapagosSenDT128.template
 
 # submit as a job:
-download_rsmas.py $SAMPLESDIR/alapagosSenDT128.template --submit
+download_data.py $SAMPLESDIR/alapagosSenDT128.template --submit
 
 # Add a value of 0.1 to latitude from boundingBox field (defaultr is 0.0):       
 download_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --delta_lat 0.1  
