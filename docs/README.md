@@ -15,7 +15,7 @@ The main Developers are Sara Mirzaee and Falk Amelung with contributions of many
 
 MinSAR downloads a stack of SLC images, downloads a DEM, processes the interferograms and creates displacement timeseries products. Optional steps are the ingestion into our [dataportal](https//:insarmaps.miami.edu) and the generation of image products that will soon be made available from another data portal.
 
-The processing is controlled by a template file which offers many different options for each processing step [see example](..samples/GalapagosSenDT128.template). The processing is executed using `process_rsmas.py` with the processing steps specified on the command line:
+The processing is controlled by a template file which offers many different options for each processing step ([see example])(../samples/GalapagosSenDT128.template). The processing is executed using `process_rsmas.py` with the processing steps specified on the command line:
 ```
 Steps: 
 download:   downloading data
