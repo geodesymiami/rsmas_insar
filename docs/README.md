@@ -1,15 +1,15 @@
-### RSMAS InSAR code
+## RSMAS InSAR code
 The Miami INterferometric SAR software  (MinSAR) is an open-source python package for Interferometric Synthetic Aperture Radar processing and time series analysis written at the Geodesy Lab of the University of Miami at the Rosenstiel School of Marine and Atmospheric Science (RSMAS). MinSAR uses the following packages:
 
 [ISCE](https://github.com/isce-framework/isce2), [MintPy](https://github.com/insarlab/MintPy), [PyAPS](https://github.com/yunjunz/pyaps3), [MiNoPy](https://github.com/geodesymiami/minopy)
 
 The main Developers are Sara Mirzaee and Falk Amelung with contributions of many University of Miami graduate and undergraduate students.
 
-### 1. [Installation](./installation.md) ###
+## 1. [Installation](./installation.md) ###
 
-### 2. [Set-up in Miami](./set_up_miami.md) ###
+## 2. [Set-up in Miami](./set_up_miami.md) ###
 
-### 3. Running MinSAR ###
+## 3. Running MinSAR ###
 
 MinSAR downloads a stack of SLC images, downloads a DEM, processes the interferograms and creates displacement timeseries products. Optional steps are the ingestion into our [dataportal] (https//:insarmaps.miami.edu) and the generation of image products that will soon be made available from another data portal.
 
@@ -36,7 +36,7 @@ Processing can be started at a given step using the `--start` option. The `--ste
 ```
 In order to use either `--start` or `--step`, it is necessary that the previous step was completed.
 
-### 4. Example for Galápagos with Sentinel-1 data ####
+## 4. Example for Galápagos with Sentinel-1 data ####
 The individual processing steps can be run stepwise using
 ```bash
 process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --step  download
@@ -60,15 +60,45 @@ export_ortho_geo.py $SAMPLESDIR/GalapagosSenDT128.template
 ````
 The  processing steps are recorded in the `./log` file in your project directory.
 
-### 5. Download data: --step download
-text from wiki. How to properly arrange the different steps for readthedocs? 
-* Trouble shooting (need this tep for each step)
+## 5. Processing steps
 
-### 6. Download DEM: --step dem
-Downaloading DEM from the USGS
-* Trouble shooting
-### 7. Process interferograms: --step ifgrams
+### 5.1 Download data: --step download
+This step uses `download_data.py` script. It will download data based on the `ssaraopt` parameters in the template file. It will create an `--intersectsWith={Polygon ..)` string based on `topsStack.boundingBox`
+
+```################################# ssara option Parameters #################################
+ssaraopt.platform                     = None         # platform name [SENTINEL-1A, ...]
+ssaraopt.relativeOrbit                = None         # relative orbit number
+ssaraopt.startDate                    = None         # starting acquisition date [YYYYMMDD]
+ssaraopt.endDate                      = None         # ending acquisition date [YYYYMMDD]
+
+topsStack.boundingBox                 = None   # [ '-1 0.15 -91.7 -90.9'] lat_south lat_north lon_west lon_east
 
 ```
+
+It also accepts the `ssaraopt.frame` option but this does not work very well.
+```
+```
+
+Example:
+```
+download_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template
+
+# submit as a job:
+download_rsmas.py $SAMPLESDIR/alapagosSenDT128.template --submit
+
+# Add a value of 0.1 to latitude from boundingBox field (defaultr is 0.0):       
+download_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --delta_lat 0.1  
+ 
+```
+* [Trouble shooting](./download_data_troubleshooting)
+
+### 5.2. Download DEM: --step dem
+Downaloading DEM from the USGS
+* Trouble shooting(./download_dem_troubleshooting)
+
+### 5.3. Process interferograms: --step ifgrams
+
+```
+create_runfiles
 execute_run_files.py ....
 ```
