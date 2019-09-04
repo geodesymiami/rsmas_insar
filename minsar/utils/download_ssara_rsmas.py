@@ -42,7 +42,7 @@ def main(iargs=None):
     #########################################
     if inps.submit_flag:
         job_file_name = 'download_ssara_rsmas'
-        job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
+        job_name = inps.custom_template_file.split(os.sep)[-1].split('.')[0]
 
         if inps.wall_time == 'None':
             inps.wall_time = config['download_rsmas']['walltime']
@@ -54,9 +54,9 @@ def main(iargs=None):
         os.makedirs(project_slc_dir)
     os.chdir(inps.slc_dir)
 
-    logger.log(loglevel.INFO, "DATASET: %s", str(inps.customTemplateFile.split('/')[-1].split(".")[0]))
+    logger.log(loglevel.INFO, "DATASET: %s", str(inps.custom_template_file.split('/')[-1].split(".")[0]))
     logger.log(loglevel.INFO, "DATE: %s", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"))
-    succesful = run_ssara(project_slc_dir, inps.customTemplateFile, inps.delta_lat, logger)
+    succesful = run_ssara(project_slc_dir, inps.custom_template_file, inps.delta_lat, logger)
     logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
     logger.log(loglevel.INFO, "------------------------------------")
 
@@ -86,7 +86,7 @@ def check_downloads(inps, run_number, args, logger):
     for f in files_to_check:
         if not os.path.isfile(str(os.getcwd()) + "/" + str(f)):
             logger.log(loglevel.WARNING, "The file, %s, didn't download correctly. Running ssara again.")
-            run_ssara(inps.slc_dir, inps.customTemplateFile, delta_lat, logger, run_number + 1)
+            run_ssara(inps.slc_dir, inps.custom_template_file, delta_lat, logger, run_number + 1)
             return
 
     logger.log(loglevel.INFO, "Everything is there!")

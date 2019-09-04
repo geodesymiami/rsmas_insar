@@ -67,27 +67,27 @@ def main(iargs=None):
 
         return
 
-    download('ssara', inps.customTemplateFile, slc_dir, outnum=1)
-    #download('ssara', inps.customTemplateFile, slc_dir, outnum = 2)
-    #download('asfserial', inps.customTemplateFile, slc_dir, outnum = 1)
+    download('ssara', inps.custom_template_file, slc_dir, outnum=1)
+    #download('ssara', inps.custom_template_file, slc_dir, outnum = 2)
+    #download('asfserial', inps.custom_template_file, slc_dir, outnum = 1)
 
     return None
 
 ###########################################################################################
 
 
-def download(script_name, customTemplateFile, slc_dir, outnum):
+def download(script_name, custom_template_file, slc_dir, outnum):
     """
     Runs download script with given script name.
     :param script_name: Name of download script to run (ssara, asfserial)
-    :param customTemplateFile: Template file to download data from.
+    :param custom_template_file: Template file to download data from.
     :param slc_dir: SLC directory inside work directory.
     """
     if script_name not in {'ssara', 'asfserial'}:
         print('{} download not supported'.format(script_name))
 
     out_file = os.path.join(os.getcwd(), 'out_download_{0}{1}'.format(script_name, outnum))
-    command = 'download_{0}_rsmas.py {1}'.format(script_name, customTemplateFile)
+    command = 'download_{0}_rsmas.py {1}'.format(script_name, custom_template_file)
     command = '({0} > {1}.o) >& {1}.e'.format(command, out_file)
 
     if os.getenv('DOWNLOADHOST') == 'local':
