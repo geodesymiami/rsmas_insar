@@ -53,7 +53,7 @@ def cmd_line_parse(iargs=None, script=None):
 def add_common_parser(parser):
 
     commonp = parser.add_argument_group('General options:')
-    commonp.add_argument('customTemplateFile', nargs='?', help='custom template with option settings.\n')
+    commonp.add_argument('custom_template_file', nargs='?', help='custom template with option settings.\n')
     commonp.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
     commonp.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
     commonp.add_argument('--walltime', dest='wall_time', default='None',
@@ -92,9 +92,9 @@ def add_download_dem(parser):
 def add_execute_runfiles(parser):
 
     run_parser = parser.add_argument_group('Steps of ISCE run files')
-    run_parser.add_argument('--start', dest='startrun', default=0, type=int,
+    run_parser.add_argument('--start', dest='start_run', default=0, type=int,
                         help='starting run file number (default = 1).\n')
-    run_parser.add_argument('--stop', dest='endrun', default=0, type=int,
+    run_parser.add_argument('--stop', dest='end_run', default=0, type=int,
                         help='stopping run file number.\n')
 
     return parser
@@ -103,24 +103,20 @@ def add_execute_runfiles(parser):
 def add_export_amplitude(parser):
 
     products = parser.add_argument_group('Options for exporting geo/ortho-rectified products')
-    products.add_argument('-f', '--file', dest='prodlist', type=str, help='Input SLC')
-    products.add_argument('-l', '--lat', dest='latFile', type=str,
+    products.add_argument('-f', '--file', dest='prod_list', type=str, help='Input SLC')
+    products.add_argument('-l', '--lat', dest='lat_file', type=str,
                         default='lat.rdr.ml', help='latitude file in radar coordinate')
-    products.add_argument('-L', '--lon', dest='lonFile', type=str,
+    products.add_argument('-L', '--lon', dest='lon_file', type=str,
                         default='lon.rdr.ml', help='longitude file in radar coordinate')
-    products.add_argument('-y', '--lat-step', dest='latStep', type=float,
+    products.add_argument('-y', '--latStep', dest='lat_step', type=float,
                         help='output pixel size in degree in latitude.')
-    products.add_argument('-x', '--lon-step', dest='lonStep', type=float,
+    products.add_argument('-x', '--lonStep', dest='lon_step', type=float,
                         help='output pixel size in degree in longitude.')
-    products.add_argument('-o', '--xoff', dest='xOff', type=int, default=0,
-                        help='Offset from the begining of geometry files in x direction. Default 0.0')
-    products.add_argument('-p', '--yoff', dest='yOff', type=int, default=0,
-                        help='Offset from the begining of geometry files in y direction. Default 0.0')
-    products.add_argument('-r', '--resampling_method', dest='resamplingMethod', type=str, default='near',
+    products.add_argument('-r', '--resamplingMethod', dest='resampling_method', type=str, default='near',
                         help='Resampling method (gdalwarp resamplin methods)')
-    products.add_argument('-t', '--type', dest='imtype', type=str, default='ortho',
+    products.add_argument('-t', '--type', dest='im_type', type=str, default='ortho',
                         help="ortho, geo")
-    products.add_argument('--outdir', dest='out_dir', default='hazard_products', help='output directory.')
+    products.add_argument('--outDir', dest='out_dir', default='hazard_products', help='output directory.')
 
     return parser
 
@@ -148,11 +144,11 @@ def add_process_rsmas(parser):
     prs = parser.add_argument_group('steps processing (start/end/step)', STEP_HELP)
     prs.add_argument('-H', dest='print_template', action='store_true',
                         help='print the default template file and exit.')
-    prs.add_argument('--remove_project_dir', dest='remove_project_dir', action='store_true',
+    prs.add_argument('--removeProjectDir', dest='remove_project_dir', action='store_true',
                      help='remove directory before download starts')
-    prs.add_argument('--start', dest='startStep', metavar='STEP', default=STEP_LIST[0],
+    prs.add_argument('--start', dest='start_step', metavar='STEP', default=STEP_LIST[0],
                       help='start processing at the named step, default: {}'.format(STEP_LIST[0]))
-    prs.add_argument('--stop', dest='endStep', metavar='STEP', default=STEP_LIST[-1],
+    prs.add_argument('--stop', dest='end_step', metavar='STEP', default=STEP_LIST[-1],
                       help='end processing at the named step, default: {}'.format(STEP_LIST[-1]))
     prs.add_argument('--step', dest='step', metavar='STEP',
                       help='run processing at the named step only')
@@ -216,9 +212,9 @@ def create_or_update_template(inps_dict):
     print('\n*************** Template Options ****************')
     # write default template
 
-    print ("Custom Template File: ", inps.customTemplateFile)
+    print ("Custom Template File: ", inps.custom_template_file)
 
-    inps.project_name = get_project_name(inps.customTemplateFile)
+    inps.project_name = get_project_name(inps.custom_template_file)
     print ("Project Name: ", inps.project_name)
 
     inps.work_dir = get_work_directory(None, inps.project_name)
@@ -244,12 +240,12 @@ def create_default_template(temp_inps):
 
     inps = temp_inps
 
-    inps.customTemplateFile = os.path.abspath(inps.customTemplateFile)
+    inps.custom_template_file = os.path.abspath(inps.custom_template_file)
 
-    inps.template_file = os.path.join(inps.work_dir, os.path.basename(inps.customTemplateFile))
+    inps.template_file = os.path.join(inps.work_dir, os.path.basename(inps.custom_template_file))
     
     # read custom template from file
-    custom_tempObj = Template(os.path.abspath(inps.customTemplateFile))
+    custom_tempObj = Template(os.path.abspath(inps.custom_template_file))
 
     # check for required options
     required_template_keys = pathObj.required_template_options
@@ -275,14 +271,14 @@ def create_default_template(temp_inps):
             inps.template.update({key: os.path.expandvars(value.strip("'"))})
 
     if os.path.exists(inps.template_file):
-        if not os.path.samefile(inps.customTemplateFile, inps.template_file):
+        if not os.path.samefile(inps.custom_template_file, inps.template_file):
             print('generate template file: {}'.format(inps.template_file))
-            shutil.copyfile(inps.customTemplateFile, inps.template_file)
+            shutil.copyfile(inps.custom_template_file, inps.template_file)
         else:
             print('template file exists: {}'.format(inps.template_file))
     else:
         print('generate template file: {}'.format(inps.template_file))
-        shutil.copyfile(inps.customTemplateFile, inps.template_file)
+        shutil.copyfile(inps.custom_template_file, inps.template_file)
 
     # updates tempDefault dictionary with the given templateObj adding new keys
     new_file = update_template_file(inps.template_file, custom_tempObj)
@@ -550,7 +546,7 @@ def walltime_adjust(inps, default_time):
     hour = (default_time_hour * number_of_bursts)*60
     minutes = int(np.remainder(hour, 60))
     hour = int(hour/60)
-    adjusted_time = '{:02d}:{:02d}:{:02d}'.format(hour, minutes, 0)
+    adjusted_time = '{:02d}:{:02d}'.format(hour, minutes)
 
     return adjusted_time
 
@@ -569,7 +565,7 @@ def add_pause_to_walltime(wall_time, wait_time):
 
     wait_seconds = (wait_parts[0] * 60 + wait_parts[1]) * 60
 
-    new_wall_time = '{:02d}:{:02d}:{:02d}'.format(hours, minutes, 0)
+    new_wall_time = '{:02d}:{:02d}'.format(hours, minutes)
 
     return wait_seconds, new_wall_time
 

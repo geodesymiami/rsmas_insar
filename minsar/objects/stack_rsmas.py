@@ -95,7 +95,7 @@ class rsmasRun(object):
         for k in inps.__dict__.keys():
             setattr(self, k, inps.__dict__[k])
 
-        self.customTemplateFile = os.path.expandvars(inps.customTemplateFile)
+        self.custom_template_file = os.path.expandvars(inps.custom_template_file)
         
         self.runDir = os.path.join(self.work_dir, pathObj.rundir)
 
