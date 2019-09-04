@@ -48,7 +48,7 @@ def main(iargs=None):
     except:
         print('geocoding ...')
 
-    slc =
+    slc = inps.prod_list
 
     if inps.im_type == 'ortho':
         inps.geo_master_dir = os.path.join(inps.work_dir, pathObj.geomasterdir)
