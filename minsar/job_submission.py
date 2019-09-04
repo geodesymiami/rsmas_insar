@@ -231,11 +231,14 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
     elif scheduler == "PBS":
         command = "qsub < " + os.path.join(work_dir, job_file_name)
     elif scheduler == 'SLURM':
-        command = "sbatch < " + os.path.join(work_dir, job_file_name)
+        command = "sbatch " + os.path.join(work_dir, job_file_name)
     else:
         raise Exception("ERROR: scheduler {0} not supported".format(scheduler))
 
-    output = subprocess.check_output(command, shell=True)
+    try:
+        output = subprocess.check_output(command, shell=True)
+    except subprocess.CalledProcessError as grepexc:
+        print("error code", grepexc.returncode, grepexc.output)
 
     # get job number to return
     if scheduler == "LSF":
@@ -247,7 +250,7 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
         # uses '7319.eos\n'
         job_number = output.decode("utf-8").split("\n")[0]
     elif scheduler == 'SLURM':
-        job_number = output.decode("utf-8").split("\n")[0]
+        job_number = str(output).split("\\n")[-2].split(' ')[-1]
     else:
         raise Exception("ERROR: scheduler {0} not supported".format(scheduler))
 
@@ -323,6 +326,7 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime, email_notif
         
     command_line = os.path.basename(argv[0]) + " "
     command_line += " ".join(flag for flag in argv[1:] if flag != "--submit")
+
     write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
                           walltime=walltime, queue=os.getenv("QUEUENAME"))
     return submit_single_job("{0}.job".format(job_file_name), work_dir)
@@ -331,15 +335,15 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime, email_notif
 def submit_job_with_launcher(batch_file, work_dir='.', memory='4000', walltime='2:00', queue='general', scheduler=None,
                              email_notif=True):
     """
-        Writes a single job file for launcher to submit as array.
-        :param batch_file: File containing tasks that we are submitting.
-        :param work_dir: the location of job and it's outputs
-        :param memory: Amount of memory to use. Defaults to 3600 KB.
-        :param walltime: Walltime for the job. Defaults to 4 hours.
-        :param scheduler: Job scheduler to use for running jobs. Defaults based on environment variable JOBSCHEDULER.
-        :param queue: Name of the queue to which the job is to be submitted. Default is set based on the scheduler..
-        :param email_notif: If email notifications should be on or not. Defaults to true.
-        """
+    Writes a single job file for launcher to submit as array.
+    :param batch_file: File containing tasks that we are submitting.
+    :param work_dir: the location of job and it's outputs
+    :param memory: Amount of memory to use. Defaults to 3600 KB.
+    :param walltime: Walltime for the job. Defaults to 4 hours.
+    :param scheduler: Job scheduler to use for running jobs. Defaults based on environment variable JOBSCHEDULER.
+    :param queue: Name of the queue to which the job is to be submitted. Default is set based on the scheduler..
+    :param email_notif: If email notifications should be on or not. Defaults to true.
+    """
     if not scheduler:
         scheduler = os.getenv("JOBSCHEDULER")
 
@@ -363,7 +367,22 @@ def submit_job_with_launcher(batch_file, work_dir='.', memory='4000', walltime='
     with open(os.path.join(work_dir, job_file_name), "w+") as job_file:
         job_file.writelines(job_file_lines)
 
-    return submit_single_job("{0}".format(job_file_name), work_dir)
+    job_number = submit_single_job(job_file_name, work_dir, scheduler)
+
+    outfile = "{}_{}.o".format(job_file_name.split('.job')[0], job_number)
+
+    # check if output files exist
+    wait_time_sec = 60
+    total_wait_time_min = 0
+
+    while not os.path.isfile(os.path.join(work_dir, outfile)):
+        print("Waiting for job (output file {}) after {} minutes".format(outfile, total_wait_time_min))
+        total_wait_time_min += wait_time_sec / 60
+        time.sleep(wait_time_sec)
+
+    print("Job complete (output file {})".format(outfile))
+
+    return job_number
 
 
 if __name__ == "__main__":
