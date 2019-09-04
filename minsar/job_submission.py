@@ -234,6 +234,7 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
     elif scheduler == "PBS":
         command = "qsub < " + os.path.join(work_dir, job_file_name)
     elif scheduler == 'SLURM':
+<<<<<<< 74936288c962be3491e6c6609fe66ec0d9de54d4
 
         hostname = subprocess.Popen("hostname", shell=True, stdout=subprocess.PIPE).stdout.read().decode("utf-8")
         if hostname.startswith('login'):
@@ -241,6 +242,9 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
         else:
             command = "ibrun {}; wait".format(os.path.join(work_dir, job_file_name))
 
+=======
+        command = "sbatch " + os.path.join(work_dir, job_file_name)
+>>>>>>> catch output error
     else:
         raise Exception("ERROR: scheduler {0} not supported".format(scheduler))
 
