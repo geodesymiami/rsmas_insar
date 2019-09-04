@@ -65,7 +65,8 @@ def parse_arguments(args):
     return job_params
 
 
-def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler=None, memory=3600, walltime="4:00:00", queue=None):
+def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler=None, memory=3600, walltime="4:00",
+                       queue=None, number_of_tasks=1):
     """
     Generates the lines of a job submission file that are based on the specified scheduler.
     :param job_name: Name of job.
@@ -75,15 +76,21 @@ def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler
     :param memory: Amount of memory to use. Defaults to 3600 KB.
     :param walltime: Walltime for the job. Defaults to 4 hours.
     :param queue: Name of the queue to which the job is to be submitted. Default is set based on the scheduler.
+    :param number_of_tasks: Number of lines in batch file to be supposed as number of tasks
     :return: List of lines for job submission file
     """
     if not scheduler:
-        scheduler=os.getenv("JOBSCHEDULER")
+        scheduler = os.getenv("JOBSCHEDULER")
+
+    if scheduler in ['PBS', 'SLURM']:
+        correct_walltime = walltime + ':{:02d}'.format(0)
+    else:
+        correct_walltime = walltime
 
     # directives based on scheduler
     if scheduler == "LSF":
         prefix = "\n#BSUB "
-        shell = "/bin/tcsh"
+        shell = "/bin/bash"
         name_option = "-J {0}"
         project_option = "-P {0}"
         process_option = "-n {0}" + prefix + "-R span[hosts={1}]"
@@ -112,7 +119,7 @@ def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler
         email_option = "-m bea" + prefix + "-M {0}"
     elif scheduler == 'SLURM':
         prefix = "\n#SBATCH "
-        shell = "/bin/tcsh"
+        shell = "/bin/bash"
         name_option = "-J {0}"
         project_option = "-A {0}"
         process_option = "-N {0}" + prefix + "-n {1}"
@@ -135,11 +142,11 @@ def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler
     if email_notif:
         job_file_lines.append(prefix + email_option.format(os.getenv("NOTIFICATIONEMAIL")))
     job_file_lines.extend([
-        prefix + process_option.format(1, 1),
+        prefix + process_option.format(1, number_of_tasks),
         prefix + stdout_option.format(os.path.join(work_dir, job_file_name)),
         prefix + stderr_option.format(os.path.join(work_dir, job_file_name)),
         prefix + queue_option.format(queue),
-        prefix + walltime_limit_option.format(walltime),
+        prefix + walltime_limit_option.format(correct_walltime),
     ])
     if memory_option:
         job_file_lines.extend([prefix + memory_option.format(memory)], )
@@ -152,7 +159,7 @@ def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler
 
 
 def write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif, scheduler=None,
-                          memory=3600, walltime="4:00:00", queue=None):
+                          memory=3600, walltime="4:00", queue=None):
     """
     Writes a job file for a single job.
     :param job_name: Name of job.
@@ -166,10 +173,11 @@ def write_single_job_file(job_name, job_file_name, command_line, work_dir, email
     :param queue: Name of the queue to which the job is to be submitted. Default is set based on the scheduler.
     """
     if not scheduler:
-        scheduler=os.getenv("JOBSCHEDULER")
+        scheduler = os.getenv("JOBSCHEDULER")
 
     # get lines to write in job file
-    job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler, memory, walltime, queue)
+    job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler, memory, walltime,
+                                        queue)
     job_file_lines.append("\nfree")
     job_file_lines.append("\n" + command_line + "\n")
 
@@ -179,7 +187,7 @@ def write_single_job_file(job_name, job_file_name, command_line, work_dir, email
         job_file.writelines(job_file_lines)
 
 
-def write_batch_job_files(batch_file, out_dir, email_notif=False, scheduler=None, memory=3600, walltime="4:00:00", queue=None):
+def write_batch_job_files(batch_file, out_dir, email_notif=False, scheduler=None, memory=3600, walltime="4:00", queue=None):
     """
     Iterates through jobs in input file and writes a job file for each job using the specified scheduler.
     :param batch_file: File containing batch of jobs for which we are creating job files.
@@ -192,7 +200,7 @@ def write_batch_job_files(batch_file, out_dir, email_notif=False, scheduler=None
     :return: List of job file names.
     """
     if not scheduler:
-        scheduler=os.getenv("JOBSCHEDULER")
+        scheduler = os.getenv("JOBSCHEDULER")
 
     with open(batch_file) as input_file:
         job_list = input_file.readlines()
@@ -214,9 +222,8 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
     :return: Job number of submission
     """
 
-
     if not scheduler:
-        scheduler=os.getenv("JOBSCHEDULER")
+        scheduler = os.getenv("JOBSCHEDULER")
     
     # use bsub or qsub to submit based on scheduler
     if scheduler == "LSF":
@@ -249,7 +256,7 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
     return job_number
 
 
-def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory='4000', walltime='2:00:00',
+def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory='4000', walltime='2:00',
                       queue='general', scheduler=None):
     """
     Submit a batch of jobs (to bsub or qsub) and wait for output files to exist before exiting.
@@ -319,6 +326,44 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime, email_notif
     write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
                           walltime=walltime, queue=os.getenv("QUEUENAME"))
     return submit_single_job("{0}.job".format(job_file_name), work_dir)
+
+
+def submit_job_with_launcher(batch_file, work_dir='.', memory='4000', walltime='2:00', queue='general', scheduler=None,
+                             email_notif=True):
+    """
+        Writes a single job file for launcher to submit as array.
+        :param batch_file: File containing tasks that we are submitting.
+        :param work_dir: the location of job and it's outputs
+        :param memory: Amount of memory to use. Defaults to 3600 KB.
+        :param walltime: Walltime for the job. Defaults to 4 hours.
+        :param scheduler: Job scheduler to use for running jobs. Defaults based on environment variable JOBSCHEDULER.
+        :param queue: Name of the queue to which the job is to be submitted. Default is set based on the scheduler..
+        :param email_notif: If email notifications should be on or not. Defaults to true.
+        """
+    if not scheduler:
+        scheduler = os.getenv("JOBSCHEDULER")
+
+    with open(batch_file, 'r') as f:
+        lines = f.readlines()
+        number_of_tasks = len(lines)
+
+    job_file_name = os.path.basename(batch_file)
+    job_name = job_file_name
+
+    # get lines to write in job file
+    job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler, memory, walltime,
+                                        queue, number_of_tasks)
+
+    job_file_lines.append("\n\nexport LAUNCHER_WORKDIR={0}".format(work_dir))
+    job_file_lines.append("\nexport LAUNCHER_JOB_FILE={0}\n".format(batch_file))
+    job_file_lines.append("\n$LAUNCHER_DIR/paramrun\n")
+
+    # write lines to .job file
+    job_file_name = "{0}.job".format(job_file_name)
+    with open(os.path.join(work_dir, job_file_name), "w+") as job_file:
+        job_file.writelines(job_file_lines)
+
+    return submit_single_job("{0}".format(job_file_name), work_dir)
 
 
 if __name__ == "__main__":

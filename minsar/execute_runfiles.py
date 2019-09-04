@@ -79,9 +79,15 @@ def main(iargs=None):
 
             putils.remove_last_job_running_products(run_file=item)
 
-            jobs = js.submit_batch_jobs(batch_file=item, out_dir=os.path.join(inps.work_dir, 'run_files'),
-                                        work_dir=inps.work_dir, memory=memorymax, walltime=walltimelimit,
-                                        queue=queuename)
+            if os.getenv('JOBSCHEDULER') in ['SLURM', 'sge']:
+
+                job = js.submit_job_with_launcher(batch_file=item, work_dir=os.path.join(inps.work_dir, 'run_files'),
+                                                  memory=memorymax, walltime=walltimelimit, queue=queuename)
+            else:
+
+                jobs = js.submit_batch_jobs(batch_file=item, out_dir=os.path.join(inps.work_dir, 'run_files'),
+                                            work_dir=inps.work_dir, memory=memorymax, walltime=walltimelimit,
+                                            queue=queuename)
 
             putils.remove_zero_size_or_length_error_files(run_file=item)
             putils.raise_exception_if_job_exited(run_file=item)

@@ -44,6 +44,12 @@ export TE=${TEMPLATES}
 export DASK_CONFIG=${RSMASINSAR_HOME}/minsar/defaults/dask
 export DASK_CONFIG=${RSMASINSAR_HOME}/sources/MintPy/mintpy/defaults
 
+############## LAUNCHER ##############
+export LAUNCHER_DIR=${RSMASINSAR_HOME}/3rdparty/launcher
+export LAUNCHER_PLUGIN_DIR=${LAUNCHER_DIR}/plugins
+export LAUNCHER_RMI=${JOBSCHEDULER}
+export LAUNCHER_SCHED=block   ## could be one of: dynamic, interleaved, block
+
 ##############  PYTHON  ##############
 export PYTHON3DIR=${RSMASINSAR_HOME}/3rdparty/miniconda3
 export CONDA_ENVS_PATH=${PYTHON3DIR}/envs
