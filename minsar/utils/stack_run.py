@@ -29,7 +29,7 @@ class CreateRun:
         self.minopy_dir = os.path.join(self.work_dir, pathObj.minopydir)
 
         self.inps = inps
-        self.inps.customTemplateFile = inps.customTemplateFile
+        self.inps.custom_template_file = inps.custom_template_file
 
         self.command_options = []
         for item in inps.topsStack_template:

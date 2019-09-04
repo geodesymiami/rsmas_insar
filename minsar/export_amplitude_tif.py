@@ -44,18 +44,18 @@ def main(iargs=None):
     os.chdir(slave_dir)
 
     try:
-        os.system('rm '+inps.prodlist + '/geo*')
+        os.system('rm '+ inps.prod_list + '/geo*')
     except:
         print('geocoding ...')
 
-    slc = inps.prodlist
+    slc = inps.prod_list
 
-    if inps.imtype == 'ortho':
+    if inps.im_type == 'ortho':
         inps.geo_master_dir = os.path.join(inps.work_dir, pathObj.geomasterdir)
     else:
         inps.geo_master_dir = os.path.join(inps.work_dir, pathObj.geomlatlondir)
 
-    os.chdir(os.path.join(slave_dir, inps.prodlist))
+    os.chdir(os.path.join(slave_dir, inps.prod_list))
 
     geocode_file(inps)
 
@@ -67,7 +67,7 @@ def main(iargs=None):
     ##
     array = np.where(array > 0, 10.0 * np.log10(pow(array, 2)) - 83.0, array)
 
-    if inps.imtype == 'ortho':
+    if inps.im_type == 'ortho':
         dst_file = 'orthorectified_' + slc + '_backscatter.tif'
     else:
         dst_file = 'georectified_' + slc + '_backscatter.tif'
@@ -79,7 +79,7 @@ def main(iargs=None):
     xmlfile = glob.glob(os.path.join(inps.work_dir, pathObj.masterdir, '*.xml'))[0]
     attributes = xmlread(xmlfile)
     Metadata = {'SAT': attributes['missionname'], 'Mode': attributes['passdirection'],
-                'Image_Type': '{}_BackScatter'.format(inps.imtype), 'Date': slc}
+                'Image_Type': '{}_BackScatter'.format(inps.im_type), 'Date': slc}
 
     raster2geotiff(dst_file, transform, array, Metadata)
 
@@ -129,9 +129,9 @@ def geocode_file(inps):
     if len(inps.cropbox) != 4:
         raise Exception('Bbox should contain 4 floating point values')
 
-    inps.latFile = os.path.abspath(os.path.join(inps.geo_master_dir, inps.latFile))
-    inps.lonFile = os.path.abspath(os.path.join(inps.geo_master_dir, inps.lonFile))
-    inps.prodlist = [inps.prodlist + '.slc.ml']
+    inps.lat_file = os.path.abspath(os.path.join(inps.geo_master_dir, inps.lat_file))
+    inps.lon_file = os.path.abspath(os.path.join(inps.geo_master_dir, inps.lon_file))
+    inps.prod_list = [inps.prod_list + '.slc.ml']
 
     WSEN = str(inps.cropbox[2]) + ' ' + str(inps.cropbox[0]) + ' ' + str(inps.cropbox[3]) + ' ' + str(inps.cropbox[1])
     latFile, lonFile = gg.prepare_lat_lon(inps)
@@ -139,14 +139,14 @@ def geocode_file(inps):
     gg.getBound(latFile, float(inps.cropbox[0]), float(inps.cropbox[1]), 'lat')
     gg.getBound(lonFile, float(inps.cropbox[2]), float(inps.cropbox[3]), 'lon')
 
-    for infile in inps.prodlist:
+    for infile in inps.prod_list:
         infile = os.path.abspath(infile)
         print('geocoding ' + infile)
         outFile = os.path.join(os.path.dirname(infile), "geo_" + os.path.basename(infile))
         gg.writeVRT(infile, latFile, lonFile)
 
-        cmd = 'gdalwarp -of ENVI -geoloc  -te ' + WSEN + ' -tr ' + str(inps.latStep) + ' ' + \
-              str(inps.lonStep) + ' -srcnodata 0 -dstnodata 0 ' + ' -r ' + inps.resamplingMethod + \
+        cmd = 'gdalwarp -of ENVI -geoloc  -te ' + WSEN + ' -tr ' + str(inps.lat_step) + ' ' + \
+              str(inps.lon_step) + ' -srcnodata 0 -dstnodata 0 ' + ' -r ' + inps.resampling_method + \
               ' -co INTERLEAVE=BIL ' + infile + '.vrt ' + outFile
         print(cmd)
         os.system(cmd)

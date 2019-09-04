@@ -34,7 +34,7 @@ def main(iargs=None):
     #########################################
     if inps.submit_flag:
         job_file_name = 'download_asfserial_rsmas'
-        job_name = inps.customTemplateFile.split(os.sep)[-1].split('.')[0]
+        job_name = inps.custom_template_file.split(os.sep)[-1].split('.')[0]
         work_dir = inps.work_dir
 
         if inps.wall_time == 'None':
@@ -58,7 +58,7 @@ def main(iargs=None):
     except OSError:
         pass
 
-    generate_files_csv(project_slc_dir, inps.customTemplateFile)
+    generate_files_csv(project_slc_dir, inps.custom_template_file)
     succesful = run_download_asf_serial(project_slc_dir, logger)
     change_file_permissions()
     logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
