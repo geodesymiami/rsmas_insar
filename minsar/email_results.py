@@ -7,7 +7,6 @@
 import os
 import sys
 import glob
-import argparse
 import subprocess
 import h5py
 from mintpy.utils import readfile
