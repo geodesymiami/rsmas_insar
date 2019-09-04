@@ -26,8 +26,8 @@ step_list, step_help = pathObj.process_rsmas_help()
 ###############################################################################
 
 EXAMPLE = """example:
-      process_rsmas.py  <customTemplateFile>              # run with default and custom templates
-      process_rsmas.py  <customTemplateFile>  --submit    # submit as job
+      process_rsmas.py  <custom_template_file>              # run with default and custom templates
+      process_rsmas.py  <custom_template_file>  --submit    # submit as job
       process_rsmas.py  -h / --help                       # help 
       process_rsmas.py  -H                                # print    default template options
       # Run with --start/stop/step options
@@ -107,9 +107,9 @@ def check_directories_and_inputs(inputs):
     inps = inputs
 
     # invalid input of custom template
-    if inps.customTemplateFile:
-        if not os.path.isfile(inps.customTemplateFile):
-            raise FileNotFoundError(inps.customTemplateFile)
+    if inps.custom_template_file:
+        if not os.path.isfile(inps.custom_template_file):
+            raise FileNotFoundError(inps.custom_template_file)
 
     if inps.remove_project_dir:
         putils.remove_directories(directories_to_delete=[inps.work_dir])
@@ -133,15 +133,15 @@ def check_directories_and_inputs(inputs):
 
     # ignore --start/end input if --step is specified
     if inps.step:
-        inps.startStep = inps.step
-        inps.endStep = inps.step
+        inps.start_step = inps.step
+        inps.end_step = inps.step
 
     # get list of steps to run
-    idx0 = step_list.index(inps.startStep)
-    idx1 = step_list.index(inps.endStep)
+    idx0 = step_list.index(inps.start_step)
+    idx1 = step_list.index(inps.end_step)
 
     if idx0 > idx1:
-        msg = 'input start step "{}" is AFTER input end step "{}"'.format(inps.startStep, inps.endStep)
+        msg = 'input start step "{}" is AFTER input end step "{}"'.format(inps.start_step, inps.end_step)
         raise ValueError(msg)
     inps.runSteps = step_list[idx0:idx1 + 1]
 
@@ -161,7 +161,7 @@ class RsmasInsar:
     """
 
     def __init__(self, inps):
-        self.customTemplateFile = inps.customTemplateFile
+        self.custom_template_file = inps.custom_template_file
         self.work_dir = inps.work_dir
         self.project_name = inps.project_name
         self.template = inps.template
@@ -188,13 +188,13 @@ class RsmasInsar:
                 if os.path.isdir(os.path.join(self.work_dir, directory)):
                     shutil.rmtree(os.path.join(self.work_dir, directory))
 
-        minsar.download_rsmas.main([self.customTemplateFile])
+        minsar.download_rsmas.main([self.custom_template_file])
         return
 
     def run_download_dem(self):
         """ Downloading DEM using dem_rsmas.py script.
         """
-        minsar.dem_rsmas.main([self.customTemplateFile, self.dem_flag])
+        minsar.dem_rsmas.main([self.custom_template_file, self.dem_flag])
         return
 
     def run_interferogram(self):
@@ -203,32 +203,32 @@ class RsmasInsar:
         2. execute run_files
         """
         try:
-            minsar.create_runfiles.main([self.customTemplateFile])
+            minsar.create_runfiles.main([self.custom_template_file])
         except:
             print('Skip creating run files ...')
-        minsar.execute_runfiles.main([self.customTemplateFile])
+        minsar.execute_runfiles.main([self.custom_template_file])
         return
 
     def run_mintpy(self):
         """ Process smallbaseline using MintPy or non-linear inversion using MiNoPy and email results
         """
         if self.method == 'mintpy':
-            minsar.smallbaseline_wrapper.main([self.customTemplateFile, '--email'])
+            minsar.smallbaseline_wrapper.main([self.custom_template_file, '--email'])
         else:
             import minsar.minopy_wrapper as minopy_wrapper
-            minopy_wrapper.main([self.customTemplateFile])
+            minopy_wrapper.main([self.custom_template_file])
         return
 
     def run_insarmaps(self):
         """ prepare outputs for insarmaps website.
         """
-        minsar.ingest_insarmaps.main([self.customTemplateFile, '--email'])
+        minsar.ingest_insarmaps.main([self.custom_template_file, '--email'])
         return
 
     def run_geocode(self):
         """ create ortho/geo-rectified products.
         """
-        minsar.export_ortho_geo.main([self.customTemplateFile])
+        minsar.export_ortho_geo.main([self.custom_template_file])
         return
 
     def run(self, steps=step_list):

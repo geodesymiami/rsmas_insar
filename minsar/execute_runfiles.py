@@ -42,18 +42,18 @@ def main(iargs=None):
 
     run_file_list = putils.read_run_list(inps.work_dir)
 
-    if inps.endrun == 0:
-        inps.endrun = len(run_file_list)
+    if inps.end_run == 0:
+        inps.end_run = len(run_file_list)
 
-    if not inps.startrun == 0:
-        inps.startrun = inps.startrun - 1
+    if not inps.start_run == 0:
+        inps.start_run = inps.start_run - 1
 
     if not iargs is None:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
     else:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
-    run_file_list = run_file_list[inps.startrun:inps.endrun]
+    run_file_list = run_file_list[inps.start_run:inps.end_run]
 
     supported_schedulers = ['LSF', 'PBS', 'SLURM']
 

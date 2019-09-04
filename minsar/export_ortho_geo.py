@@ -240,19 +240,19 @@ def make_run_list(inps):
     lonstep = abs(
         (np.nanmin(lon_ds.GetVirtualMemArray()) - np.nanmax(lon_ds.GetVirtualMemArray())) / (lon_ds.RasterXSize - 1))
 
-    ifgram_cmd = 'ifgramStack_to_ifgram_and_coherence.py {}'.format(inps.customTemplateFile)
+    ifgram_cmd = 'ifgramStack_to_ifgram_and_coherence.py {}'.format(inps.custom_template_file)
 
     with open(run_orthorectify, 'w') as f:
         for item in slc_list:
             cmd = 'export_amplitude_tif.py {a0} -f {a1} -y {a2} -x {a3}  -t ortho \n'.format(
-                a0=inps.customTemplateFile, a1=item, a2=latstep, a3=lonstep)
+                a0=inps.custom_template_file, a1=item, a2=latstep, a3=lonstep)
             f.write(cmd)
         f.write(ifgram_cmd)
 
     with open(run_georectify, 'w') as f:
         for item in slc_list:
             cmd = 'export_amplitude_tif.py {a0} -f {a1} -y {a2} -x {a3} -t geo \n'.format(
-                a0=inps.customTemplateFile, a1=item, a2=latstep, a3=lonstep)
+                a0=inps.custom_template_file, a1=item, a2=latstep, a3=lonstep)
             f.write(cmd)
 
     run_file_list = [run_orthorectify, run_georectify]
