@@ -124,7 +124,7 @@ def check_directories_and_inputs(inputs):
         os.makedirs(inps.slc_dir)
 
     # check input --start/end/step
-    for key in ['startStep', 'endStep', 'step']:
+    for key in ['start_step', 'end_step', 'step']:
         value = vars(inps)[key]
         if value and value not in step_list:
             msg = 'Input step not found: {}'.format(value)
