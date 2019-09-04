@@ -209,7 +209,7 @@ class RsmasInsar:
         minsar.execute_runfiles.main([self.custom_template_file])
         return
 
-    def run_mintpy(self):
+    def run_timeseries(self):
         """ Process smallbaseline using MintPy or non-linear inversion using MiNoPy and email results
         """
         if self.method == 'mintpy':
@@ -246,8 +246,8 @@ class RsmasInsar:
             elif sname == 'ifgrams':
                 self.run_interferogram()
 
-            elif sname == 'mintpy':
-                self.run_mintpy()
+            elif sname == 'timeseries':
+                self.run_timeseries()
 
             elif sname == 'insarmaps':
                 self.run_insarmaps()

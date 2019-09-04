@@ -139,7 +139,7 @@ class PathFind:
             'download',
             'dem',
             'ifgrams',
-            'mintpy',
+            'timeseries',
             'insarmaps',
             'geocode',
         ]
