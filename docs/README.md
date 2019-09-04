@@ -48,7 +48,7 @@ process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --step  insarmaps
 process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --step  image_products
 ```
 
-These commands runs the following scripts:
+These commands run the following scripts:
 ```
 download_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template
 dem_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template
@@ -95,7 +95,7 @@ download_asfserial.py $SAMPLESDIR/GalapagosSenDT128.template --delta_lat 0.1
 
 ### 5.2. Download DEM: --step dem
 Downaloading DEM from the USGS
-* Trouble shooting(./download_dem_troubleshooting)
+* [Trouble shooting](./download_dem_troubleshooting.md)
 
 ### 5.3. Process interferograms: --step ifgrams
 
