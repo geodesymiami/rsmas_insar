@@ -5,5 +5,4 @@ __pycache__/
 *.csv
 temp*
 *.log
-data/*
 sources/*
