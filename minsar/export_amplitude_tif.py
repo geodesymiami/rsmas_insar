@@ -44,7 +44,7 @@ def main(iargs=None):
     os.chdir(slave_dir)
 
     try:
-        os.system('rm '+ + '/geo*')
+        os.system('rm '+ inps.prod_list + '/geo*')
     except:
         print('geocoding ...')
 
@@ -55,7 +55,7 @@ def main(iargs=None):
     else:
         inps.geo_master_dir = os.path.join(inps.work_dir, pathObj.geomlatlondir)
 
-    os.chdir(os.path.join(slave_dir, ))
+    os.chdir(os.path.join(slave_dir, inps.prod_list))
 
     geocode_file(inps)
 
@@ -131,6 +131,7 @@ def geocode_file(inps):
 
     inps.lat_file = os.path.abspath(os.path.join(inps.geo_master_dir, inps.lat_file))
     inps.lon_file = os.path.abspath(os.path.join(inps.geo_master_dir, inps.lon_file))
+    inps.prod_list = [inps.prod_list + '.slc.ml']
 
     WSEN = str(inps.cropbox[2]) + ' ' + str(inps.cropbox[0]) + ' ' + str(inps.cropbox[3]) + ' ' + str(inps.cropbox[1])
     latFile, lonFile = gg.prepare_lat_lon(inps)
@@ -138,7 +139,7 @@ def geocode_file(inps):
     gg.getBound(latFile, float(inps.cropbox[0]), float(inps.cropbox[1]), 'lat')
     gg.getBound(lonFile, float(inps.cropbox[2]), float(inps.cropbox[3]), 'lon')
 
-    for infile in :
+    for infile in inps.prod_list:
         infile = os.path.abspath(infile)
         print('geocoding ' + infile)
         outFile = os.path.join(os.path.dirname(infile), "geo_" + os.path.basename(infile))
