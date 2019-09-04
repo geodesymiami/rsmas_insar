@@ -6,5 +6,4 @@ __pycache__/
 temp*
 *.log
 data/*
-sources/geodmod/*
-sources/mintpy/*
+sources/*
