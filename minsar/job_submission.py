@@ -69,6 +69,7 @@ def parse_arguments(args):
 
 def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler=None, memory=3600, walltime="4:00",
                        queue=None, number_of_tasks=1, number_of_nodes=1):
+
     """
     Generates the lines of a job submission file that are based on the specified scheduler.
     :param job_name: Name of job.
@@ -162,6 +163,7 @@ def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler
 
 def write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif, scheduler=None,
                           memory=3600, walltime="4:00", queue=None, number_of_nodes=1):
+
     """
     Writes a job file for a single job.
     :param job_name: Name of job.
@@ -186,6 +188,7 @@ def write_single_job_file(job_name, job_file_name, command_line, work_dir, email
     # get lines to write in job file
     job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler, memory, walltime,
                                         queue, number_of_tasks, number_of_nodes)
+
     job_file_lines.append("\nfree")
     job_file_lines.append("\n" + command_line + "\n")
 
@@ -245,6 +248,7 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
             command = "sbatch " + os.path.join(work_dir, job_file_name)
         else:
             command = "ibrun {}; wait".format(os.path.join(work_dir, job_file_name))
+
 
     else:
         raise Exception("ERROR: scheduler {0} not supported".format(scheduler))
