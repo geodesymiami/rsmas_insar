@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 #####################################
-# Setting the environment (don't modify)
-# check for required variables
+# Setting the environment (don't modify) 
+# check for required variables 
 [ -z $RSMASINSAR_HOME ] && echo ERROR: RSMASINSAR_HOME is required variable && return
 [ -z $JOBSCHEDULER ] && echo ERROR: JOBSCHEDULER is required variable && return
 [ -z $QUEUENAME ] && echo ERROR: QUEUENAME is required variable && return
@@ -33,8 +33,7 @@ export OPERATIONS=${WORKDIR}/OPERATIONS
 export MODELDATA=${WORKDIR}/MODELDATA
 export GEODMOD_INFILES=${WORKDIR}/infiles/${USER_PREFERRED}/GEODMOD_INFILES
 export GEODMOD_HOME=${RSMASINSAR_HOME}/sources/geodmod
-export GEODMOD_TESTDATA=${WORKDIR}/TESTDATA_GEODMOD
-export GBIS_TESTDATA=${WORKDIR}/TESTDATA_GBIS
+export GEODMOD_TESTDATA=${RSMASINSAR_HOME}/data/testdata/geodmod
 export GEODMOD_TESTBENCH=${SCRATCHDIR}/GEODMOD_TESTBENCH
 export GBIS_INFILES=${WORKDIR}/infiles/${USER_PREFERRED}/GBIS_INFILES
 
