@@ -12,6 +12,8 @@ import subprocess
 import argparse
 import time
 from minsar.objects import message_rsmas
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 
 def create_argument_parser():
@@ -66,7 +68,8 @@ def parse_arguments(args):
 
 
 def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler=None, memory=3600, walltime="4:00",
-                       queue=None, number_of_tasks=1):
+                       queue=None, number_of_tasks=1, number_of_nodes=1):
+
     """
     Generates the lines of a job submission file that are based on the specified scheduler.
     :param job_name: Name of job.
@@ -142,7 +145,7 @@ def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler
     if email_notif:
         job_file_lines.append(prefix + email_option.format(os.getenv("NOTIFICATIONEMAIL")))
     job_file_lines.extend([
-        prefix + process_option.format(1, number_of_tasks),
+        prefix + process_option.format(number_of_nodes, number_of_tasks),
         prefix + stdout_option.format(os.path.join(work_dir, job_file_name)),
         prefix + stderr_option.format(os.path.join(work_dir, job_file_name)),
         prefix + queue_option.format(queue),
@@ -159,7 +162,8 @@ def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler
 
 
 def write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif, scheduler=None,
-                          memory=3600, walltime="4:00", queue=None):
+                          memory=3600, walltime="4:00", queue=None, number_of_nodes=1):
+
     """
     Writes a job file for a single job.
     :param job_name: Name of job.
@@ -171,13 +175,20 @@ def write_single_job_file(job_name, job_file_name, command_line, work_dir, email
     :param memory: Amount of memory to use. Defaults to 3600 KB.
     :param walltime: Walltime for the job. Defaults to 4 hours.
     :param queue: Name of the queue to which the job is to be submitted. Default is set based on the scheduler.
+    :param number_of_nodes: Number of nodes to preserve
     """
     if not scheduler:
         scheduler = os.getenv("JOBSCHEDULER")
 
+    if scheduler=='SLURM':
+        number_of_tasks = 20
+    else:
+        number_of_tasks = 1
+
     # get lines to write in job file
     job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler, memory, walltime,
-                                        queue)
+                                        queue, number_of_tasks, number_of_nodes)
+
     job_file_lines.append("\nfree")
     job_file_lines.append("\n" + command_line + "\n")
 
@@ -231,7 +242,14 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
     elif scheduler == "PBS":
         command = "qsub < " + os.path.join(work_dir, job_file_name)
     elif scheduler == 'SLURM':
-        command = "sbatch " + os.path.join(work_dir, job_file_name)
+
+        hostname = subprocess.Popen("hostname", shell=True, stdout=subprocess.PIPE).stdout.read().decode("utf-8")
+        if hostname.startswith('login'):
+            command = "sbatch " + os.path.join(work_dir, job_file_name)
+        else:
+            command = "ibrun {}; wait".format(os.path.join(work_dir, job_file_name))
+
+
     else:
         raise Exception("ERROR: scheduler {0} not supported".format(scheduler))
 
@@ -328,7 +346,7 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime, email_notif
     command_line += " ".join(flag for flag in argv[1:] if flag != "--submit")
 
     write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
-                          walltime=walltime, queue=os.getenv("QUEUENAME"))
+                          walltime=walltime, queue=os.getenv("QUEUENAME"), number_of_nodes=4)
     return submit_single_job("{0}.job".format(job_file_name), work_dir)
 
 
@@ -367,20 +385,9 @@ def submit_job_with_launcher(batch_file, work_dir='.', memory='4000', walltime='
     with open(os.path.join(work_dir, job_file_name), "w+") as job_file:
         job_file.writelines(job_file_lines)
 
+    os.system('chmod +x {}'.format(os.path.join(work_dir, job_file_name)))
+
     job_number = submit_single_job(job_file_name, work_dir, scheduler)
-
-    outfile = "{}_{}.o".format(job_file_name.split('.job')[0], job_number)
-
-    # check if output files exist
-    wait_time_sec = 60
-    total_wait_time_min = 0
-
-    while not os.path.isfile(os.path.join(work_dir, outfile)):
-        print("Waiting for job (output file {}) after {} minutes".format(outfile, total_wait_time_min))
-        total_wait_time_min += wait_time_sec / 60
-        time.sleep(wait_time_sec)
-
-    print("Job complete (output file {})".format(outfile))
 
     return job_number
 

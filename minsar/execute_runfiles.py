@@ -9,6 +9,8 @@ import time
 from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
 import minsar.job_submission as js
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 ##############################################################################
 
@@ -89,10 +91,15 @@ def main(iargs=None):
                                             work_dir=inps.work_dir, memory=memorymax, walltime=walltimelimit,
                                             queue=queuename)
 
-            putils.remove_zero_size_or_length_error_files(run_file=item)
-            putils.raise_exception_if_job_exited(run_file=item)
-            putils.concatenate_error_files(run_file=item, work_dir=inps.work_dir)
-            putils.move_out_job_files_to_stdout(run_file=item)
+                putils.remove_zero_size_or_length_error_files(run_file=item)
+                putils.raise_exception_if_job_exited(run_file=item)
+                putils.concatenate_error_files(run_file=item, work_dir=inps.work_dir)
+                putils.move_out_job_files_to_stdout(run_file=item)
+
+            print('Job {} completed'.format(item))
+
+        print('all jobs from {} to {} have been completed'.format(os.path.basename(run_file_list[0]),
+                                                                  os.path.basename(run_file_list[-1])))
 
     else:
         for item in run_file_list:
