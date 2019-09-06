@@ -68,7 +68,7 @@ def parse_arguments(args):
 
 
 def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler=None, memory=3600, walltime="4:00",
-                       queue=None, number_of_tasks=1, number_of_nodes=1):
+                       queue=None, number_of_tasks=1):
     """
     Generates the lines of a job submission file that are based on the specified scheduler.
     :param job_name: Name of job.
@@ -144,7 +144,7 @@ def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler
     if email_notif:
         job_file_lines.append(prefix + email_option.format(os.getenv("NOTIFICATIONEMAIL")))
     job_file_lines.extend([
-        prefix + process_option.format(number_of_nodes, number_of_tasks),
+        prefix + process_option.format(1, number_of_tasks),
         prefix + stdout_option.format(os.path.join(work_dir, job_file_name)),
         prefix + stderr_option.format(os.path.join(work_dir, job_file_name)),
         prefix + queue_option.format(queue),
@@ -161,7 +161,7 @@ def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler
 
 
 def write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif, scheduler=None,
-                          memory=3600, walltime="4:00", queue=None, number_of_nodes=1):
+                          memory=3600, walltime="4:00", queue=None):
     """
     Writes a job file for a single job.
     :param job_name: Name of job.
@@ -178,14 +178,9 @@ def write_single_job_file(job_name, job_file_name, command_line, work_dir, email
     if not scheduler:
         scheduler = os.getenv("JOBSCHEDULER")
 
-    if scheduler=='SLURM':
-        number_of_tasks = 20
-    else:
-        number_of_tasks = 1
-
     # get lines to write in job file
     job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler, memory, walltime,
-                                        queue, number_of_tasks, number_of_nodes)
+                                        queue)
     job_file_lines.append("\nfree")
     job_file_lines.append("\n" + command_line + "\n")
 
@@ -342,7 +337,7 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime, email_notif
     command_line += " ".join(flag for flag in argv[1:] if flag != "--submit")
 
     write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
-                          walltime=walltime, queue=os.getenv("QUEUENAME"), number_of_nodes=4)
+                          walltime=walltime, queue=os.getenv("QUEUENAME"))
     return submit_single_job("{0}.job".format(job_file_name), work_dir)
 
 
