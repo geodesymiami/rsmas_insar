@@ -241,6 +241,7 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
         else:
             command = "ibrun {}; wait".format(os.path.join(work_dir, job_file_name))
 
+
     else:
         raise Exception("ERROR: scheduler {0} not supported".format(scheduler))
 
