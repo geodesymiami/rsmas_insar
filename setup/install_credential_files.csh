@@ -12,7 +12,8 @@ if (  $characterCount[1] == 75) then
       echo File password_config.py not empty - kept unchanged
 endif
 
-cp ~/accounts/password_config.py ../minsar/defaults/ssara_ASF
+echo "Copying password_config.py into ../minsar/utils/ssara_ASF"
+cp ~/accounts/password_config.py ../minsar/utils/ssara_ASF
 
 # for dem.py 
 if (! -f ~/.netrc) then
