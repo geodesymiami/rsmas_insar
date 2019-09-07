@@ -81,7 +81,7 @@ Examples:
 download_data.py $SAMPLESDIR/GalapagosSenDT128.template
 
 # submit as a job:
-download_data.py $SAMPLESDIR/alapagosSenDT128.template --submit
+download_data.py $SAMPLESDIR/GalapagosSenDT128.template --submit
 
 # Add a value of 0.1 to latitude from boundingBox field (default is 0.0):       
 download_data.py $SAMPLESDIR/GalapagosSenDT128.template --delta_lat 0.1  
