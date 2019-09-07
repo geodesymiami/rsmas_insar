@@ -11,7 +11,6 @@ from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
 import minsar.job_submission as js
 import contextlib
-
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 
