@@ -27,7 +27,7 @@ class PathFind:
         self.stackdir = 'stack'
         self.tiffdir = 'hazard_products'
         self.daskconfig = os.path.expandvars('${RSMASINSAR_HOME}/minsar/defaults/dask/dask.yaml')
-        self.auto_template = self.defaultdir + '/stack_template.txt'
+        self.auto_template = self.defaultdir + '/minsar_template.cfg'
         return
 
     def set_isce_defaults(self, inps):

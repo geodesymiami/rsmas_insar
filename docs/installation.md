@@ -30,6 +30,7 @@ git clone https://github.com/geodesymiami/geodmod.git sources/geodmod;
 git clone https://github.com/geodesymiami/GBIS.git sources/GBIS;
 git clone https://github.com/bakerunavco/SSARA.git 3rdparty/SSARA
 git clone https://github.com/yunjunz/pyaps3.git 3rdparty/PyAPS/pyaps3
+git clone https://github.com/geodesymiami/MimtPy.git sources/MimtPy ;
 git clone https://github.com/TACC/launcher.git 3rdparty/launcher ;
 
 git clone https://github.com/isce-framework/isce2.git 3rdparty/isce2
