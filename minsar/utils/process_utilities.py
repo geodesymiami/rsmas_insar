@@ -254,9 +254,9 @@ def create_default_template(temp_inps):
         if not template_key in custom_tempObj.options:
             raise Exception('ERROR: {0} is required'.format(template_key))
 
-    # find default values from template_defaults.cfg to assign to default_tempObj
+    # find default values from minsar_template_defaults.cfg to assign to default_tempObj
     default_tempObj = Template(pathObj.auto_template)
-    config_template = get_config_defaults(config_file='template_defaults.cfg')
+    config_template = get_config_defaults(config_file='minsar_template_defaults.cfg')
     for each_section in config_template.sections():
         for (each_key, each_val) in config_template.items(each_section):
             default_tempObj.options.update({each_key: os.path.expandvars(each_val.strip("'"))})

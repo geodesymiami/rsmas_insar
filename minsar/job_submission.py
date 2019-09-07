@@ -241,7 +241,6 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
         else:
             command = "ibrun {}; wait".format(os.path.join(work_dir, job_file_name))
 
-
     else:
         raise Exception("ERROR: scheduler {0} not supported".format(scheduler))
 
@@ -357,9 +356,14 @@ def submit_job_with_launcher(batch_file, work_dir='.', memory='4000', walltime='
     if not scheduler:
         scheduler = os.getenv("JOBSCHEDULER")
 
-    with open(batch_file, 'r') as f:
+    os.system('chmod +x {}'.format(batch_file))
+    with open(batch_file, 'r+') as f:
         lines = f.readlines()
         number_of_tasks = len(lines)
+        if not lines[0].split('\n')[0].endswith('&'):
+            lines_modified = [x.split('\n')[0] + ' &\n' for x in lines]
+            f.seek(0)
+            f.writelines(lines_modified)
 
     job_file_name = os.path.basename(batch_file)
     job_name = job_file_name
@@ -381,7 +385,7 @@ def submit_job_with_launcher(batch_file, work_dir='.', memory='4000', walltime='
 
     job_number = submit_single_job(job_file_name, work_dir, scheduler)
 
-    return job_number
+    return 
 
 
 if __name__ == "__main__":

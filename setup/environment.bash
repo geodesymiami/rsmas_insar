@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 #####################################
-# Setting the environment (don't modify) 
-# check for required variables 
+# Setting the environment (don't modify)
+# check for required variables
 [ -z $RSMASINSAR_HOME ] && echo ERROR: RSMASINSAR_HOME is required variable && return
 [ -z $JOBSCHEDULER ] && echo ERROR: JOBSCHEDULER is required variable && return
 [ -z $QUEUENAME ] && echo ERROR: QUEUENAME is required variable && return
@@ -20,7 +20,6 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 
 ############ FOR PROCESSING  #########
 export SSARAHOME=${RSMASINSAR_HOME}/3rdparty/SSARA
-export SSARA_ASF=${RSMASINSAR_HOME}/sources/ssara_ASF
 export ISCE_HOME=${RSMASINSAR_HOME}/3rdparty/miniconda3/lib/python3.7/site-packages/isce
 export ISCE_STACK=${RSMASINSAR_HOME}/sources/isceStack/topsStack
 export MINTPY_HOME=${RSMASINSAR_HOME}/sources/MintPy
@@ -33,7 +32,8 @@ export OPERATIONS=${WORKDIR}/OPERATIONS
 export MODELDATA=${WORKDIR}/MODELDATA
 export GEODMOD_INFILES=${WORKDIR}/infiles/${USER_PREFERRED}/GEODMOD_INFILES
 export GEODMOD_HOME=${RSMASINSAR_HOME}/sources/geodmod
-export GEODMOD_TESTDATA=${RSMASINSAR_HOME}/data/testdata/geodmod
+export GEODMOD_TESTDATA=${WORKDIR}/TESTDATA_GEODMOD
+export GBIS_TESTDATA=${WORKDIR}/TESTDATA_GBIS
 export GEODMOD_TESTBENCH=${SCRATCHDIR}/GEODMOD_TESTBENCH
 export GBIS_INFILES=${WORKDIR}/infiles/${USER_PREFERRED}/GBIS_INFILES
 
@@ -63,13 +63,13 @@ export GDAL_DATA=${PYTHON3DIR}/share/gdal
 export PYTHONPATH=${PYTHONPATH-""}
 export PYTHONPATH=${PYTHONPATH}:${MINTPY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${INT_SCR}
-export PYTHONPATH=${PYTHONPATH}:${SSARA_ASF}
 export PYTHONPATH=${PYTHONPATH}:${PYTHON3DIR}/lib/python3.7/site-packages:${ISCE_HOME}:${ISCE_HOME}/components
 export PYTHONPATH=${PYTHONPATH}:${MINOPY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${MIMTPY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/sources/rsmas_tools
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/3rdparty/PyAPS
+export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/minsar/utils/ssara_ASF
 export PYTHONPATH=${PYTHONPATH}:${ISCE_STACK}
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/sources      # needed for mimt. Need to talk to Sara on how to do this smarter
 export PYTHONPATH_RSMAS=${PYTHONPATH}
@@ -85,6 +85,7 @@ export PATH=${PATH}:${SSARA_ASF}
 export PATH=${PATH}:${MINOPY_HOME}
 export PATH=${PATH}:${RSMASINSAR_HOME}/minsar:${RSMASINSAR_HOME}/minsar/utils
 export PATH=${PATH}:${RSMASINSAR_HOME}/minsar
+export PATH=${PATH}:${RSMASINSAR_HOME}/minsar/utils/ssara_ASF
 export PATH=${PATH}:${RSMASINSAR_HOME}/setup/accounts
 export PATH=${PATH}:${RSMASINSAR_HOME}/sources/rsmas_tools/SAR:${RSMASINSAR_HOME}/sources/rsmas_tools/GPS:${RSMASINSAR_HOME}/sources/rsmas_tools/notebooks
 export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${ISCE_STACK}:${PATH}

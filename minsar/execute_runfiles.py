@@ -6,9 +6,11 @@
 import os
 import sys
 import time
+import datetime
 from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
 import minsar.job_submission as js
+import contextlib
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -83,8 +85,10 @@ def main(iargs=None):
 
             if os.getenv('JOBSCHEDULER') in ['SLURM', 'sge']:
 
-                job = js.submit_job_with_launcher(batch_file=item, work_dir=os.path.join(inps.work_dir, 'run_files'),
-                                                  memory=memorymax, walltime=walltimelimit, queue=queuename)
+                with open('{}.o'.format(item), 'w') as f:
+                    with contextlib.redirect_stdout(f):
+                        js.submit_job_with_launcher(batch_file=item, work_dir=os.path.join(inps.work_dir, 'run_files'),
+                                                          memory=memorymax, walltime=walltimelimit, queue=queuename)
             else:
 
                 jobs = js.submit_batch_jobs(batch_file=item, out_dir=os.path.join(inps.work_dir, 'run_files'),
@@ -96,10 +100,12 @@ def main(iargs=None):
                 putils.concatenate_error_files(run_file=item, work_dir=inps.work_dir)
                 putils.move_out_job_files_to_stdout(run_file=item)
 
-            print('Job {} completed'.format(item))
+            date_str = datetime.datetime.strftime(datetime.datetime.now(), '%Y%m%d:%H%M%S')
+            print(date_str + ' * Job {} completed'.format(item))
 
-        print('all jobs from {} to {} have been completed'.format(os.path.basename(run_file_list[0]),
-                                                                  os.path.basename(run_file_list[-1])))
+        date_str = datetime.datetime.strftime(datetime.datetime.now(), '%Y%m%d:%H%M%S')
+        print(date_str + ' * all jobs from {} to {} have been completed'.format(os.path.basename(run_file_list[0]),
+                                                                                os.path.basename(run_file_list[-1])))
 
     else:
         for item in run_file_list:
