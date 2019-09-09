@@ -11,6 +11,7 @@ from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
 import minsar.job_submission as js
 import contextlib
+import subprocess
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -85,10 +86,22 @@ def main(iargs=None):
 
             if os.getenv('JOBSCHEDULER') in ['SLURM', 'sge']:
 
-                with open('{}.o'.format(item), 'w') as f:
-                    with contextlib.redirect_stdout(f):
-                        js.submit_job_with_launcher(batch_file=item, work_dir=os.path.join(inps.work_dir, 'run_files'),
-                                                          memory=memorymax, walltime=walltimelimit, queue=queuename)
+                hostname = subprocess.Popen("hostname", shell=True, stdout=subprocess.PIPE).stdout.read().decode(
+                    "utf-8")
+                if hostname.startswith('login'):
+
+                    js.submit_job_with_launcher(batch_file=item, work_dir=os.path.join(inps.work_dir, 'run_files'),
+                                                memory=memorymax, walltime=walltimelimit, queue=queuename)
+                else:
+
+                    with open('{}.o'.format(item), 'w') as f:
+                        with contextlib.redirect_stdout(f):
+                            js.submit_job_with_launcher(batch_file=item,
+                                                        work_dir=os.path.join(inps.work_dir, 'run_files'),
+                                                        memory=memorymax, walltime=walltimelimit, queue=queuename)
+
+
+
             else:
 
                 jobs = js.submit_batch_jobs(batch_file=item, out_dir=os.path.join(inps.work_dir, 'run_files'),
