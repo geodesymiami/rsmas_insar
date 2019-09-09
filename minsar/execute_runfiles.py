@@ -100,8 +100,6 @@ def main(iargs=None):
                                                         work_dir=os.path.join(inps.work_dir, 'run_files'),
                                                         memory=memorymax, walltime=walltimelimit, queue=queuename)
 
-
-
             else:
 
                 jobs = js.submit_batch_jobs(batch_file=item, out_dir=os.path.join(inps.work_dir, 'run_files'),
