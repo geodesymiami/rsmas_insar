@@ -11,6 +11,7 @@ import sys
 import subprocess
 import argparse
 import time
+import numpy as np
 from minsar.objects import message_rsmas
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -68,7 +69,7 @@ def parse_arguments(args):
 
 
 def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler=None, memory=3600, walltime="4:00",
-                       queue=None, number_of_tasks=1):
+                       queue=None, number_of_tasks=1, number_of_nodes=1):
     """
     Generates the lines of a job submission file that are based on the specified scheduler.
     :param job_name: Name of job.
@@ -79,6 +80,7 @@ def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler
     :param walltime: Walltime for the job. Defaults to 4 hours.
     :param queue: Name of the queue to which the job is to be submitted. Default is set based on the scheduler.
     :param number_of_tasks: Number of lines in batch file to be supposed as number of tasks
+    :param number_of_nodes: Number of nodes based on number of tasks (each node is able to perform 68 tasks)
     :return: List of lines for job submission file
     """
     if not scheduler:
@@ -244,6 +246,7 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
     else:
         raise Exception("ERROR: scheduler {0} not supported".format(scheduler))
 
+
     try:
         output = subprocess.check_output(command, shell=True)
     except subprocess.CalledProcessError as grepexc:
@@ -368,9 +371,13 @@ def submit_job_with_launcher(batch_file, work_dir='.', memory='4000', walltime='
     job_file_name = os.path.basename(batch_file)
     job_name = job_file_name
 
+    number_of_nodes = np.int(np.ceil(number_of_tasks/68))
+
     # get lines to write in job file
     job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler, memory, walltime,
-                                        queue, number_of_tasks)
+                                        queue, number_of_tasks, number_of_nodes)
+
+    job_file_lines.append("\n\nmodule load launcher")
 
     job_file_lines.append("\n\nexport LAUNCHER_WORKDIR={0}".format(work_dir))
     job_file_lines.append("\nexport LAUNCHER_JOB_FILE={0}\n".format(batch_file))
