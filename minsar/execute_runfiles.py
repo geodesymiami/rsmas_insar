@@ -94,11 +94,18 @@ def main(iargs=None):
                                                 memory=memorymax, walltime=walltimelimit, queue=queuename)
                 else:
 
-                    with open('{}.o'.format(item), 'w') as f:
-                        with contextlib.redirect_stdout(f):
-                            js.submit_job_with_launcher(batch_file=item,
-                                                        work_dir=os.path.join(inps.work_dir, 'run_files'),
-                                                        memory=memorymax, walltime=walltimelimit, queue=queuename)
+                    try:
+                        with open('{}.o'.format(item), 'w') as f:
+                            with contextlib.redirect_stdout(f):
+                                js.submit_job_with_launcher(batch_file=item,
+                                                            work_dir=os.path.join(inps.work_dir, 'run_files'),
+                                                            memory=memorymax, walltime=walltimelimit, queue=queuename)
+                    except:
+                        with open('{}.e'.format(item), 'w') as g:
+                            with contextlib.redirect_stderr(g):
+                                js.submit_job_with_launcher(batch_file=item,
+                                                            work_dir=os.path.join(inps.work_dir, 'run_files'),
+                                                            memory=memorymax, walltime=walltimelimit, queue=queuename)
 
             else:
 
