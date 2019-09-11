@@ -69,7 +69,7 @@ def parse_arguments(args):
 
 
 def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler=None, memory=3600, walltime="4:00",
-                       queue=None, number_of_tasks=1):
+                       queue=None, number_of_tasks=1, number_of_nodes=1):
     """
     Generates the lines of a job submission file that are based on the specified scheduler.
     :param job_name: Name of job.
@@ -175,7 +175,6 @@ def write_single_job_file(job_name, job_file_name, command_line, work_dir, email
     :param memory: Amount of memory to use. Defaults to 3600 KB.
     :param walltime: Walltime for the job. Defaults to 4 hours.
     :param queue: Name of the queue to which the job is to be submitted. Default is set based on the scheduler.
-    :param number_of_nodes: Number of nodes to preserve
     """
     if not scheduler:
         scheduler = os.getenv("JOBSCHEDULER")
