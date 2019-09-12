@@ -175,7 +175,6 @@ def write_single_job_file(job_name, job_file_name, command_line, work_dir, email
     :param memory: Amount of memory to use. Defaults to 3600 KB.
     :param walltime: Walltime for the job. Defaults to 4 hours.
     :param queue: Name of the queue to which the job is to be submitted. Default is set based on the scheduler.
-    :param number_of_nodes: Number of nodes to preserve
     """
     if not scheduler:
         scheduler = os.getenv("JOBSCHEDULER")

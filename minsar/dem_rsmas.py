@@ -89,7 +89,6 @@ def main(iargs=None):
         command = 'dem.py -a stitch -b ' + demBbox + ' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
         message_rsmas.log(os.getcwd(), command)
 
-        #import pdb; pdb.set_trace()
         if os.getenv('DOWNLOADHOST') == 'local':
             try:
                 proc = subprocess.Popen(command,  stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True, universal_newlines=True)

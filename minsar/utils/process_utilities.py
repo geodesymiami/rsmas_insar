@@ -270,20 +270,11 @@ def create_default_template(temp_inps):
         if not value in [None, 'auto']:
             inps.template.update({key: os.path.expandvars(value.strip("'"))})
 
-    if os.path.exists(inps.template_file):
-        if not os.path.samefile(inps.custom_template_file, inps.template_file):
-            print('generate template file: {}'.format(inps.template_file))
-            shutil.copyfile(inps.custom_template_file, inps.template_file)
-        else:
-            print('template file exists: {}'.format(inps.template_file))
-    else:
-        print('generate template file: {}'.format(inps.template_file))
+    # update template file if necessary
+    if not os.path.exists(inps.template_file):
         shutil.copyfile(inps.custom_template_file, inps.template_file)
-
-    # updates tempDefault dictionary with the given templateObj adding new keys
-    new_file = update_template_file(inps.template_file, custom_tempObj)
-    with open(inps.template_file, 'w') as file:
-        file.write(new_file)
+    else:
+        update_template_file(inps.template_file, custom_tempObj)
 
     inps.cropbox = pathObj.grab_cropbox(inps)
 
@@ -304,17 +295,27 @@ def update_template_file(TEMP_FILE, custom_templateObj):
     :return: updated file text
     """
 
-    # fileText = TEMP_FILE
-    with open(TEMP_FILE, 'r') as file:
-        fileText = file.read()
-
     tempObj = Template(TEMP_FILE)
 
+    update_status = False
+
     for key, value in custom_templateObj.options.items():
-        if not key in tempObj.options:
+        if not key in tempObj.options or not tempObj.options[key] == value:
+            tempObj.options[key] = value
+            update_status = True
+
+    if update_status:
+        print('Updating template file')
+        fileText = '#####################################\n'
+        for key, value in tempObj.options.items():
             fileText = fileText + "{:<38}".format(key) + "{:<15}".format("= {}".format(value.strip("'"))) + '\n'
 
-    return fileText
+        with open(TEMP_FILE, 'w') as file:
+            file.writelines(fileText)
+    else:
+        print('template file exists: {}, no updates'.format(TEMP_FILE))
+
+    return
 
 ##########################################################################
 
