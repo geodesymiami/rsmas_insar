@@ -3,13 +3,13 @@
 
 import os
 import datetime
-
+import glob
 
 class PathFind:
     def __init__(self):
         self.logdir = os.getenv('OPERATIONS') + '/LOGS'
         self.scratchdir = os.getenv('SCRATCHDIR')
-        self.required_template_options = ['topsStack.subswath', 'topsStack.boundingBox']
+        self.required_template_options_tops = ['topsStack.subswath', 'topsStack.boundingBox']
         self.defaultdir = os.path.expandvars('${RSMASINSAR_HOME}/minsar/defaults')
         self.orbitdir = os.path.expandvars('$SENTINEL_ORBITS')
         self.auxdir = os.path.expandvars('$SENTINEL_AUX')
@@ -28,6 +28,7 @@ class PathFind:
         self.tiffdir = 'hazard_products'
         self.daskconfig = os.path.expandvars('${RSMASINSAR_HOME}/minsar/defaults/dask/dask.yaml')
         self.auto_template = self.defaultdir + '/minsar_template.cfg'
+        self.stack_prefix = os.path.basename(os.getenv('ISCE_STACK'))
         return
 
     def set_isce_defaults(self, inps):
@@ -52,7 +53,9 @@ class PathFind:
         if not inps.template['minopy.subset'] == 'None':
                 cropbox = inps.template['minopy.subset']
         else:
-            cropbox = inps.template['topsStack.boundingBox']
+            stackprefix = os.path.basename(os.getenv('ISCE_STACK'))
+            bbox = stackprefix+'.boundingBox'
+            cropbox = inps.template[bbox]
         return cropbox
 
     @staticmethod
@@ -99,36 +102,63 @@ class PathFind:
     def correct_for_isce_naming_convention(inps):
 
         inps_dict = {}
+        stackprefix = os.path.basename(os.getenv('ISCE_STACK'))
+
+        if not inps.template['acquisition_mode'] == stackprefix.split('Stack')[0]:
+            raise Exception('ERROR: change environmental variable of "ISCE_STACK" based on acquisition mode {}'.format(inps.template['acquisition_mode']))
+
         for item in inps.template:
-            if item.startswith('topsStack'):
+            if item.startswith(stackprefix):
                 inps_dict[item] = inps.template[item]
 
-        isceKey = ['slc_directory', 'orbit_directory', 'aux_directory', 'working_directory', 'dem', 'master_date', 'num_connections',
-                   'num_overlap_connections', 'swath_num', 'bbox', 'text_cmd', 'exclude_dates', 'include_dates',
-                   'azimuth_looks', 'range_looks', 'filter_strength', 'esd_coherence_threshold', 'snr_misreg_threshold', 'unw_method',
-                   'polarization', 'coregistration', 'workflow', 'start_date', 'stop_date', 'useGPU']
+        if stackprefix == 'topsStack':
 
-        templateKey = ['slcDir', 'orbitDir', 'auxDir', 'workingDir', 'demDir', 'master', 'numConnections',
-                       'numOverlapConnections', 'subswath', 'boundingBox', 'textCmd', 'excludeDates', 'includeDates',
-                       'azimuthLooks', 'rangeLooks', 'filtStrength', 'esdCoherenceThreshold', 'snrMisregThreshold',
-                       'unwMethod', 'polarization', 'coregistration', 'workflow', 'startDate', 'stopDate', 'useGPU']
+            isceKey = ['slc_directory', 'orbit_directory', 'aux_directory', 'working_directory', 'dem', 'master_date', 'num_connections',
+                       'num_overlap_connections', 'swath_num', 'bbox', 'text_cmd', 'exclude_dates', 'include_dates',
+                       'azimuth_looks', 'range_looks', 'filter_strength', 'esd_coherence_threshold', 'snr_misreg_threshold', 'unw_method',
+                       'polarization', 'coregistration', 'workflow', 'start_date', 'stop_date', 'useGPU']
 
-        stackprefix = os.path.basename(os.getenv('ISCE_STACK'))
-        templateKey = [stackprefix + '.' + x for x in templateKey]
+            templateKey = ['slcDir', 'orbitDir', 'auxDir', 'workingDir', 'demDir', 'master', 'numConnections',
+                           'numOverlapConnections', 'subswath', 'boundingBox', 'textCmd', 'excludeDates', 'includeDates',
+                           'azimuthLooks', 'rangeLooks', 'filtStrength', 'esdCoherenceThreshold', 'snrMisregThreshold',
+                           'unwMethod', 'polarization', 'coregistration', 'workflow', 'startDate', 'stopDate', 'useGPU']
 
-        for old_key, new_key in zip(templateKey, isceKey):
-            inps_dict[new_key] = inps_dict.pop(old_key)
-            if inps_dict[new_key] == 'None':
-                inps_dict[new_key] = None
+            templateKey = [stackprefix + '.' + x for x in templateKey]
 
-        if not inps_dict['start_date'] in [None, 'auto']:
-            print(inps_dict['start_date'])
-            inps_dict['start_date'] = datetime.datetime.strptime(inps_dict['start_date'],
-                                                                            '%Y%m%d').strftime('%Y-%m-%d')
+            for old_key, new_key in zip(templateKey, isceKey):
+                inps_dict[new_key] = inps_dict.pop(old_key)
+                if inps_dict[new_key] == 'None':
+                    inps_dict[new_key] = None
 
-        if not inps_dict['stop_date'] in [None, 'auto']:
-            inps_dict['stop_date'] = datetime.datetime.strptime(inps_dict['stop_date'],
-                                                                           '%Y%m%d').strftime('%Y-%m-%d')
+            if not inps_dict['start_date'] in [None, 'auto']:
+                print(inps_dict['start_date'])
+                inps_dict['start_date'] = datetime.datetime.strptime(inps_dict['start_date'],
+                                                                                '%Y%m%d').strftime('%Y-%m-%d')
+
+            if not inps_dict['stop_date'] in [None, 'auto']:
+                inps_dict['stop_date'] = datetime.datetime.strptime(inps_dict['stop_date'],
+                                                                               '%Y%m%d').strftime('%Y-%m-%d')
+
+        else:   # stripmapStack
+
+            isceKey = ['slc_directory', 'working_directory', 'dem', 'bbox', 'master_date', 'time_threshold',
+                       'baseline_threshold', 'azimuth_looks', 'range_looks', 'sensor', 'low_band_frequency',
+                       'high_band_frequency', 'subband_bandwidth', 'unw_method', 'filter_strength', 'filter_sigma_x',
+                       'filter_sigma_y', 'filter_size_x', 'filter_size_y', 'filter_kernel_rotation', 'workflow',
+                       'zero', 'nofocus', 'text_cmd', 'useGPU']
+
+            templateKey = ['slcDir', 'workingDir', 'demDir', 'boundingBox', 'master', 'timeThreshold',
+                           'baselineThreshold', 'azimuthLooks', 'rangeLooks', 'sensor',
+                           'LowBandFrequency', 'HighBandFrequency', 'subbandBandwith', 'unwMethod',
+                           'golstinFilterStrength', 'filterSigmaX', 'filterSigmaY', 'filterSizeX', 'filterSizeY',
+                           'filterKernelRotation', 'workflow', 'zerodop', 'nofocus', 'textCmd', 'useGPU']
+
+            templateKey = [stackprefix + '.' + x for x in templateKey]
+
+            for old_key, new_key in zip(templateKey, isceKey):
+                inps_dict[new_key] = inps_dict.pop(old_key)
+                if inps_dict[new_key] == 'None':
+                    inps_dict[new_key] = None
 
         return inps_dict
 
@@ -196,6 +226,27 @@ class PathFind:
                     'hdfeos5']
 
         return runSteps
+
+    @staticmethod
+    def stripmap_unpack_script(raw_image_dir, multiple='False'):
+
+        sample_image_name = glob.glob(raw_image_dir + '/*/*')[0]
+
+        sensors = ['ALOS2', 'ALOS', 'CSK', 'ENV', 'ERS', 'K5', 'risat', 'RSAT1', 'RSAT2', 'TSX', 'UAVSAR',
+                   'S1', 'ROIPAC']
+
+        for sensor in sensors:
+            if sensor in sample_image_name:
+                out_sensor = sensor
+                if multiple == 'True':
+                    out_sensor = sensor + '_raw'
+                return 'unpackFrame_{}.py'.format(out_sensor)
+
+        return 'unpackFrame_{}.py'.format('ROIPAC')
+
+
+
+
 
 
 

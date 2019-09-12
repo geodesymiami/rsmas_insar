@@ -165,6 +165,8 @@ class RsmasInsar:
         self.work_dir = inps.work_dir
         self.project_name = inps.project_name
         self.template = inps.template
+        self.insarmaps_flag = inps.template['insarmaps_flag']
+        self.hazard_products_flag = inps.template['hazard_products_flag']
 
         if 'demMethod' in inps.template and inps.template['demMethod'] == 'boundingBox':
             self.dem_flag = '--boundingBox'
@@ -250,10 +252,12 @@ class RsmasInsar:
                 self.run_timeseries()
 
             elif sname == 'insarmaps':
-                self.run_insarmaps()
+                if self.insarmaps_flag:
+                    self.run_insarmaps()
 
             elif sname == 'geocode':
-                self.run_geocode()
+                if self.hazard_products_flag:
+                    self.run_geocode()
 
         # message
         msg = '\n###############################################################'
