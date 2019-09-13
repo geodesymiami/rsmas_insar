@@ -103,6 +103,7 @@ def main(iargs=None):
                         os.chdir('..')
                         shutil.rmtree('DEM')
                         sys.exit('Error in dem.py: Tiles are missing. Ocean???')
+
             else:
                 dem_dir = os.getcwd()
                 ssh_command_list = ['s.bgood', 'cd {0}'.format(dem_dir), command]
