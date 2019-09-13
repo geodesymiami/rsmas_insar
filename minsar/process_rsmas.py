@@ -47,6 +47,10 @@ def process_rsmas_cmd_line_parse(iargs=None):
     parser = putils.add_common_parser(parser)
     parser = putils.add_process_rsmas(parser)
     inps = parser.parse_args(args=iargs)
+    template_file = pathObj.auto_template
+    # print default template
+    if inps.print_template:
+        raise SystemExit(open(template_file, 'r').read())
     inps = putils.create_or_update_template(inps)
 
     return inps
@@ -57,12 +61,6 @@ def main(iargs=None):
     start_time = time.time()
 
     inps = process_rsmas_cmd_line_parse(iargs)
-
-    template_file = pathObj.auto_template
-
-    # print default template
-    if inps.print_template:
-        raise SystemExit(open(template_file, 'r').read())
 
     inps = check_directories_and_inputs(inps)
 
