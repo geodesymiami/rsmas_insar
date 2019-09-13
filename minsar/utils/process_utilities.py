@@ -78,7 +78,7 @@ def add_download_dem(parser):
     flag_parser.add_argument('--ssara',
                         dest='flag_ssara',
                         action='store_true',
-                        default=True,
+                        default=False,
                         help='run ssara_federated_query w/ grd output file, set as default [option for dem_rsmas.py]')
     flag_parser.add_argument('--boundingBox',
                         dest='flag_boundingBox',

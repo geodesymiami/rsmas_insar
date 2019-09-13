@@ -44,25 +44,24 @@ def main(iargs=None):
     # set defaults: ssara=True is set in dem_parser, use custom_pemp[late field if given
     inps = cmd_line_parse(iargs, script='dem_rsmas')
 
-    # switch off ssara (default) if boundingBox is selected
-    if inps.flag_boundingBox:
-        inps.flag_ssara = False
-
     if not iargs is None:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
     else:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
-    if 'demMethod' in list(inps.template.keys()):
-        if inps.template['demMethod'] == 'ssara':
-            inps.flag_ssara = True
-            inps.flag_boundingBox = False
-        if inps.template['demMethod'] == 'boundingBox':
-            inps.flag_ssara = False
-            inps.flag_boundingBox = True
-
-    # print( 'flag_ssara: ' +str(inps.flag_ssara))
-    # print( 'flag_boundingBox : ' + str(inps.flag_boundingBox))
+    import pdb; pdb.set_trace()
+    if not inps.flag_boundingBox and not inps.flag_ssara:
+        if 'demMethod' in list(inps.template.keys()):
+            if inps.template['demMethod'] == 'ssara':
+                inps.flag_ssara = True
+                inps.flag_boundingBox = False
+            if inps.template['demMethod'] == 'boundingBox':
+                inps.flag_ssara = False
+                inps.flag_boundingBox = True
+    elif inps.flag_boundingBox:
+        inps.flag_ssara = False
+    else:
+        inps.flag_ssara = True
 
     dem_dir = make_dem_dir(inps.work_dir)
 
