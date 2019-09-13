@@ -141,7 +141,7 @@ class PathFind:
             'ifgrams',
             'timeseries',
             'insarmaps',
-            'geocode',
+            'imageProducts',
         ]
 
         STEP_HELP = """Command line options for steps processing with names are chosen from the following list:

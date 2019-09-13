@@ -47,6 +47,10 @@ def process_rsmas_cmd_line_parse(iargs=None):
     parser = putils.add_common_parser(parser)
     parser = putils.add_process_rsmas(parser)
     inps = parser.parse_args(args=iargs)
+    template_file = pathObj.auto_template
+    # print default template
+    if inps.print_template:
+        raise SystemExit(open(template_file, 'r').read())
     inps = putils.create_or_update_template(inps)
 
     return inps
@@ -57,12 +61,6 @@ def main(iargs=None):
     start_time = time.time()
 
     inps = process_rsmas_cmd_line_parse(iargs)
-
-    template_file = pathObj.auto_template
-
-    # print default template
-    if inps.print_template:
-        raise SystemExit(open(template_file, 'r').read())
 
     inps = check_directories_and_inputs(inps)
 
@@ -165,6 +163,8 @@ class RsmasInsar:
         self.work_dir = inps.work_dir
         self.project_name = inps.project_name
         self.template = inps.template
+        self.image_products_flag = inps.template['image_products_flag']
+        self.insarmaps_flag = inps.template['insarmaps_flag']
 
         if 'demMethod' in inps.template and inps.template['demMethod'] == 'boundingBox':
             self.dem_flag = '--boundingBox'
@@ -222,13 +222,19 @@ class RsmasInsar:
     def run_insarmaps(self):
         """ prepare outputs for insarmaps website.
         """
-        minsar.ingest_insarmaps.main([self.custom_template_file, '--email'])
+        if self.insarmaps_flag:
+            minsar.ingest_insarmaps.main([self.custom_template_file, '--email'])
+        else:
+            print('insarmaps step is off (insarmaps_flag in template is False)')
         return
 
-    def run_geocode(self):
+    def run_image_products(self):
         """ create ortho/geo-rectified products.
         """
-        minsar.export_ortho_geo.main([self.custom_template_file])
+        if self.image_products_flag == 'True':
+            minsar.export_ortho_geo.main([self.custom_template_file])
+        else:
+            print('imageProducts step is off (image_products_flag in template is False)')
         return
 
     def run(self, steps=step_list):
@@ -252,8 +258,8 @@ class RsmasInsar:
             elif sname == 'insarmaps':
                 self.run_insarmaps()
 
-            elif sname == 'geocode':
-                self.run_geocode()
+            elif sname == 'imageProducts':
+                self.run_image_products()
 
         # message
         msg = '\n###############################################################'
