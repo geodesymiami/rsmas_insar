@@ -8,9 +8,7 @@ The main Developers are Sara Mirzaee and Falk Amelung with contributions of many
 
 ## 1. [Installation](./installation.md) ###
 
-## 2. [Set-up in Miami](./set_up_miami.md) ###
-
-## 3. Running MinSAR ###
+## 2. Running MinSAR ###
 
 MinSAR downloads a stack of SLC images, downloads a DEM, processes the interferograms and creates displacement timeseries products. Optional steps are the ingestion into our [dataportal] (https//:insarmaps.miami.edu) and the generation of image products that will soon be made available from another data portal.
 
