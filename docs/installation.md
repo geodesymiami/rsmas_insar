@@ -27,7 +27,6 @@ cd rsmas_insar
 
 git clone https://github.com/insarlab/MintPy.git sources/MintPy ;
 git clone https://github.com/geodesymiami/geodmod.git sources/geodmod;
-git clone https://github.com/geodesymiami/GBIS.git sources/GBIS;
 git clone https://github.com/bakerunavco/SSARA.git 3rdparty/SSARA
 git clone https://github.com/yunjunz/pyaps3.git 3rdparty/PyAPS/pyaps3
 git clone https://github.com/geodesymiami/MimtPy.git sources/MimtPy ;
@@ -104,4 +103,7 @@ drwxrws-w-+ 2 famelung insarlab       4096 Jan 17 16:58 test
 //login4/nethome/dwg11/insarlab/TESTDATA_ISCE[59]
 ```
 * For possible problems, check [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/installation_issues.md).
+
+
+### *. [Set-up in Miami](./set_up_miami.md) ###
 
