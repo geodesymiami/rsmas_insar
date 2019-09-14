@@ -1,6 +1,7 @@
 ## Research and development workflow in Miami
-* If you want to use GBIS clone it (Marco Bagnardi plans to place this on GitHub soon) 
+* If you want to use GBIS clone the repo (Marco Bagnardi plans to place this on GitHub soon) 
 ```
+cd $RSMASINSAR_HOME
 git clone https://github.com/geodesymiami/GBIS.git sources/GBIS;
 ```
 
