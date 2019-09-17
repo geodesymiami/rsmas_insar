@@ -44,93 +44,94 @@ def main(iargs=None):
     # set defaults: ssara=True is set in dem_parser, use custom_pemp[late field if given
     inps = cmd_line_parse(iargs, script='dem_rsmas')
 
-    # switch off ssara (default) if boundingBox is selected
-    if inps.flag_boundingBox:
-        inps.flag_ssara = False
-
     if not iargs is None:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
     else:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
-    if 'demMethod' in list(inps.template.keys()):
-        if inps.template['demMethod'] == 'ssara':
-            inps.flag_ssara = True
-            inps.flag_boundingBox = False
-        if inps.template['demMethod'] == 'boundingBox':
-            inps.flag_ssara = False
-            inps.flag_boundingBox = True
-
-    # print( 'flag_ssara: ' +str(inps.flag_ssara))
-    # print( 'flag_boundingBox : ' + str(inps.flag_boundingBox))
+    if not inps.flag_boundingBox and not inps.flag_ssara:
+        if 'demMethod' in list(inps.template.keys()):
+            if inps.template['demMethod'] == 'ssara':
+                inps.flag_ssara = True
+                inps.flag_boundingBox = False
+            if inps.template['demMethod'] == 'boundingBox':
+                inps.flag_ssara = False
+                inps.flag_boundingBox = True
+    elif inps.flag_boundingBox:
+        inps.flag_ssara = False
+    else:
+        inps.flag_ssara = True
 
     dem_dir = make_dem_dir(inps.work_dir)
 
-    if inps.flag_ssara:
+    if dem_dir:
 
-        call_ssara_dem(inps, dem_dir)
+        if inps.flag_ssara:
 
-        print('You have finished SSARA!')
-    elif inps.flag_boundingBox:
-        print('DEM generation using ISCE')
-        bbox = inps.template['topsStack.boundingBox'].strip("'")
-        bbox = [val for val in bbox.split()]
-        south = bbox[0]
-        north = bbox[1]
-        west = bbox[2]
-        east = bbox[3].split('\'')[0]
+            call_ssara_dem(inps, dem_dir)
 
-        south = math.floor(float(south) - 0.5)
-        north = math.ceil(float(north) + 0.5)
-        west = math.floor(float(west) - 0.5)
-        east = math.ceil(float(east) + 0.5 )
+            print('You have finished SSARA!')
+        elif inps.flag_boundingBox:
+            print('DEM generation using ISCE')
+            bbox = inps.template['topsStack.boundingBox'].strip("'")
+            bbox = [val for val in bbox.split()]
+            south = bbox[0]
+            north = bbox[1]
+            west = bbox[2]
+            east = bbox[3].split('\'')[0]
 
-        demBbox = str(int(south)) + ' ' + str(int(north)) + ' ' + str(int(west)) + ' ' + str(int(east))
-        command = 'dem.py -a stitch -b ' + demBbox + ' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
-        message_rsmas.log(os.getcwd(), command)
+            south = math.floor(float(south) - 0.5)
+            north = math.ceil(float(north) + 0.5)
+            west = math.floor(float(west) - 0.5)
+            east = math.ceil(float(east) + 0.5 )
 
-        if os.getenv('DOWNLOADHOST') == 'local':
-            try:
-                proc = subprocess.Popen(command,  stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True, universal_newlines=True)
-                output, error = proc.communicate()
-                if proc.returncode is not 0:
-                    raise Exception('ERROR starting dem.py subprocess')   # FA 8/19: I don't think this happens, errors are is output
-            except subprocess.CalledProcessError as exc:
-                print("Command failed. Exit code, StdErr:", exc.returncode, exc.output)
-                sys.exit('Error produced by dem.py')
+            demBbox = str(int(south)) + ' ' + str(int(north)) + ' ' + str(int(west)) + ' ' + str(int(east))
+            command = 'dem.py -a stitch -b ' + demBbox + ' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
+            message_rsmas.log(os.getcwd(), command)
+
+            if os.getenv('DOWNLOADHOST') == 'local':
+                try:
+                    proc = subprocess.Popen(command,  stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True, universal_newlines=True)
+                    output, error = proc.communicate()
+                    if proc.returncode is not 0:
+                        raise Exception('ERROR starting dem.py subprocess')   # FA 8/19: I don't think this happens, errors are is output
+                except subprocess.CalledProcessError as exc:
+                    print("Command failed. Exit code, StdErr:", exc.returncode, exc.output)
+                    sys.exit('Error produced by dem.py')
+                else:
+                    if 'Could not create a stitched DEM. Some tiles are missing' in output:
+                        os.chdir('..')
+                        shutil.rmtree('DEM')
+                        sys.exit('Error in dem.py: Tiles are missing. Ocean???')
+
             else:
-                if 'Could not create a stitched DEM. Some tiles are missing' in output:
-                    os.chdir('..')
-                    shutil.rmtree('DEM')
-                    sys.exit('Error in dem.py: Tiles are missing. Ocean???')
+                dem_dir = os.getcwd()
+                ssh_command_list = ['s.bgood', 'cd {0}'.format(dem_dir), command]
+                host = os.getenv('DOWNLOADHOST')
+                try:
+                    status = ssh_with_commands(host, ssh_command_list)
+                except subprocess.CalledProcessError as exc:
+                    print("Command failed. Exit code, StdErr:", exc.returncode, exc.output)
+                    sys.exit('Error produced by dem.py using ' + host)
+
+            #print('Exit status from dem.py: {0}'.format(status))
+
+            xmlFile = glob.glob('demLat_*.wgs84.xml')[0]
+
+            fin = open(xmlFile, 'r')
+            fout = open("tmp.txt", "wt")
+            for line in fin:
+                fout.write(line.replace('demLat', dem_dir + '/demLat'))
+            fin.close()
+            fout.close()
+            os.rename('tmp.txt', xmlFile)
+
         else:
-            dem_dir = os.getcwd()
-            ssh_command_list = ['s.bgood', 'cd {0}'.format(dem_dir), command]
-            host = os.getenv('DOWNLOADHOST')
-            try:
-                status = ssh_with_commands(host, ssh_command_list)
-            except subprocess.CalledProcessError as exc:
-                print("Command failed. Exit code, StdErr:", exc.returncode, exc.output)
-                sys.exit('Error produced by dem.py using ' + host)
+            sys.ext('Error unspported demMethod option: ' + inps.template['topsStack.demMethod'])
 
-        #print('Exit status from dem.py: {0}'.format(status))
-
-        xmlFile = glob.glob('demLat_*.wgs84.xml')[0]
-
-        fin = open(xmlFile, 'r')
-        fout = open("tmp.txt", "wt")
-        for line in fin:
-            fout.write(line.replace('demLat', dem_dir + '/demLat'))
-        fin.close()
-        fout.close()
-        os.rename('tmp.txt', xmlFile)
-
-    else:
-        sys.ext('Error unspported demMethod option: ' + inps.template['topsStack.demMethod'])
-
-    print('\n###############################################')
-    print('End of dem_rsmas.py')
-    print('################################################\n')
+        print('\n###############################################')
+        print('End of dem_rsmas.py')
+        print('################################################\n')
 
     return None
 
@@ -180,10 +181,16 @@ def call_ssara_dem(inps, cwd):
 def make_dem_dir(work_dir):
     dem_dir = os.path.join(work_dir, 'DEM')
     if os.path.isdir(dem_dir):
-        shutil.rmtree(dem_dir)
-    os.mkdir(dem_dir)
-    os.chdir(dem_dir)
-    return os.getcwd()
+        products = glob.glob(os.path.join(dem_dir, '*dem.wgs84*'))
+        if len(products) >= 3:
+            print('DEM products already exist. if not satisfying, remove the folder and run again')
+            return False
+        else:
+            shutil.rmtree(dem_dir)
+    else:
+        os.mkdir(dem_dir)
+        os.chdir(dem_dir)
+        return os.getcwd()
 
 
 def grd_to_xml(cwd):

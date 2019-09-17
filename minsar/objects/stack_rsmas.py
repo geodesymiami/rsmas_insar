@@ -147,7 +147,10 @@ class rsmasRun(object):
         configObj.plmethod = inps.template['minopy.plmethod']
         configObj.generate_igram('[Function-1]')
         configObj.finalize()
-        self.runf.write(inps.template['topsStack.textCmd'] + pathObj.wrappercommandtops + configName + '\n')
+        if inps.template['topsStack.textCmd'] is None or inps.template['topsStack.textCmd'] == 'None':
+            self.runf.write(pathObj.wrappercommandtops + configName + '\n')
+        else:
+            self.runf.write(inps.template['topsStack.textCmd'] + pathObj.wrappercommandtops + configName + '\n')
 
     def unwrap(self, inps, pairs):
         for pair in pairs:
@@ -168,7 +171,10 @@ class rsmasRun(object):
             configObj.azimuthLooks = inps.template['topsStack.azimuthLooks']
             configObj.unwrap('[Function-1]')
             configObj.finalize()
-            self.runf.write(inps.template['topsStack.textCmd'] + pathObj.wrappercommandtops + configName + '\n')
+            if inps.template['topsStack.textCmd'] is None or inps.template['topsStack.textCmd'] == 'None':
+                self.runf.write(pathObj.wrappercommandtops + configName + '\n')
+            else:
+                self.runf.write(inps.template['topsStack.textCmd'] + pathObj.wrappercommandtops + configName + '\n')
 
     def finalize(self):
         self.runf.close()

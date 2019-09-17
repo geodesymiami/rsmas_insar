@@ -24,7 +24,7 @@ nav:
     - Home: README.md
     - User Guide:
         - Installation: installation.md
-<#      - Example datasets: example_dataset.md
+#      - Example datasets: example_dataset.md
         - Example directory structure: dir_structure.md
         - Example template files: examples/input_files/README.md
 #        - Tutorials in Jupyter Notebook: tutorials/README.md

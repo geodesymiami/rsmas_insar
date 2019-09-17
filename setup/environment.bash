@@ -12,7 +12,7 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 [ -z ${WORKDIR} ] && export WORKDIR=~/insarlab
 [ -z ${USER_PREFERRED} ] && export USER_PREFERRED=$USER
 [ -z ${DOWNLOADHOST} ] && export DOWNLOADHOST=local
-[ -z ${PROJECTNAME} ] && export PROJECTNAME=insarlab
+[ -z ${JOBSHEDULER_PROJECTNAME} ] && export JOBSHEDULER_PROJECTNAME=insarlab
 [ -z ${SENTINEL_ORBITS} ] && export SENTINEL_ORBITS=${WORKDIR}/S1orbits
 [ -z ${SENTINEL_AUX} ] && export SENTINEL_AUX=${WORKDIR}/S1aux
 [ -z ${WEATHER_DIR} ] && export WEATHER_DIR=${WORKDIR}/WEATHER
