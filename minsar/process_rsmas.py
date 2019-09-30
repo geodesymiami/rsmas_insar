@@ -163,6 +163,7 @@ class RsmasInsar:
         self.work_dir = inps.work_dir
         self.project_name = inps.project_name
         self.template = inps.template
+
         self.image_products_flag = inps.template['image_products_flag']
         self.insarmaps_flag = inps.template['insarmaps_flag']
 
@@ -256,7 +257,8 @@ class RsmasInsar:
                 self.run_timeseries()
 
             elif sname == 'insarmaps':
-                self.run_insarmaps()
+                if self.insarmaps_flag:
+                    self.run_insarmaps()
 
             elif sname == 'imageProducts':
                 self.run_image_products()
