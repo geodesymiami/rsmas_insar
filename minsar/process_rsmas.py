@@ -166,6 +166,9 @@ class RsmasInsar:
         self.image_products_flag = inps.template['image_products_flag']
         self.insarmaps_flag = inps.template['insarmaps_flag']
 
+        self.image_products_flag = inps.template['image_products_flag']
+        self.insarmaps_flag = inps.template['insarmaps_flag']
+
         if 'demMethod' in inps.template and inps.template['demMethod'] == 'boundingBox':
             self.dem_flag = '--boundingBox'
         else:
@@ -256,7 +259,8 @@ class RsmasInsar:
                 self.run_timeseries()
 
             elif sname == 'insarmaps':
-                self.run_insarmaps()
+                if self.insarmaps_flag:
+                    self.run_insarmaps()
 
             elif sname == 'imageProducts':
                 self.run_image_products()

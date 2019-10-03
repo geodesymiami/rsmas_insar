@@ -7,6 +7,7 @@
 from pathlib import Path
 import importlib
 import logging
+import os
 mpl_logger = logging.getLogger('matplotlib')
 mpl_logger.setLevel(logging.WARNING)
 
@@ -18,7 +19,6 @@ __all__ = [
     'email_results',
     'execute_runfiles',
     'export_amplitude_tif',
-    'export_ortho_geo',
     'ifgramStack_to_ifgram_and_coherence',
     'ingest_insarmaps',
     'job_submission',
@@ -26,6 +26,12 @@ __all__ = [
     'process_rsmas',
     'version',
 ]
+
+stack_path = os.path.basename(os.getenv('ISCE_STACK'))
+if stack_path == 'topsStack':
+    __all__ = __all__ + ['export_ortho_geo']
+
+print(__all__)
 
 root_module = Path(__file__).parent.parent.name   # minsar
 for module in __all__:
