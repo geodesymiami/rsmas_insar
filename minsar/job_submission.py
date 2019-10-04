@@ -235,19 +235,23 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
     elif scheduler == "PBS":
         command = "qsub < " + os.path.join(work_dir, job_file_name)
     elif scheduler == 'SLURM':
-
         hostname = subprocess.Popen("hostname", shell=True, stdout=subprocess.PIPE).stdout.read().decode("utf-8")
         if hostname.startswith('login'):
             command = "sbatch " + os.path.join(work_dir, job_file_name)
         else:
-            command = "ibrun {}; wait".format(os.path.join(work_dir, job_file_name))
+            job_num = '{}99999'.format(job_file_name.split('_')[1])
+            command = "srun {} > {} 2>{} ".format(os.path.join(work_dir, job_file_name),
+                                                  os.path.join(work_dir, job_file_name.split('.')[0] +
+                                                               '_{}.o'.format(job_num)),
+                                                  os.path.join(work_dir, job_file_name.split('.')[0] +
+                                                               '_{}.e'.format(job_num)))
 
     else:
         raise Exception("ERROR: scheduler {0} not supported".format(scheduler))
 
-
     try:
-        output = subprocess.check_output(command, shell=True)
+        output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+
     except subprocess.CalledProcessError as grepexc:
         print("error code", grepexc.returncode, grepexc.output)
 
@@ -261,7 +265,11 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
         # uses '7319.eos\n'
         job_number = output.decode("utf-8").split("\n")[0]
     elif scheduler == 'SLURM':
-        job_number = str(output).split("\\n")[-2].split(' ')[-1]
+        try:
+            job_number = str(output).split("\\n")[-2].split(' ')[-1]
+        except:
+            job_number = job_num
+
     else:
         raise Exception("ERROR: scheduler {0} not supported".format(scheduler))
 
@@ -391,7 +399,18 @@ def submit_job_with_launcher(batch_file, work_dir='.', memory='4000', walltime='
 
     job_number = submit_single_job(job_file_name, work_dir, scheduler)
 
-    return 
+    i = 0
+    wait_time_sec = 60
+    total_wait_time_min = 0
+    out = work_dir + "/{}_{}.o".format(job_file_name.split('.')[0], job_number)
+
+    while not os.path.exists(out):
+        print("Waiting for job {} output file after {} minutes".format(job_file_name, total_wait_time_min))
+        total_wait_time_min += wait_time_sec / 60
+        time.sleep(wait_time_sec)
+        i += 1
+
+    return
 
 
 if __name__ == "__main__":

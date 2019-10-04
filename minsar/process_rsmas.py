@@ -28,11 +28,11 @@ step_list, step_help = pathObj.process_rsmas_help()
 EXAMPLE = """example:
       process_rsmas.py  <custom_template_file>              # run with default and custom templates
       process_rsmas.py  <custom_template_file>  --submit    # submit as job
-      process_rsmas.py  -h / --help                       # help 
+      process_rsmas.py  -h / --help                       # help
       process_rsmas.py  -H                                # print    default template options
       # Run with --start/stop/step options
       process_rsmas.py GalapagosSenDT128.template --step  download        # run the step 'download' only
-      process_rsmas.py GalapagosSenDT128.template --start download        # start from the step 'download' 
+      process_rsmas.py GalapagosSenDT128.template --start download        # start from the step 'download'
       process_rsmas.py GalapagosSenDT128.template --stop  ifgrams         # end after step 'interferogram'
     """
 

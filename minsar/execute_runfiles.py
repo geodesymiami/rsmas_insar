@@ -86,26 +86,8 @@ def main(iargs=None):
 
             if os.getenv('JOBSCHEDULER') in ['SLURM', 'sge']:
 
-                hostname = subprocess.Popen("hostname", shell=True, stdout=subprocess.PIPE).stdout.read().decode(
-                    "utf-8")
-                if hostname.startswith('login'):
-
-                    js.submit_job_with_launcher(batch_file=item, work_dir=os.path.join(inps.work_dir, 'run_files'),
-                                                memory=memorymax, walltime=walltimelimit, queue=queuename)
-                else:
-
-                    try:
-                        with open('{}.o'.format(item), 'w') as f:
-                            with contextlib.redirect_stdout(f):
-                                js.submit_job_with_launcher(batch_file=item,
-                                                            work_dir=os.path.join(inps.work_dir, 'run_files'),
-                                                            memory=memorymax, walltime=walltimelimit, queue=queuename)
-                    except:
-                        with open('{}.e'.format(item), 'w') as g:
-                            with contextlib.redirect_stderr(g):
-                                js.submit_job_with_launcher(batch_file=item,
-                                                            work_dir=os.path.join(inps.work_dir, 'run_files'),
-                                                            memory=memorymax, walltime=walltimelimit, queue=queuename)
+                js.submit_job_with_launcher(batch_file=item, work_dir=os.path.join(inps.work_dir, 'run_files'),
+                                            memory=memorymax, walltime=walltimelimit, queue=queuename)
 
             else:
 
@@ -113,10 +95,10 @@ def main(iargs=None):
                                             work_dir=inps.work_dir, memory=memorymax, walltime=walltimelimit,
                                             queue=queuename)
 
-                putils.remove_zero_size_or_length_error_files(run_file=item)
-                putils.raise_exception_if_job_exited(run_file=item)
-                putils.concatenate_error_files(run_file=item, work_dir=inps.work_dir)
-                putils.move_out_job_files_to_stdout(run_file=item)
+            putils.remove_zero_size_or_length_error_files(run_file=item)
+            putils.raise_exception_if_job_exited(run_file=item)
+            putils.concatenate_error_files(run_file=item, work_dir=inps.work_dir)
+            putils.move_out_job_files_to_stdout(run_file=item)
 
             date_str = datetime.datetime.strftime(datetime.datetime.now(), '%Y%m%d:%H%M%S')
             print(date_str + ' * Job {} completed'.format(item))
