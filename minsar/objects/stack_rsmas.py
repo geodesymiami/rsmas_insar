@@ -132,10 +132,7 @@ class rsmasRun(object):
             configObj.azimuthLooks = inps.template['topsStack.azimuthLooks']
             configObj.generate_igram('[Function-1]')
             configObj.finalize()
-            if inps.template['topsStack.textCmd'] is None or inps.template['topsStack.textCmd'] == 'None':
-                self.runf.write(pathObj.wrappercommandtops + configName + '\n')
-            else:
-                self.runf.write(inps.template['topsStack.textCmd'] + pathObj.wrappercommandtops + configName + '\n')
+            self.runf.write(inps.template['topsStack.textCmd'] + pathObj.wrappercommandtops + configName + '\n')
         configName = os.path.join(self.config_path, 'config_generate_quality_map')
         configObj = rsmasConfig(self.config_path, configName)
         configObj.configure(self)
