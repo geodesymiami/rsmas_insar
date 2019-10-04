@@ -18,8 +18,7 @@ import minsar.utils.process_utilities as putils
 import minsar.job_submission as js
 import mergeBursts as mb
 
-# FA 9/19: commented out as `import boto3 hangs`
-#from upload_image_products import upload_to_s3
+from upload_image_products import upload_to_s3
 
 pathObj = PathFind()
 #################################################################################
@@ -114,7 +113,7 @@ def main(iargs=None):
         putils.concatenate_error_files(run_file=item, work_dir=inps.work_dir)
         putils.move_out_job_files_to_stdout(run_file=item)
 
-    #upload_to_s3(pic_dir)
+    upload_to_s3(pic_dir)
 
     return
 
