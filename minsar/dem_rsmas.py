@@ -226,7 +226,7 @@ def grd_to_xml(cwd):
     xmlparamters['c2sv'] = round(float(re.findall(r'Upper Right\s+\(\s*.\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0]), 1)
 
     xmlparamters['numbands'] = re.findall(r'Band (\d+) \w', tempstr)[0]
-    xmlparamters['ref'] = re.findall(r'GEOGCS\["(.+)",', tempstr)[0].replace(' ', '')
+    xmlparamters['ref'] = re.findall(r'GEOGRCS\["(.+)",', tempstr)[0].replace(' ', '')
     xmlparamters['length'] = xmlparamters['c2size']
     xmlparamters['width'] = xmlparamters['c1size']
     xmlparamters['xmax'] = xmlparamters['c1ev']
