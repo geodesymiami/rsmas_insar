@@ -9,7 +9,8 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 [ -z $SCRATCHDIR ] && echo ERROR: SCRATCHDIR is required variable && return
 
 #  set customizable variables to defaults if not given
-[ -z ${WORKDIR} ] && export WORKDIR=~/insarlab
+#[ -z ${WORKDIR} ] && export WORKDIR=~/insarlab
+[ -z ${WORKDIR} ] && export WORKDIR=/data/usrname/insarlab
 [ -z ${USER_PREFERRED} ] && export USER_PREFERRED=$USER
 [ -z ${DOWNLOADHOST} ] && export DOWNLOADHOST=local
 [ -z ${JOBSHEDULER_PROJECTNAME} ] && export JOBSHEDULER_PROJECTNAME=insarlab
