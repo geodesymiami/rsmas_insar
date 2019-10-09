@@ -127,7 +127,7 @@ def main(iargs=None):
             os.rename('tmp.txt', xmlFile)
 
         else:
-            sys.exit('Error unspported demMethod option: ' + inps.template['topsStack.demMethod'])
+            sys.exit('Error unspported demMethod option: ' + inps.template['demMethod'])
 
         print('\n###############################################')
         print('End of dem_rsmas.py')
