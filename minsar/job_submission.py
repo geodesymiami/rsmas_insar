@@ -258,7 +258,7 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
     # get job number to return
     if scheduler == "LSF":
         # works for 'Job <19490923> is submitted to queue <general>.\n'
-        job_number = output.decode("utf-8").split("\n")[0].split("<")[1].split(">")[0]
+        job_number = output.decode("utf-8").split("\n")[1].split("<")[1].split(">")[0]
     elif scheduler == "PBS":
         # extracts number from '7319.eos\n'
         job_number = output.decode("utf-8").split("\n")[0].split(".")[0]
