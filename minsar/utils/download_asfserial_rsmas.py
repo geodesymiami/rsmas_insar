@@ -17,7 +17,6 @@ import password_config as password
 
 def main(iargs=None):
 
-    global inps
     inps = putils.cmd_line_parse(iargs, script='download_rsmas')
 
     config = putils.get_config_defaults(config_file='job_defaults.cfg')
@@ -59,18 +58,11 @@ def main(iargs=None):
     except OSError:
         pass
     
-    global dataset_template
     dataset_template = Template(inps.custom_template_file)
     dataset_template.options.update(PathFind.correct_for_ssara_date_format(dataset_template.options))
     subprocess.Popen("rm new_files.csv", shell=True).wait()
-    if inps.seasonalStartDate is not None and inps.seasonalEndDate is not None: 
-        global x
-        global ogStartYearInt
-        global y
-        global YearRange
-        global seasonalStartDateAddOn
-        global seasonalEndDateAddOn
-        global ogEndDate
+    standardTuple = (inps, dataset_template)
+    if inps.seasonalStartDate is not None and inps.seasonalEndDate is not None:
         ogStartYearInt = int(dataset_template.options['ssaraopt.startDate'][:4])
         if int(inps.seasonalStartDate) > int(inps.seasonalEndDate):
             y = 1
@@ -83,10 +75,11 @@ def main(iargs=None):
         seasonalEndDateAddOn = '-' + inps.seasonalEndDate[:2] + '-' + inps.seasonalEndDate[2:]
         ogEndDate = dataset_template.options['ssaraopt.endDate']
         for x in range(YearRange):
-            generate_files_csv(project_slc_dir, inps.custom_template_file)
+            seasonalTuple = standardTuple + (x, ogStartYearInt, y, YearRange, seasonalStartDateAddOn, seasonalEndDateAddOn, ogEndDate)
+            generate_files_csv(project_slc_dir, inps.custom_template_file, seasonalTuple)
             y += 1
     else:
-        generate_files_csv(project_slc_dir, inps.custom_template_file)
+        generate_files_csv(project_slc_dir, inps.custom_template_file, standardTuple)
     succesful = run_download_asf_serial(project_slc_dir, logger)
     change_file_permissions()
     logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
@@ -95,14 +88,23 @@ def main(iargs=None):
     return None
 
 
-def generate_files_csv(slc_dir, custom_template_file):
+def generate_files_csv(slc_dir, custom_template_file, tupleParam):
     """ Generates a csv file of the files to download serially.
     Uses the `awk` command to generate a csv file containing the data files to be download
     serially. The output csv file is then sent through the `sed` command to remove the first five
     empty values to eliminate errors in download_ASF_serial.py.
     """
-
+    
+    inps = tupleParam[0]
+    dataset_template = tupleParam[1]
     if inps.seasonalStartDate is not None and inps.seasonalEndDate is not None:
+        x = tupleParam[2]
+        ogStartYearInt = tupleParam[3]
+        y = tupleParam[4]
+        YearRange = tupleParam[5]
+        seasonalStartDateAddOn = tupleParam[6]
+        seasonalEndDateAddOn = tupleParam[7]
+        ogEndDate = tupleParam[8]
         if x == 0:
             if YearRange == 1:
                 if y == 0:
