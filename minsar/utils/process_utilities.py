@@ -68,6 +68,8 @@ def add_download_data(parser):
     flag_parser = parser.add_argument_group('Download data options:')
     flag_parser.add_argument('--delta_lat', dest='delta_lat', default='0.0', type=float,
                         help='delta to add to latitude from boundingBox field, default is 0.0')
+    flag_parser.add_argument('--seasonalStartDate', dest='seasonalStartDate', type=str, help ='seasonal start date to specify download dates within start and end dates, example: a seasonsal start date of January 1 would be added as --seasonalEndDate 0101')
+    flag_parser.add_argument('--seasonalEndDate', dest='seasonalEndDate', type=str, help ='seasonal end date to specify download dates within start and end dates, example: a seasonsal end date of December 31 would be added as --seasonalEndDate 1231')    
 
     return parser
 
