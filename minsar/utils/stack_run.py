@@ -35,9 +35,10 @@ class CreateRun:
         for item in inps.topsStack_template:
             if item == 'useGPU':
                 if inps.topsStack_template[item] == 'True':
-                    self.command_options = self.command_options + ['--' + item]
-            elif not inps.topsStack_template[item] is None:
-                self.command_options = self.command_options + ['--' + item] + [inps.topsStack_template[item]]
+                    self.command_options.append('--' + item)
+            elif inps.topsStack_template[item]:
+                self.command_options.append('--' + item)
+                self.command_options.append(inps.topsStack_template[item])
 
         clean_list = pathObj.isce_clean_list()
         for item in clean_list[0]:

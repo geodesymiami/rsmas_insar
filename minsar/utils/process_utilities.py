@@ -253,7 +253,7 @@ def create_default_template(temp_inps):
     required_template_keys = pathObj.required_template_options
 
     for template_key in required_template_keys:
-        if not template_key in custom_tempObj.options:
+        if template_key not in custom_tempObj.options:
             raise Exception('ERROR: {0} is required'.format(template_key))
 
     # find default values from minsar_template_defaults.cfg to assign to default_tempObj
@@ -269,7 +269,7 @@ def create_default_template(temp_inps):
 
     # update default_temObj with custom_tempObj
     for key, value in custom_tempObj.options.items():
-        if not value in [None, 'auto']:
+        if value not in [None, 'auto']:
             inps.template.update({key: os.path.expandvars(value.strip("'"))})
 
     # update template file if necessary
@@ -302,7 +302,7 @@ def update_template_file(TEMP_FILE, custom_templateObj):
     update_status = False
 
     for key, value in custom_templateObj.options.items():
-        if not key in tempObj.options or not tempObj.options[key] == value:
+        if key not in tempObj.options or tempObj.options[key] != value:
             tempObj.options[key] = value
             update_status = True
 
@@ -466,11 +466,7 @@ def make_run_list(work_dir):
     """ exports run files to a list: run_file_list. """
 
     run_list = glob.glob(os.path.join(work_dir, pathObj.rundir) + '/run_*')
-    run_test = glob.glob(os.path.join(work_dir, pathObj.rundir) + '/run_*')
-    for item in run_test:
-        test = item.split('/')[-1]
-        if test.endswith('.e') or test.endswith('.o') or test.endswith('.job'):
-            run_list.remove(item)
+    run_list = filter(lambda x: x.split(".")[-1] not in ['e', 'o', 'job'], run_list)
     run_list = natsorted(run_list)
     return run_list
 

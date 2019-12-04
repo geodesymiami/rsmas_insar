@@ -44,7 +44,7 @@ def main(iargs=None):
 
     time.sleep(wait_seconds)
 
-    if not iargs is None:
+    if iargs is not None:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
     else:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
