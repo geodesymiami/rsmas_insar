@@ -1,6 +1,7 @@
 import os
 import boto3
 import botocore
+from minsar.download_rsmas import ssh_with_commands
 
 def upload_to_s3(products_directory):
 
@@ -22,3 +23,15 @@ def upload_to_s3(products_directory):
         #print(f)
         s3.upload_file(os.path.join(products_directory, f), S3_BUCKET_NAME, f)
         print("{} has been succesfully uploaded to {}".format(f, S3_BUCKET_NAME))
+
+def upload_to_jetstream(products_directory):
+
+    products = os.listdir(products_directory)
+    print(products)
+
+    for f in products:
+        f = os.path.join(products_directory, f)
+        ssh_command_list = ["scp {} centos@129.114.104.223:/data/hazard_products".format(f)]
+
+        ssh_with_commands('famelung@pegasus.ccs.miami.edu', ssh_command_list)
+        print('{} succesfully uploaded to Jetstream data repository'.format(f))
