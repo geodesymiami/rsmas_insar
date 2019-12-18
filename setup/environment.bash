@@ -93,7 +93,7 @@ export PATH=${PATH}:${RSMASINSAR_HOME}/sources/MimtPy
 export PATH=${PATH}:${MINTPY_HOME}/mintpy:${MINTPY_HOME}/sh
 export PATH=${PYTHON3DIR}/bin:${PATH}
 export PATH=${PATH}:${PROJ_LIB}
-export PATH=${PATH}:${RSMASINSAR_HOME}/3rdparty/tippecanoe/bin
+export PATH=${PATH}:${RSMASINSAR_HOME}/3rdparty/tippecanoe
 export PATH=${PATH}:${DASK_CONFIG}
 [ -n ${MATLAB_HOME} ] && export PATH=${PATH}:${MATLAB_HOME}/bin
 
