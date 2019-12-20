@@ -19,16 +19,13 @@ from minsar import email_results
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
 
-
 ##############################################################################
-
 
 def main(iargs=None):
 
     inps = putils.cmd_line_parse(iargs, script='upload_dataserver')
 
     config = putils.get_config_defaults(config_file='job_defaults.cfg')
-
 
     job_file_name = 'upload_dataserver'
     job_name = job_file_name
@@ -78,7 +75,8 @@ def main(iargs=None):
 
     for pattern in rsync_list:
         command = 'rsync -avuz ' + inps.work_dir + pattern + ' ' + destination + project_name + '/'.join(pattern.split('/')[0:-1])
-        command = 'rsync -avuz -e ssh ' + inps.work_dir + pattern + ' ' + destination + project_name + '/'.join(pattern.split('/')[0:-1])
+        command = 'rsync -avuz -e ssh --chmod=755 ' + inps.work_dir + pattern + ' ' + destination + project_name + '/'.join(pattern.split('/')[0:-1])
+        command = 'rsync -avuz -e ssh --chmod=Du=rwx,Dg=rx,Do=rx ' + inps.work_dir + pattern + ' ' + destination + project_name + '/'.join(pattern.split('/')[0:-1])
         print (command)
         status = subprocess.Popen(command, shell=True).wait()
         if status is not 0:
