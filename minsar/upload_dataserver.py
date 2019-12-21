@@ -58,6 +58,7 @@ def main(iargs=None):
             raise Exception('ERROR in upload_dataserver.py')
 
     # temporary rsync of full mintpy folder
+    # text for test PR 2
 
     command = 'rsync -avuz -e ssh --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r ' + inps.work_dir + '/mintpy ' + destination + project_name + '/full_mintpy'
     print (command)
