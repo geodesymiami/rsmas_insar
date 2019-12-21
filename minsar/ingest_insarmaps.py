@@ -88,7 +88,7 @@ def main(iargs=None):
 
     # Email insarmaps results:
     if inps.email:
-        email_results.main([inps.custom_template_file, '--insarmap'])
+        email_results.main([inps.custom_template_file, '--insarmaps'])
 
     return None
 

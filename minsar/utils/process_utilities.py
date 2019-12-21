@@ -125,7 +125,7 @@ def add_email_args(parser):
 
     em = parser.add_argument_group('Option for emailing insarmaps result.')
     em.add_argument('--insarmaps', action='store_true', dest='insarmaps', default=False,
-                        help='Email insarmap results')
+                        help='Email insarmaps results')
     return parser
 
 
@@ -153,7 +153,7 @@ def add_process_rsmas(parser):
     prs.add_argument('--step', dest='step', metavar='STEP',
                       help='run processing at the named step only')
     prs.add_argument('--insarmaps', action='store_true', dest='insarmap', default=False,
-                        help='Email insarmap results')
+                        help='Email insarmaps results')
 
     return parser
 
