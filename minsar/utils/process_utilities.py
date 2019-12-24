@@ -41,6 +41,8 @@ def cmd_line_parse(iargs=None, script=None):
         parser = add_export_amplitude(parser)
     if script =='email_results':
         parser = add_email_args(parser)
+    if script =='upload_data_products':
+        parser = add_upload_data_products(parser)
     if script == 'smallbaseline_wrapper' or script == 'ingest_insarmaps':
         parser = add_notification(parser)
 
@@ -73,6 +75,22 @@ def add_download_data(parser):
 
     return parser
 
+
+def add_upload_data_products(parser):
+
+    flag_parser = parser.add_argument_group('upload data products flags')
+    flag_parser.add_argument('--mintpy_products',
+                        dest='flag_mintpy_products',
+                        action='store_true',
+                        default=False,
+                        help='uploads mintpy data products to data portal')
+    flag_parser.add_argument('--image_products',
+                        dest='flag_image_products',
+                        action='store_true',
+                        default=False,
+                        help='uploads image data products to data portal')
+
+    return parser
 
 def add_download_dem(parser):
 
@@ -118,7 +136,7 @@ def add_export_amplitude(parser):
                         help='Resampling method (gdalwarp resamplin methods)')
     products.add_argument('-t', '--type', dest='im_type', type=str, default='ortho',
                         help="ortho, geo")
-    products.add_argument('--outDir', dest='out_dir', default='hazard_products', help='output directory.')
+    products.add_argument('--outDir', dest='out_dir', default='image_products', help='output directory.')
 
     return parser
 

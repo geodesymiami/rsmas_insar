@@ -6,7 +6,7 @@ ssaraopt.relativeOrbit            = 128
 ssaraopt.startDate                = 20160601
 ssaraopt.endDate                  = 20160831
 demMethod                         = ssara
-hazard_products_flag              = True
+image_products_flag              = True
 insarmaps_flag                    = False
 
 ######################################################
