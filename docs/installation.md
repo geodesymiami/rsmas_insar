@@ -75,7 +75,7 @@ mkdir -p ../3rdparty
 source ~/accounts/platforms_defaults.bash;
 source environment.bash;
 mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
-./$RSMASINSAR_HOME/setup/install_credential_files.csh;
+$RSMASINSAR_HOME/setup/install_credential_files.csh;
 ```
 
 ### Orbits and aux files
