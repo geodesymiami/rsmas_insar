@@ -82,13 +82,15 @@ def main(iargs=None):
     download('ssara', inps.custom_template_file, slc_dir, outnum=1)
     download('asfserial', inps.custom_template_file, slc_dir, outnum = 1)
 
-    download_success = run_check_download(slc_dir = slc_dir)
+    for i_download in [2,3]:
+        download_success = run_check_download(slc_dir = slc_dir)
 
-    if not download_success:
-       print('check_download.py: There were bad files, download again')
-       message_rsmas.log(inps.work_dir,'check_download.py: there were bad files, download again')
-       download('ssara', inps.custom_template_file, slc_dir, outnum=2)
-       download('asfserial', inps.custom_template_file, slc_dir, outnum = 2)
+        if not download_success:
+           print('check_download.py: There were bad files, download again')
+           message_rsmas.log(inps.work_dir,'check_download.py: there were bad files, download again')
+
+           download('ssara', inps.custom_template_file, slc_dir, outnum = i_download)
+           download('asfserial', inps.custom_template_file, slc_dir, outnum = i_download)
 
 ###########################################################################################
 
