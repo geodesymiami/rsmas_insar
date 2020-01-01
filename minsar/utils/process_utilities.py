@@ -81,7 +81,7 @@ def add_download_data(parser):
 def add_upload_data_products(parser):
 
     flag_parser = parser.add_argument_group('upload data products flags')
-    flag_parser.add_argument('--mintpy_products',
+    flag_parser.add_argument('--mintpy-products',
                         dest='flag_mintpy_products',
                         action='store_true',
                         default=False,
@@ -391,7 +391,6 @@ def rerun_job_if_exit_code_140(run_file):
     print(memory)
 
     for file in files: 
-        #os.remove(file)
         os.remove(file.replace('.o','.e'))
 
     move_out_job_files_to_stdout(run_file)
@@ -406,8 +405,10 @@ def rerun_job_if_exit_code_140(run_file):
     jobs = js.submit_batch_jobs(batch_file=rerun_file, out_dir=os.path.dirname(rerun_file), 
                                 work_dir=os.path.dirname(os.path.dirname(rerun_file)), memory=memory, walltime=new_wall_time,
                                             queue=queuename)
-    move_out_job_files_to_stdout(rerun_file)
     remove_zero_size_or_length_error_files(run_file = rerun_file)
+    raise_exception_if_job_exited(run_file = rerun_file)
+    concatenate_error_files(run_file = rerun_file, work_dir=os.path.dirname(os.path.dirname(run_file)))
+    move_out_job_files_to_stdout(rerun_file)
 
 ##########################################################################
 
@@ -537,7 +538,8 @@ def concatenate_error_files(run_file, work_dir):
                     outfile.write(infile.read())
                 os.remove(fname)
                 
-        shutil.move(os.path.abspath(out_name), os.path.abspath(work_dir))
+        shutil.copy(os.path.abspath(out_name), os.path.abspath(work_dir))
+        os.remove(os.path.abspath(out_name))
 
     return None
 
