@@ -12,6 +12,7 @@ import glob
 import sys
 import argparse
 import zipfile
+from minsar.objects import message_rsmas
 
 
 EXAMPLE = """example:
@@ -52,21 +53,21 @@ def check_zipfiles(inps):
         except zipfile.BadZipFile:
             broken_list.append(file)
     if broken_list:
-        print('The broken zipfiles are:')
+        print('Broken zipfiles:')
         for filename in broken_list:
             print(filename)
-    else:
-        print('There are not broken zipfiles!')
     return broken_list
 
 
-def delete_zipfiles(inps,broken_list):
-    """delete data"""
+def delete_files(inps,broken_list):
+    """delete bad files"""
     inputdir = "".join(inps.inputdir)
     os.chdir(inputdir)
     for file in broken_list:
         real_path = os.path.realpath(file)
-        os.remove(real_path)
+        if os.path.exists(real_path):
+            os.remove(real_path)
+            message_rsmas.log(os.getcwd(), os.path.basename(__file__) + ': deleting ' + real_path )
     return
 
 def check_size(inps):
@@ -85,31 +86,31 @@ def check_size(inps):
         if size_bit == 1568:
             bit_1568_list.append(file)
     if bit_0_list:
-        print('0-bit file size:')
+        print('Files with 0-bit size:')
         for file_0 in bit_0_list:
             print(file_0)
-    else:
-        print('0-bit file size files don not exist in this directory!')
     if bit_1568_list:
-        print('1568-bit file size:')
+        print('Files with 1568-bit size:')
         for file_1568 in bit_1568_list:
             print(file_1568)
-    else:
-        print('1568-bit file size files don not exist in this directory!')
     return bit_0_list,bit_1568_list       
              
-
 ##############################################################################
 def main(iargs=None):
     inps = cmd_line_parse(iargs)
 
-    broken_files=check_zipfiles(inps)
-    bit_0_files,bit_1568_files=check_size(inps)
+    broken_files = check_zipfiles(inps)
+    bit_0_files,bit_1568_files = check_size(inps)
 
-    if inps.delete:
-        delete_zipfiles(inps,broken_files)
-        delete_zipfiles(inps,bit_0_files)
-        delete_zipfiles(inps,bit_1568_files)
+    bad_files = broken_files + bit_0_files + bit_1568_files
+    bad_files = list(set(bad_files))
+    number_of_files = len(bad_files)
+    print ('Number of bad files: ', number_of_files)
+
+    if inps.delete and number_of_files > 0:
+        print ('Number of files deleted: ', number_of_files)
+        delete_files(inps,bad_files)
+        
 
 ##########################################################################
 if __name__ == '__main__':
