@@ -102,7 +102,6 @@ def run_check_download(slc_dir):
     f = io.StringIO()
     with redirect_stdout(f):
         check_download.main([slc_dir,'--delete'])
-        check_download.main([slc_dir])
         out = f.getvalue()
    
     if 'Broken zipfiles' in out or 'Files with ' in out:

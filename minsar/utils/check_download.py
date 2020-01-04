@@ -12,6 +12,7 @@ import glob
 import sys
 import argparse
 import zipfile
+from minsar.objects import message_rsmas
 
 
 EXAMPLE = """example:
@@ -66,6 +67,7 @@ def delete_files(inps,broken_list):
         real_path = os.path.realpath(file)
         if os.path.exists(real_path):
             os.remove(real_path)
+            message_rsmas.log(os.getcwd(), os.path.basename(__file__) + ': deleting ' + real_path )
     return
 
 def check_size(inps):
@@ -93,21 +95,21 @@ def check_size(inps):
             print(file_1568)
     return bit_0_list,bit_1568_list       
              
-
 ##############################################################################
 def main(iargs=None):
     inps = cmd_line_parse(iargs)
 
     broken_files = check_zipfiles(inps)
     bit_0_files,bit_1568_files = check_size(inps)
-    number_of_files = len(broken_files) + len(bit_0_files) + len(bit_1568_files)
+
+    bad_files = broken_files + bit_0_files + bit_1568_files
+    bad_files = list(set(bad_files))
+    number_of_files = len(bad_files)
     print ('Number of bad files: ', number_of_files)
 
     if inps.delete and number_of_files > 0:
         print ('Number of files deleted: ', number_of_files)
-        delete_files(inps,broken_files)
-        delete_files(inps,bit_0_files)
-        delete_files(inps,bit_1568_files)
+        delete_files(inps,bad_files)
         
 
 ##########################################################################
