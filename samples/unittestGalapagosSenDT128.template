@@ -7,7 +7,7 @@ ssaraopt.startDate                = 20160601
 ssaraopt.endDate                  = 20160831
 demMethod                         = ssara
 hazard_products_flag              = True
-insarmaps_flag                     = False
+insarmaps_flag                    = False
 
 ######################################################
 
@@ -28,6 +28,6 @@ mintpy.networkInversion.walltime   = 00:15 #[yes / no], auto for no, parallel pr
 mintpy.troposphericDelay.method    = no    # pyaps  #[pyaps / height_correlation / base_trop_cor / no], auto for pyaps
 mintpy.save.hdfEos5                = yes   #[yes / update / no], auto for no, save timeseries to UNAVCO InSAR Archive format
 mintpy.save.hdfEos5.update         = yes   #[yes / no], auto for no, put XXXXXXXX as endDate in output filename
-mintpy.save.kml                    = yes  #[yes / no], auto for yes, save geocoded velocity to Google Earth KMZ file
+mintpy.save.kmz                    = yes  #[yes / no], auto for yes, save geocoded velocity to Google Earth KMZ file
 
 ######################################################

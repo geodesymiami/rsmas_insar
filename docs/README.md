@@ -8,9 +8,7 @@ The main Developers are Sara Mirzaee and Falk Amelung with contributions of many
 
 ## 1. [Installation](./installation.md) ###
 
-## 2. [Set-up in Miami](./set_up_miami.md) ###
-
-## 3. Running MinSAR ###
+## 2. Running MinSAR ###
 
 MinSAR downloads a stack of SLC images, downloads a DEM, processes the interferograms and creates displacement timeseries products. Optional steps are the ingestion into our [dataportal] (https//:insarmaps.miami.edu) and the generation of image products that will soon be made available from another data portal.
 
@@ -37,7 +35,7 @@ Processing can be started at a given step using the `--start` option. The `--ste
 ```
 In order to use either `--start` or `--step`, it is necessary that the previous step was completed.
 
-## 4. Example for Galápagos with Sentinel-1 data ####
+## 3. Example for Galápagos with Sentinel-1 data ####
 The individual processing steps can be run stepwise using
 ```bash
 process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --step  download
@@ -61,9 +59,9 @@ export_ortho_geo.py $SAMPLESDIR/GalapagosSenDT128.template
 ````
 The  processing steps are recorded in the `./log` file in your project directory.
 
-## 5. Processing steps
+## 4. Processing steps
 
-### 5.1 Download data: --step download
+### 4.1 Download data: --step download
 The `download_data.py` script downloads data based on the `ssaraopt` parameters in the template file. It will create an `--intersectsWith={Polygon ..)` string based on `topsStack.boundingBox`.
 
 ```################################# ssara option Parameters #################################
@@ -93,11 +91,11 @@ download_asfserial.py $SAMPLESDIR/GalapagosSenDT128.template --delta_lat 0.1
 ```
 * [Trouble shooting](./download_data_troubleshooting.md)
 
-### 5.2. Download DEM: --step dem
+### 4.2. Download DEM: --step dem
 Downaloading DEM from the USGS
 * [Trouble shooting](./download_dem_troubleshooting.md)
 
-### 5.3. Process interferograms: --step ifgrams
+### 4.3. Process interferograms: --step ifgrams
 
 ```
 create_runfiles

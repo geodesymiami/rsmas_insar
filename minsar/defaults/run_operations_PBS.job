@@ -1,0 +1,17 @@
+#! /bin/tcsh
+#PBS -N run_operations
+#PBS -N -u famelung@rsmas.miami.edu
+#PBS -o /home/famelung/insarlab/OPERATIONS/LOGS/JOB_SUBMISSION_LOGS/z_autorun_%J.o
+#PBS -e /home/famelung/insarlab/OPERATIONS/LOGS/JOB_SUBMISSION_LOGS/z_autorun_%J.e
+#PBS -l nodes=1:ppn=1
+#PBS -q batch
+#PBS -l walltime=24:00:00
+#PBS -b 12:00
+
+s.bgood
+nohup run_operations.py --sheet_id 1zAsa5cykv-WS39ufkCZdvFvaOem3Akol8aqzANnsdhE &
+
+sleep 120
+
+bsub < $OPERATIONS/run_operations_LSF.job
+
