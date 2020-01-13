@@ -21,9 +21,10 @@ pathObj = PathFind()
 
 
 def main(iargs=None):
-    """ email mintpy or insarmap results """
+    """ email mintpy or insarmaps results """
 
     inps = putils.cmd_line_parse(iargs, script='email_results')
+    print (inps.insarmaps)
 
     email_address = os.getenv('NOTIFICATIONEMAIL')
 

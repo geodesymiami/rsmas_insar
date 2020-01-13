@@ -12,7 +12,7 @@ ssaraopt.startDate                  = 20180701
 ssaraopt.endDate                    = 20181221
 ssaraopt.parallel                   = 20
 demMethod                           = ssara
-hazard_products_flag                = True
+image_products_flag                 = True
 insarmaps_flag                      = False
 cleanopt                            = 0
 
@@ -37,4 +37,4 @@ mintpy.networkInversion.parallel     = yes                                      
 mintpy.networkInversion.walltime     = 00:30                                             #[yes / no], auto for no, parallel processing using dask
 mintpy.save.hdfEos5                  = yes                                               # [yes / update / no], auto for no, save timeseries to UNAVCO InSAR Archive format
 mintpy.save.hdfEos5.update           = yes                                               # [yes / no], auto for no, put XXXXXXXX as endDate in output filename
-mintpy.save.kml                      = yes                                               # [yes / no], auto for yes, save geocoded velocity to Google Earth KMZ file
+mintpy.save.kmz                      = yes                                               # [yes / no], auto for yes, save geocoded velocity to Google Earth KMZ file

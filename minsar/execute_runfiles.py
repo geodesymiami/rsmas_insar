@@ -73,10 +73,12 @@ def main(iargs=None):
                 memorymax = config['DEFAULT']['memory']
 
             try:
-                if config[step_name]['adjust'] == 'True':
-                    walltimelimit = putils.walltime_adjust(inps, config[step_name]['walltime'])
-                else:
-                    walltimelimit = config[step_name]['walltime']
+                # FA 26 Dec commented out as it seemed wrong
+                #if config[step_name]['adjust'] == 'True':
+                #    walltimelimit = putils.walltime_adjust(inps, config[step_name]['walltime'])
+                #else:
+                #    walltimelimit = config[step_name]['walltime']
+                walltimelimit = config[step_name]['walltime']
             except:
                 walltimelimit = config['DEFAULT']['walltime']
 
@@ -96,6 +98,7 @@ def main(iargs=None):
                                             queue=queuename)
 
             putils.remove_zero_size_or_length_error_files(run_file=item)
+            putils.rerun_job_if_exit_code_140(run_file=item)
             putils.raise_exception_if_job_exited(run_file=item)
             putils.concatenate_error_files(run_file=item, work_dir=inps.work_dir)
             putils.move_out_job_files_to_stdout(run_file=item)

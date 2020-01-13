@@ -67,10 +67,12 @@ def main(iargs=None):
     command2 = 'json_mbtiles2insarmaps.py -u ' + password.insaruser + ' -p ' + password.insarpass + ' --host ' + \
                'insarmaps.miami.edu -P rsmastest -U rsmas\@gmail.com --json_folder ' + \
                json_folder + ' --mbtiles_file ' + mbtiles_file + ' |& tee -a out_insarmaps.log'
+    command3 = 'upload_data_products.py --mintpy-products ' + ' ' + inps.custom_template_file + ' |& tee out_insarmaps.log'
 
     with open(inps.work_dir + '/mintpy/run_insarmaps', 'w') as f:
         f.write(command1 + '\n')
         f.write(command2 + '\n')
+        f.write(command3 + '\n')
 
     out_file = 'out_insarmaps'
     message_rsmas.log(inps.work_dir, command1)
@@ -86,9 +88,15 @@ def main(iargs=None):
     if status is not 0:
         raise Exception('ERROR in json_mbtiles2insarmaps.py')
 
+    message_rsmas.log(inps.work_dir, command3)
+    command3 = '('+command3+' | tee -a '+out_file+'.o) 3>&1 1>&2 2>&3 | tee -a '+out_file+'.e'
+    status = subprocess.Popen(command3, shell=True).wait()
+    if status is not 0:
+        raise Exception('ERROR in upload_data_products.py')
+
     # Email insarmaps results:
     if inps.email:
-        email_results.main([inps.custom_template_file, '--insarmap'])
+        email_results.main([inps.custom_template_file, '--insarmaps'])
 
     return None
 
