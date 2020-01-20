@@ -13,6 +13,7 @@ import glob
 import configparser
 import argparse
 import numpy as np
+import h5py
 from natsort import natsorted
 import xml.etree.ElementTree as ET
 import shutil
@@ -146,7 +147,9 @@ def add_export_amplitude(parser):
 def add_email_args(parser):
 
     em = parser.add_argument_group('Option for emailing insarmaps result.')
-    em.add_argument('--insarmaps', action='store_true', dest='insarmaps', default=False,
+    em.add_argument('--mintpy', action='store_true', dest='email_mintpy_flag', default=False,
+                        help='Email mintpy results')
+    em.add_argument('--insarmaps', action='store_true', dest='email_insarmaps_flag', default=False,
                         help='Email insarmaps results')
     return parser
 
@@ -430,6 +433,22 @@ def create_rerun_run_file(job_files):
              f.write(command_line)
 
     return rerun_file
+
+##########################################################################
+
+def extract_attribute_from_hdf_file(file,attribute):
+    """
+    extract attribute from an HDF5 file
+    :param file: hdf file name
+    :param attr: attribut to extracted
+    :return Updated template file added to temp_inps.
+    """
+
+    with h5py.File(file,'r') as f:
+        metadata = dict(f.attrs)
+        extracted_attribute = metadata[attribute]
+
+    return extracted_attribute
 
 ##########################################################################
 
