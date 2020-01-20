@@ -366,6 +366,8 @@ def submit_job_with_launcher(batch_file, work_dir='.', memory='4000', walltime='
     if not scheduler:
         scheduler = os.getenv("JOBSCHEDULER")
 
+    number_of_threads = 64
+
     os.system('chmod +x {}'.format(batch_file))
     with open(batch_file, 'r+') as f:
         lines = f.readlines()
@@ -378,7 +380,8 @@ def submit_job_with_launcher(batch_file, work_dir='.', memory='4000', walltime='
     job_file_name = os.path.basename(batch_file)
     job_name = job_file_name
 
-    number_of_nodes = np.int(np.ceil(number_of_tasks/68))
+    # stampede has 68 cores per node and 4 threads per core = 272 threads per node
+    number_of_nodes = np.int(np.ceil(number_of_tasks*number_of_threads/(68*4)))
 
     # get lines to write in job file
     job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler, memory, walltime,
@@ -386,7 +389,8 @@ def submit_job_with_launcher(batch_file, work_dir='.', memory='4000', walltime='
 
     job_file_lines.append("\n\nmodule load launcher")
 
-    job_file_lines.append("\n\nexport LAUNCHER_WORKDIR={0}".format(work_dir))
+    job_file_lines.append("\n\nexport OMP_NUM_THREADS={0}".format(number_of_threads))
+    job_file_lines.append("\nexport LAUNCHER_WORKDIR={0}".format(work_dir))
     job_file_lines.append("\nexport LAUNCHER_JOB_FILE={0}\n".format(batch_file))
     job_file_lines.append("\n$LAUNCHER_DIR/paramrun\n")
 
