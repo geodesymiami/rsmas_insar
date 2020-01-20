@@ -119,8 +119,8 @@ def email_mintpy_results(email_address):
 def prepend_ssh_command_if_needed(command):
     """ prepend ssh mail_host if needed """
 
-    HOSTNAME = os.getenv('HOSTNAME')
-    if  HOSTNAME == 'login3' or HOSTNAME == 'login4' or 'vis' in HOSTNAME :
+    PLATFORM_NAME = os.getenv('PLATFORM_NAME')
+    if  PLATFORM_NAME == 'pegasus':
         command = 'ssh pegasus.ccs.miami.edu \"' + command + '\"'
 
     return command

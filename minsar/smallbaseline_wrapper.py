@@ -67,7 +67,8 @@ def main(iargs=None):
 
     # Email Mintpy results
     if inps.email:
-        email_results.main([inps.custom_template_file])
+        email_results.main([inps.custom_template_file, '--mintpy'] )
+
 
     return None
 
