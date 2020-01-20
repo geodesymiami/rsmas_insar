@@ -146,7 +146,7 @@ def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler
     if email_notif:
         job_file_lines.append(prefix + email_option.format(os.getenv("NOTIFICATIONEMAIL")))
     job_file_lines.extend([
-        prefix + process_option.format(1, number_of_tasks),
+        prefix + process_option.format(number_of_nodes, number_of_tasks),
         prefix + stdout_option.format(os.path.join(work_dir, job_file_name)),
         prefix + stderr_option.format(os.path.join(work_dir, job_file_name)),
         prefix + queue_option.format(queue),
