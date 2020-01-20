@@ -104,6 +104,7 @@ def email_mintpy_results(email_address):
             attachmentStr = attachmentStr + ' -a ' + template_file
 
     mailCmd = 'echo \"' + textStr + '\" | mail -s ' + cwd + ' ' + attachmentStr + ' ' + email_address
+    mailCmd = 'cd ' + cwd + '; ' + mailCmd 
 
     command = prepend_ssh_command_if_needed(mailCmd)
     print(command)
@@ -118,7 +119,7 @@ def prepend_ssh_command_if_needed(command):
 
     HOSTNAME = os.getenv('HOSTNAME')
     if  HOSTNAME == 'login3' or HOSTNAME == 'login4' or 'vis' in HOSTNAME :
-        command = 'ssh pegasus.ccs.miami.edu \" ' + command + '\"'
+        command = 'ssh pegasus.ccs.miami.edu \"' + command + '\"'
 
     return command
 
