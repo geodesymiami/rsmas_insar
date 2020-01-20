@@ -11,6 +11,7 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 #  set customizable variables to defaults if not given
 [ -z ${WORKDIR} ] && export WORKDIR=~/insarlab
 [ -z ${USER_PREFERRED} ] && export USER_PREFERRED=$USER
+[ -z ${NOTIFICATIONEMAIL} ] && export NOTIFICATIONEMAIL=${USER_PREFERRED}@rsmas.miami.edu
 [ -z ${DOWNLOADHOST} ] && export DOWNLOADHOST=local
 [ -z ${JOBSHEDULER_PROJECTNAME} ] && export JOBSHEDULER_PROJECTNAME=insarlab
 [ -z ${SENTINEL_ORBITS} ] && export SENTINEL_ORBITS=${WORKDIR}/S1orbits
