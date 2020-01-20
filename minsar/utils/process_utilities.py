@@ -13,6 +13,7 @@ import glob
 import configparser
 import argparse
 import numpy as np
+import h5py
 from natsort import natsorted
 import xml.etree.ElementTree as ET
 import shutil
@@ -430,6 +431,22 @@ def create_rerun_run_file(job_files):
              f.write(command_line)
 
     return rerun_file
+
+##########################################################################
+
+def extract_attribute_from_hdf_file(file,attribute):
+    """
+    extract attribute from an HDF5 file
+    :param file: hdf file name
+    :param attr: attribut to extracted
+    :return Updated template file added to temp_inps.
+    """
+
+    with h5py.File(file,'r') as f:
+        metadata = dict(f.attrs)
+        extracted_attribute = metadata[attribute]
+
+    return extracted_attribute
 
 ##########################################################################
 

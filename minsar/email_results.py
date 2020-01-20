@@ -9,6 +9,7 @@ import sys
 import glob
 import argparse
 import subprocess
+import h5py
 from mintpy.utils import readfile
 import minsar.utils.process_utilities as putils
 from minsar.objects.auto_defaults import PathFind
@@ -57,12 +58,18 @@ def email_insarmaps_results(email_address):
     hdfeos_file = hdfeos_file[0]
     hdfeos_name = os.path.splitext(os.path.basename(hdfeos_file))[0]
 
-    textStr = 'http://insarmaps.miami.edu/start/-0.008/-78.0/7"\?"startDataset=' + hdfeos_name
+    ref_lat = putils.extract_attribute_from_hdf_file(file=hdfeos_file, attribute='REF_LAT')
+    ref_lon = putils.extract_attribute_from_hdf_file(file=hdfeos_file, attribute='REF_LON')
+    ref_lat = str(round(float(ref_lat),1))
+    ref_lon = str(round(float(ref_lon),1))
+         
+    textStr = 'http://insarmaps.miami.edu/start/' + ref_lat + '/' + ref_lon + '/7"\?"startDataset=' + hdfeos_name
 
     mailCmd = 'echo \"' + textStr + '\" | mail -s Miami_InSAR_results:_' + os.path.basename(cwd) + ' ' + email_address
-    command = 'ssh pegasus.ccs.miami.edu \" ' + mailCmd + '\"'
 
+    command = prepend_ssh_command_if_needed(mailCmd)
     print(command)
+
     status = subprocess.Popen(command, shell=True).wait()
     if status is not 0:
         sys.exit('Error in email_insarmaps_results')
@@ -97,13 +104,23 @@ def email_mintpy_results(email_address):
             attachmentStr = attachmentStr + ' -a ' + template_file
 
     mailCmd = 'echo \"' + textStr + '\" | mail -s ' + cwd + ' ' + attachmentStr + ' ' + email_address
-    command = 'ssh pegasus.ccs.miami.edu \"cd ' + cwd + '; ' + mailCmd + '\"'
+
+    command = prepend_ssh_command_if_needed(mailCmd)
     print(command)
     status = subprocess.Popen(command, shell=True).wait()
     if status is not 0:
         sys.exit('Error in email_mintpy_results')
 
     return
+
+def prepend_ssh_command_if_needed(command):
+    """ prepend ssh mail_host if needed """
+
+    HOSTNAME = os.getenv('HOSTNAME')
+    if  HOSTNAME == 'login3' or HOSTNAME == 'login4' or 'vis' in HOSTNAME :
+        command = 'ssh pegasus.ccs.miami.edu \" ' + command + '\"'
+
+    return command
 
 ###########################################################################################
 
