@@ -25,7 +25,6 @@ def main(iargs=None):
     """ email mintpy or insarmaps results """
 
     inps = putils.cmd_line_parse(iargs, script='email_results')
-    print (inps.insarmaps)
 
     email_address = os.getenv('NOTIFICATIONEMAIL')
 
@@ -34,15 +33,18 @@ def main(iargs=None):
     else:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
-    if inps.insarmaps:
+    if inps.email_insarmaps_flag:
         email_insarmaps_results(email_address)
 
         if int(inps.template['cleanopt']) == 4:
             cleanlist = pathObj.isce_clean_list
             putils.remove_directories(cleanlist[4])
 
-    else:
+        return
+
+    if inps.email_mintpy_flag:
         email_mintpy_results(email_address)
+        return
 
     return None
 

@@ -147,7 +147,9 @@ def add_export_amplitude(parser):
 def add_email_args(parser):
 
     em = parser.add_argument_group('Option for emailing insarmaps result.')
-    em.add_argument('--insarmaps', action='store_true', dest='insarmaps', default=False,
+    em.add_argument('--mintpy', action='store_true', dest='email_mintpy_flag', default=False,
+                        help='Email mintpy results')
+    em.add_argument('--insarmaps', action='store_true', dest='email_insarmaps_flag', default=False,
                         help='Email insarmaps results')
     return parser
 
