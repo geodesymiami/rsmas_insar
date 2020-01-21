@@ -16,7 +16,6 @@
 import os
 import sys
 import glob
-import argparse
 import shutil
 import re
 import subprocess

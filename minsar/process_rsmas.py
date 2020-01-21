@@ -68,27 +68,20 @@ def main(iargs=None):
     message_rsmas.log(inps.work_dir, '##### NEW RUN #####')
     message_rsmas.log(inps.work_dir, command_line)
 
-    config = putils.get_config_defaults(config_file='job_defaults.cfg')
-
-    job_file_name = 'process_rsmas'
-    if inps.wall_time == 'None':
-        inps.wall_time = config[job_file_name]['walltime']
-
-    wait_seconds, new_wall_time = putils.add_pause_to_walltime(inps.wall_time, inps.wait_time)
+    time.sleep(putils.pause_seconds(inps.wait_time))
 
     #########################################
     # Submit job
     #########################################
     if inps.submit_flag:
-        job = js.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir, new_wall_time)
+        job_file_name = 'process_rsmas'
+        job = js.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir)
         # run_operations.py needs this print statement for now.
         # This is not for debugging purposes.
         # DO NOT REMOVE.
         print(job)
 
     else:
-        time.sleep(wait_seconds)
-
         objInsar = RsmasInsar(inps)
         objInsar.run(steps=inps.runSteps)
 

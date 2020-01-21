@@ -7,9 +7,7 @@
 import os
 import sys
 import glob
-import argparse
 import subprocess
-from mintpy.utils import readfile
 import minsar.utils.process_utilities as putils
 from minsar.objects.auto_defaults import PathFind
 from minsar.objects import message_rsmas
