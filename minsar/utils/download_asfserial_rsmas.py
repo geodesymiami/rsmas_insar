@@ -13,7 +13,7 @@ import minsar.job_submission as js
 import glob
 from minsar.objects.auto_defaults import PathFind
 import password_config as password
-
+from multiprocessing import Pool
 
 def main(iargs=None):
 
@@ -27,6 +27,7 @@ def main(iargs=None):
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     logfile_name = inps.work_dir + '/asfserial_rsmas.log'
+    global logger
     logger = RsmasLogger(file_name=logfile_name)
 
     #########################################
@@ -49,6 +50,7 @@ def main(iargs=None):
     else:
         inps.slc_dir = os.path.join(inps.work_dir, 'SLC')
 
+    global project_slc_dir
     project_slc_dir = os.path.join(inps.work_dir, 'SLC')
 
     os.chdir(inps.slc_dir)
@@ -61,25 +63,66 @@ def main(iargs=None):
     dataset_template = Template(inps.custom_template_file)
     dataset_template.options.update(PathFind.correct_for_ssara_date_format(dataset_template.options))
     subprocess.Popen("rm new_files.csv", shell=True).wait()
-    standardTuple = (inps, dataset_template)
+    standard_tuple = (inps, dataset_template)
+    seasonal_start_date = None
+    seasonal_end_date = None
+    try:
+        if dataset_template.options['seasonalStartDate'] is not None and dataset_template.options['seasonalEndDate'] is not None:
+            seasonal_start_date = dataset_template.options['seasonalStartDate']
+            seasonal_end_date = dataset_template.options['seasonalEndDate']
+    except:
+        pass
     if inps.seasonalStartDate is not None and inps.seasonalEndDate is not None:
-        ogStartYearInt = int(dataset_template.options['ssaraopt.startDate'][:4])
-        if int(inps.seasonalStartDate) > int(inps.seasonalEndDate):
-            y = 1
+        seasonal_start_date = inps.seasonalStartDate
+        seasonal_end_date = inps.seasonalEndDate
+    if seasonal_start_date is not None and seasonal_end_date is not None:
+        original_start_year = int(dataset_template.options['ssaraopt.startDate'][:4])
+        if int(seasonal_start_date) > int(seasonal_end_date):
+            offset = 1
         else:
-            y = 0
-        YearRange = int(dataset_template.options['ssaraopt.endDate'][:4]) - ogStartYearInt + 1
-        if YearRange > 1 and y == 1:
-            YearRange = YearRange - 1
-        seasonalStartDateAddOn = '-' + inps.seasonalStartDate[:2] + '-' + inps.seasonalStartDate[2:]
-        seasonalEndDateAddOn = '-' + inps.seasonalEndDate[:2] + '-' + inps.seasonalEndDate[2:]
-        ogEndDate = dataset_template.options['ssaraopt.endDate']
-        for x in range(YearRange):
-            seasonalTuple = standardTuple + (x, ogStartYearInt, y, YearRange, seasonalStartDateAddOn, seasonalEndDateAddOn, ogEndDate)
-            generate_files_csv(project_slc_dir, inps.custom_template_file, seasonalTuple)
-            y += 1
+            offset = 0
+        year_range = int(dataset_template.options['ssaraopt.endDate'][:4]) - original_start_year + 1
+        if year_range > 1 and offset == 1:
+            year_range = year_range - 1
+        ssaraopt_seasonal_start_date = '-' + seasonal_start_date[:2] + '-' + seasonal_start_date[2:]
+        seasonalEndDateAddOn = '-' + seasonal_end_date[:2] + '-' + seasonal_end_date[2:]
+        original_end_date = dataset_template.options['ssaraopt.endDate']
+        for counter in range(year_range):
+            seasonal_tuple = standard_tuple + (counter, original_start_year, offset, year_range, ssaraopt_seasonal_start_date, ssaraopt_seasonal_end_date, original_end_date)
+            generate_files_csv(project_slc_dir, inps.custom_template_file, seasonal_tuple)
+            counter += 1
     else:
-        generate_files_csv(project_slc_dir, inps.custom_template_file, standardTuple)
+        generate_files_csv(project_slc_dir, inps.custom_template_file, standard_tuple)
+    parallel = False
+    try:
+        if dataset_template.options['parallel'] != 'yes':
+            parallel = True
+    except:
+        pass
+    if inps.parallel != 'yes':
+        parallel = True
+    processes = os.cpu_count()
+    try:
+        if dataset_template.options['processes'] is not None:
+            processes = dataset_template.options['processes']
+    except:
+        pass
+    if inps.processes is not None:
+        processes = inps.processes
+    if parallel:
+        comma = '^[^,]+,?'
+        num = 1
+        csv_chunk_files = []
+        while os.stat(project_slc_dir + '/new_files.csv').st_size == 0:
+            subprocess.Popen("grep -E -o '" + comma + "' " + project_slc_dir + "/new_files.csv > " + project_slc_dir + "/new_files" + num + ".csv", shell=True).wait()
+            subprocess.Popen("sed -r -i 's/" + comma + "//' " + project_slc_dir + "/new_files.csv", shell=True).wait()
+            num += 1
+            if num > processes:
+                num = 1
+        for num in range(1, processes + 1):
+            subprocess.Popen("sed -r -i 's/,$//' " + project_slc_dir + "/new_files" + num + ".csv", shell=True).wait()
+            csv_chunk_files.append('new_files' + num + '.csv')
+        Pool(processes).map(run_parallel_download_asf_serial_helper, csv_chunk_files)
     succesful = run_download_asf_serial(project_slc_dir, logger)
     change_file_permissions()
     logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
@@ -97,55 +140,53 @@ def generate_files_csv(slc_dir, custom_template_file, tupleParam):
     
     inps = tupleParam[0]
     dataset_template = tupleParam[1]
-    if inps.seasonalStartDate is not None and inps.seasonalEndDate is not None:
-        x = tupleParam[2]
-        ogStartYearInt = tupleParam[3]
-        y = tupleParam[4]
-        YearRange = tupleParam[5]
-        seasonalStartDateAddOn = tupleParam[6]
-        seasonalEndDateAddOn = tupleParam[7]
-        ogEndDate = tupleParam[8]
-        if x == 0:
-            if YearRange == 1:
-                if y == 0:
-                    if int(inps.seasonalEndDate) < int(dataset_template.options['ssaraopt.startDate'][4:].replace('-', '')) or int(inps.seasonalStartDate) > int(ogEndDate[4:].replace('-', '')):
+    if seasonal_start_date is not None and seasonal_end_date is not None:
+        counter = tupleParam[2]
+        original_start_year = tupleParam[3]
+        offset = tupleParam[4]
+        year_range = tupleParam[5]
+        ssaraopt_seasonal_start_date = tupleParam[6]
+        ssaraopt_seasonal_end_date = tupleParam[7]
+        original_end_date = tupleParam[8]
+        if counter == 0:
+            if year_range == 1:
+                if offset == 0:
+                    if int(seasonal_end_date) < int(dataset_template.options['ssaraopt.startDate'][4:].replace('-', '')) or int(seasonal_start_date) > int(original_end_date[4:].replace('-', '')):
                         return
-                    else:
-                        if int(inps.seasonalStartDate) >  int(dataset_template.options['ssaraopt.startDate'][4:].replace('-', '')):
-                            dataset_template.options['ssaraopt.startDate'] = str(ogStartYearInt) + seasonalStartDateAddOn
-                        if int(inps.seasonalEndDate) < int(ogEndDate[4:].replace('-', '')):
-                            dataset_template.options['ssaraopt.endDate'] = str(ogStartYearInt) + seasonalEndDateAddOn
-                elif int(dataset_template.options['ssaraopt.endDate'][:4]) - ogStartYearInt + 1 == 1:
-                    if int(inps.seasonalStartDate) > int(ogEndDate[4:].replace('-', '')):
+                    if int(seasonal_start_date) >  int(dataset_template.options['ssaraopt.startDate'][4:].replace('-', '')):
+                        dataset_template.options['ssaraopt.startDate'] = str(original_start_year) + ssaraopt_seasonal_start_date
+                    if int(seasonal_end_date) < int(original_end_date[4:].replace('-', '')):
+                        dataset_template.options['ssaraopt.endDate'] = str(original_start_year) + ssaraopt_seasonal_end_date
+                elif int(dataset_template.options['ssaraopt.endDate'][:4]) - original_start_year + 1 == 1:
+                    if int(seasonal_start_date) > int(original_end_date[4:].replace('-', '')):
                         return
-                    elif int(inps.seasonalStartDate) >  int(dataset_template.options['ssaraopt.startDate'][4:].replace('-', '')):
-                        dataset_template.options['ssaraopt.startDate'] = str(ogStartYearInt) + seasonalStartDateAddOn
+                    if int(seasonal_start_date) >  int(dataset_template.options['ssaraopt.startDate'][4:].replace('-', '')):
+                        dataset_template.options['ssaraopt.startDate'] = str(original_start_year) + ssaraopt_seasonal_start_date
                 else:
-                    if int(inps.seasonalStartDate) >  int(dataset_template.options['ssaraopt.startDate'][4:].replace('-', '')):
-                        dataset_template.options['ssaraopt.startDate'] = str(ogStartYearInt) + seasonalStartDateAddOn
-                    if int(inps.seasonalEndDate) < int(ogEndDate[4:].replace('-', '')):
-                        dataset_template.options['ssaraopt.endDate'] = str(ogStartYearInt + y) + seasonalEndDateAddOn
+                    if int(seasonal_start_date) >  int(dataset_template.options['ssaraopt.startDate'][4:].replace('-', '')):
+                        dataset_template.options['ssaraopt.startDate'] = str(original_start_year) + ssaraopt_seasonal_start_date
+                    if int(seasonal_end_date) < int(original_end_date[4:].replace('-', '')):
+                        dataset_template.options['ssaraopt.endDate'] = str(original_start_year + offset) + ssaraopt_seasonal_end_date
             else:
-                if y == 0:
-                    if int(inps.seasonalEndDate) < int(dataset_template.options['ssaraopt.startDate'][4:].replace('-', '')):
-                        return
-                    else: 
-                        if int(inps.seasonalStartDate) >  int(dataset_template.options['ssaraopt.startDate'][4:].replace('-', '')):
-                            dataset_template.options['ssaraopt.startDate'] = str(ogStartYearInt) + seasonalStartDateAddOn
-                        dataset_template.options['ssaraopt.endDate'] = str(ogStartYearInt) + seasonalEndDateAddOn
+                if offset == 0:
+                    if int(seasonal_end_date) < int(dataset_template.options['ssaraopt.startDate'][4:].replace('-', '')):
+                        return 
+                    if int(seasonal_start_date) >  int(dataset_template.options['ssaraopt.startDate'][4:].replace('-', '')):
+                        dataset_template.options['ssaraopt.startDate'] = str(original_start_year) + ssaraopt_seasonal_start_date
+                    dataset_template.options['ssaraopt.endDate'] = str(original_start_year) + ssaraopt_seasonal_end_date
                 else:
-                    if int(inps.seasonalStartDate) >  int(dataset_template.options['ssaraopt.startDate'][4:].replace('-', '')):
-                        dataset_template.options['ssaraopt.startDate'] = str(ogStartYearInt) + seasonalStartDateAddOn
-                    dataset_template.options['ssaraopt.endDate'] = str(ogStartYearInt + y) + seasonalEndDateAddOn
-        elif x < YearRange - 1:
-            dataset_template.options['ssaraopt.startDate'] = str(ogStartYearInt + x) + seasonalStartDateAddOn
-            dataset_template.options['ssaraopt.endDate'] = str(ogStartYearInt + y) + seasonalEndDateAddOn
-        elif x == YearRange - 1:
-            if int(inps.seasonalEndDate) < int(ogEndDate[4:].replace('-', '')):
-                dataset_template.options['ssaraopt.endDate'] = str(ogStartYearInt + y) + seasonalEndDateAddOn
-            else: 
-                dataset_template.options['ssaraopt.endDate'] = ogEndDate
-            dataset_template.options['ssaraopt.startDate'] = str(ogStartYearInt + x) + seasonalStartDateAddOn
+                    if int(seasonal_start_date) >  int(dataset_template.options['ssaraopt.startDate'][4:].replace('-', '')):
+                        dataset_template.options['ssaraopt.startDate'] = str(original_start_year) + ssaraopt_seasonal_start_date
+                    dataset_template.options['ssaraopt.endDate'] = str(original_start_year + offset) + ssaraopt_seasonal_end_date
+        elif counter < year_range - 1:
+            dataset_template.options['ssaraopt.startDate'] = str(original_start_year + counter) + ssaraopt_seasonal_start_date
+            dataset_template.options['ssaraopt.endDate'] = str(original_start_year + offset) + ssaraopt_seasonal_end_date
+        elif counter == year_range - 1:
+            if int(seasonal_end_date) < int(original_end_date[4:].replace('-', '')):
+                dataset_template.options['ssaraopt.endDate'] = str(original_start_year + offset) + ssaraopt_seasonal_end_date
+            else:
+                dataset_template.options['ssaraopt.endDate'] = original_end_date
+            dataset_template.options['ssaraopt.startDate'] = str(original_start_year + counter) + ssaraopt_seasonal_start_date
     ssaraopt = dataset_template.generate_ssaraopt_string()
     ssaraopt = ssaraopt.split(' ')
 
@@ -165,8 +206,10 @@ def generate_files_csv(slc_dir, custom_template_file, tupleParam):
     message_rsmas.log(slc_dir, sed_command)
     subprocess.Popen(sed_command, shell=True).wait()
 
+def run_parallel_download_asf_serial_helper(csv_chunk_file):
+    run_download_asf_serial(project_slc_dir, logger, csv_file=csv_chunk_file)
 
-def run_download_asf_serial(slc_dir, logger, run_number=1):
+def run_download_asf_serial(slc_dir, logger, run_number=1, csv_file='new_files.csv'):
     """ Runs download_ASF_serial.py with proper files.
     Runs adapted download_ASF_serial.py with a CLI username and password and a csv file containing
     the the files needed to be downloaded (provided by ssara_federated_query.py --print)
@@ -177,11 +220,11 @@ def run_download_asf_serial(slc_dir, logger, run_number=1):
         return 0
 
     command = ' '.join(['download_ASF_serial.py', '-username', password.asfuser, '-password', 
-                                              password.asfpass, slc_dir + '/new_files.csv'])
+                                              password.asfpass, slc_dir + '/' + csv_file])
 
     message_rsmas.log(os.getcwd(), command)
     completion_status = subprocess.Popen(' '.join(['download_ASF_serial.py', '-username', password.asfuser, '-password',
-                                                   password.asfpass, slc_dir + '/new_files.csv']), shell=True).wait()
+                                                   password.asfpass, slc_dir + '/' + csv_file]), shell=True).wait()
 
     hang_status = False  # whether or not the download has hung
     wait_time = 6  # wait time in 'minutes' to determine hang status
