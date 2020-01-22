@@ -11,6 +11,7 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 #  set customizable variables to defaults if not given
 [ -z ${WORKDIR} ] && export WORKDIR=~/insarlab
 [ -z ${USER_PREFERRED} ] && export USER_PREFERRED=$USER
+[ -z ${NOTIFICATIONEMAIL} ] && export NOTIFICATIONEMAIL=${USER_PREFERRED}@rsmas.miami.edu
 [ -z ${DOWNLOADHOST} ] && export DOWNLOADHOST=local
 [ -z ${JOBSHEDULER_PROJECTNAME} ] && export JOBSHEDULER_PROJECTNAME=insarlab
 [ -z ${SENTINEL_ORBITS} ] && export SENTINEL_ORBITS=${WORKDIR}/S1orbits
@@ -93,7 +94,7 @@ export PATH=${PATH}:${RSMASINSAR_HOME}/sources/MimtPy
 export PATH=${PATH}:${MINTPY_HOME}/mintpy:${MINTPY_HOME}/sh
 export PATH=${PYTHON3DIR}/bin:${PATH}
 export PATH=${PATH}:${PROJ_LIB}
-export PATH=${PATH}:${RSMASINSAR_HOME}/3rdparty/tippecanoe/bin
+export PATH=${PATH}:${RSMASINSAR_HOME}/3rdparty/tippecanoe
 export PATH=${PATH}:${DASK_CONFIG}
 [ -n ${MATLAB_HOME} ] && export PATH=${PATH}:${MATLAB_HOME}/bin
 

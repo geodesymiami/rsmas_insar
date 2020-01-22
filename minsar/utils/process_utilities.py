@@ -13,12 +13,15 @@ import glob
 import configparser
 import argparse
 import numpy as np
+import h5py
 from natsort import natsorted
 import xml.etree.ElementTree as ET
 import shutil
 from mintpy.defaults.auto_path import autoPath
 from minsar.objects.dataset_template import Template
 from minsar.objects.auto_defaults import PathFind
+
+import minsar.job_submission as js
 
 pathObj = PathFind()
 
@@ -41,6 +44,8 @@ def cmd_line_parse(iargs=None, script=None):
         parser = add_export_amplitude(parser)
     if script =='email_results':
         parser = add_email_args(parser)
+    if script =='upload_data_products':
+        parser = add_upload_data_products(parser)
     if script == 'smallbaseline_wrapper' or script == 'ingest_insarmaps':
         parser = add_notification(parser)
 
@@ -68,9 +73,27 @@ def add_download_data(parser):
     flag_parser = parser.add_argument_group('Download data options:')
     flag_parser.add_argument('--delta_lat', dest='delta_lat', default='0.0', type=float,
                         help='delta to add to latitude from boundingBox field, default is 0.0')
+    flag_parser.add_argument('--seasonalStartDate', dest='seasonalStartDate', type=str, help ='seasonal start date to specify download dates within start and end dates, example: a seasonsal start date of January 1 would be added as --seasonalEndDate 0101')
+    flag_parser.add_argument('--seasonalEndDate', dest='seasonalEndDate', type=str, help ='seasonal end date to specify download dates within start and end dates, example: a seasonsal end date of December 31 would be added as --seasonalEndDate 1231')    
 
     return parser
 
+
+def add_upload_data_products(parser):
+
+    flag_parser = parser.add_argument_group('upload data products flags')
+    flag_parser.add_argument('--mintpy-products',
+                        dest='flag_mintpy_products',
+                        action='store_true',
+                        default=False,
+                        help='uploads mintpy data products to data portal')
+    flag_parser.add_argument('--image_products',
+                        dest='flag_image_products',
+                        action='store_true',
+                        default=False,
+                        help='uploads image data products to data portal')
+
+    return parser
 
 def add_download_dem(parser):
 
@@ -116,7 +139,7 @@ def add_export_amplitude(parser):
                         help='Resampling method (gdalwarp resamplin methods)')
     products.add_argument('-t', '--type', dest='im_type', type=str, default='ortho',
                         help="ortho, geo")
-    products.add_argument('--outDir', dest='out_dir', default='hazard_products', help='output directory.')
+    products.add_argument('--outDir', dest='out_dir', default='image_products', help='output directory.')
 
     return parser
 
@@ -124,8 +147,10 @@ def add_export_amplitude(parser):
 def add_email_args(parser):
 
     em = parser.add_argument_group('Option for emailing insarmaps result.')
-    em.add_argument('--insarmaps', action='store_true', dest='insarmaps', default=False,
-                        help='Email insarmap results')
+    em.add_argument('--mintpy', action='store_true', dest='email_mintpy_flag', default=False,
+                        help='Email mintpy results')
+    em.add_argument('--insarmaps', action='store_true', dest='email_insarmaps_flag', default=False,
+                        help='Email insarmaps results')
     return parser
 
 
@@ -153,7 +178,7 @@ def add_process_rsmas(parser):
     prs.add_argument('--step', dest='step', metavar='STEP',
                       help='run processing at the named step only')
     prs.add_argument('--insarmaps', action='store_true', dest='insarmap', default=False,
-                        help='Email insarmap results')
+                        help='Email insarmaps results')
 
     return parser
 
@@ -347,9 +372,148 @@ def run_or_skip(custom_template_file):
     else:
         return 'skip'
 
+
 ##########################################################################
 
+def rerun_job_if_exit_code_140(run_file):
+    """Find files that exited because walltime exceeed and run again with twice the walltime"""
+    
+    search_string = 'Exited with exit code 140.'
+    files, job_files = find_completed_jobs_matching_search_string(run_file,search_string)
 
+    if len(files) == 0:
+       return
+    
+    rerun_file = create_rerun_run_file(job_files)
+
+    wall_time = extract_walltime_from_job_file(job_files[0])
+    memory = extract_memory_from_job_file(job_files[0])
+    new_wall_time = multiply_walltime(wall_time, factor=2)
+
+    print(new_wall_time)
+    print(memory)
+
+    for file in files: 
+        os.remove(file.replace('.o','.e'))
+
+    move_out_job_files_to_stdout(run_file)
+    
+    # renaming of stdout dir as otherwise it will get deleted in later move_out_job_files_to_stdout step
+    stdout_dir = os.path.dirname(run_file) + '/stdout_' + os.path.basename(run_file)
+    os.rename(stdout_dir,stdout_dir + '_pre_rerun')
+
+    remove_last_job_running_products(run_file)
+
+    queuename = os.getenv('QUEUENAME')
+    jobs = js.submit_batch_jobs(batch_file=rerun_file, out_dir=os.path.dirname(rerun_file), 
+                                work_dir=os.path.dirname(os.path.dirname(rerun_file)), memory=memory, walltime=new_wall_time,
+                                            queue=queuename)
+    remove_zero_size_or_length_error_files(run_file = rerun_file)
+    raise_exception_if_job_exited(run_file = rerun_file)
+    concatenate_error_files(run_file = rerun_file, work_dir=os.path.dirname(os.path.dirname(run_file)))
+    move_out_job_files_to_stdout(rerun_file)
+
+##########################################################################
+
+def create_rerun_run_file(job_files):
+    """Write job file commands into rerun run file"""
+    
+    run_file =  '_'.join(job_files[0].split('_')[0:-1])
+    rerun_file = run_file + '_rerun'
+    try:
+        os.remove(rerun_file)
+    except OSError:
+        pass
+    
+    files = natsorted(job_files)
+    for file in job_files:
+        command_line = get_line_before_last(file) 
+        print(command_line)
+        with open(rerun_file, 'a+') as f:
+             f.write(command_line)
+
+    return rerun_file
+
+##########################################################################
+
+def extract_attribute_from_hdf_file(file,attribute):
+    """
+    extract attribute from an HDF5 file
+    :param file: hdf file name
+    :param attr: attribut to extracted
+    :return Updated template file added to temp_inps.
+    """
+
+    with h5py.File(file,'r') as f:
+        metadata = dict(f.attrs)
+        extracted_attribute = metadata[attribute]
+
+    return extracted_attribute
+
+##########################################################################
+
+def extract_walltime_from_job_file(file):
+    """ Extracts the walltime from an LSF (BSUB) job file """
+    with open(file) as fr:
+        lines = fr.readlines()
+        for line in lines:
+            if '#BSUB -W' in line:
+                walltime = line.split('-W')[1]
+                walltime = walltime.strip()
+                return walltime
+
+##########################################################################
+
+def extract_memory_from_job_file(file):
+    """ Extracts the memory from an LSF (BSUB) job file """
+    with open(file) as fr:
+        lines = fr.readlines()
+        for line in lines:
+            if 'BSUB -R rusage[mem=' in line:
+                memory = line.split('mem=')[1]
+                memory = memory.split(']')[0]
+                return memory
+
+##########################################################################
+
+def get_line_before_last(file):
+    """get the line before last from a file"""
+
+    with open(file) as fr:
+        lines = fr.readlines()
+
+    line_before_last = lines[-2]
+
+    return line_before_last
+
+    return
+
+##########################################################################
+
+def find_completed_jobs_matching_search_string(run_file,search_string):
+    """returns names of files that match seasrch strings (*.e files in run_files)."""
+    
+    files = glob.glob(run_file + '*.o')
+    file_list = []
+
+    files = natsorted(files)
+    for file in files:
+        with open(file) as fr:
+            lines = fr.readlines()
+            for line in lines:
+                if search_string in line: 
+                   file_list.append(file)
+    
+    file_list = natsorted(file_list)
+
+    job_file_list = []
+    for file in file_list:
+        job_file = '_'.join(file.split('_')[0:-1]) + '.job'
+        job_file_list.append(job_file)
+
+    return file_list, job_file_list
+
+##########################################################################
 def raise_exception_if_job_exited(run_file):
     """Removes files with zero size or zero length (*.e files in run_files)."""
     
@@ -365,7 +529,6 @@ def raise_exception_if_job_exited(run_file):
             for line in lines:
                 if search_string in line: 
                    raise Exception("ERROR: {0} exited; contains: {1}".format(file, line))
-
 
 ##########################################################################
 
@@ -394,7 +557,8 @@ def concatenate_error_files(run_file, work_dir):
                     outfile.write(infile.read())
                 os.remove(fname)
                 
-        shutil.move(os.path.abspath(out_name), os.path.abspath(work_dir))
+        shutil.copy(os.path.abspath(out_name), os.path.abspath(work_dir))
+        os.remove(os.path.abspath(out_name))
 
     return None
 
@@ -442,7 +606,11 @@ def move_out_job_files_to_stdout(run_file):
 
     job_files = glob.glob(run_file + '*.job')
     stdout_files = glob.glob(run_file + '*.o')
-    dir_name = os.path.dirname(stdout_files[0])
+
+    if len(job_files) + len(stdout_files) == 0:
+       return
+
+    dir_name = os.path.dirname(run_file)
     out_folder = dir_name + '/stdout_' + os.path.basename(run_file)
     if not os.path.isdir(out_folder):
         os.mkdir(out_folder)
@@ -555,20 +723,32 @@ def walltime_adjust(inps, default_time):
 ############################################################################
 
 
-def add_pause_to_walltime(wall_time, wait_time):
+def pause_seconds(wait_time):
 
-    wall_parts = [int(s) for s in wall_time.split(':')]
     wait_parts = [int(s) for s in wait_time.split(':')]
-
-    minutes = wall_parts[1] + wait_parts[1]
-    hours = wall_parts[0] + wait_parts[0] + int(minutes/60)
-    minutes = int(np.remainder(float(minutes), 60))
-
     wait_seconds = (wait_parts[0] * 60 + wait_parts[1]) * 60
 
-    new_wall_time = '{:02d}:{:02d}'.format(hours, minutes)
+    return wait_seconds
 
-    return wait_seconds, new_wall_time
+############################################################################
+
+
+def multiply_walltime(wall_time, factor):
+    """ increase the walltime in HH:MM format by factor """
+
+    wall_time_parts = [int(s) for s in wall_time.split(':')]
+    minutes = wall_time_parts[1] * factor 
+    hours = wall_time_parts[0] * factor 
+
+    minutes = minutes + ( hours - int(hours)) * 60
+    hours = int(hours)
+
+    hours = hours + int(minutes/60)
+    minutes = minutes - int(minutes/60) * 60
+
+    new_wall_time = '{:02d}:{:02d}'.format(hours,int(round( minutes)))
+
+    return new_wall_time
 
 ############################################################################
 

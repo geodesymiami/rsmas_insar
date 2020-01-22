@@ -22,9 +22,9 @@ if (! -f ~/.netrc) then
 endif
 
 # for pyaps 
-if (! -f 3rdparty/PyAPS/pyaps/model.cfg) then
-      echo Copying default model.cfg for ECMWF download with PyAPS into ../3rdparty/PyAPS/pyaps
-      cp ~/accounts/model.cfg ../3rdparty/PyAPS/pyaps
+if (! -f 3rdparty/PyAPS/pyaps3/model.cfg) then
+      echo Copying default model.cfg for ECMWF download with PyAPS into ../3rdparty/PyAPS/pyaps3
+      cp ~/accounts/model.cfg ../3rdparty/PyAPS/pyaps3
    else
       echo File model.cfg exists already - kept unchanged
 endif

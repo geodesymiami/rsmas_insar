@@ -25,7 +25,7 @@ class PathFind:
         self.wrappercommandstripmap = 'stripmapWrapper.py -c '
         self.masterdir = 'master'
         self.stackdir = 'stack'
-        self.tiffdir = 'hazard_products'
+        self.tiffdir = 'image_products'
         self.daskconfig = os.path.expandvars('${RSMASINSAR_HOME}/minsar/defaults/dask/dask.yaml')
         self.auto_template = self.defaultdir + '/minsar_template.cfg'
         return
