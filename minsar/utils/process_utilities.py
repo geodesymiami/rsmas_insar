@@ -723,22 +723,15 @@ def walltime_adjust(inps, default_time):
 ############################################################################
 
 
-def add_pause_to_walltime(wall_time, wait_time):
+def pause_seconds(wait_time):
 
-    wall_parts = [int(s) for s in wall_time.split(':')]
     wait_parts = [int(s) for s in wait_time.split(':')]
-
-    minutes = wall_parts[1] + wait_parts[1]
-    hours = wall_parts[0] + wait_parts[0] + int(minutes/60)
-    minutes = int(np.remainder(float(minutes), 60))
-
     wait_seconds = (wait_parts[0] * 60 + wait_parts[1]) * 60
 
-    new_wall_time = '{:02d}:{:02d}'.format(hours, minutes)
-
-    return wait_seconds, new_wall_time
+    return wait_seconds
 
 ############################################################################
+
 
 def multiply_walltime(wall_time, factor):
     """ increase the walltime in HH:MM format by factor """

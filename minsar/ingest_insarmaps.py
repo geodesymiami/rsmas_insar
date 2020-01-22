@@ -10,8 +10,6 @@ import sys
 import glob
 import time
 import shutil
-import argparse
-from minsar.objects.rsmas_logging import loglevel
 from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
 import minsar.job_submission as js
@@ -28,23 +26,17 @@ def main(iargs=None):
 
     inps = putils.cmd_line_parse(iargs, script='ingest_insarmaps')
 
-    config = putils.get_config_defaults(config_file='job_defaults.cfg')
-
-    job_file_name = 'ingest_insarmaps'
-    job_name = job_file_name
-
-    if inps.wall_time == 'None':
-        inps.wall_time = config[job_file_name]['walltime']
-
-    wait_seconds, new_wall_time = putils.add_pause_to_walltime(inps.wall_time, inps.wait_time)
+    time.sleep(putils.pause_seconds(inps.wait_time))
 
     #########################################
     # Submit job
     #########################################
-    if inps.submit_flag:
-        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, new_wall_time)
 
-    time.sleep(wait_seconds)
+    if inps.submit_flag:
+        job_name = 'ingest_insarmaps'
+        job_file_name = job_name
+        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir)
+        sys.exit(0)
 
     os.chdir(inps.work_dir)
 

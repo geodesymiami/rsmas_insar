@@ -7,7 +7,6 @@
 
 import os
 import sys
-import argparse
 import glob
 import time
 from osgeo import gdal, osr, ogr
@@ -30,25 +29,17 @@ def main(iargs=None):
 
     inps = putils.cmd_line_parse(iargs)
 
-    config = putils.get_config_defaults(config_file='job_defaults.cfg')
-
-    job_file_name = 'ifgramStack_to_ifgram_and_coherence'
-    job_name = job_file_name
-    
-    if inps.wall_time == 'None':
-        inps.wall_time = config[job_file_name]['walltime']
-
-    wait_seconds, new_wall_time = putils.add_pause_to_walltime(inps.wall_time, inps.wait_time)
+    time.sleep(putils.pause_seconds(inps.wait_time))
 
     #########################################
     # Submit job
     #########################################
+
     if inps.submit_flag:
-
-        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, new_wall_time)
+        job_name = 'ifgramStack_to_ifgram_and_coherence'
+        job_file_name = job_name
+        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir)
         sys.exit(0)
-
-    time.sleep(wait_seconds)
 
     if not iargs is None:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
