@@ -7,9 +7,7 @@ import os
 import sys
 import gdal
 import osr
-import argparse
 import glob
-from minsar.objects.dataset_template import Template
 from minsar.objects.auto_defaults import PathFind
 from minsar.utils.process_utilities import xmlread, cmd_line_parse
 from minsar.objects import message_rsmas
