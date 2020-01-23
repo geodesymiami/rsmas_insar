@@ -58,7 +58,6 @@ def main(iargs=None):
     if inps.email:
         email_results.main([inps.custom_template_file, '--mintpy'] )
 
-
     return None
 
 ###########################################################################################

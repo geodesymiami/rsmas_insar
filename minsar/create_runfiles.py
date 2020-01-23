@@ -40,7 +40,6 @@ def main(iargs=None):
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
     else:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
-
     try:
         dem_file = glob.glob('DEM/*.wgs84')[0]
         inps.template['topsStack.demDir'] = dem_file

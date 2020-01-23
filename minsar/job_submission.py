@@ -246,7 +246,6 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
                                                                '_{}.o'.format(job_num)),
                                                   os.path.join(work_dir, job_file_name.split('.')[0] +
                                                                '_{}.e'.format(job_num)))
-
     else:
         raise Exception("ERROR: scheduler {0} not supported".format(scheduler))
 
@@ -368,10 +367,7 @@ def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', w
     if not scheduler:
         scheduler = os.getenv("JOBSCHEDULER")
 
-    number_of_threads = 64
-
-    os.system('chmod +x {}'.format(batch_file))
-    with open(batch_file, 'r+') as f:
+    with open(batch_file, 'r') as f:
         lines = f.readlines()
         number_of_tasks = len(lines)
 
@@ -379,7 +375,7 @@ def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', w
     job_name = job_file_name
 
     # stampede has 68 cores per node and 4 threads per core = 272 threads per node
-    number_of_nodes = np.int(np.ceil(number_of_tasks*float(number_of_threads)/(68.0*4.0)))
+    number_of_nodes = np.int(np.ceil(number_of_tasks*float(number_of_threads)/(60.0*2.0)))
 
     # get lines to write in job file
     job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, out_dir, scheduler, memory, walltime,
@@ -405,6 +401,7 @@ def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', w
     wait_time_sec = 60
     total_wait_time_min = 0
     out = out_dir + "/{}_{}.o".format(job_file_name.split('.')[0], job_number)
+    err = out_dir + "/{}_{}.e".format(job_file_name.split('.')[0], job_number)
 
     while not os.path.exists(out):
         print("Waiting for job {} output file after {} minutes".format(job_file_name, total_wait_time_min))
@@ -413,8 +410,13 @@ def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', w
         i += 1
 
     status = 'running'
-    
+
     while status == 'running':
+        with open(err, 'r') as f:
+            lines = f.readlines()
+            lastline = lines[-1]
+        if 'killed' in lastline:
+            return
         with open(out, 'r') as f:
             lines = f.readlines()
             lastline = lines[-1]
