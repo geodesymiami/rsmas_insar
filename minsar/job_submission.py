@@ -238,7 +238,7 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
     elif scheduler == 'SLURM':
         hostname = subprocess.Popen("hostname", shell=True, stdout=subprocess.PIPE).stdout.read().decode("utf-8")
         if hostname.startswith('login'):
-            command = "sbatch " + os.path.join(work_dir, job_file_name)
+            command = "sbatch {}".format(os.path.join(work_dir, job_file_name))
         else:
             job_num = '{}99999'.format(job_file_name.split('_')[1])
             command = "srun {} > {} 2>{} ".format(os.path.join(work_dir, job_file_name),
@@ -343,7 +343,7 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime=None, email_
     command_line = os.path.basename(argv[0]) + " "
     command_line += " ".join(flag for flag in argv[1:] if flag != "--submit")
 
-    memory, walltime, number_of_threads = get_memory_walltime(job_name, job_type='batch', wall_time=walltime)
+    memory, walltime, number_of_threads = get_memory_walltime(job_name, job_type='script', wall_time=walltime)
 
     write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
                           walltime=walltime, queue=os.getenv("QUEUENAME"))
@@ -494,7 +494,7 @@ def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory=No
     if os.getenv('JOBSCHEDULER') in supported_schedulers:
         print('\nWorking on a {} machine ...\n'.format(os.getenv('JOBSCHEDULER')))
 
-        maxmemory, wall_time, number_of_threads = get_memory_walltime(batch_file, jobtype='batch', walltime=walltime,
+        maxmemory, wall_time, number_of_threads = get_memory_walltime(batch_file, job_type='batch', wall_time=walltime,
                                                                       memory=memory)
 
         if queue is None:
@@ -502,7 +502,7 @@ def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory=No
 
         if os.getenv('JOBSCHEDULER') in ['SLURM', 'sge']:
 
-            submit_job_with_launcher(batch_file=batch_file, out_dir=work_dir, memory=maxmemory, walltime=wall_time,
+            submit_job_with_launcher(batch_file=batch_file, out_dir=out_dir, memory=maxmemory, walltime=wall_time,
                                      number_of_threads=number_of_threads, queue=queue)
         else:
 
