@@ -18,7 +18,8 @@ import minsar.utils.process_utilities as putils
 import minsar.job_submission as js
 import mergeBursts as mb
 
-from upload_image_products import upload_to_s3
+# FA 9/19: commented out as `import boto3 hangs`
+#from upload_image_products import upload_to_s3
 
 pathObj = PathFind()
 #################################################################################
