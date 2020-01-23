@@ -343,7 +343,7 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime=None, email_
     command_line = os.path.basename(argv[0]) + " "
     command_line += " ".join(flag for flag in argv[1:] if flag != "--submit")
 
-    memory, walltime, number_of_threads = get_memory_walltime(job_name, job_type='script', wall_time=walltime)
+    memory, walltime = get_memory_walltime(job_name, job_type='script', wall_time=walltime)
 
     write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
                           walltime=walltime, queue=os.getenv("QUEUENAME"))
@@ -352,7 +352,7 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime=None, email_
 
 
 def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', walltime='2:00',
-                             queue='general', number_of_threads=1, scheduler=None, email_notif=True):
+                             queue='general', scheduler=None, email_notif=True):
     """
     Writes a single job file for launcher to submit as array.
     :param batch_file: File containing tasks that we are submitting.
@@ -375,7 +375,7 @@ def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', w
     job_name = job_file_name
 
     # stampede has 68 cores per node and 4 threads per core = 272 threads per node
-    number_of_nodes = np.int(np.ceil(number_of_tasks*float(number_of_threads)/(60.0*2.0)))
+    number_of_nodes = np.int(np.ceil(number_of_tasks*4.0/(60.0*2.0)))
 
     # get lines to write in job file
     job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, out_dir, scheduler, memory, walltime,
@@ -383,7 +383,6 @@ def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', w
 
     job_file_lines.append("\n\nmodule load launcher")
 
-    job_file_lines.append("\n\nexport OMP_NUM_THREADS={0}".format(number_of_threads))
     job_file_lines.append("\nexport LAUNCHER_WORKDIR={0}".format(out_dir))
     job_file_lines.append("\nexport LAUNCHER_JOB_FILE={0}\n".format(batch_file))
     job_file_lines.append("\n$LAUNCHER_DIR/paramrun\n")
@@ -456,24 +455,15 @@ def get_memory_walltime(job_name, job_type='batch', wall_time=None, memory=None)
             else:
                 wall_time = config['DEFAULT']['walltime']
 
-        if step_name in config:
-            number_of_threads = config[step_name]['num_threads']
-        else:
-            number_of_threads = config['DEFAULT']['num_threads']
-
     elif job_type == 'script':
-
-        number_of_threads = 1
 
         if wall_time is None:
             if job_name in config:
                 wall_time = config[job_name]['walltime']
-                number_of_threads = config[job_name]['num_threads']
             else:
                 wall_time = config['DEFAULT']['walltime']
-                number_of_threads = config['DEFAULT']['num_threads']
 
-    return memory, wall_time, number_of_threads
+    return memory, wall_time
 
 
 def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory=None, walltime=None, queue=None):
@@ -494,7 +484,7 @@ def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory=No
     if os.getenv('JOBSCHEDULER') in supported_schedulers:
         print('\nWorking on a {} machine ...\n'.format(os.getenv('JOBSCHEDULER')))
 
-        maxmemory, wall_time, number_of_threads = get_memory_walltime(batch_file, job_type='batch', wall_time=walltime,
+        maxmemory, wall_time = get_memory_walltime(batch_file, job_type='batch', wall_time=walltime,
                                                                       memory=memory)
 
         if queue is None:
@@ -503,7 +493,7 @@ def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory=No
         if os.getenv('JOBSCHEDULER') in ['SLURM', 'sge']:
 
             submit_job_with_launcher(batch_file=batch_file, out_dir=out_dir, memory=maxmemory, walltime=wall_time,
-                                     number_of_threads=number_of_threads, queue=queue)
+                                     queue=queue)
         else:
 
             jobs = submit_jobs_individually(batch_file=batch_file, out_dir=out_dir, memory=maxmemory,
