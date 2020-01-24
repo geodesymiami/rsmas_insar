@@ -62,7 +62,7 @@ def main(iargs=None):
     
     dataset_template = Template(inps.custom_template_file)
     dataset_template.options.update(PathFind.correct_for_ssara_date_format(dataset_template.options))
-    subprocess.Popen("rm new_files.csv", shell=True).wait()
+    subprocess.Popen("rm " + project_slc_dir + "/new_files*.csv", shell=True).wait()
     seasonal_start_date = None
     seasonal_end_date = None
 
@@ -112,6 +112,7 @@ def main(iargs=None):
     change_file_permissions()
     logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
     logger.log(loglevel.INFO, "------------------------------------")
+    subprocess.Popen("rm " + project_slc_dir + "/new_files*.csv", shell=True).wait()
 
     return None
 
