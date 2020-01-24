@@ -117,8 +117,9 @@ def main(iargs=None):
 
 
 def generate_seasonal_files_csv(dataset_template, seasonal_start_date, seasonal_end_date):
-    """ 
+    """ Helps generate only the required seasonal ssaraopt dates to avoid unnecessary information
     """
+
     original_start_year = int(dataset_template.options['ssaraopt.startDate'][:4])
     if int(seasonal_start_date) > int(seasonal_end_date):
         offset = 1
@@ -139,8 +140,10 @@ def generate_seasonal_files_csv(dataset_template, seasonal_start_date, seasonal_
 
 
 def generate_seasonal_ssaraopt_dates(dataset_template, seasonal_start_date, seasonal_end_date, tuple_param):
-    """ 
+    """ Generates appropriate seasonal ssaraopt dates for the download process
+    Parameters include tuple_param which contains information required for successfully setting the dates
     """
+
     counter = tuple_param[0]
     original_start_year = tuple_param[1]
     offset = tuple_param[2]
@@ -229,8 +232,10 @@ def generate_files_csv(slc_dir, custom_template_file, start_date=None, end_date=
 
 
 def run_parallel_download_asf_serial(project_slc_dir, processes):
-    """ 
+    """ Creates the chunk files necessary for Pool and runs it for the parallel download process
+    The parameter processes is the desired number of processes to run. If no input is provided the default os.cpu_count() is used which is the number of processors
     """
+
     comma = '^[^,]+,?'
     file_num = 1
     total_num = 0
@@ -252,7 +257,11 @@ def run_parallel_download_asf_serial(project_slc_dir, processes):
     return Pool(processes).map(run_parallel_download_asf_serial_helper, csv_chunk_files)
 
 def run_parallel_download_asf_serial_helper(csv_chunk_file):
+    """ Helper function necessary to run Pool since it requires only one parameter
+    """
+
     run_download_asf_serial(project_slc_dir, logger, csv_file=csv_chunk_file)
+
 
 def run_download_asf_serial(slc_dir, logger, run_number=1, csv_file='new_files.csv'):
     """ Runs download_ASF_serial.py with proper files.
