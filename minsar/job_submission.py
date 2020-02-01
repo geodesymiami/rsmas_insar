@@ -14,6 +14,7 @@ import time
 import numpy as np
 from minsar.objects import message_rsmas
 import warnings
+import minsar.utils.process_utilities as putils
 warnings.filterwarnings("ignore", category=FutureWarning)
 
 
@@ -146,7 +147,7 @@ def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler
     if email_notif:
         job_file_lines.append(prefix + email_option.format(os.getenv("NOTIFICATIONEMAIL")))
     job_file_lines.extend([
-        prefix + process_option.format(number_of_nodes, number_of_tasks),
+        prefix + process_option.format(1, number_of_tasks),
         prefix + stdout_option.format(os.path.join(work_dir, job_file_name)),
         prefix + stderr_option.format(os.path.join(work_dir, job_file_name)),
         prefix + queue_option.format(queue),
@@ -237,7 +238,7 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
     elif scheduler == 'SLURM':
         hostname = subprocess.Popen("hostname", shell=True, stdout=subprocess.PIPE).stdout.read().decode("utf-8")
         if hostname.startswith('login'):
-            command = "sbatch " + os.path.join(work_dir, job_file_name)
+            command = "sbatch {}".format(os.path.join(work_dir, job_file_name))
         else:
             job_num = '{}99999'.format(job_file_name.split('_')[1])
             command = "srun {} > {} 2>{} ".format(os.path.join(work_dir, job_file_name),
@@ -245,7 +246,6 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
                                                                '_{}.o'.format(job_num)),
                                                   os.path.join(work_dir, job_file_name.split('.')[0] +
                                                                '_{}.e'.format(job_num)))
-
     else:
         raise Exception("ERROR: scheduler {0} not supported".format(scheduler))
 
@@ -261,7 +261,7 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
         job_number = output.decode("utf-8").split("\n")[1].split("<")[1].split(">")[0]
     elif scheduler == "PBS":
         # extracts number from '7319.eos\n'
-        job_number = output.decode("utf-8").split("\n")[0].split(".")[0]
+        # job_number = output.decode("utf-8").split("\n")[0].split(".")[0]
         # uses '7319.eos\n'
         job_number = output.decode("utf-8").split("\n")[0]
     elif scheduler == 'SLURM':
@@ -278,7 +278,7 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
     return job_number
 
 
-def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory='4000', walltime='2:00',
+def submit_jobs_individually(batch_file, out_dir='./run_files', memory='4000', walltime='2:00',
                       queue='general', scheduler=None):
     """
     Submit a batch of jobs (to bsub or qsub) and wait for output files to exist before exiting.
@@ -290,9 +290,6 @@ def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory='4
     :param scheduler: Job scheduler to use for running jobs. Defaults based on environment variable JOBSCHEDULER.
     :param queue: Name of the queue to which the job is to be submitted. Default is set based on the scheduler.
     """
-
-    message_rsmas.log(work_dir, 'job_submission.py {a} --memory {b} --walltime {c} --queuename {d} --outdir {e}'
-                      .format(a=batch_file, b=memory, c=walltime, d=queue, e=out_dir))
 
     job_files = write_batch_job_files(batch_file, out_dir, memory=memory, walltime=walltime, queue=queue)
 
@@ -327,7 +324,7 @@ def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory='4
     return batch_file
 
 
-def submit_script(job_name, job_file_name, argv, work_dir, walltime, email_notif=True):
+def submit_script(job_name, job_file_name, argv, work_dir, walltime=None, email_notif=True):
     """
     Submits a single script as a job.
     :param job_name: Name of job.
@@ -346,17 +343,21 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime, email_notif
     command_line = os.path.basename(argv[0]) + " "
     command_line += " ".join(flag for flag in argv[1:] if flag != "--submit")
 
+    memory, walltime = get_memory_walltime(job_name, job_type='script', wall_time=walltime)
+
     write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
                           walltime=walltime, queue=os.getenv("QUEUENAME"))
+
     return submit_single_job("{0}.job".format(job_file_name), work_dir)
 
 
-def submit_job_with_launcher(batch_file, work_dir='.', memory='4000', walltime='2:00', queue='general', scheduler=None,
-                             email_notif=True):
+def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', walltime='2:00',
+                             queue='general', scheduler=None, email_notif=True):
     """
     Writes a single job file for launcher to submit as array.
     :param batch_file: File containing tasks that we are submitting.
-    :param work_dir: the location of job and it's outputs
+    :param out_dir: the location of job and it's outputs
+    :param work_dir: the location of log file
     :param memory: Amount of memory to use. Defaults to 3600 KB.
     :param walltime: Walltime for the job. Defaults to 4 hours.
     :param scheduler: Job scheduler to use for running jobs. Defaults based on environment variable JOBSCHEDULER.
@@ -366,43 +367,40 @@ def submit_job_with_launcher(batch_file, work_dir='.', memory='4000', walltime='
     if not scheduler:
         scheduler = os.getenv("JOBSCHEDULER")
 
-    os.system('chmod +x {}'.format(batch_file))
-    with open(batch_file, 'r+') as f:
+    with open(batch_file, 'r') as f:
         lines = f.readlines()
         number_of_tasks = len(lines)
-        if not lines[0].split('\n')[0].endswith('&'):
-            lines_modified = [x.split('\n')[0] + ' &\n' for x in lines]
-            f.seek(0)
-            f.writelines(lines_modified)
 
     job_file_name = os.path.basename(batch_file)
     job_name = job_file_name
 
-    number_of_nodes = np.int(np.ceil(number_of_tasks/68))
+    # stampede has 68 cores per node and 4 threads per core = 272 threads per node
+    number_of_nodes = np.int(np.ceil(number_of_tasks*4.0/(60.0*2.0)))
 
     # get lines to write in job file
-    job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler, memory, walltime,
+    job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, out_dir, scheduler, memory, walltime,
                                         queue, number_of_tasks, number_of_nodes)
 
     job_file_lines.append("\n\nmodule load launcher")
 
-    job_file_lines.append("\n\nexport LAUNCHER_WORKDIR={0}".format(work_dir))
+    job_file_lines.append("\nexport LAUNCHER_WORKDIR={0}".format(out_dir))
     job_file_lines.append("\nexport LAUNCHER_JOB_FILE={0}\n".format(batch_file))
     job_file_lines.append("\n$LAUNCHER_DIR/paramrun\n")
 
     # write lines to .job file
     job_file_name = "{0}.job".format(job_file_name)
-    with open(os.path.join(work_dir, job_file_name), "w+") as job_file:
+    with open(os.path.join(out_dir, job_file_name), "w+") as job_file:
         job_file.writelines(job_file_lines)
 
-    os.system('chmod +x {}'.format(os.path.join(work_dir, job_file_name)))
+    os.system('chmod +x {}'.format(os.path.join(out_dir, job_file_name)))
 
-    job_number = submit_single_job(job_file_name, work_dir, scheduler)
+    job_number = submit_single_job(job_file_name, out_dir, scheduler)
 
     i = 0
     wait_time_sec = 60
     total_wait_time_min = 0
-    out = work_dir + "/{}_{}.o".format(job_file_name.split('.')[0], job_number)
+    out = out_dir + "/{}_{}.o".format(job_file_name.split('.')[0], job_number)
+    err = out_dir + "/{}_{}.e".format(job_file_name.split('.')[0], job_number)
 
     while not os.path.exists(out):
         print("Waiting for job {} output file after {} minutes".format(job_file_name, total_wait_time_min))
@@ -410,10 +408,111 @@ def submit_job_with_launcher(batch_file, work_dir='.', memory='4000', walltime='
         time.sleep(wait_time_sec)
         i += 1
 
+    status = 'running'
+
+    while status == 'running':
+        with open(err, 'r') as f:
+            lines = f.readlines()
+            lastline = lines[-1]
+        if 'killed' in lastline:
+            return
+        with open(out, 'r') as f:
+            lines = f.readlines()
+            lastline = lines[-1]
+        if not 'Launcher: Done. Job exited without errors' in lastline:
+            time.sleep(wait_time_sec)
+            i += 1
+        else:
+            status = 'complete'
     return
+
+
+def get_memory_walltime(job_name, job_type='batch', wall_time=None, memory=None):
+    """
+    get memory and walltime for the job from job_defaults.cfg
+    :param job_name: the job file name
+    :param job_type: 'batch' or 'script'
+    :return: memory, wall_time, number_of_threads
+    """
+
+    config = putils.get_config_defaults(config_file='job_defaults.cfg')
+
+    if job_type == 'batch':
+        step_name = '_'
+        step_name = step_name.join(job_name.split('/')[-1].split('_')[2::])
+
+        if memory is None:
+
+            if step_name in config:
+                memory = config[step_name]['memory']
+            else:
+                memory = config['DEFAULT']['memory']
+
+        if wall_time is None:
+
+            if step_name in config:
+                wall_time = config[step_name]['walltime']
+            else:
+                wall_time = config['DEFAULT']['walltime']
+
+    elif job_type == 'script':
+
+        if wall_time is None:
+            if job_name in config:
+                wall_time = config[job_name]['walltime']
+            else:
+                wall_time = config['DEFAULT']['walltime']
+
+    return memory, wall_time
+
+
+def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory=None, walltime=None, queue=None):
+    """
+    submit jobs based on scheduler
+    :param batch_file: batch job name
+    :param out_dir: output directory
+    :param work_dir: logging directory
+    :param walltime: max time to process the job
+    :param memory: max memory required
+    :return: True if running on a cluster
+    """
+
+    message_rsmas.log(work_dir, 'job_submission.py {a} --outdir {b}'.format(a=batch_file, b=out_dir))
+
+    supported_schedulers = ['LSF', 'PBS', 'SLURM']
+
+    if os.getenv('JOBSCHEDULER') in supported_schedulers:
+        print('\nWorking on a {} machine ...\n'.format(os.getenv('JOBSCHEDULER')))
+
+        maxmemory, wall_time = get_memory_walltime(batch_file, job_type='batch', wall_time=walltime,
+                                                                      memory=memory)
+
+        if queue is None:
+            queue = os.getenv('QUEUENAME')
+
+        if os.getenv('JOBSCHEDULER') in ['SLURM', 'sge']:
+
+            submit_job_with_launcher(batch_file=batch_file, out_dir=out_dir, memory=maxmemory, walltime=wall_time,
+                                     queue=queue)
+        else:
+
+            jobs = submit_jobs_individually(batch_file=batch_file, out_dir=out_dir, memory=maxmemory,
+                                            walltime=wall_time, queue=queue)
+
+        return True
+
+    else:
+        print('\nWorking on a single machine ...\n')
+
+        with open(batch_file, 'r') as f:
+            command_lines = f.readlines()
+            for command_line in command_lines:
+                os.system(command_line)
+
+        return False
 
 
 if __name__ == "__main__":
     PARAMS = parse_arguments(sys.argv[1::])
-    submit_batch_jobs(PARAMS.file, PARAMS.outdir, PARAMS.work_dir, memory=PARAMS.memory,
-                      walltime=PARAMS.wall, queue=PARAMS.queue)
+    status = submit_batch_jobs(PARAMS.file, PARAMS.outdir, PARAMS.work_dir, memory=PARAMS.memory,
+                               walltime=PARAMS.wall, queue=PARAMS.queue)
