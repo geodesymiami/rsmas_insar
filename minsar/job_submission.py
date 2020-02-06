@@ -376,7 +376,7 @@ def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', w
     job_name = job_file_name
 
     # stampede has 68 cores per node and 4 threads per core = 272 threads per node
-    number_of_nodes = np.int(np.ceil(number_of_tasks*number_of_threads/(60.0*2.0)))
+    number_of_nodes = np.int(np.ceil(number_of_tasks * float(number_of_threads) / (60.0 * 2.0)))
 
     # get lines to write in job file
     job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, out_dir, scheduler, memory, walltime,
