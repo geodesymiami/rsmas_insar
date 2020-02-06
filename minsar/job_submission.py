@@ -343,7 +343,7 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime=None, email_
     command_line = os.path.basename(argv[0]) + " "
     command_line += " ".join(flag for flag in argv[1:] if flag != "--submit")
 
-    memory, walltime = get_memory_walltime(job_name, job_type='script', wall_time=walltime)
+    memory, walltime, num_threads = get_memory_walltime(job_name, job_type='script', wall_time=walltime)
 
     write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
                           walltime=walltime, queue=os.getenv("QUEUENAME"))
@@ -352,7 +352,7 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime=None, email_
 
 
 def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', walltime='2:00',
-                             queue='general', scheduler=None, email_notif=True):
+                             number_of_threads=4, queue='general', scheduler=None, email_notif=True):
     """
     Writes a single job file for launcher to submit as array.
     :param batch_file: File containing tasks that we are submitting.
@@ -361,6 +361,7 @@ def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', w
     :param memory: Amount of memory to use. Defaults to 3600 KB.
     :param walltime: Walltime for the job. Defaults to 4 hours.
     :param scheduler: Job scheduler to use for running jobs. Defaults based on environment variable JOBSCHEDULER.
+    :param number_of_threads: number of threads asking for each task
     :param queue: Name of the queue to which the job is to be submitted. Default is set based on the scheduler..
     :param email_notif: If email notifications should be on or not. Defaults to true.
     """
@@ -375,7 +376,7 @@ def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', w
     job_name = job_file_name
 
     # stampede has 68 cores per node and 4 threads per core = 272 threads per node
-    number_of_nodes = np.int(np.ceil(number_of_tasks*4.0/(60.0*2.0)))
+    number_of_nodes = np.int(np.ceil(number_of_tasks * float(number_of_threads) / (60.0 * 2.0)))
 
     # get lines to write in job file
     job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, out_dir, scheduler, memory, walltime,
@@ -383,6 +384,7 @@ def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', w
 
     job_file_lines.append("\n\nmodule load launcher")
 
+    job_file_lines.append("\nexport OMP_NUM_THREADS={0}".format(number_of_threads))
     job_file_lines.append("\nexport LAUNCHER_WORKDIR={0}".format(out_dir))
     job_file_lines.append("\nexport LAUNCHER_JOB_FILE={0}\n".format(batch_file))
     job_file_lines.append("\n$LAUNCHER_DIR/paramrun\n")
@@ -432,10 +434,13 @@ def get_memory_walltime(job_name, job_type='batch', wall_time=None, memory=None)
     get memory and walltime for the job from job_defaults.cfg
     :param job_name: the job file name
     :param job_type: 'batch' or 'script'
+    :param wall_time: wall time required for the job
+    :param memory: memory required for the job
     :return: memory, wall_time, number_of_threads
     """
 
     config = putils.get_config_defaults(config_file='job_defaults.cfg')
+    num_threads = 4
 
     if job_type == 'batch':
         step_name = '_'
@@ -455,6 +460,11 @@ def get_memory_walltime(job_name, job_type='batch', wall_time=None, memory=None)
             else:
                 wall_time = config['DEFAULT']['walltime']
 
+        if step_name in config:
+            num_threads = config[step_name]['num_threads']
+        else:
+            num_threads = config[step_name]['num_threads']
+
     elif job_type == 'script':
 
         if wall_time is None:
@@ -463,7 +473,7 @@ def get_memory_walltime(job_name, job_type='batch', wall_time=None, memory=None)
             else:
                 wall_time = config['DEFAULT']['walltime']
 
-    return memory, wall_time
+    return memory, wall_time, num_threads
 
 
 def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory=None, walltime=None, queue=None):
@@ -484,7 +494,7 @@ def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory=No
     if os.getenv('JOBSCHEDULER') in supported_schedulers:
         print('\nWorking on a {} machine ...\n'.format(os.getenv('JOBSCHEDULER')))
 
-        maxmemory, wall_time = get_memory_walltime(batch_file, job_type='batch', wall_time=walltime,
+        maxmemory, wall_time, num_threads = get_memory_walltime(batch_file, job_type='batch', wall_time=walltime,
                                                                       memory=memory)
 
         if queue is None:
@@ -493,7 +503,7 @@ def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory=No
         if os.getenv('JOBSCHEDULER') in ['SLURM', 'sge']:
 
             submit_job_with_launcher(batch_file=batch_file, out_dir=out_dir, memory=maxmemory, walltime=wall_time,
-                                     queue=queue)
+                                     number_of_threads=num_threads, queue=queue)
         else:
 
             jobs = submit_jobs_individually(batch_file=batch_file, out_dir=out_dir, memory=maxmemory,
