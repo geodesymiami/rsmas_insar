@@ -4,6 +4,14 @@ Functions related to batch job submission.
 Should be run with a file containing jobs to submit as a batch.
 Optional parameters for job submission are, --memory, --walltime, and --queuename.
 Generates job scripts, runs them, and waits for output files to be written before exiting.
+
+
+This script has functions to support submitting two different job types: a script as a job or a batch file consisting of
+multiple parallel tasks. submitting a script as a job is done calling the function: submit_script
+However submitting a batch file (calling submit_batch_jobs) can be done in two different ways based on the job scheduler.
+If it is pegasus (LSF), the batch file is splitted into multiple single jobs and then submitted individually. This is
+done with submit_jobs_individually. however, in slurm or sge, the launcher is used to split jobs on the resources.
+The function that is used for that is submit_job_with_launcher.
 """
 
 import os
@@ -147,7 +155,7 @@ def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler
     if email_notif:
         job_file_lines.append(prefix + email_option.format(os.getenv("NOTIFICATIONEMAIL")))
     job_file_lines.extend([
-        prefix + process_option.format(1, number_of_tasks),
+        prefix + process_option.format(number_of_nodes, number_of_tasks),
         prefix + stdout_option.format(os.path.join(work_dir, job_file_name)),
         prefix + stderr_option.format(os.path.join(work_dir, job_file_name)),
         prefix + queue_option.format(queue),
@@ -194,7 +202,8 @@ def write_single_job_file(job_name, job_file_name, command_line, work_dir, email
 
 def write_batch_job_files(batch_file, out_dir, email_notif=False, scheduler=None, memory=3600, walltime="4:00", queue=None):
     """
-    Iterates through jobs in input file and writes a job file for each job using the specified scheduler.
+    Iterates through jobs in input file and writes a job file for each job using the specified scheduler. This function
+    is used for batch jobs in pegasus (LSF) to split the tasks into multiple jobs
     :param batch_file: File containing batch of jobs for which we are creating job files.
     :param out_dir: Output directory for run files.
     :param email_notif: If email notifications should be on or not. Defaults to false for batch submission.
@@ -221,7 +230,7 @@ def write_batch_job_files(batch_file, out_dir, email_notif=False, scheduler=None
 
 def submit_single_job(job_file_name, work_dir, scheduler=None):
     """
-    Submit a single job (to bsub or qsub).
+    Submit a single job (to bsub or qsub). Used by submit_jobs_individually and submit_job_with_launcher and submit_script.
     :param job_file_name: Name of job file to submit.
     :param scheduler: Job scheduler to use for running jobs. Defaults based on environment variable JOBSCHEDULER.
     :return: Job number of submission
@@ -278,10 +287,83 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
     return job_number
 
 
+def submit_script(job_name, job_file_name, argv, work_dir, walltime=None, email_notif=True):
+    """
+    Submits a single script as a job. (compare to submit_batch_jobs for several tasks given in run_file)
+    :param job_name: Name of job.
+    :param job_file_name: Name of job file.
+    :param argv: Command line arguments for running job.
+    :param work_dir: Work directory in which to write job, output, and error files.
+    :param walltime: Input parameter of walltime for the job.
+    :param email_notif: If email notifications should be on or not. Defaults to true.
+    :return job number of the script that was submitted
+    """
+    if not os.path.isdir(work_dir):
+        if os.path.isfile(work_dir):
+            os.remove(work_dir)
+        os.makedirs(work_dir)
+        
+    command_line = os.path.basename(argv[0]) + " "
+    command_line += " ".join(flag for flag in argv[1:] if flag != "--submit")
+
+    memory, walltime, num_threads = get_memory_walltime(job_name, job_type='script', wall_time=walltime)
+
+    write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
+                          walltime=walltime, queue=os.getenv("QUEUENAME"))
+
+    return submit_single_job("{0}.job".format(job_file_name), work_dir)
+
+
+def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory=None, walltime=None, queue=None):
+    """
+    submit jobs based on scheduler
+    :param batch_file: batch job name
+    :param out_dir: output directory
+    :param work_dir: logging directory
+    :param walltime: max time to process the job
+    :param memory: max memory required
+    :return: True if running on a cluster
+    """
+
+    message_rsmas.log(work_dir, 'job_submission.py {a} --outdir {b}'.format(a=batch_file, b=out_dir))
+
+    supported_schedulers = ['LSF', 'PBS', 'SLURM']
+
+    if os.getenv('JOBSCHEDULER') in supported_schedulers:
+        print('\nWorking on a {} machine ...\n'.format(os.getenv('JOBSCHEDULER')))
+
+        maxmemory, wall_time, num_threads = get_memory_walltime(batch_file, job_type='batch', wall_time=walltime,
+                                                                      memory=memory)
+
+        if queue is None:
+            queue = os.getenv('QUEUENAME')
+
+        if os.getenv('JOBSCHEDULER') in ['SLURM', 'sge']:
+
+            submit_job_with_launcher(batch_file=batch_file, out_dir=out_dir, memory=maxmemory, walltime=wall_time,
+                                     number_of_threads=num_threads, queue=queue)
+        else:
+
+            jobs = submit_jobs_individually(batch_file=batch_file, out_dir=out_dir, memory=maxmemory,
+                                            walltime=wall_time, queue=queue)
+
+        return True
+
+    else:
+        print('\nWorking on a single machine ...\n')
+
+        with open(batch_file, 'r') as f:
+            command_lines = f.readlines()
+            for command_line in command_lines:
+                os.system(command_line)
+
+        return False
+
+
 def submit_jobs_individually(batch_file, out_dir='./run_files', memory='4000', walltime='2:00',
                       queue='general', scheduler=None):
     """
-    Submit a batch of jobs (to bsub or qsub) and wait for output files to exist before exiting.
+    Submit a batch of jobs (to bsub or qsub) and wait for output files to exist before exiting. This is used in pegasus (LSF)
     :param batch_file: File containing jobs that we are submitting.
     :param out_dir: Output directory for run files.
     :param work_dir: project directory
@@ -323,38 +405,11 @@ def submit_jobs_individually(batch_file, out_dir='./run_files', memory='4000', w
 
     return batch_file
 
-
-def submit_script(job_name, job_file_name, argv, work_dir, walltime=None, email_notif=True):
-    """
-    Submits a single script as a job.
-    :param job_name: Name of job.
-    :param job_file_name: Name of job file.
-    :param argv: Command line arguments for running job.
-    :param work_dir: Work directory in which to write job, output, and error files.
-    :param walltime: Input parameter of walltime for the job.
-    :param email_notif: If email notifications should be on or not. Defaults to true.
-    :return job number of the script that was submitted
-    """
-    if not os.path.isdir(work_dir):
-        if os.path.isfile(work_dir):
-            os.remove(work_dir)
-        os.makedirs(work_dir)
-        
-    command_line = os.path.basename(argv[0]) + " "
-    command_line += " ".join(flag for flag in argv[1:] if flag != "--submit")
-
-    memory, walltime, num_threads = get_memory_walltime(job_name, job_type='script', wall_time=walltime)
-
-    write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
-                          walltime=walltime, queue=os.getenv("QUEUENAME"))
-
-    return submit_single_job("{0}.job".format(job_file_name), work_dir)
-
-
 def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', walltime='2:00',
                              number_of_threads=4, queue='general', scheduler=None, email_notif=True):
     """
-    Writes a single job file for launcher to submit as array.
+    Writes a single job file for launcher to submit as array. This is used to submit jobs in slurm or sge where launcher
+    is available (compare to submit_jobs_individually used on pegasus with LSF)
     :param batch_file: File containing tasks that we are submitting.
     :param out_dir: the location of job and it's outputs
     :param work_dir: the location of log file
@@ -376,7 +431,8 @@ def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', w
     job_name = job_file_name
 
     # stampede has 68 cores per node and 4 threads per core = 272 threads per node
-    number_of_nodes = np.int(np.ceil(number_of_tasks * float(number_of_threads) / (60.0 * 2.0)))
+    # but it is usually suggested to use 1-2 threads per core and no more than 66-67 cores per node
+    number_of_nodes = np.int(np.ceil(number_of_tasks * float(number_of_threads) / (66.0 * 2.0)))
 
     # get lines to write in job file
     job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, out_dir, scheduler, memory, walltime,
@@ -474,52 +530,6 @@ def get_memory_walltime(job_name, job_type='batch', wall_time=None, memory=None)
                 wall_time = config['DEFAULT']['walltime']
 
     return memory, wall_time, num_threads
-
-
-def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory=None, walltime=None, queue=None):
-    """
-    submit jobs based on scheduler
-    :param batch_file: batch job name
-    :param out_dir: output directory
-    :param work_dir: logging directory
-    :param walltime: max time to process the job
-    :param memory: max memory required
-    :return: True if running on a cluster
-    """
-
-    message_rsmas.log(work_dir, 'job_submission.py {a} --outdir {b}'.format(a=batch_file, b=out_dir))
-
-    supported_schedulers = ['LSF', 'PBS', 'SLURM']
-
-    if os.getenv('JOBSCHEDULER') in supported_schedulers:
-        print('\nWorking on a {} machine ...\n'.format(os.getenv('JOBSCHEDULER')))
-
-        maxmemory, wall_time, num_threads = get_memory_walltime(batch_file, job_type='batch', wall_time=walltime,
-                                                                      memory=memory)
-
-        if queue is None:
-            queue = os.getenv('QUEUENAME')
-
-        if os.getenv('JOBSCHEDULER') in ['SLURM', 'sge']:
-
-            submit_job_with_launcher(batch_file=batch_file, out_dir=out_dir, memory=maxmemory, walltime=wall_time,
-                                     number_of_threads=num_threads, queue=queue)
-        else:
-
-            jobs = submit_jobs_individually(batch_file=batch_file, out_dir=out_dir, memory=maxmemory,
-                                            walltime=wall_time, queue=queue)
-
-        return True
-
-    else:
-        print('\nWorking on a single machine ...\n')
-
-        with open(batch_file, 'r') as f:
-            command_lines = f.readlines()
-            for command_line in command_lines:
-                os.system(command_line)
-
-        return False
 
 
 if __name__ == "__main__":
