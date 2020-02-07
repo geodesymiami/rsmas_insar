@@ -405,7 +405,6 @@ def submit_jobs_individually(batch_file, out_dir='./run_files', memory='4000', w
 
     return batch_file
 
-
 def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', walltime='2:00',
                              number_of_threads=4, queue='general', scheduler=None, email_notif=True):
     """
