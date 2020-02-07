@@ -306,7 +306,7 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime=None, email_
     command_line = os.path.basename(argv[0]) + " "
     command_line += " ".join(flag for flag in argv[1:] if flag != "--submit")
 
-    memory, walltime, num_threads = get_memory_walltime(job_name, job_type='script', wall_time=walltime)
+    memory, walltime, num_threads = get_memory_walltime(job_file_name, job_type='script', wall_time=walltime)
 
     write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
                           walltime=walltime, queue=os.getenv("QUEUENAME"))
