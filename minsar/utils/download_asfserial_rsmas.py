@@ -13,7 +13,7 @@ import minsar.job_submission as js
 import glob
 from minsar.objects.auto_defaults import PathFind
 import password_config as password
-from multiprocessing import Pool
+from multiprocessing.dummy import Pool as ThreadPool
 
 def main(iargs=None):
 
@@ -93,11 +93,11 @@ def main(iargs=None):
     """if inps.parallel == 'yes':
         parallel = True"""
 
-    processes = os.cpu_count()
+    threads = os.cpu_count()
 
     try:
-        if dataset_template.options['processes'] is not None:
-            processes = int(dataset_template.options['processes'])
+        if dataset_template.options['threads'] is not None:
+            threads = int(dataset_template.options['threads'])
     except:
         pass
 
@@ -105,12 +105,12 @@ def main(iargs=None):
         processes = inps.processes"""
 
     if parallel:
-        succesful = run_parallel_download_asf_serial(project_slc_dir, processes)
+        run_parallel_download_asf_serial(project_slc_dir, threads)
     else:
         succesful = run_download_asf_serial(project_slc_dir, logger)
+        logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
 
     change_file_permissions()
-    logger.log(loglevel.INFO, "SUCCESS: %s", str(succesful))
     logger.log(loglevel.INFO, "------------------------------------")
     subprocess.Popen("rm " + project_slc_dir + "/new_files*.csv", shell=True).wait()
 
@@ -232,7 +232,7 @@ def generate_files_csv(slc_dir, custom_template_file, start_date=None, end_date=
     subprocess.Popen(sed_command, shell=True).wait()
 
 
-def run_parallel_download_asf_serial(project_slc_dir, processes):
+def run_parallel_download_asf_serial(project_slc_dir, threads):
     """ Creates the chunk files necessary for Pool and runs it for the parallel download process
     The parameter processes is the desired number of processes to run. If no input is provided the default os.cpu_count() is used which is the number of processors
     """
@@ -243,25 +243,27 @@ def run_parallel_download_asf_serial(project_slc_dir, processes):
     csv_chunk_files = []
 
     while os.stat(project_slc_dir + '/new_files.csv').st_size != 0:
-        subprocess.Popen("grep -E -o '" + comma + "' " + project_slc_dir + "/new_files.csv > " + project_slc_dir + "/new_files" + str(file_num) + ".csv", shell=True).wait()
+        subprocess.Popen("grep -E -o '" + comma + "' " + project_slc_dir + "/new_files.csv | tr -d '\n' >> " + project_slc_dir + "/new_files" + str(file_num) + ".csv", shell=True).wait()
         subprocess.Popen("sed -r -i 's/" + comma + "//' " + project_slc_dir + "/new_files.csv", shell=True).wait()
         file_num += 1
         total_num += 1
-        if file_num > processes:
+        if file_num > threads:
             file_num = 1
-    if total_num < processes:
+    if total_num < threads:
         processes = total_num
-    for file_num in range(1, processes + 1):
+    for file_num in range(1, threads + 1):
         subprocess.Popen("sed -r -i 's/,$//' " + project_slc_dir + "/new_files" + str(file_num) + ".csv", shell=True).wait()
         csv_chunk_files.append('new_files' + str(file_num) + '.csv')
 
-    return Pool(processes).map(run_parallel_download_asf_serial_helper, csv_chunk_files)
+    ThreadPool(threads).map(run_parallel_download_asf_serial_helper, csv_chunk_files)
+
 
 def run_parallel_download_asf_serial_helper(csv_chunk_file):
     """ Helper function necessary to run Pool since it requires only one parameter
     """
 
-    run_download_asf_serial(project_slc_dir, logger, csv_file=csv_chunk_file)
+    exit_code = run_download_asf_serial(project_slc_dir, logger, csv_file=csv_chunk_file)
+    logger.log(loglevel.INFO, "SUCCESS: %s", exit_code)
 
 
 def run_download_asf_serial(slc_dir, logger, run_number=1, csv_file='new_files.csv'):
@@ -316,7 +318,7 @@ def run_download_asf_serial(slc_dir, logger, run_number=1, csv_file='new_files.c
     # If the exit code is one that signifies an error, rerun the entire command
     if exit_code in bad_codes or hang_status:
         logger.log(loglevel.WARNING, "Something went wrong, running again")
-        run_download_asf_serial(slc_dir, logger, run_number=run_number + 1)
+        run_download_asf_serial(slc_dir, logger, run_number=run_number + 1, csv_file=csv_file)
 
     return exit_code
 
