@@ -525,7 +525,7 @@ def asf_dl(d, opt_dict):
     global asf_urs4
     asf_urs4 = { 'url': 'https://urs.earthdata.nasa.gov/oauth/authorize',
             'client': 'BO_n7nTIlMljdvU6kRRB3g',
-            'redir': 'https://vertex-retired.daac.asf.alaska.edu/services/urs4_token_request'}
+            'redir': 'https://auth.asf.alaska.edu/login'}
 
     # Make sure we can write it our current directory
     if os.access(os.getcwd(), os.W_OK) is False:
