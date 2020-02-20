@@ -440,6 +440,7 @@ def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', w
 
     job_file_lines.append("\n\nmodule load launcher")
 
+    job_file_lines.append("\nexport LAUNCHER_NPROCS={0}".format(number_of_tasks))
     job_file_lines.append("\nexport OMP_NUM_THREADS={0}".format(number_of_threads))
     job_file_lines.append("\nexport LAUNCHER_WORKDIR={0}".format(out_dir))
     job_file_lines.append("\nexport LAUNCHER_JOB_FILE={0}\n".format(batch_file))
