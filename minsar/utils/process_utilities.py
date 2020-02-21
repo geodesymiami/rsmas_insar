@@ -74,7 +74,9 @@ def add_download_data(parser):
     flag_parser.add_argument('--delta_lat', dest='delta_lat', default='0.0', type=float,
                         help='delta to add to latitude from boundingBox field, default is 0.0')
     flag_parser.add_argument('--seasonalStartDate', dest='seasonalStartDate', type=str, help ='seasonal start date to specify download dates within start and end dates, example: a seasonsal start date of January 1 would be added as --seasonalEndDate 0101')
-    flag_parser.add_argument('--seasonalEndDate', dest='seasonalEndDate', type=str, help ='seasonal end date to specify download dates within start and end dates, example: a seasonsal end date of December 31 would be added as --seasonalEndDate 1231')    
+    flag_parser.add_argument('--seasonalEndDate', dest='seasonalEndDate', type=str, help ='seasonal end date to specify download dates within start and end dates, example: a seasonsal end date of December 31 would be added as --seasonalEndDate 1231')
+    flag_parser.add_argument('--parallel', dest='parallel', type=str, help ='determines whether a parallel download is required with a yes/no')
+    flag_parser.add_argument('--processes', dest='processes', type=int, help ='specifies number of processes for the parallel download, if no value is provided then the number of processors from os.cpu_count() is used')
 
     return parser
 
