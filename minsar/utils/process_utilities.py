@@ -14,6 +14,7 @@ import configparser
 import argparse
 import numpy as np
 import h5py
+import math
 from natsort import natsorted
 import xml.etree.ElementTree as ET
 import shutil
@@ -734,24 +735,65 @@ def pause_seconds(wait_time):
 
 ############################################################################
 
-
 def multiply_walltime(wall_time, factor):
-    """ increase the walltime in HH:MM format by factor """
+    """ multiply walltime in HH:MM or HH:MM:SS format by factor """
 
     wall_time_parts = [int(s) for s in wall_time.split(':')]
-    minutes = wall_time_parts[1] * factor 
-    hours = wall_time_parts[0] * factor 
 
-    minutes = minutes + ( hours - int(hours)) * 60
-    hours = int(hours)
+    hours = wall_time_parts[0] 
+    minutes = wall_time_parts[1] 
 
-    hours = hours + int(minutes/60)
-    minutes = minutes - int(minutes/60) * 60
+    try:
+        seconds = wall_time_parts[2]
+    except:
+        seconds = 0
 
-    new_wall_time = '{:02d}:{:02d}'.format(hours,int(round( minutes)))
+    seconds_total = seconds + minutes * 60 + hours * 3600
+    seconds_new = seconds_total * factor
 
+    hours = math.floor( seconds_new / 3600 )
+    minutes = math.floor( (seconds_new - hours * 3600) / 60 )
+    seconds = math.floor( (seconds_new - hours * 3600 - minutes*60) )
+    new_wall_time = '{:02d}:{:02d}:{:02d}'.format(hours, minutes,seconds)
+
+    if len(wall_time_parts) == 2:
+       new_wall_time = '{:02d}:{:02d}'.format(hours, minutes)
+    else:
+       new_wall_time = '{:02d}:{:02d}:{:02d}'.format(hours, minutes,seconds)
+    
     return new_wall_time
 
+############################################################################
+
+def sum_time(time_str_list):
+    """ sum time in HH:MM or HH:MM:SS format """
+
+    seconds_sum = 0
+
+    for item in time_str_list:
+       item_parts = [int(s) for s in item.split(':')]
+
+       hours = item_parts[0] 
+       minutes = item_parts[1] 
+
+       try:
+           seconds = item_parts[2]
+       except:
+           seconds = 0
+
+       seconds_total = seconds + minutes * 60 + hours * 3600
+       seconds_sum = seconds_sum + seconds_total
+
+    hours   = math.floor( seconds_sum / 3600 )
+    minutes = math.floor( (seconds_sum - hours * 3600) / 60 )
+    seconds = math.floor( (seconds_sum - hours * 3600 - minutes*60) )
+    
+    if len(item_parts) == 2:
+       new_time_str = '{:02d}:{:02d}'.format(hours, minutes)
+    else:
+       new_time_str = '{:02d}:{:02d}:{:02d}'.format(hours, minutes,seconds)
+    
+    return new_time_str
 ############################################################################
 
 

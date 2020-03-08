@@ -39,7 +39,8 @@ def create_argument_parser():
     group.add_argument("file", type=str, help="The file to batch create")
     group.add_argument("--memory", dest="memory", default=3600, metavar="MEMORY (KB)",
                        help="Amount of memory to allocate, specified in kilobytes")
-    group.add_argument("--walltime", dest="wall", default="4:00", metavar="WALLTIME (HH:MM)",
+    #group.add_argument("--walltime", dest="wall", default="4:00", metavar="WALLTIME (HH:MM)",
+    group.add_argument("--walltime", dest="wall", metavar="WALLTIME (HH:MM)",
                        help="Amount of wall time to use, in HH:MM format")
     group.add_argument("--queuename", dest="queue", metavar="QUEUE", help="Name of queue to submit job to")
     group.add_argument("--outdir", dest="outdir", default='run_files', metavar="OUTDIR",
@@ -64,8 +65,8 @@ def parse_arguments(args):
             job_params.queue = "general"
         if scheduler == "PBS":
             job_params.queue = "batch"
-        if scheduler == 'SLURM':
-            job_params.queue = "normal"
+        #if scheduler == 'SLURM':
+        #    job_params.queue = "skx-normal"
 
     job_params.file = os.path.abspath(job_params.file)
     job_params.work_dir = os.path.join(os.getenv('SCRATCHDIR'),
@@ -154,6 +155,7 @@ def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler
     ]
     if email_notif:
         job_file_lines.append(prefix + email_option.format(os.getenv("NOTIFICATIONEMAIL")))
+
     job_file_lines.extend([
         prefix + process_option.format(number_of_nodes, number_of_tasks),
         prefix + stdout_option.format(os.path.join(work_dir, job_file_name)),
@@ -427,24 +429,40 @@ def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', w
         lines = f.readlines()
         number_of_tasks = len(lines)
 
+    # FA 3/2030:  LAUNCHER_NPROCS does not seem to have any effect. -n 20 runs 20 after 20 task, etc
+    #if os.getenv('LAUNCHER_NPROCS'):
+    #    number_of_parallel_tasks = int(os.getenv('LAUNCHER_NPROCS'))
+    #    number_of_tasks = number_of_parallel_tasks
+    #else:
+    #    number_of_parallel_tasks = number_of_tasks
+    number_of_parallel_tasks = number_of_tasks
+    
+    # walltime_factor = number_of_tasks / number_of_parallel_tasks  #need to implement: factor to multiply to update walltimes ( use process_utilities.py:def multiply_walltime(wall_time, factor) )
+
     job_file_name = os.path.basename(batch_file)
     job_name = job_file_name
 
-    # stampede has 68 cores per node and 4 threads per core = 272 threads per node
-    # but it is usually suggested to use 1-2 threads per core and no more than 66-67 cores per node
-    number_of_nodes = np.int(np.ceil(number_of_tasks * float(number_of_threads) / (66.0 * 2.0)))
+    # Stampede2's skx-normal queue has 48 cores per node, each has 2 threads, is is suggested not to use all cores
+    number_of_cores_per_node = int(os.getenv('NUMBER_OF_CORES_PER_NODE'))
+    number_of_threads_per_core = int(os.getenv('NUMBER_OF_THREADS_PER_CORE'))
+    #number_of_nodes = np.int(np.ceil(number_of_parallel_tasks * float(number_of_threads) / (46.0 * 2.0)))
+    number_of_nodes = np.int(np.ceil(number_of_parallel_tasks * float(number_of_threads) / ((number_of_cores_per_node - 1) * number_of_threads_per_core)))
 
     # get lines to write in job file
     job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, out_dir, scheduler, memory, walltime,
                                         queue, number_of_tasks, number_of_nodes)
 
+    job_file_lines.append("\nSTART_TIME=$SECONDS")
+    job_file_lines.append("\nSTART_TIME=`date \"+%T\"`")
+    job_file_lines.append("\necho START_TIME: $START_TIME")
     job_file_lines.append("\n\nmodule load launcher")
 
-    job_file_lines.append("\nexport LAUNCHER_NPROCS={0}".format(number_of_tasks))
+    #job_file_lines.append("\nexport LAUNCHER_NPROCS={0}".format(number_of_parallel_tasks))
     job_file_lines.append("\nexport OMP_NUM_THREADS={0}".format(number_of_threads))
     job_file_lines.append("\nexport LAUNCHER_WORKDIR={0}".format(out_dir))
     job_file_lines.append("\nexport LAUNCHER_JOB_FILE={0}\n".format(batch_file))
     job_file_lines.append("\n$LAUNCHER_DIR/paramrun\n")
+    #job_file_lines.append("\necho ELAPSED_TIME: $(($SECONDS - $START_TIME)) seconds\n")
 
     # write lines to .job file
     job_file_name = "{0}.job".format(job_file_name)
