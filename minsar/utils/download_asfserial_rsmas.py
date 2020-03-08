@@ -53,6 +53,9 @@ def main(iargs=None):
     global project_slc_dir
     project_slc_dir = os.path.join(inps.work_dir, 'SLC')
 
+    if not os.path.exists(inps.slc_dir):
+        os.mkdir(inps.slc_dir)
+
     os.chdir(inps.slc_dir)
 
     try:
