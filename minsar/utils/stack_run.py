@@ -9,7 +9,6 @@ import sys
 from argparse import Namespace
 import shutil
 import stackSentinel
-from minsar.objects.stack_rsmas import rsmasRun
 from minsar.utils.process_utilities import make_run_list
 from minsar.objects.auto_defaults import PathFind
 import contextlib
@@ -60,37 +59,4 @@ class CreateRun:
                     stackSentinel.main(self.command_options)
 
         return
-
-    def run_post_stack(self):
-
-        inps = self.inps
-
-        if inps.template['processingMethod'] == 'minopy' or inps.template['topsStack.workflow'] == 'slc':
-
-            if not os.path.exists(self.minopy_dir):
-                os.mkdir(self.minopy_dir)
-
-            os.chdir(self.minopy_dir)
-            inps_stack = stackSentinel.cmdLineParse(self.command_options)
-            acquisitionDates, stackMasterDate, slaveDates, safe_dict, stackUpdate = stackSentinel.checkCurrentStatus(inps_stack)
-
-            pairs_sm = []
-
-            for i in range(len(acquisitionDates) - 1):
-                pairs_sm.append((acquisitionDates[0], acquisitionDates[i + 1]))
-
-            runObj = rsmasRun()
-            runObj.configure(inps, 'run_single_master_interferograms')
-            runObj.generateIfg(inps, pairs_sm)
-            runObj.finalize()
-
-            runObj = rsmasRun()
-            runObj.configure(inps, 'run_unwrap')
-            runObj.unwrap(inps, pairs_sm)
-            runObj.finalize()
-
-        return
-
-
-
 

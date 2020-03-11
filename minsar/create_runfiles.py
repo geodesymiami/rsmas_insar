@@ -56,9 +56,6 @@ def main(iargs=None):
         for item in run_file_list:
             run_file.writelines(item + '\n')
 
-    if inps.template['topsStack.workflow'] in ['interferogram', 'slc']:
-        runObj.run_post_stack()
-
     return None
 
 ###########################################################################################
