@@ -213,19 +213,13 @@ class RsmasInsar:
     def run_insarmaps(self):
         """ prepare outputs for insarmaps website.
         """
-        if self.insarmaps_flag:
-            minsar.ingest_insarmaps.main([self.custom_template_file, '--email'])
-        else:
-            print('insarmaps step is off (insarmaps_flag in template is False)')
+        minsar.ingest_insarmaps.main([self.custom_template_file, '--email'])
         return
 
     def run_image_products(self):
         """ create ortho/geo-rectified products.
         """
-        if self.image_products_flag == 'True':
-            minsar.export_ortho_geo.main([self.custom_template_file])
-        else:
-            print('imageProducts step is off (image_products_flag in template is False)')
+        minsar.export_ortho_geo.main([self.custom_template_file])
         return
 
     def run(self, steps=step_list):

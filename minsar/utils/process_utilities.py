@@ -85,13 +85,13 @@ def add_download_data(parser):
 def add_upload_data_products(parser):
 
     flag_parser = parser.add_argument_group('upload data products flags')
-    flag_parser.add_argument('--mintpy-products',
-                        dest='flag_mintpy_products',
+    flag_parser.add_argument('--mintpyProducts',
+                        dest='mintpy_products_flag',
                         action='store_true',
                         default=False,
                         help='uploads mintpy data products to data portal')
-    flag_parser.add_argument('--image_products',
-                        dest='flag_image_products',
+    flag_parser.add_argument('--imageProducts',
+                        dest='image_products_flag',
                         action='store_true',
                         default=False,
                         help='uploads image data products to data portal')
@@ -180,8 +180,6 @@ def add_process_rsmas(parser):
                       help='end processing at the named step, default: {}'.format(STEP_LIST[-1]))
     prs.add_argument('--step', dest='step', metavar='STEP',
                       help='run processing at the named step only')
-    prs.add_argument('--insarmaps', action='store_true', dest='insarmap', default=False,
-                        help='Email insarmaps results')
 
     return parser
 

@@ -59,7 +59,7 @@ def main(iargs=None):
     command2 = 'json_mbtiles2insarmaps.py -u ' + password.insaruser + ' -p ' + password.insarpass + ' --host ' + \
                'insarmaps.miami.edu -P rsmastest -U rsmas\@gmail.com --json_folder ' + \
                json_folder + ' --mbtiles_file ' + mbtiles_file + ' |& tee -a out_insarmaps.log'
-    command3 = 'upload_data_products.py --mintpy-products ' + ' ' + inps.custom_template_file + ' |& tee out_insarmaps.log'
+    command3 = 'upload_data_products.py --mintpyProducts ' + ' ' + inps.custom_template_file + ' |& tee out_insarmaps.log'
 
     with open(inps.work_dir + '/mintpy/run_insarmaps', 'w') as f:
         f.write(command1 + '\n')
