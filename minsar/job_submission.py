@@ -538,7 +538,7 @@ def get_memory_walltime(job_name, job_type='batch', wall_time=None, memory=None)
         if step_name in config:
             num_threads = config[step_name]['num_threads']
         else:
-            num_threads = config[step_name]['num_threads']
+            num_threads = config['DEFAULT']['num_threads']
 
     elif job_type == 'script':
 
