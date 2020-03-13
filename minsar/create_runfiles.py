@@ -45,7 +45,19 @@ def main(iargs=None):
         inps.template['topsStack.demDir'] = dem_file
     except:
         raise SystemExit('DEM does not exist')
+    
+    # check for orbits
+    orbit_dir = os.getenv('SENTINEL_ORBITS')
+    print ('Updating orbits...')
+    orbit_command = 'dloadOrbits.py --dir {}'.format(orbit_dir)
+    if not inps.template['ssaraopt.startDate'] == 'None':
+        orbit_command += ' --start {}'.format(inps.template['ssaraopt.startDate'])
+    if not inps.template['ssaraopt.endDate'] == 'None':
+        orbit_command += ' --end {}'.format(inps.template['ssaraopt.endDate'])
+    message_rsmas.log(inps.work_dir, orbit_command)
+    os.system(orbit_command)
 
+    # make run file
     inps.topsStack_template = pathObj.correct_for_isce_naming_convention(inps)
     runObj = CreateRun(inps)
     runObj.run_stack_workflow()
