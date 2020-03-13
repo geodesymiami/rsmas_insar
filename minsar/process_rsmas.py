@@ -75,7 +75,7 @@ def main(iargs=None):
     #########################################
     if inps.submit_flag:
         job_file_name = 'process_rsmas'
-        job = js.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir)
+        job = js.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir, number_of_bursts=inps.num_bursts)
         # run_operations.py needs this print statement for now.
         # This is not for debugging purposes.
         # DO NOT REMOVE.
@@ -213,19 +213,13 @@ class RsmasInsar:
     def run_insarmaps(self):
         """ prepare outputs for insarmaps website.
         """
-        if self.insarmaps_flag:
-            minsar.ingest_insarmaps.main([self.custom_template_file, '--email'])
-        else:
-            print('insarmaps step is off (insarmaps_flag in template is False)')
+        minsar.ingest_insarmaps.main([self.custom_template_file, '--email'])
         return
 
     def run_image_products(self):
         """ create ortho/geo-rectified products.
         """
-        if self.image_products_flag == 'True':
-            minsar.export_ortho_geo.main([self.custom_template_file])
-        else:
-            print('imageProducts step is off (image_products_flag in template is False)')
+        minsar.export_ortho_geo.main([self.custom_template_file])
         return
 
     def run(self, steps=step_list):

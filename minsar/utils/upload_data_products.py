@@ -43,7 +43,7 @@ def main(iargs=None):
 
     project_name = putils.get_project_name(inps.custom_template_file)
 
-    if inps.flag_mintpy_products:
+    if inps.mintpy_products_flag:
 
         REMOTE_DIR = '/data/HDF5EOS/'
         destination = DATA_SERVER + ':' + REMOTE_DIR
@@ -76,7 +76,7 @@ def main(iargs=None):
             raise Exception('ERROR in upload_data_products.py')
         return None
 
-    if inps.flag_image_products:
+    if inps.image_products_flag:
         REMOTE_DIR = '/data/image_products/'
         destination = DATA_SERVER + ':' + REMOTE_DIR
 

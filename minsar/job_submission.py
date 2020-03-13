@@ -19,6 +19,7 @@ import sys
 import subprocess
 import argparse
 import time
+import glob
 import numpy as np
 from minsar.objects import message_rsmas
 import warnings
@@ -74,6 +75,10 @@ def parse_arguments(args):
 
     if job_params.outdir == 'run_files':
         job_params.outdir = os.path.join(job_params.work_dir, job_params.outdir)
+
+    job_params.custom_template_file = glob.glob(job_params.work_dir + '/*.template')[0]
+    job_params = putils.create_default_template(job_params)
+    job_params.num_bursts = putils.get_number_of_bursts(job_params)
 
     return job_params
 
@@ -289,7 +294,7 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
     return job_number
 
 
-def submit_script(job_name, job_file_name, argv, work_dir, walltime=None, email_notif=True):
+def submit_script(job_name, job_file_name, argv, work_dir, walltime=None, number_of_bursts=1, email_notif=True):
     """
     Submits a single script as a job. (compare to submit_batch_jobs for several tasks given in run_file)
     :param job_name: Name of job.
@@ -308,7 +313,7 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime=None, email_
     command_line = os.path.basename(argv[0]) + " "
     command_line += " ".join(flag for flag in argv[1:] if flag != "--submit")
 
-    memory, walltime, num_threads = get_memory_walltime(job_file_name, job_type='script', wall_time=walltime)
+    memory, walltime, num_threads = get_memory_walltime(job_file_name, job_type='script', wall_time=walltime, num_bursts=number_of_bursts)
 
     write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
                           walltime=walltime, queue=os.getenv("QUEUENAME"))
@@ -316,7 +321,7 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime=None, email_
     return submit_single_job("{0}.job".format(job_file_name), work_dir)
 
 
-def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory=None, walltime=None, queue=None):
+def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory=None, walltime=None, queue=None, num_bursts=1):
     """
     submit jobs based on scheduler
     :param batch_file: batch job name
@@ -335,7 +340,7 @@ def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory=No
         print('\nWorking on a {} machine ...\n'.format(os.getenv('JOBSCHEDULER')))
 
         maxmemory, wall_time, num_threads = get_memory_walltime(batch_file, job_type='batch', wall_time=walltime,
-                                                                      memory=memory)
+                                                                memory=memory, num_bursts=num_bursts)
 
         if queue is None:
             queue = os.getenv('QUEUENAME')
@@ -504,7 +509,7 @@ def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', w
     return
 
 
-def get_memory_walltime(job_name, job_type='batch', wall_time=None, memory=None):
+def get_memory_walltime(job_name, job_type='batch', wall_time=None, memory=None, num_bursts=1):
     """
     get memory and walltime for the job from job_defaults.cfg
     :param job_name: the job file name
@@ -516,6 +521,7 @@ def get_memory_walltime(job_name, job_type='batch', wall_time=None, memory=None)
 
     config = putils.get_config_defaults(config_file='job_defaults.cfg')
     num_threads = 4
+    
 
     if job_type == 'batch':
         step_name = '_'
@@ -529,22 +535,25 @@ def get_memory_walltime(job_name, job_type='batch', wall_time=None, memory=None)
                 memory = config['DEFAULT']['memory']
 
         if wall_time is None:
-
             if step_name in config:
                 wall_time = config[step_name]['walltime']
+                if config[step_name]['adjust'] == 'True':
+                    wall_time = putils.walltime_adjust(num_bursts, wall_time)
             else:
                 wall_time = config['DEFAULT']['walltime']
 
         if step_name in config:
             num_threads = config[step_name]['num_threads']
         else:
-            num_threads = config[step_name]['num_threads']
+            num_threads = config['DEFAULT']['num_threads']
 
     elif job_type == 'script':
-
+    
         if wall_time is None:
             if job_name in config:
                 wall_time = config[job_name]['walltime']
+                if config[job_name]['adjust'] == 'True':
+                    wall_time = putils.walltime_adjust(num_bursts, wall_time)
             else:
                 wall_time = config['DEFAULT']['walltime']
 
@@ -554,4 +563,4 @@ def get_memory_walltime(job_name, job_type='batch', wall_time=None, memory=None)
 if __name__ == "__main__":
     PARAMS = parse_arguments(sys.argv[1::])
     status = submit_batch_jobs(PARAMS.file, PARAMS.outdir, PARAMS.work_dir, memory=PARAMS.memory,
-                               walltime=PARAMS.wall, queue=PARAMS.queue)
+                               walltime=PARAMS.wall, queue=PARAMS.queue, num_bursts=PARAMS.num_bursts)

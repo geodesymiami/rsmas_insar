@@ -120,7 +120,8 @@ def main(iargs=None):
     string =' '
     print (string); out_lines.append(string)
     
-    save_job_run_times_summary('/home1/05861/tg851601/job_summaries', out_lines)
+    homedir = os.getenv('HOME')
+    save_job_run_times_summary(homedir + 'job_summaries', out_lines)
   
     return None
 
