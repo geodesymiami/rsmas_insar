@@ -32,7 +32,7 @@ def main(iargs=None):
     if inps.submit_flag:
         job_name = 'execute_runfiles'
         job_file_name = job_name
-        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir)
+        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, number_of_bursts=inps.num_bursts)
         sys.exit(0)
 
     run_file_list = putils.read_run_list(inps.work_dir)
@@ -55,7 +55,7 @@ def main(iargs=None):
         putils.remove_last_job_running_products(run_file=item)
 
         job_status = js.submit_batch_jobs(batch_file=item, out_dir=os.path.join(inps.work_dir, 'run_files'),
-                                          work_dir=inps.work_dir)
+                                          work_dir=inps.work_dirs num_bursts=inps.num_bursts)
 
         if job_status:
 

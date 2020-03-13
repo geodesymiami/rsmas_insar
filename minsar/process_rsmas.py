@@ -75,7 +75,7 @@ def main(iargs=None):
     #########################################
     if inps.submit_flag:
         job_file_name = 'process_rsmas'
-        job = js.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir)
+        job = js.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir, number_of_bursts=inps.num_bursts)
         # run_operations.py needs this print statement for now.
         # This is not for debugging purposes.
         # DO NOT REMOVE.

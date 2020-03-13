@@ -21,7 +21,8 @@ import shutil
 from mintpy.defaults.auto_path import autoPath
 from minsar.objects.dataset_template import Template
 from minsar.objects.auto_defaults import PathFind
-
+from minsar.objects.sentinel1_override import Sentinel1_burst_count
+from stackSentinel import cmdLineParse as stack_cmd
 import minsar.job_submission as js
 
 pathObj = PathFind()
@@ -52,7 +53,7 @@ def cmd_line_parse(iargs=None, script=None):
 
     inps = parser.parse_args(args=iargs)
     inps = create_or_update_template(inps)
-
+    
     return inps
 
 
@@ -251,6 +252,8 @@ def create_or_update_template(inps_dict):
 
     # Creates default Template
     inps = create_default_template(inps)
+    
+    inps.num_bursts = get_number_of_bursts(inps)
 
     return inps
 
@@ -690,32 +693,48 @@ def xmlread(filename):
 ############################################################################
 
 
-def walltime_adjust(inps, default_time):
+def get_number_of_bursts(inps_dict):
     """ calculates the number of bursts based on boundingBox and returns an adjusting factor for walltimes """
 
-    from minsar.objects.sentinel1_override import Sentinel1_burst_count
-    from argparse import Namespace
+    try:
+        topsStack_template = pathObj.correct_for_isce_naming_convention(inps_dict)
+        command_options = []
+        for item in topsStack_template:
+            if item == 'useGPU':
+                if topsStack_template[item] == 'True':
+                    command_options = command_options + ['--' + item]
+            elif not topsStack_template[item] is None:
+                command_options = command_options + ['--' + item] + [topsStack_template[item]]
 
-    inps_dict = inps
-    pathObj.correct_for_isce_naming_convention(inps_dict)
-    inps_dict = Namespace(**inps_dict.template)
+        inps = stack_cmd(command_options)
+    
+        if inps.swath_num is None:
+            swaths = [1, 2, 3]
+        else:
+            swaths = [int(i) for i in inps.swath_num.split()]
 
-    if inps_dict.swath_num is None:
-        swaths = [1, 2, 3]
-    else:
-        swaths = [int(i) for i in inps_dict.swath_num.split()]
+        number_of_bursts = 0
 
-    number_of_bursts = 0
+        for swath in swaths:
+            obj = Sentinel1_burst_count()
+            obj.configure()
+            number_of_bursts = number_of_bursts + obj.get_burst_num(inps, swath)
+    except:
+        number_of_bursts = 1
+    print('number of bursts: {}'.format(number_of_bursts))
+    
+    return number_of_bursts
+    
+############################################################################
 
-    for swath in swaths:
-        obj = Sentinel1_burst_count()
-        obj.configure()
-        number_of_bursts = number_of_bursts + obj.get_burst_num(inps_dict, swath)
 
-    default_time_hour = float(default_time.split(':')[0]) + float(default_time.split(':')[1]) / 60
-    hour = (default_time_hour * number_of_bursts)*60
-    minutes = int(np.remainder(hour, 60))
-    hour = int(hour/60)
+def walltime_adjust(number_of_bursts, default_time):
+    """ multiplys default walltime by number of bursts and returns adjusted walltime """
+    
+    default_time_minutes = float(default_time.split(':')[0]) * 60 + float(default_time.split(':')[1])
+    new_time_minutes = default_time_minutes * number_of_bursts
+    hour = int(new_time_minutes/60)
+    minutes = int(np.remainder(new_time_minutes, 60))
     adjusted_time = '{:02d}:{:02d}'.format(hour, minutes)
 
     return adjusted_time

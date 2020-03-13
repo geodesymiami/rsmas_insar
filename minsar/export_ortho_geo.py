@@ -51,7 +51,7 @@ def main(iargs=None):
     if inps.submit_flag:
         job_name = 'export_ortho_geo'
         job_file_name = job_name
-        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir)
+        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, number_of_bursts=inps.num_bursts)
         sys.exit(0)
 
     pic_dir = os.path.join(inps.work_dir, pathObj.tiffdir)
@@ -85,7 +85,7 @@ def main(iargs=None):
 
         try:
             if config[step_name]['adjust'] == 'True':
-                walltimelimit = putils.walltime_adjust(config[step_name]['walltime'])
+                walltimelimit = putils.walltime_adjust(inps.num_bursts, config[step_name]['walltime'])
             else:
                 walltimelimit = config[step_name]['walltime']
         except:
