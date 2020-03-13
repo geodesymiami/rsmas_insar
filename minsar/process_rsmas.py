@@ -75,7 +75,7 @@ def main(iargs=None):
     #########################################
     if inps.submit_flag:
         job_file_name = 'process_rsmas'
-        job = js.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir, number_of_bursts=inps.num_bursts)
+        job = js.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir, walltime=inps.wall_time, number_of_bursts=inps.num_bursts)
         # run_operations.py needs this print statement for now.
         # This is not for debugging purposes.
         # DO NOT REMOVE.
@@ -156,6 +156,7 @@ class RsmasInsar:
         self.work_dir = inps.work_dir
         self.project_name = inps.project_name
         self.template = inps.template
+        self.num_bursts = str(inps.num_bursts)
 
         if 'demMethod' in inps.template and inps.template['demMethod'] == 'boundingBox':
             self.dem_flag = '--boundingBox'
@@ -179,13 +180,13 @@ class RsmasInsar:
                 if os.path.isdir(os.path.join(self.work_dir, directory)):
                     shutil.rmtree(os.path.join(self.work_dir, directory))
 
-        minsar.download_rsmas.main([self.custom_template_file])
+        minsar.download_rsmas.main([self.custom_template_file, '--numBursts', self.num_bursts])
         return
 
     def run_download_dem(self):
         """ Downloading DEM using dem_rsmas.py script.
         """
-        minsar.dem_rsmas.main([self.custom_template_file, self.dem_flag])
+        minsar.dem_rsmas.main([self.custom_template_file, self.dem_flag, '--numBursts', self.num_bursts])
         return
 
     def run_interferogram(self):
@@ -194,17 +195,17 @@ class RsmasInsar:
         2. execute run_files
         """
         try:
-            minsar.create_runfiles.main([self.custom_template_file])
+            minsar.create_runfiles.main([self.custom_template_file, '--numBursts', self.num_bursts])
         except:
             print('Skip creating run files ...')
-        minsar.execute_runfiles.main([self.custom_template_file])
+        minsar.execute_runfiles.main([self.custom_template_file, '--numBursts', self.num_bursts])
         return
 
     def run_timeseries(self):
         """ Process smallbaseline using MintPy or non-linear inversion using MiNoPy and email results
         """
         if self.method == 'mintpy':
-            minsar.smallbaseline_wrapper.main([self.custom_template_file, '--email'])
+            minsar.smallbaseline_wrapper.main([self.custom_template_file, '--email', '--numBursts', self.num_bursts])
         else:
             import minsar.minopy_wrapper as minopy_wrapper
             minopy_wrapper.main([self.custom_template_file])
@@ -213,13 +214,13 @@ class RsmasInsar:
     def run_insarmaps(self):
         """ prepare outputs for insarmaps website.
         """
-        minsar.ingest_insarmaps.main([self.custom_template_file, '--email'])
+        minsar.ingest_insarmaps.main([self.custom_template_file, '--email', '--numBursts', self.num_bursts])
         return
 
     def run_image_products(self):
         """ create ortho/geo-rectified products.
         """
-        minsar.export_ortho_geo.main([self.custom_template_file])
+        minsar.export_ortho_geo.main([self.custom_template_file, '--numBursts', self.num_bursts])
         return
 
     def run(self, steps=step_list):

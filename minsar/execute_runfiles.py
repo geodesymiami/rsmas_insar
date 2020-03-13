@@ -43,6 +43,10 @@ def main(iargs=None):
     if not inps.start_run == 0:
         inps.start_run = inps.start_run - 1
 
+    if inps.step:
+       inps.start_run = inps.step - 1
+       inps.end_run = inps.step
+
     if not iargs is None:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
     else:
@@ -55,7 +59,7 @@ def main(iargs=None):
         putils.remove_last_job_running_products(run_file=item)
 
         job_status = js.submit_batch_jobs(batch_file=item, out_dir=os.path.join(inps.work_dir, 'run_files'),
-                                          work_dir=inps.work_dirs num_bursts=inps.num_bursts)
+                                          work_dir=inps.work_dir, num_bursts=inps.num_bursts)
 
         if job_status:
 
@@ -68,9 +72,9 @@ def main(iargs=None):
             date_str = datetime.datetime.strftime(datetime.datetime.now(), '%Y%m%d:%H%M%S')
             print(date_str + ' * Job {} completed'.format(item))
 
-        date_str = datetime.datetime.strftime(datetime.datetime.now(), '%Y%m%d:%H%M%S')
-        print(date_str + ' * all jobs from {} to {} have been completed'.format(os.path.basename(run_file_list[0]),
-                                                                                os.path.basename(run_file_list[-1])))
+    date_str = datetime.datetime.strftime(datetime.datetime.now(), '%Y%m%d:%H%M%S')
+    print(date_str + ' * all jobs from {} to {} have been completed'.format(os.path.basename(run_file_list[0]),
+                                                                            os.path.basename(run_file_list[-1])))
 
     return None
 
