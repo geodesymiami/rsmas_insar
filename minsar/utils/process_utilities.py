@@ -67,6 +67,8 @@ def add_common_parser(parser):
                         help='walltime for submitting the script as a job')
     commonp.add_argument('--wait', dest='wait_time', default='00:00', metavar="Wait time (hh:mm)",
                        help="wait time to submit a job")
+    commonp.add_argument('--numBursts', dest='num_bursts', metavar='number of bursts',
+                        help='walltime for submitting the script as a job')
     return parser
 
 
@@ -123,6 +125,8 @@ def add_execute_runfiles(parser):
                         help='starting run file number (default = 1).\n')
     run_parser.add_argument('--stop', dest='end_run', default=0, type=int,
                         help='stopping run file number.\n')
+    run_parser.add_argument('--dostep', dest='step', type=int, metavar='STEP',
+                      help='run processing at the # step only')
 
     return parser
 
@@ -179,7 +183,7 @@ def add_process_rsmas(parser):
                       help='start processing at the named step, default: {}'.format(STEP_LIST[0]))
     prs.add_argument('--stop', dest='end_step', metavar='STEP', default=STEP_LIST[-1],
                       help='end processing at the named step, default: {}'.format(STEP_LIST[-1]))
-    prs.add_argument('--step', dest='step', metavar='STEP',
+    prs.add_argument('--dostep', dest='step', metavar='STEP',
                       help='run processing at the named step only')
 
     return parser
@@ -253,7 +257,10 @@ def create_or_update_template(inps_dict):
     # Creates default Template
     inps = create_default_template(inps)
     
-    inps.num_bursts = get_number_of_bursts(inps)
+    if not inps.num_bursts:
+        inps.num_bursts = get_number_of_bursts(inps)
+    else:
+        inps.num_bursts = int(inps.num_bursts)
 
     return inps
 
@@ -616,16 +623,18 @@ def move_out_job_files_to_stdout(run_file):
 
     dir_name = os.path.dirname(run_file)
     out_folder = dir_name + '/stdout_' + os.path.basename(run_file)
-    if not os.path.isdir(out_folder):
-        os.mkdir(out_folder)
-    else:
-        shutil.rmtree(out_folder)
-        os.mkdir(out_folder)
+    
+    if len(job_files) >= 2:
+        if not os.path.isdir(out_folder):
+            os.mkdir(out_folder)
+        else:
+            shutil.rmtree(out_folder)
+            os.mkdir(out_folder)
 
-    for item in stdout_files:
-        shutil.move(item, out_folder)
-    for item in job_files:
-        shutil.move(item, out_folder)
+        for item in stdout_files:
+            shutil.move(item, out_folder)
+        for item in job_files:
+            shutil.move(item, out_folder)
 
     return None
 
