@@ -61,7 +61,7 @@ def main(iargs=None):
     else:
         inps.flag_ssara = True
 
-    dem_dir = make_dem_dir(inps.work_dir)
+    dem_dir = os.getcwd() #import pdb dem_dir = make_dem_dir(inps.work_dir)
 
     if dem_dir:
 
@@ -169,8 +169,8 @@ def call_ssara_dem(inps, cwd):
         ssh_command_list = ['s.bgood', 'cd {0}'.format(cwd), command]
         host = os.getenv('DOWNLOADHOST')
         status = ssh_with_commands(host, ssh_command_list)
-        print('status from ssh_with_commands:' + str(status)); sys.stdout.flush()
-
+        #print('status from ssh_with_commands:' + str(status)); sys.stdout.flush()
+    
     print('Done downloading dem.grd'); sys.stdout.flush()
     grd_to_envi_and_vrt()
     grd_to_xml(cwd)
@@ -214,18 +214,17 @@ def grd_to_xml(cwd):
     xmlparamters = dict()
 
     xmlparamters['c1delta'] = re.findall(r'Pixel Size = \((.+),.+\)', tempstr)[0]
-    xmlparamters['c1ev'] = round(float(re.findall(r'Upper Right\s+\(\s*(.\d+.\d+),', tempstr)[0]), 1)
+    xmlparamters['c1ev'] = float(re.findall(r'Upper Right\s+\(\s*(.\d+.\d+),', tempstr)[0])
     xmlparamters['c1size'] = int(re.findall(r'Size is (\d+),\s+\d+', tempstr)[0])
-    xmlparamters['c1sv'] = round(float(re.findall(r'Lower Left\s+\(\s*(.\d+.\d+),', tempstr)[0]), 1)
+    xmlparamters['c1sv'] = float(re.findall(r'Lower Left\s+\(\s*(.\d+.\d+),', tempstr)[0])
 
     xmlparamters['c2delta'] = re.findall(r'Pixel Size = \(.+,(.+)\)', tempstr)[0]
-    xmlparamters['c2ev'] = round(float(re.findall(r'Lower Left\s+\(\s*.\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0]), 1)
+    xmlparamters['c2ev'] = float(re.findall(r'Lower Left\s+\(\s*.\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0])
     xmlparamters['c2size'] = int(re.findall(r'Size is \d+,\s+(\d+)', tempstr)[0])
-    xmlparamters['c2sv'] = round(float(re.findall(r'Upper Right\s+\(\s*.\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0]), 1)
+    xmlparamters['c2sv'] = float(re.findall(r'Upper Right\s+\(\s*.\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0])
 
     xmlparamters['numbands'] = re.findall(r'Band (\d+) \w', tempstr)[0]
-    #xmlparamters['ref'] = re.findall(r'GEOGCS\["(.+)",', tempstr)[0].replace(' ', '') # FA 3/20: gdal3 produced GEOGCRS
-    xmlparamters['ref'] = 'WGS84'                                                      #  FA 3/20: hardwired in
+    xmlparamters['ref'] = 'WGS84'                                            #  FA 3/20: hardwired in
     xmlparamters['length'] = xmlparamters['c2size']
     xmlparamters['width'] = xmlparamters['c1size']
     xmlparamters['xmax'] = xmlparamters['c1ev']
