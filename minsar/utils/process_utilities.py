@@ -748,8 +748,7 @@ def walltime_adjust(number_of_bursts, default_time, scheduler='SLURM'):
 
     if scheduler == 'LSF':
         factor = 6
-
-    new_time_minutes *= factor
+        new_time_minutes *= factor
 
     hour = int(new_time_minutes/60)
     minutes = int(np.remainder(new_time_minutes, 60))
