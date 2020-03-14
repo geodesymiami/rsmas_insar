@@ -18,7 +18,9 @@ import minsar.utils.process_utilities as putils
 from natsort import natsorted
 
 EXAMPLE = """example:
-  cd run_files; summarize_job_run_times.py
+  summarize_job_run_times.py --local
+  summarize_job_run_times.py
+  cd run_files; summarize_job_run_times.py --local
 
   summarize_job_run_times.py $SAMPLESDIR/unittestGalapagosSenDT128.template
   \n
@@ -36,8 +38,7 @@ def main(iargs=None):
                                      formatter_class=argparse.RawTextHelpFormatter,
                                      epilog=EXAMPLE)
     parser.add_argument('custom_template_file', metavar="FILE", default='None', nargs='?', help='template file to use [default: working directory]')
-                                     #formatter_class=argparse.RawTextHelpFormatter)
-                                     #epilog=EXAMPLE)
+    parser.add_argument('--local', dest='local_flag', action='store_true', default=False, help='for current (local) directory')
 
     inps = parser.parse_args(args=iargs)
 
@@ -120,9 +121,9 @@ def main(iargs=None):
     string =' '
     print (string); out_lines.append(string)
     
-    homedir = os.getenv('HOME')
-    save_job_run_times_summary(homedir + 'job_summaries', out_lines)
-  
+    home_dir = os.getenv('HOME')
+    save_job_run_times_summary(home_dir + '/job_summaries', out_lines)
+
     return None
 
 
