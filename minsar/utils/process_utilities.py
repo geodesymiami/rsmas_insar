@@ -67,8 +67,6 @@ def add_common_parser(parser):
                         help='walltime for submitting the script as a job')
     commonp.add_argument('--wait', dest='wait_time', default='00:00', metavar="Wait time (hh:mm)",
                        help="wait time to submit a job")
-    commonp.add_argument('--numBursts', dest='num_bursts', metavar='number of bursts',
-                        help='walltime for submitting the script as a job')
     return parser
 
 
@@ -127,6 +125,8 @@ def add_execute_runfiles(parser):
                         help='stopping run file number.\n')
     run_parser.add_argument('--dostep', dest='step', type=int, metavar='STEP',
                       help='run processing at the # step only')
+    run_parser.add_argument('--numBursts', dest='num_bursts', metavar='number of bursts',
+                         help='walltime for submitting the script as a job')
 
     return parser
 
@@ -256,11 +256,6 @@ def create_or_update_template(inps_dict):
 
     # Creates default Template
     inps = create_default_template(inps)
-    
-    if not inps.num_bursts:
-        inps.num_bursts = get_number_of_bursts(inps)
-    else:
-        inps.num_bursts = int(inps.num_bursts)
 
     return inps
 
@@ -426,6 +421,7 @@ def rerun_job_if_exit_code_140(run_file):
 
 ##########################################################################
 
+
 def create_rerun_run_file(job_files):
     """Write job file commands into rerun run file"""
     
@@ -447,6 +443,7 @@ def create_rerun_run_file(job_files):
 
 ##########################################################################
 
+
 def extract_attribute_from_hdf_file(file,attribute):
     """
     extract attribute from an HDF5 file
@@ -463,6 +460,7 @@ def extract_attribute_from_hdf_file(file,attribute):
 
 ##########################################################################
 
+
 def extract_walltime_from_job_file(file):
     """ Extracts the walltime from an LSF (BSUB) job file """
     with open(file) as fr:
@@ -475,6 +473,7 @@ def extract_walltime_from_job_file(file):
 
 ##########################################################################
 
+
 def extract_memory_from_job_file(file):
     """ Extracts the memory from an LSF (BSUB) job file """
     with open(file) as fr:
@@ -486,6 +485,7 @@ def extract_memory_from_job_file(file):
                 return memory
 
 ##########################################################################
+
 
 def get_line_before_last(file):
     """get the line before last from a file"""
@@ -500,6 +500,7 @@ def get_line_before_last(file):
     return
 
 ##########################################################################
+
 
 def find_completed_jobs_matching_search_string(run_file,search_string):
     """returns names of files that match seasrch strings (*.e files in run_files)."""
@@ -525,6 +526,8 @@ def find_completed_jobs_matching_search_string(run_file,search_string):
     return file_list, job_file_list
 
 ##########################################################################
+
+
 def raise_exception_if_job_exited(run_file):
     """Removes files with zero size or zero length (*.e files in run_files)."""
     
@@ -737,11 +740,17 @@ def get_number_of_bursts(inps_dict):
 ############################################################################
 
 
-def walltime_adjust(number_of_bursts, default_time):
+def walltime_adjust(number_of_bursts, default_time, scheduler='SLURM'):
     """ multiplys default walltime by number of bursts and returns adjusted walltime """
     
     default_time_minutes = float(default_time.split(':')[0]) * 60 + float(default_time.split(':')[1])
     new_time_minutes = default_time_minutes * number_of_bursts
+
+    if scheduler == 'LSF':
+        factor = 6
+
+    new_time_minutes *= factor
+
     hour = int(new_time_minutes/60)
     minutes = int(np.remainder(new_time_minutes, 60))
     adjusted_time = '{:02d}:{:02d}'.format(hour, minutes)
@@ -760,6 +769,7 @@ def pause_seconds(wait_time):
     return wait_seconds
 
 ############################################################################
+
 
 def multiply_walltime(wall_time, factor):
     """ multiply walltime in HH:MM or HH:MM:SS format by factor """
@@ -791,6 +801,7 @@ def multiply_walltime(wall_time, factor):
 
 ############################################################################
 
+
 def sum_time(time_str_list):
     """ sum time in HH:MM or HH:MM:SS format """
 
@@ -820,6 +831,7 @@ def sum_time(time_str_list):
        new_time_str = '{:02d}:{:02d}:{:02d}'.format(hours, minutes,seconds)
     
     return new_time_str
+
 ############################################################################
 
 
