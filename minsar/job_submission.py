@@ -294,7 +294,7 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
     return job_number
 
 
-def submit_script(job_name, job_file_name, argv, work_dir, walltime='None', number_of_bursts=1, email_notif=True):
+def submit_script(job_name, job_file_name, argv, work_dir, walltime=None, number_of_bursts=1, email_notif=True):
     """
     Submits a single script as a job. (compare to submit_batch_jobs for several tasks given in run_file)
     :param job_name: Name of job.
@@ -315,7 +315,7 @@ def submit_script(job_name, job_file_name, argv, work_dir, walltime='None', numb
 
     memory, wall_time, num_threads = get_memory_walltime(job_file_name, job_type='script', wall_time=walltime, num_bursts=number_of_bursts)
 
-    if not walltime == 'None':
+    if not walltime is None:
         wall_time = walltime        
 
     write_single_job_file(job_name, job_file_name, command_line, work_dir, email_notif,
