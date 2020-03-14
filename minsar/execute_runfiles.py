@@ -32,8 +32,13 @@ def main(iargs=None):
     if inps.submit_flag:
         job_name = 'execute_runfiles'
         job_file_name = job_name
-        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, number_of_bursts=inps.num_bursts)
+        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir)
         sys.exit(0)
+
+    if not inps.num_bursts:
+        inps.num_bursts = putils.get_number_of_bursts(inps)
+    else:
+        inps.num_bursts = int(inps.num_bursts)
 
     run_file_list = putils.read_run_list(inps.work_dir)
 

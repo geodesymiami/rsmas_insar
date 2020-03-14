@@ -51,7 +51,7 @@ def main(iargs=None):
     if inps.submit_flag:
         job_name = 'export_ortho_geo'
         job_file_name = job_name
-        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, number_of_bursts=inps.num_bursts)
+        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir)
         sys.exit(0)
 
     pic_dir = os.path.join(inps.work_dir, pathObj.tiffdir)
