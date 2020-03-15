@@ -111,7 +111,7 @@ def email_mintpy_results(email_address):
     print(command)
     status = subprocess.Popen(command, shell=True).wait()
     if status is not 0:
-        sys.exit('Error in email_mintpy_results')
+        print('Error in email_mintpy_results -- skipping error')
 
     return
 
