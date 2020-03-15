@@ -354,7 +354,11 @@ def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory=No
                                      number_of_threads=num_threads, queue=queue)
         else:
 
-            jobs = submit_jobs_individually(batch_file=batch_file, out_dir=out_dir, memory=maxmemory,
+            if (os.getenv('JOB_SUBMISSION_SCHEME') == 'singlefile_parallel_LSF_parallel'):      # FA 3/20 temporarily. Will be: if (PARAMS.method=='parallel'):
+                jobs = submit_parallel_jobs(batch_file=batch_file, out_dir=out_dir, memory=maxmemory,
+                                                walltime=wall_time, queue='parallel')
+            else:
+                jobs = submit_jobs_individually(batch_file=batch_file, out_dir=out_dir, memory=maxmemory,
                                             walltime=wall_time, queue=queue)
 
         return True
@@ -369,7 +373,7 @@ def submit_batch_jobs(batch_file, out_dir='./run_files', work_dir='.', memory=No
 
         return False
 
-
+###################################################################################################
 def submit_jobs_individually(batch_file, out_dir='./run_files', memory='4000', walltime='2:00',
                       queue='general', scheduler=None):
     """
@@ -416,6 +420,51 @@ def submit_jobs_individually(batch_file, out_dir='./run_files', memory='4000', w
     return batch_file
 
 
+def submit_parallel_jobs(batch_file, out_dir='./run_files', memory='4000', walltime='2:00',
+                      queue='parallel', scheduler=None):
+    # FA 3/20: not working yet. This is a copy of submit_jobs_individually and need to be made work
+    """
+    Submit a batch of jobs (to bsub or qsub) and wait for output files to exist before exiting. This is used in pegasus (LSF)
+    :param batch_file: File containing jobs that we are submitting.
+    :param out_dir: Output directory for run files.
+    :param work_dir: project directory
+    :param memory: Amount of memory to use. Defaults to 3600 KB.
+    :param walltime: Walltime for the job. Defaults to 4 hours.
+    :param scheduler: Job scheduler to use for running jobs. Defaults based on environment variable JOBSCHEDULER.
+    :param queue: Name of the queue to which the job is to be submitted. Default is set based on the scheduler.
+    """
+
+    # FA 3/20: need write_parallel_job_files (or option for parallel file writing). Would use get_job_file_lines(... number_of_tasks=PARAMS.number_of_tasks ...)
+    job_files = write_batch_job_files(batch_file, out_dir, memory=memory, walltime=walltime, queue=queue)
+
+    if not scheduler:
+        scheduler = os.getenv("JOBSCHEDULER")
+
+    os.chdir(out_dir)
+
+    files = []
+
+    for i, job in enumerate(job_files):
+        job_number = submit_single_job(job, out_dir, scheduler)
+        job_file_name = job.split(".")[0]
+        files.append("{}_{}.o".format(job_file_name, job_number))
+        # files.append("{}_{}.e".format(job_file_name, job_number))
+        if len(job_files) < 100 or i == 0 or i % 50 == 49:
+            print("Submitting from {0}: job #{1} of {2} jobs".format(os.path.abspath(batch_file).split(os.sep)[-1], i+1, len(job_files)))
+
+    # check if output files exist
+    i = 0
+    wait_time_sec = 60
+    total_wait_time_min = 0
+    while i < len(files):
+        if os.path.isfile(files[i]):
+            print("Job #{} of {} complete (output file {})".format(i+1, len(files), files[i]))
+            i += 1
+        else:
+            print("Waiting for job #{} of {} (output file {}) after {} minutes".format(i+1, len(files), files[i], total_wait_time_min))
+            total_wait_time_min += wait_time_sec/60
+            time.sleep(wait_time_sec)
+
 def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', walltime='2:00',
                              number_of_threads=4, queue='general', scheduler=None, email_notif=True):
     """
@@ -438,12 +487,6 @@ def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', w
         lines = f.readlines()
         number_of_tasks = len(lines)
 
-    # FA 3/2030:  LAUNCHER_NPROCS does not seem to have any effect. -n 20 runs 20 after 20 task, etc
-    #if os.getenv('LAUNCHER_NPROCS'):
-    #    number_of_parallel_tasks = int(os.getenv('LAUNCHER_NPROCS'))
-    #    number_of_tasks = number_of_parallel_tasks
-    #else:
-    #    number_of_parallel_tasks = number_of_tasks
     number_of_parallel_tasks = number_of_tasks
     
     # walltime_factor = number_of_tasks / number_of_parallel_tasks  #need to implement: factor to multiply to update walltimes ( use process_utilities.py:def multiply_walltime(wall_time, factor) )
@@ -461,9 +504,6 @@ def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', w
     job_file_lines = get_job_file_lines(job_name, job_file_name, email_notif, out_dir, scheduler, memory, walltime,
                                         queue, number_of_tasks, number_of_nodes)
 
-    job_file_lines.append("\nSTART_TIME=$SECONDS")
-    job_file_lines.append("\nSTART_TIME=`date \"+%T\"`")
-    job_file_lines.append("\necho START_TIME: $START_TIME")
     job_file_lines.append("\n\nmodule load launcher")
 
     #job_file_lines.append("\nexport LAUNCHER_NPROCS={0}".format(number_of_parallel_tasks))
@@ -471,7 +511,6 @@ def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', w
     job_file_lines.append("\nexport LAUNCHER_WORKDIR={0}".format(out_dir))
     job_file_lines.append("\nexport LAUNCHER_JOB_FILE={0}\n".format(batch_file))
     job_file_lines.append("\n$LAUNCHER_DIR/paramrun\n")
-    #job_file_lines.append("\necho ELAPSED_TIME: $(($SECONDS - $START_TIME)) seconds\n")
 
     # write lines to .job file
     job_file_name = "{0}.job".format(job_file_name)
@@ -512,6 +551,7 @@ def submit_job_with_launcher(batch_file, out_dir='./run_files', memory='4000', w
             status = 'complete'
     return
 
+###################################################################################################
 
 def get_memory_walltime(job_name, job_type='batch', wall_time=None, memory=None, num_bursts=1):
     """
