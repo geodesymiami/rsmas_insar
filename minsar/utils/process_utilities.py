@@ -802,18 +802,23 @@ def multiply_walltime(wall_time, factor):
 
 
 def sum_time(time_str_list):
-    """ sum time in HH:MM or HH:MM:SS format """
+    """ sum time in D-HH:MM or D-HH:MM:SS format """
 
     seconds_sum = 0
 
     for item in time_str_list:
-       item_parts = [int(s) for s in item.split(':')]
-
-       hours = item_parts[0] 
-       minutes = item_parts[1] 
+       item_parts = item.split(':')
 
        try:
-           seconds = item_parts[2]
+           days, hours = item_parts[0].split('-')
+           hours = int(days) * 24 + int(hours)
+       except:
+           hours = int(item_parts[0])
+
+       minutes = int(item_parts[1])
+
+       try:
+           seconds = int(item_parts[2])
        except:
            seconds = 0
 
