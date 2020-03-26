@@ -26,9 +26,9 @@ git clone https://github.com/geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
 
 git clone https://github.com/insarlab/MintPy.git sources/MintPy ;
-git clone https://github.com/geodesymiami/geodmod.git sources/geodmod;
-git clone https://github.com/bakerunavco/SSARA.git 3rdparty/SSARA
-git clone https://github.com/yunjunz/pyaps3.git 3rdparty/PyAPS/pyaps3
+git clone https://github.com/geodesymiami/geodmod.git sources/geodmod ;
+git clone https://github.com/bakerunavco/SSARA.git 3rdparty/SSARA ;
+git clone https://github.com/yunjunz/pyaps3.git 3rdparty/PyAPS/pyaps3 ;
 git clone https://github.com/geodesymiami/MimtPy.git sources/MimtPy ;
 git clone https://github.com/TACC/launcher.git 3rdparty/launcher ;
 
@@ -66,7 +66,7 @@ mkdir -p ../3rdparty
 ../3rdparty/miniconda3/bin/pip install --upgrade pip
 ../3rdparty/miniconda3/bin/pip install opencv-python
 ../3rdparty/miniconda3/bin/pip install geocoder
-#../3rdparty/miniconda3/bin/pip install git+https://github.com/matplotlib/basemap.git#egg=mpl_toolkits #needed for ARIA products
+../3rdparty/miniconda3/bin/pip install git+https://github.com/dask/dask-jobqueue
 ../3rdparty/miniconda3/bin/conda install basemap python=3.7 --yes
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
 ```

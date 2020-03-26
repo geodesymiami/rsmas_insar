@@ -10,11 +10,9 @@ import sys
 import glob
 import time
 import shutil
-import argparse
-from minsar.objects.rsmas_logging import loglevel
 from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
-import minsar.job_submission as js
+from minsar.job_submission import JOB_SUBMIT
 from minsar import email_results
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
@@ -28,23 +26,18 @@ def main(iargs=None):
 
     inps = putils.cmd_line_parse(iargs, script='ingest_insarmaps')
 
-    config = putils.get_config_defaults(config_file='job_defaults.cfg')
-
-    job_file_name = 'ingest_insarmaps'
-    job_name = job_file_name
-
-    if inps.wall_time == 'None':
-        inps.wall_time = config[job_file_name]['walltime']
-
-    wait_seconds, new_wall_time = putils.add_pause_to_walltime(inps.wall_time, inps.wait_time)
+    time.sleep(putils.pause_seconds(inps.wait_time))
 
     #########################################
     # Submit job
     #########################################
-    if inps.submit_flag:
-        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, new_wall_time)
 
-    time.sleep(wait_seconds)
+    if inps.submit_flag:
+        job_obj = JOB_SUBMIT(inps)
+        job_name = 'ingest_insarmaps'
+        job_file_name = job_name
+        job_obj.submit_script(job_name, job_file_name, sys.argv[:])
+        sys.exit(0)
 
     os.chdir(inps.work_dir)
 
@@ -67,10 +60,12 @@ def main(iargs=None):
     command2 = 'json_mbtiles2insarmaps.py -u ' + password.insaruser + ' -p ' + password.insarpass + ' --host ' + \
                'insarmaps.miami.edu -P rsmastest -U rsmas\@gmail.com --json_folder ' + \
                json_folder + ' --mbtiles_file ' + mbtiles_file + ' |& tee -a out_insarmaps.log'
+    command3 = 'upload_data_products.py --mintpyProducts ' + ' ' + inps.custom_template_file + ' |& tee out_insarmaps.log'
 
     with open(inps.work_dir + '/mintpy/run_insarmaps', 'w') as f:
         f.write(command1 + '\n')
         f.write(command2 + '\n')
+        f.write(command3 + '\n')
 
     out_file = 'out_insarmaps'
     message_rsmas.log(inps.work_dir, command1)
@@ -86,9 +81,15 @@ def main(iargs=None):
     if status is not 0:
         raise Exception('ERROR in json_mbtiles2insarmaps.py')
 
+    message_rsmas.log(inps.work_dir, command3)
+    command3 = '('+command3+' | tee -a '+out_file+'.o) 3>&1 1>&2 2>&3 | tee -a '+out_file+'.e'
+    status = subprocess.Popen(command3, shell=True).wait()
+    if status is not 0:
+        raise Exception('ERROR in upload_data_products.py')
+
     # Email insarmaps results:
     if inps.email:
-        email_results.main([inps.custom_template_file, '--insarmap'])
+        email_results.main([inps.custom_template_file, '--insarmaps'])
 
     return None
 

@@ -18,7 +18,7 @@ import minsar
 import minsar.workflow
 from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
-import minsar.job_submission as js
+from minsar.job_submission import JOB_SUBMIT
 from minsar.objects.auto_defaults import PathFind
 
 pathObj = PathFind()
@@ -31,7 +31,7 @@ EXAMPLE = """example:
       process_rsmas.py  -h / --help                       # help
       process_rsmas.py  -H                                # print    default template options
       # Run with --start/stop/step options
-      process_rsmas.py GalapagosSenDT128.template --step  download        # run the step 'download' only
+      process_rsmas.py GalapagosSenDT128.template --dostep  download        # run the step 'download' only
       process_rsmas.py GalapagosSenDT128.template --start download        # start from the step 'download'
       process_rsmas.py GalapagosSenDT128.template --stop  ifgrams         # end after step 'interferogram'
     """
@@ -68,27 +68,22 @@ def main(iargs=None):
     message_rsmas.log(inps.work_dir, '##### NEW RUN #####')
     message_rsmas.log(inps.work_dir, command_line)
 
-    config = putils.get_config_defaults(config_file='job_defaults.cfg')
-
-    job_file_name = 'process_rsmas'
-    if inps.wall_time == 'None':
-        inps.wall_time = config[job_file_name]['walltime']
-
-    wait_seconds, new_wall_time = putils.add_pause_to_walltime(inps.wall_time, inps.wait_time)
+    time.sleep(putils.pause_seconds(inps.wait_time))
 
     #########################################
     # Submit job
     #########################################
     if inps.submit_flag:
-        job = js.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir, new_wall_time)
+        job_obj = JOB_SUBMIT(inps)
+        job_file_name = 'process_rsmas'
+        job = job_obj.submit_script(inps.project_name, job_file_name, sys.argv[:])
         # run_operations.py needs this print statement for now.
         # This is not for debugging purposes.
         # DO NOT REMOVE.
         print(job)
 
     else:
-        time.sleep(wait_seconds)
-
+        inps.num_bursts = putils.get_number_of_bursts(inps)
         objInsar = RsmasInsar(inps)
         objInsar.run(steps=inps.runSteps)
 
@@ -163,8 +158,7 @@ class RsmasInsar:
         self.work_dir = inps.work_dir
         self.project_name = inps.project_name
         self.template = inps.template
-        self.image_products_flag = inps.template['image_products_flag']
-        self.insarmaps_flag = inps.template['insarmaps_flag']
+        self.num_bursts = str(inps.num_bursts)
 
         if 'demMethod' in inps.template and inps.template['demMethod'] == 'boundingBox':
             self.dem_flag = '--boundingBox'
@@ -206,7 +200,7 @@ class RsmasInsar:
             minsar.create_runfiles.main([self.custom_template_file])
         except:
             print('Skip creating run files ...')
-        minsar.execute_runfiles.main([self.custom_template_file])
+        minsar.execute_runfiles.main([self.custom_template_file, '--numBursts', self.num_bursts])
         return
 
     def run_timeseries(self):
@@ -222,19 +216,13 @@ class RsmasInsar:
     def run_insarmaps(self):
         """ prepare outputs for insarmaps website.
         """
-        if self.insarmaps_flag:
-            minsar.ingest_insarmaps.main([self.custom_template_file, '--email'])
-        else:
-            print('insarmaps step is off (insarmaps_flag in template is False)')
+        minsar.ingest_insarmaps.main([self.custom_template_file, '--email'])
         return
 
     def run_image_products(self):
         """ create ortho/geo-rectified products.
         """
-        if self.image_products_flag == 'True':
-            minsar.export_ortho_geo.main([self.custom_template_file])
-        else:
-            print('imageProducts step is off (image_products_flag in template is False)')
+        minsar.export_ortho_geo.main([self.custom_template_file])
         return
 
     def run(self, steps=step_list):

@@ -30,7 +30,7 @@
 
 
 [DEFAULT]
-walltime = 4:00
+walltime = 10:00
 memory = 3000
 adjust = Fale
 num_threads = 4
@@ -39,158 +39,182 @@ num_threads = 4
 walltime = 3:00
 memory = 1000
 adjust = False
-num_threads = 1
+num_threads = 4
 
 [create_runfiles]
 walltime = 00:10
 memory = 1000
 adjust = False
-num_threads = 1
+num_threads = 4
 
 [execute_runfiles]
 walltime = 2:00
 memory = 1000
 adjust = False
-num_threads = 1
+num_threads = 4
 
 [export_ortho_geo]
 walltime = 01:00
 memory = 1000
 adjust = False
-num_threads = 1
+num_threads = 4
 
 [ingest_insarmaps]
 walltime = 01:00
 memory = 1000
 adjust = False
-num_threads = 1
+num_threads = 4
 
 [download_rsmas]
 walltime = 03:00
 memory = 5000
 adjust = False
-num_threads = 1
+num_threads = 4
 
 [smallbaseline_wrapper]
 walltime = 5:00
 memory = 2000
 adjust = False
-num_threads = 1
+num_threads = 4
+
+[minopy_wrapper]
+walltime = 12:00
+memory = 5000
+adjust = False
+num_threads = 4
+
+[crop_sentinel]
+walltime = 1:00
+memory = 6000
+adjust = False
+num_threads = 4
+
+[create_patch]
+walltime = 1:00
+memory = 4000
+adjust = False
+num_threads = 4
+
+[phase_linking]
+walltime = 12:00
+memory = 1000
+adjust = False
+num_threads = 4
+
+[patch_inversion]
+walltime = 6:00
+memory = 3000
+adjust = False
+num_threads = 4
 
 [ifgramStack_to_ifgram_and_coherence]
 walltime = 1:00
 memory = 4000
 adjust = False
-num_threads = 1
+num_threads = 4
 
 [timeseries_corrections]
 walltime = 4:00
 memory = 8000
 adjust = False
-num_threads = 1
+num_threads = 4
 
 ### ISCE topsSatck #####
 [unpack_slc_topo_master]
-walltime = 00:08
+walltime = 2:00
 memory = 4000
 adjust = True
-num_threads = 4
-
-[unpack_topo_master]
-walltime = 00:03
-memory = 4000
-adjust = True
-num_threads = 4
-
-[unpack_slave_slc]
-walltime = 00:40
-memory = 4000
-adjust = False
-num_threads = 4
+num_threads = 16
 
 [average_baseline]
-walltime = 00:01
+walltime = 00:06
 memory = 1000
-adjust = True
+adjust = False
 num_threads = 2
 
 [extract_burst_overlaps]
-walltime = 00:01
+walltime = 00:02
 memory = 4000
-adjust = True
-num_threads = 4
+adjust = False
+num_threads = 16
 
 [overlap_geo2rdr_resample]
-walltime = 00:40
-memory = 6000
+walltime = 01:00
+memory = 4000
 adjust = False
-num_threads = 4
+num_threads = 2
 
 [pairs_misreg]
-walltime = 00:03
+walltime = 0:30
 memory = 4000
-adjust = True
-num_threads = 4
+adjust = False
+num_threads = 2
 
 [timeseries_misreg]
 walltime = 0:02
 memory = 4000
 adjust = False
-num_threads = 4
+num_threads = 16
 
 [geo2rdr_resample]
-walltime = 00:10
+walltime = 1:00
 memory = 5000
 adjust = True
 num_threads = 4
 
 [extract_stack_valid_region]
-walltime = 00:10
+walltime = 00:30
 memory = 4000
-adjust = False
+adjust = True
 num_threads = 4
 
 [merge]
-walltime = 00:30
+walltime = 02:00
 memory = 4000
-adjust = False
+adjust = True
 num_threads = 4
 
 [merge_burst_igram]
-walltime = 00:30
+walltime = 01:00
 memory = 4000
-adjust = False
+adjust = True
 num_threads = 2
 
 [grid_baseline]
-walltime = 00:05
+walltime = 01:00
 memory = 4000
-adjust = True
+adjust = False
 num_threads = 4
 
 [generate_igram]
-walltime = 00:05
+walltime = 1:00
 memory = 4000
-adjust = True
+adjust = False
 num_threads = 4
 
 [filter_coherence]
 walltime = 0:20
 memory = 6000
-adjust = False
+adjust = True
 num_threads = 2
 
 [unwrap]
-walltime = 0:10
+walltime = 0:20
 memory = 5000
-adjust = True
-num_threads = 4
+adjust = False
+num_threads = 2
 
 [merge_master_slave_slc]
 walltime = 00:20
 memory = 4000
-adjust = False
+adjust = True
 num_threads = 2
+
+[single_master_interferograms]
+walltime = 2:00
+memory = 4000
+adjust = False
+num_threads = 4
 
 [amplitude_ortho_geo]
 walltime = 00:30

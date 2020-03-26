@@ -21,7 +21,7 @@ timeseries: time series analysis based on smallbaseline method or single master 
 insarmaps:  uploading displacement products to insarmaps website
 image_products: generating and uploading image products to hazards website (amplitudes, interferograms, coherences)
 ```
-Processing can be started at a given step using the `--start` option. The `--step`  option allows to execute only one processing step. Example: 
+Processing can be started at a given step using the `--start` option. The `--dostep`  option allows to execute only one processing step. Example: 
 ```bash
   process_rsmas.py  $SAMPLESDIR/GalapagosSenDT128.template             # run with default and custom templates
   process_rsmas.py  $SAMPLESDIR/GalapagosSenDT128.template  --submit   # submit as job
@@ -29,7 +29,7 @@ Processing can be started at a given step using the `--start` option. The `--ste
   process_rsmas.py -H                                # print    default template options
 
 # Run with --start/stop/step options
-  process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --step  download        # run the step 'download' only
+  process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --dostep  download        # run the step 'download' only
   process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --start download        # start from the step 'download' 
   process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --stop  ifgrams         # end after step 'interferogram'
 ```
@@ -38,12 +38,12 @@ In order to use either `--start` or `--step`, it is necessary that the previous 
 ## 3. Example for Galápagos with Sentinel-1 data ####
 The individual processing steps can be run stepwise using
 ```bash
-process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --step  download
-process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --step  dem
-process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --step  ifgrams
-process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --step  timeseries
-process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --step  insarmaps
-process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --step  image_products
+process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --dostep  download
+process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --dostep  dem
+process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --dostep  ifgrams
+process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --dostep  timeseries
+process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --dostep  insarmaps
+process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --dostep  image_products
 ```
 
 These commands run the following scripts:
@@ -91,11 +91,11 @@ download_asfserial.py $SAMPLESDIR/GalapagosSenDT128.template --delta_lat 0.1
 ```
 * [Trouble shooting](./download_data_troubleshooting.md)
 
-### 4.2. Download DEM: --step dem
+### 4.2. Download DEM: --dostep dem
 Downaloading DEM from the USGS
 * [Trouble shooting](./download_dem_troubleshooting.md)
 
-### 4.3. Process interferograms: --step ifgrams
+### 4.3. Process interferograms: --dostep ifgrams
 
 ```
 create_runfiles
