@@ -95,7 +95,7 @@ def main(iargs=None):
         wall_time     = out.decode('utf-8').split()[1]
         reserved_time = out.decode('utf-8').split()[2]
         elapsed_time  = out.decode('utf-8').split()[3]
-
+   
         time_per_burst = putils.multiply_walltime(elapsed_time, factor = 1/number_of_bursts)
 
         string ='{:32} {:1}  {:1}'.format('_'.join(os.path.basename(fname).split('_')[0:-1]) , out.decode('utf-8'), time_per_burst)

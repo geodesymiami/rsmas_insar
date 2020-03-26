@@ -18,7 +18,7 @@ import minsar
 import minsar.workflow
 from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
-import minsar.job_submission as js
+from minsar.job_submission import JOB_SUBMIT
 from minsar.objects.auto_defaults import PathFind
 
 pathObj = PathFind()
@@ -74,8 +74,9 @@ def main(iargs=None):
     # Submit job
     #########################################
     if inps.submit_flag:
+        job_obj = JOB_SUBMIT(inps)
         job_file_name = 'process_rsmas'
-        job = js.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir, walltime=inps.wall_time)
+        job = job_obj.submit_script(inps.project_name, job_file_name, sys.argv[:])
         # run_operations.py needs this print statement for now.
         # This is not for debugging purposes.
         # DO NOT REMOVE.

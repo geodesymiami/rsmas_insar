@@ -12,7 +12,7 @@ import time
 import shutil
 from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
-import minsar.job_submission as js
+from minsar.job_submission import JOB_SUBMIT
 from minsar import email_results
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
@@ -33,9 +33,10 @@ def main(iargs=None):
     #########################################
 
     if inps.submit_flag:
+        job_obj = JOB_SUBMIT(inps)
         job_name = 'ingest_insarmaps'
         job_file_name = job_name
-        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir)
+        job_obj.submit_script(job_name, job_file_name, sys.argv[:])
         sys.exit(0)
 
     os.chdir(inps.work_dir)

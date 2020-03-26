@@ -21,9 +21,9 @@ import shutil
 from mintpy.defaults.auto_path import autoPath
 from minsar.objects.dataset_template import Template
 from minsar.objects.auto_defaults import PathFind
-from minsar.objects.sentinel1_override import Sentinel1_burst_count
-from stackSentinel import cmdLineParse as stack_cmd
-import minsar.job_submission as js
+from isceobj.Sensor.TOPS.Sentinel1 import Sentinel1
+from stackSentinel import cmdLineParse as stack_cmd, get_dates
+from minsar.job_submission import JOB_SUBMIT
 
 pathObj = PathFind()
 
@@ -63,7 +63,7 @@ def add_common_parser(parser):
     commonp.add_argument('custom_template_file', nargs='?', help='custom template with option settings.\n')
     commonp.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
     commonp.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
-    commonp.add_argument('--walltime', dest='wall_time', default='None',
+    commonp.add_argument('--walltime', dest='wall_time', metavar="WALLTIME (HH:MM)",
                         help='walltime for submitting the script as a job')
     commonp.add_argument('--wait', dest='wait_time', default='00:00', metavar="Wait time (hh:mm)",
                        help="wait time to submit a job")
@@ -381,11 +381,13 @@ def run_or_skip(custom_template_file):
 
 ##########################################################################
 
-def rerun_job_if_exit_code_140(run_file):
+def rerun_job_if_exit_code_140(run_file, inps_dict):
     """Find files that exited because walltime exceeed and run again with twice the walltime"""
-    
+
+    inps = inps_dict
+
     search_string = 'Exited with exit code 140.'
-    files, job_files = find_completed_jobs_matching_search_string(run_file,search_string)
+    files, job_files = find_completed_jobs_matching_search_string(run_file, search_string)
 
     if len(files) == 0:
        return
@@ -400,23 +402,30 @@ def rerun_job_if_exit_code_140(run_file):
     print(memory)
 
     for file in files: 
-        os.remove(file.replace('.o','.e'))
+        os.remove(file.replace('.o', '.e'))
 
     move_out_job_files_to_stdout(run_file)
     
     # renaming of stdout dir as otherwise it will get deleted in later move_out_job_files_to_stdout step
     stdout_dir = os.path.dirname(run_file) + '/stdout_' + os.path.basename(run_file)
-    os.rename(stdout_dir,stdout_dir + '_pre_rerun')
+    os.rename(stdout_dir, stdout_dir + '_pre_rerun')
 
     remove_last_job_running_products(run_file)
 
     queuename = os.getenv('QUEUENAME')
-    jobs = js.submit_batch_jobs(batch_file=rerun_file, out_dir=os.path.dirname(rerun_file), 
-                                work_dir=os.path.dirname(os.path.dirname(rerun_file)), memory=memory, walltime=new_wall_time,
-                                            queue=queuename)
-    remove_zero_size_or_length_error_files(run_file = rerun_file)
-    raise_exception_if_job_exited(run_file = rerun_file)
-    concatenate_error_files(run_file = rerun_file, work_dir=os.path.dirname(os.path.dirname(run_file)))
+
+    inps.wall_time = new_wall_time
+    inps.memory = inps.memory
+    inps.work_dir = s.path.dirname(os.path.dirname(rerun_file))
+    inps.out_dir = os.path.dirname(rerun_file)
+    inps.queue = queuename
+
+    job_obj = JOB_SUBMIT(inps)
+    jobs = job_obj.submit_batch_jobs(batch_file=rerun_file)
+
+    remove_zero_size_or_length_error_files(run_file=rerun_file)
+    raise_exception_if_job_exited(run_file=rerun_file)
+    concatenate_error_files(run_file=rerun_file, work_dir=os.path.dirname(os.path.dirname(run_file)))
     move_out_job_files_to_stdout(rerun_file)
 
 ##########################################################################
@@ -707,7 +716,6 @@ def xmlread(filename):
 
 def get_number_of_bursts(inps_dict):
     """ calculates the number of bursts based on boundingBox and returns an adjusting factor for walltimes """
-
     try:
         topsStack_template = pathObj.correct_for_isce_naming_convention(inps_dict)
         command_options = []
@@ -719,7 +727,10 @@ def get_number_of_bursts(inps_dict):
                 command_options = command_options + ['--' + item] + [topsStack_template[item]]
 
         inps = stack_cmd(command_options)
-    
+
+        dateList, master_date, slaveList, safe_dict = get_dates(inps)
+        dirname = safe_dict[master_date].safe_file
+
         if inps.swath_num is None:
             swaths = [1, 2, 3]
         else:
@@ -728,13 +739,28 @@ def get_number_of_bursts(inps_dict):
         number_of_bursts = 0
 
         for swath in swaths:
-            obj = Sentinel1_burst_count()
+            obj = Sentinel1()
             obj.configure()
-            number_of_bursts = number_of_bursts + obj.get_burst_num(inps, swath)
+            obj.safe = dirname.split()
+            obj.swathNumber = swath
+            obj.output = os.path.join(inps.work_dir, 'master', 'IW{0}'.format(swath))
+            obj.orbitFile = None
+            obj.auxFile = None
+            obj.orbitDir = inps.orbit_dirname
+            obj.auxDir = inps.aux_dirname
+            obj.polarization = inps.polarization
+            if inps.bbox is not None:
+                obj.regionOfInterest = [float(x) for x in inps.bbox.split()]
+            try:
+                obj.parse()
+            except Exception as e:
+                print(e)
+            number_of_bursts = number_of_bursts + obj.product.numberOfBursts
+
     except:
         number_of_bursts = 1
     print('number of bursts: {}'.format(number_of_bursts))
-    
+
     return number_of_bursts
     
 ############################################################################
