@@ -9,7 +9,7 @@ import difflib
 from minsar.objects.dataset_template import Template
 from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
-import minsar.job_submission as js
+from minsar.job_submission import JOB_SUBMIT
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
@@ -143,10 +143,9 @@ if __name__ == "__main__":
     if inps.submit_flag:
         job_file_name = 'download_ssara_rsmas'
         job_name = inps.template.split(os.sep)[-1].split('.')[0]
-        work_dir = inps.work_dir
-        wall_time = '24:00'
-
-        js.submit_script(job_name, job_file_name, sys.argv[:], work_dir, wall_time)
+        inps.wall_time = '24:00'
+        job_obj = JOB_SUBMIT(inps)
+        job_obj.submit_script(job_name, job_file_name, sys.argv[:])
         sys.exit(0)
 
     os.chdir(inps.work_dir)

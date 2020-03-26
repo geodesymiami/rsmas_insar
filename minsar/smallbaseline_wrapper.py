@@ -9,7 +9,7 @@ import time
 from minsar.objects import message_rsmas
 from minsar.objects.auto_defaults import PathFind
 import minsar.utils.process_utilities as putils
-import minsar.job_submission as js
+from minsar.job_submission import JOB_SUBMIT
 from minsar import email_results
 from mintpy import smallbaselineApp
 import contextlib
@@ -30,9 +30,10 @@ def main(iargs=None):
     #########################################
 
     if inps.submit_flag:
+        job_obj = JOB_SUBMIT(inps)
         job_name = 'smallbaseline_wrapper'
         job_file_name = job_name
-        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir)
+        job_obj.submit_script(job_name, job_file_name, sys.argv[:])
         sys.exit(0)
 
     if not iargs is None:

@@ -11,7 +11,7 @@ from minsar.objects.rsmas_logging import RsmasLogger, loglevel
 from minsar.objects import message_rsmas
 from minsar.utils import process_utilities as putils
 from minsar.objects.auto_defaults import PathFind
-import minsar.job_submission as js
+from minsar.job_submission import JOB_SUBMIT
 
 pathObj = PathFind()
 inps = None
@@ -20,8 +20,6 @@ inps = None
 def main(iargs=None):
 
     inps = putils.cmd_line_parse(iargs, script='download_rsmas')
-
-    config = putils.get_config_defaults(config_file='job_defaults.cfg')
 
     if not iargs is None:
         message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
@@ -43,11 +41,8 @@ def main(iargs=None):
     if inps.submit_flag:
         job_file_name = 'download_ssara_rsmas'
         job_name = inps.custom_template_file.split(os.sep)[-1].split('.')[0]
-
-        if inps.wall_time == 'None':
-            inps.wall_time = config['download_rsmas']['walltime']
-
-        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, inps.wall_time)
+        job_obj = JOB_SUBMIT(inps)
+        job_obj.submit_script(job_name, job_file_name, sys.argv[:])
         sys.exit(0)
 
     if not os.path.isdir(project_slc_dir):

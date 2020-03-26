@@ -15,7 +15,7 @@ from zerodop.topozero import createTopozero
 from isceobj.Util.ImageUtil import ImageLib as IML
 from minsar.objects.auto_defaults import PathFind
 import minsar.utils.process_utilities as putils
-import minsar.job_submission as js
+from minsar.job_submission import JOB_SUBMIT
 import mergeBursts as mb
 
 # FA 9/19: commented out as `import boto3 hangs`
@@ -44,6 +44,9 @@ def main(iargs=None):
 
     time.sleep(putils.pause_seconds(inps.wait_time))
 
+    inps.out_dir = os.path.join(inps.work_dir, 'run_files')
+    job_obj = JOB_SUBMIT(inps)
+
     #########################################
     # Submit job
     #########################################
@@ -51,7 +54,7 @@ def main(iargs=None):
     if inps.submit_flag:
         job_name = 'export_ortho_geo'
         job_file_name = job_name
-        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir)
+        job_obj.submit_script(job_name, job_file_name, sys.argv[:])
         sys.exit(0)
 
     pic_dir = os.path.join(inps.work_dir, pathObj.tiffdir)
@@ -77,33 +80,18 @@ def main(iargs=None):
     run_file_list = make_run_list(inps)
 
     for item in run_file_list:
-        step_name = 'amplitude_ortho_geo'
-        try:
-            memorymax = config[step_name]['memory']
-        except:
-            memorymax = config['DEFAULT']['memory']
-
-        try:
-            if config[step_name]['adjust'] == 'True':
-                walltimelimit = putils.walltime_adjust(inps.num_bursts, config[step_name]['walltime'])
-            else:
-                walltimelimit = config[step_name]['walltime']
-        except:
-            walltimelimit = config['DEFAULT']['walltime']
-
-        queuename = os.getenv('QUEUENAME')
 
         putils.remove_last_job_running_products(run_file=item)
 
-        jobs = js.submit_batch_jobs(batch_file=item,
-                                    out_dir=os.path.join(inps.work_dir, 'run_files'),
-                                    work_dir=inps.work_dir, memory=memorymax,
-                                    walltime=walltimelimit, queue=queuename)
+        job_status = job_obj.submit_batch_jobs(batch_file=item)
 
-        putils.remove_zero_size_or_length_error_files(run_file=item)
-        putils.raise_exception_if_job_exited(run_file=item)
-        putils.concatenate_error_files(run_file=item, work_dir=inps.work_dir)
-        putils.move_out_job_files_to_stdout(run_file=item)
+        if job_status:
+
+            putils.remove_zero_size_or_length_error_files(run_file=item)
+            putils.rerun_job_if_exit_code_140(run_file=item, inps_dict=inps)
+            putils.raise_exception_if_job_exited(run_file=item)
+            putils.concatenate_error_files(run_file=item, work_dir=inps.work_dir)
+            putils.move_out_job_files_to_stdout(run_file=item)
 
     #upload_to_s3(pic_dir)
     minsar.upload_data_products.main([inps.custom_template_file, '--imageProducts'])

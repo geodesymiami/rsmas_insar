@@ -9,7 +9,7 @@ import time
 import datetime
 from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
-import minsar.job_submission as js
+from minsar.job_submission import JOB_SUBMIT
 
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -25,6 +25,9 @@ def main(iargs=None):
 
     time.sleep(putils.pause_seconds(inps.wait_time))
 
+    inps.out_dir = os.path.join(inps.work_dir, 'run_files')
+    job_obj = JOB_SUBMIT(inps)
+
     #########################################
     # Submit job
     #########################################
@@ -32,13 +35,8 @@ def main(iargs=None):
     if inps.submit_flag:
         job_name = 'execute_runfiles'
         job_file_name = job_name
-        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir)
+        job_obj.submit_script(job_name, job_file_name, sys.argv[:])
         sys.exit(0)
-
-    if not inps.num_bursts:
-        inps.num_bursts = putils.get_number_of_bursts(inps)
-    else:
-        inps.num_bursts = int(inps.num_bursts)
 
     run_file_list = putils.read_run_list(inps.work_dir)
 
@@ -63,13 +61,12 @@ def main(iargs=None):
 
         putils.remove_last_job_running_products(run_file=item)
 
-        job_status = js.submit_batch_jobs(batch_file=item, out_dir=os.path.join(inps.work_dir, 'run_files'),
-                                          work_dir=inps.work_dir, num_bursts=inps.num_bursts)
+        job_status = job_obj.submit_batch_jobs(batch_file=item)
 
         if job_status:
 
             putils.remove_zero_size_or_length_error_files(run_file=item)
-            putils.rerun_job_if_exit_code_140(run_file=item)
+            putils.rerun_job_if_exit_code_140(run_file=item, inps_dict=inps)
             putils.raise_exception_if_job_exited(run_file=item)
             putils.concatenate_error_files(run_file=item, work_dir=inps.work_dir)
             putils.move_out_job_files_to_stdout(run_file=item)

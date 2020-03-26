@@ -11,7 +11,7 @@ import subprocess
 import time
 from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
-import minsar.job_submission as js
+from minsar.job_submission import JOB_SUBMIT
 from minsar.utils import check_download
 from contextlib import redirect_stdout
 import io
@@ -40,9 +40,10 @@ def main(iargs=None):
     #########################################
 
     if inps.submit_flag:
+        job_obj = JOB_SUBMIT(inps)
         job_name = 'download_rsmas'
         job_file_name = job_name
-        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir)
+        job_obj.submit_script(job_name, job_file_name, sys.argv[:])
         sys.exit(0)
 
     if not iargs is None:
