@@ -753,10 +753,10 @@ def get_number_of_bursts(inps_dict):
                 obj.regionOfInterest = [float(x) for x in inps.bbox.split()]
             try:
                 obj.parse()
+                number_of_bursts = number_of_bursts + obj.product.numberOfBursts    
             except Exception as e:
                 print(e)
-            number_of_bursts = number_of_bursts + obj.product.numberOfBursts
-
+        
     except:
         number_of_bursts = 1
     print('number of bursts: {}'.format(number_of_bursts))
