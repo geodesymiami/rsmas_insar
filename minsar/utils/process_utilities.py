@@ -243,10 +243,10 @@ def create_or_update_template(inps_dict):
     print('\n*************** Template Options ****************')
     # write default template
 
-    print ("Custom Template File: ", inps.custom_template_file)
+    print("Custom Template File: ", inps.custom_template_file)
 
     inps.project_name = get_project_name(inps.custom_template_file)
-    print ("Project Name: ", inps.project_name)
+    print("Project Name: ", inps.project_name)
 
     inps.work_dir = get_work_directory(None, inps.project_name)
     print("Work Dir: ", inps.work_dir)
@@ -276,7 +276,7 @@ def create_default_template(temp_inps):
     inps.template_file = os.path.join(inps.work_dir, os.path.basename(inps.custom_template_file))
     
     # read custom template from file
-    custom_tempObj = Template(os.path.abspath(inps.custom_template_file))
+    custom_template_obj = Template(inps.custom_template_file)
 
     # check for required options
     required_template_keys = pathObj.required_template_options
