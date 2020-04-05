@@ -26,6 +26,8 @@ jobqueue:
     local-directory: $SCRATCHDIR
     shebang: "#!/usr/bin/env bash"
     log-directory: null
+    job-cpu: null
+    job-mem: null
 
 
   #################### Configuration for Stampede ####################
@@ -47,3 +49,5 @@ jobqueue:
     shebang: "#!/usr/bin/env bash"
     header-skip: ['--mem']          # stampede doesn't use the '--mem' directive, but dask requires it
     log-directory: null             # location to store output files from jobs
+    job-cpu: null
+    job-mem: null
