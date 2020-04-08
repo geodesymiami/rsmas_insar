@@ -276,7 +276,7 @@ def create_default_template(temp_inps):
     inps.template_file = os.path.join(inps.work_dir, os.path.basename(inps.custom_template_file))
     
     # read custom template from file
-    custom_template_obj = Template(inps.custom_template_file)
+    custom_tempObj = Template(inps.custom_template_file)
 
     # check for required options
     required_template_keys = pathObj.required_template_options
