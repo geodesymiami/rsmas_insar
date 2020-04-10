@@ -292,7 +292,7 @@ class JOB_SUBMIT:
         job_numbers = []
         jobs_out = []
         jobs_err = []
-        
+
         for job_file_name in job_files:
             os.system('chmod +x {}'.format(os.path.join(self.out_dir, job_file_name)))
             job_num = submit_single_job(job_file_name, self.out_dir, self.scheduler)
@@ -315,12 +315,16 @@ class JOB_SUBMIT:
                     with open(job_status_file) as stat_file:
                         status = stat_file.readlines()
                     if 'PENDING' in status[2] or 'RUNNING' in status[2]:
-                        print("Waiting for job {} output file after {} minutes".format(job_file_name, total_wait_time_min))
+                        print("Waiting for job {} output file after {} minutes".format(job_file_name,
+                                                                                       total_wait_time_min))
                         total_wait_time_min += wait_time_sec / 60
                         time.sleep(wait_time_sec)
                         i += 1
-                    else:
+                    elif 'COMPLETED' in status[2]:
                         job_stat = 'complete'
+                    else:
+                        job_stat = 'failed'
+                        raise RuntimeError('Error: {} job was terminated with Error'.format(job_file_name))
         except:
 
             for out, job_file_name in zip(jobs_out, job_files):
@@ -335,21 +339,23 @@ class JOB_SUBMIT:
     def split_jobs(self, batch_file, tasks, number_of_nodes):
 
         splitted_job_files = []
-        number_of_parallel_tasks = int(np.ceil(len(tasks) / number_of_nodes))
+        if number_of_nodes > 1:
+            number_of_parallel_tasks = int(np.ceil(len(tasks) / number_of_nodes))
+            start_lines = np.ogrid[0:len(tasks) - number_of_parallel_tasks:number_of_parallel_tasks].tolist()
+            end_lines = [x + number_of_parallel_tasks for x in start_lines]
+            end_lines[-1] = len(tasks)
+        else:
+            start_lines = np.ogrid[0:1].tolist()
+            end_lines = np.ogrid[len(tasks):len(tasks) + 1].tolist()
 
-        start_lines = np.ogrid[0:len(tasks)-number_of_parallel_tasks:number_of_parallel_tasks]
-        end_lines = start_lines + number_of_parallel_tasks
-        end_lines[-1] = len(tasks)
-
-        for job_count in range(0, len(start_lines)):
+        for start_line, end_line in zip(start_lines, end_lines):
+            job_count = start_lines.index(start_line)
             batch_file_name = batch_file + '_{}'.format(job_count)
             job_name = os.path.basename(batch_file_name)
-            start_line = start_lines[job_count]
-            end_line = end_lines[job_count]
 
             job_file_lines = get_job_file_lines(job_name, batch_file_name, self.email_notif, self.out_dir,
                                                 self.scheduler, self.default_memory, self.default_wall_time,
-                                                self.queue, self.number_of_cores_per_node , number_of_nodes=1)
+                                                self.queue, self.number_of_cores_per_node, number_of_nodes=1)
 
             if self.submission_scheme == 'launcher':
 
@@ -369,11 +375,11 @@ class JOB_SUBMIT:
 
             else:
 
-                job_file_lines.append("\nexport OMP_NUM_THREADS={0}".format(self.default_num_threads))
+                job_file_lines.append("\n\nexport OMP_NUM_THREADS={0}".format(self.default_num_threads))
 
                 job_file_lines.append("\n")
 
-                for line in range(0, end_line-start_line):
+                for line in range(0, end_line - start_line):
                     job_file_lines.append("{} &\n".format(tasks[start_line + line].split('\n')[0]))
 
                 job_file_lines.append("\nwait")
@@ -480,6 +486,9 @@ def get_job_file_lines(job_name, job_file_name, email_notif, work_dir, scheduler
         # export all local environment variables to job
         job_file_lines.append(prefix + "-V")
 
+    if queue == 'gpu':
+        job_file_lines.append(prefix + "--gres=gpu:4")
+
     return job_file_lines
 
 
@@ -559,10 +568,10 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
         command = "qsub < " + os.path.join(work_dir, job_file_name)
     elif scheduler == 'SLURM':
         hostname = subprocess.Popen("hostname", shell=True, stdout=subprocess.PIPE).stdout.read().decode("utf-8")
-        if hostname.startswith('login'):
+        if hostname.startswith('login') or hostname.startswith('comet'):
             command = "sbatch {}".format(os.path.join(work_dir, job_file_name))
         else:
-            job_num = '{}99999'.format(job_file_name.split('_')[1])
+            job_num = '{}_99999'.format(job_file_name.split('_')[1])
             command = "srun {} > {} 2>{} ".format(os.path.join(work_dir, job_file_name),
                                                   os.path.join(work_dir, job_file_name.split('.')[0] +
                                                                '_{}.o'.format(job_num)),
@@ -578,10 +587,8 @@ def submit_single_job(job_file_name, work_dir, scheduler=None):
         print("error code", grepexc.returncode, grepexc.output)
 
     try:
-        if scheduler == 'LSF':
-            job_number = re.search(r'\d{8}', output.decode("utf-8")).group(0)
-        else:
-            job_number = re.search(r'\d{7}', output.decode("utf-8")).group(0)
+        job_number = re.findall('\d+', output.decode("utf-8"))
+        job_number = str(max([int(x) for x in job_number]))
 
     except:
         job_number = job_num
