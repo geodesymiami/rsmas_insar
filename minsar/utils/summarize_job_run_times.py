@@ -54,7 +54,7 @@ def main(iargs=None):
             inps.work_dir = cwd
             run_files_dir = cwd + '/run_files'
 
-    run_stdout_files = glob.glob(run_files_dir + '/run_*.o')
+    run_stdout_files = glob.glob(run_files_dir + '/run_*.o') + glob.glob(run_files_dir + '/*/run_*.o')
     run_stdout_files = natsorted(run_stdout_files)
     
     #run_stdout_files2 = glob.glob(run_files_dir + '/stdout_run_*/run_*.o')
