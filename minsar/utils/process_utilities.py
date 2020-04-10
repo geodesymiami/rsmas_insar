@@ -24,6 +24,7 @@ from minsar.objects.auto_defaults import PathFind
 from isceobj.Sensor.TOPS.Sentinel1 import Sentinel1
 from stackSentinel import cmdLineParse as stack_cmd, get_dates
 from minsar.job_submission import JOB_SUBMIT
+import time, datetime
 
 pathObj = PathFind()
 
@@ -268,7 +269,6 @@ def create_default_template(temp_inps):
     :param temp_inps: input parsed arguments
     :return Updated template file added to temp_inps.
     """
-
     inps = temp_inps
 
     inps.custom_template_file = os.path.abspath(inps.custom_template_file)
@@ -295,7 +295,6 @@ def create_default_template(temp_inps):
     inps.template = default_tempObj.options
 
     pathObj.set_isce_defaults(inps)
-
     # update default_temObj with custom_tempObj
     for key, value in custom_tempObj.options.items():
         if not value in [None, 'auto']:
@@ -359,9 +358,25 @@ def get_config_defaults(config_file='job_defaults.cfg'):
     if not os.path.isfile(config_file):
         raise ValueError('job config file NOT found, it should be: {}'.format(config_file))
 
-    config = configparser.ConfigParser(delimiters='=')
-    config.optionxform = str
-    config.read(config_file)
+    if os.path.basename(config_file) in ['job_defaults.cfg']:
+
+        fields = ['walltime', 'adjust', 'memory', 'num_threads']
+
+        with open(config_file, 'r') as f:
+            lines = f.readlines()
+
+        config = configparser.RawConfigParser()
+
+        for line in lines:
+            sections = line.split()
+            if len(sections) > 4:
+                config.add_section(sections[0])
+                for t in range(0, len(fields)):
+                    config.set(sections[0], fields[t], sections[t + 1])
+    else:
+        config = configparser.ConfigParser(delimiters='=')
+        config.optionxform = str
+        config.read(config_file)
 
     return config
 
@@ -717,7 +732,8 @@ def xmlread(filename):
 def get_number_of_bursts(inps_dict):
     """ calculates the number of bursts based on boundingBox and returns an adjusting factor for walltimes """
     try:
-        topsStack_template = pathObj.correct_for_isce_naming_convention(inps_dict)
+        inpd = create_default_template(inps_dict)
+        topsStack_template = pathObj.correct_for_isce_naming_convention(inpd)
         command_options = []
         for item in topsStack_template:
             if item == 'useGPU':
@@ -727,7 +743,6 @@ def get_number_of_bursts(inps_dict):
                 command_options = command_options + ['--' + item] + [topsStack_template[item]]
 
         inps = stack_cmd(command_options)
-
         dateList, master_date, slaveList, safe_dict = get_dates(inps)
         dirname = safe_dict[master_date].safe_file
 
@@ -768,17 +783,27 @@ def get_number_of_bursts(inps_dict):
 
 def walltime_adjust(number_of_bursts, default_time, scheduler='SLURM'):
     """ multiplys default walltime by number of bursts and returns adjusted walltime """
-    
-    default_time_minutes = float(default_time.split(':')[0]) * 60 + float(default_time.split(':')[1])
-    new_time_minutes = default_time_minutes * number_of_bursts
 
-    if scheduler == 'LSF':
-        factor = 6
-        new_time_minutes *= factor
+    try:
+        time_split = time.strptime(default_time, '%H:%M:%S')
+    except:
+        time_split = time.strptime(default_time, '%H:%M')
 
-    hour = int(new_time_minutes/60)
-    minutes = int(np.remainder(new_time_minutes, 60))
-    adjusted_time = '{:02d}:{:02d}'.format(hour, minutes)
+    time_seconds = datetime.timedelta(hours=time_split.tm_hour,
+                                      minutes=time_split.tm_min,
+                                      seconds=time_split.tm_sec).total_seconds()
+
+    if not number_of_bursts in [None, 'None']:
+        time_seconds = time_seconds * number_of_bursts
+
+    walltime_factor = float(os.getenv('WALLTIME_FACTOR'))
+
+    time_seconds *= walltime_factor
+
+    if scheduler in ['LSF']:
+        adjusted_time = time.strftime("%H:%M", time.gmtime(time_seconds))
+    else:
+        adjusted_time = time.strftime("%H:%M:%S", time.gmtime(time_seconds))
 
     return adjusted_time
 
