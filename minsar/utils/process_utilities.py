@@ -417,7 +417,7 @@ def rerun_job_if_exit_code_140(run_file, inps_dict):
     print(memory)
 
     for file in files: 
-        os.remove(file.replace('.o', '.e'))
+        os.remove(file.replace('.o*', '.e*'))
 
     move_out_job_files_to_stdout(run_file)
     
@@ -449,7 +449,7 @@ def rerun_job_if_exit_code_140(run_file, inps_dict):
 def create_rerun_run_file(job_files):
     """Write job file commands into rerun run file"""
     
-    run_file =  '_'.join(job_files[0].split('_')[0:-1])
+    run_file = '_'.join(job_files[0].split('_')[0:-1])
     rerun_file = run_file + '_rerun'
     try:
         os.remove(rerun_file)
@@ -526,10 +526,10 @@ def get_line_before_last(file):
 ##########################################################################
 
 
-def find_completed_jobs_matching_search_string(run_file,search_string):
+def find_completed_jobs_matching_search_string(run_file, search_string):
     """returns names of files that match seasrch strings (*.e files in run_files)."""
     
-    files = glob.glob(run_file + '*.o')
+    files = glob.glob(run_file + '*.o*')
     file_list = []
 
     files = natsorted(files)
@@ -555,7 +555,7 @@ def find_completed_jobs_matching_search_string(run_file,search_string):
 def raise_exception_if_job_exited(run_file):
     """Removes files with zero size or zero length (*.e files in run_files)."""
     
-    files = glob.glob(run_file + '*.o')
+    files = glob.glob(run_file + '*.o*')
 
     # need to add for PBS. search_string='Terminated'
     search_string = 'Exited with exit code'
@@ -584,7 +584,7 @@ def concatenate_error_files(run_file, work_dir):
         os.remove(out_file)
 
     out_name = os.path.dirname(run_file) + '/out_' + run_file.split('/')[-1] + '.e'
-    error_files = glob.glob(run_file + '*.e')
+    error_files = glob.glob(run_file + '*.e*')
     if not len(error_files) == 0:
         with open(out_name, 'w') as outfile:
             for fname in error_files:
@@ -614,7 +614,7 @@ def file_len(fname):
 def remove_zero_size_or_length_error_files(run_file):
     """Removes files with zero size or zero length (*.e files in run_files)."""
 
-    error_files = glob.glob(run_file + '*.e')
+    error_files = glob.glob(run_file + '*.e*')
     error_files = natsorted(error_files)
     for item in error_files:
         if os.path.getsize(item) == 0:       # remove zero-size files
@@ -627,9 +627,9 @@ def remove_zero_size_or_length_error_files(run_file):
 
 
 def remove_last_job_running_products(run_file):
-    error_files = glob.glob(run_file + '*.e')
+    error_files = glob.glob(run_file + '*.e*')
     job_files = glob.glob(run_file + '*.job')
-    out_file = glob.glob(run_file + '*.o')
+    out_file = glob.glob(run_file + '*.o*')
     list_files = error_files + out_file + job_files
     if not len(list_files) == 0:
         for item in list_files:
@@ -643,7 +643,7 @@ def move_out_job_files_to_stdout(run_file):
     """move the error file into stdout_files directory"""
 
     job_files = glob.glob(run_file + '*.job')
-    stdout_files = glob.glob(run_file + '*.o')
+    stdout_files = glob.glob(run_file + '*.o*')
 
     if len(job_files) + len(stdout_files) == 0:
        return
