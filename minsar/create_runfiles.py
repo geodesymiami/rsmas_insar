@@ -49,6 +49,7 @@ def main(iargs=None):
     
     # check for orbits
     orbit_dir = os.getenv('SENTINEL_ORBITS')
+    '''
     print ('Updating orbits...')
     orbit_command = 'dloadOrbits.py --dir {}'.format(orbit_dir)
     if not inps.template['ssaraopt.startDate'] == 'None':
@@ -57,6 +58,7 @@ def main(iargs=None):
         orbit_command += ' --end {}'.format(inps.template['ssaraopt.endDate'])
     message_rsmas.log(inps.work_dir, orbit_command)
     os.system(orbit_command)
+    '''
 
     # make run file
     inps.topsStack_template = pathObj.correct_for_isce_naming_convention(inps)
@@ -68,6 +70,12 @@ def main(iargs=None):
     with open(inps.work_dir + '/run_files_list', 'w') as run_file:
         for item in run_file_list:
             run_file.writelines(item + '\n')
+
+    local_orbit = os.path.join(inps.work_dir, 'orbits')
+    precise_orbits_in_local = glob.glob(local_orbit + '/*/*POEORB*')
+    if len(precise_orbits_in_local) > 0:
+        for orbit_file in precise_orbits_in_local:
+            os.system('cp {} {}'.format(orbit_file, orbit_dir))
 
     return None
 

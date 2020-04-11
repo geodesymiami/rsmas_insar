@@ -24,6 +24,7 @@ from minsar.objects.auto_defaults import PathFind
 from isceobj.Sensor.TOPS.Sentinel1 import Sentinel1
 from stackSentinel import cmdLineParse as stack_cmd, get_dates
 from minsar.job_submission import JOB_SUBMIT
+import time, datetime
 
 pathObj = PathFind()
 
@@ -268,7 +269,6 @@ def create_default_template(temp_inps):
     :param temp_inps: input parsed arguments
     :return Updated template file added to temp_inps.
     """
-
     inps = temp_inps
 
     inps.custom_template_file = os.path.abspath(inps.custom_template_file)
@@ -295,7 +295,6 @@ def create_default_template(temp_inps):
     inps.template = default_tempObj.options
 
     pathObj.set_isce_defaults(inps)
-
     # update default_temObj with custom_tempObj
     for key, value in custom_tempObj.options.items():
         if value not in [None, 'auto']:
@@ -359,9 +358,25 @@ def get_config_defaults(config_file='job_defaults.cfg'):
     if not os.path.isfile(config_file):
         raise ValueError('job config file NOT found, it should be: {}'.format(config_file))
 
-    config = configparser.ConfigParser(delimiters='=')
-    config.optionxform = str
-    config.read(config_file)
+    if os.path.basename(config_file) in ['job_defaults.cfg']:
+
+        fields = ['walltime', 'adjust', 'memory', 'num_threads']
+
+        with open(config_file, 'r') as f:
+            lines = f.readlines()
+
+        config = configparser.RawConfigParser()
+
+        for line in lines:
+            sections = line.split()
+            if len(sections) > 4:
+                config.add_section(sections[0])
+                for t in range(0, len(fields)):
+                    config.set(sections[0], fields[t], sections[t + 1])
+    else:
+        config = configparser.ConfigParser(delimiters='=')
+        config.optionxform = str
+        config.read(config_file)
 
     return config
 
@@ -402,7 +417,7 @@ def rerun_job_if_exit_code_140(run_file, inps_dict):
     print(memory)
 
     for file in files: 
-        os.remove(file.replace('.o', '.e'))
+        os.remove(file.replace('.o*', '.e*'))
 
     move_out_job_files_to_stdout(run_file)
     
@@ -434,7 +449,7 @@ def rerun_job_if_exit_code_140(run_file, inps_dict):
 def create_rerun_run_file(job_files):
     """Write job file commands into rerun run file"""
     
-    run_file =  '_'.join(job_files[0].split('_')[0:-1])
+    run_file = '_'.join(job_files[0].split('_')[0:-1])
     rerun_file = run_file + '_rerun'
     try:
         os.remove(rerun_file)
@@ -511,10 +526,10 @@ def get_line_before_last(file):
 ##########################################################################
 
 
-def find_completed_jobs_matching_search_string(run_file,search_string):
+def find_completed_jobs_matching_search_string(run_file, search_string):
     """returns names of files that match seasrch strings (*.e files in run_files)."""
     
-    files = glob.glob(run_file + '*.o')
+    files = glob.glob(run_file + '*.o*')
     file_list = []
 
     files = natsorted(files)
@@ -540,7 +555,7 @@ def find_completed_jobs_matching_search_string(run_file,search_string):
 def raise_exception_if_job_exited(run_file):
     """Removes files with zero size or zero length (*.e files in run_files)."""
     
-    files = glob.glob(run_file + '*.o')
+    files = glob.glob(run_file + '*.o*')
 
     # need to add for PBS. search_string='Terminated'
     search_string = 'Exited with exit code'
@@ -569,7 +584,7 @@ def concatenate_error_files(run_file, work_dir):
         os.remove(out_file)
 
     out_name = os.path.dirname(run_file) + '/out_' + run_file.split('/')[-1] + '.e'
-    error_files = glob.glob(run_file + '*.e')
+    error_files = glob.glob(run_file + '*.e*')
     if not len(error_files) == 0:
         with open(out_name, 'w') as outfile:
             for fname in error_files:
@@ -599,7 +614,7 @@ def file_len(fname):
 def remove_zero_size_or_length_error_files(run_file):
     """Removes files with zero size or zero length (*.e files in run_files)."""
 
-    error_files = glob.glob(run_file + '*.e')
+    error_files = glob.glob(run_file + '*.e*')
     error_files = natsorted(error_files)
     for item in error_files:
         if os.path.getsize(item) == 0:       # remove zero-size files
@@ -612,9 +627,9 @@ def remove_zero_size_or_length_error_files(run_file):
 
 
 def remove_last_job_running_products(run_file):
-    error_files = glob.glob(run_file + '*.e')
+    error_files = glob.glob(run_file + '*.e*')
     job_files = glob.glob(run_file + '*.job')
-    out_file = glob.glob(run_file + '*.o')
+    out_file = glob.glob(run_file + '*.o*')
     list_files = error_files + out_file + job_files
     if not len(list_files) == 0:
         for item in list_files:
@@ -628,7 +643,7 @@ def move_out_job_files_to_stdout(run_file):
     """move the error file into stdout_files directory"""
 
     job_files = glob.glob(run_file + '*.job')
-    stdout_files = glob.glob(run_file + '*.o')
+    stdout_files = glob.glob(run_file + '*.o*')
 
     if len(job_files) + len(stdout_files) == 0:
        return
@@ -713,7 +728,8 @@ def xmlread(filename):
 def get_number_of_bursts(inps_dict):
     """ calculates the number of bursts based on boundingBox and returns an adjusting factor for walltimes """
     try:
-        topsStack_template = pathObj.correct_for_isce_naming_convention(inps_dict)
+        inpd = create_default_template(inps_dict)
+        topsStack_template = pathObj.correct_for_isce_naming_convention(inpd)
         command_options = []
         for item in topsStack_template:
             if item == 'useGPU':
@@ -723,7 +739,6 @@ def get_number_of_bursts(inps_dict):
                 command_options = command_options + ['--' + item] + [topsStack_template[item]]
 
         inps = stack_cmd(command_options)
-
         dateList, master_date, slaveList, safe_dict = get_dates(inps)
         dirname = safe_dict[master_date].safe_file
 
@@ -764,17 +779,27 @@ def get_number_of_bursts(inps_dict):
 
 def walltime_adjust(number_of_bursts, default_time, scheduler='SLURM'):
     """ multiplys default walltime by number of bursts and returns adjusted walltime """
-    
-    default_time_minutes = float(default_time.split(':')[0]) * 60 + float(default_time.split(':')[1])
-    new_time_minutes = default_time_minutes * number_of_bursts
 
-    if scheduler == 'LSF':
-        factor = 6
-        new_time_minutes *= factor
+    try:
+        time_split = time.strptime(default_time, '%H:%M:%S')
+    except:
+        time_split = time.strptime(default_time, '%H:%M')
 
-    hour = int(new_time_minutes/60)
-    minutes = int(np.remainder(new_time_minutes, 60))
-    adjusted_time = '{:02d}:{:02d}'.format(hour, minutes)
+    time_seconds = datetime.timedelta(hours=time_split.tm_hour,
+                                      minutes=time_split.tm_min,
+                                      seconds=time_split.tm_sec).total_seconds()
+
+    if not number_of_bursts in [None, 'None']:
+        time_seconds = time_seconds * number_of_bursts
+
+    walltime_factor = float(os.getenv('WALLTIME_FACTOR'))
+
+    time_seconds *= walltime_factor
+
+    if scheduler in ['LSF']:
+        adjusted_time = time.strftime("%H:%M", time.gmtime(time_seconds))
+    else:
+        adjusted_time = time.strftime("%H:%M:%S", time.gmtime(time_seconds))
 
     return adjusted_time
 
