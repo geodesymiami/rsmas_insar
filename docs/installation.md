@@ -32,11 +32,9 @@ git clone https://github.com/yunjunz/pyaps3.git 3rdparty/PyAPS/pyaps3 ;
 git clone https://github.com/geodesymiami/MimtPy.git sources/MimtPy ;
 git clone https://github.com/TACC/launcher.git 3rdparty/launcher ;
 
-git clone https://github.com/isce-framework/isce2.git 3rdparty/isce2
 mkdir -p sources/isceStack
-cp -r 3rdparty/isce2/contrib/stack/topsStack sources/isceStack
-cp -r 3rdparty/isce2/contrib/stack/stripmapStack sources/isceStack
-rm -rf 3rdparty/isce2
+git clone https://github.com/isce-framework/isce2.git sources/isceStack/isce2
+
 ########  Done with critical code.  ########
 
 # Install tippecanoe for insarmaps (need gcc 4.9.1 or younger):
