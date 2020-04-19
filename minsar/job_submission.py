@@ -332,13 +332,16 @@ class JOB_SUBMIT:
                 job_stat = 'wait'
                 while job_stat == 'wait':
                     os.system('sacct --format="State"   -j {} > {}'.format(job_number, job_status_file))
+                    time.sleep(2)
                     with open(job_status_file, 'r') as stat_file:
                         status = stat_file.readlines()
+                        if len(status) < 3:
+                            continue
                     if 'PENDING' in status[2] or 'RUNNING' in status[2]:
                         print("Waiting for job {} output file after {} minutes".format(job_file_name,
                                                                                        total_wait_time_min))
                         total_wait_time_min += wait_time_sec / 60
-                        time.sleep(wait_time_sec)
+                        time.sleep(wait_time_sec - 2)
                         i += 1
                     elif 'COMPLETED' in status[2]:
                         job_stat = 'complete'
@@ -373,17 +376,19 @@ class JOB_SUBMIT:
         :return:
         """
 
-        adjusted_number_of_nodes = 1
+        number_of_jobs = number_of_nodes
+
+        number_of_nodes_per_job = 1
 
         while number_of_nodes > int(self.max_jobs_per_queue):
-            number_of_nodes = np.ceil(number_of_nodes/2)
-            adjusted_number_of_nodes = adjusted_number_of_nodes + 1
+            number_of_nodes_per_job = number_of_nodes_per_job + 1
+            number_of_jobs = np.ceil(number_of_nodes/number_of_nodes_per_job)
 
-        if adjusted_number_of_nodes > 1:
+        if number_of_nodes_per_job > 1:
             print('Note: Number of jobs exceed the numbers allowed per queue for jobs with 1 node...\n'
-                  'Number of Nodes per job are adjusted to {}'.format(adjusted_number_of_nodes))
+                  'Number of Nodes per job are adjusted to {}'.format(number_of_nodes_per_job))
 
-        number_of_parallel_tasks = int(np.ceil(len(tasks) / number_of_nodes))
+        number_of_parallel_tasks = int(np.ceil(len(tasks) / number_of_jobs))
 
         start_lines = np.ogrid[0:len(tasks):number_of_parallel_tasks].tolist()
         end_lines = [x + number_of_parallel_tasks for x in start_lines]
@@ -395,7 +400,7 @@ class JOB_SUBMIT:
             job_name = os.path.basename(batch_file_name)
 
             job_file_lines = self.get_job_file_lines(job_name, batch_file_name, number_of_tasks=end_line-start_line,
-                                                     number_of_nodes=adjusted_number_of_nodes, work_dir=self.out_dir)
+                                                     number_of_nodes=number_of_nodes_per_job, work_dir=self.out_dir)
 
             job_file_name = self.add_tasks_to_job_file_lines(job_file_lines, tasks[start_line:end_line],
                                                              batch_file=batch_file_name)
