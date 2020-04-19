@@ -468,7 +468,7 @@ def create_rerun_run_file(job_files):
 ##########################################################################
 
 
-def extract_attribute_from_hdf_file(file,attribute):
+def extract_attribute_from_hdf_file(file, attribute):
     """
     extract attribute from an HDF5 file
     :param file: hdf file name
@@ -614,7 +614,7 @@ def file_len(fname):
 def remove_zero_size_or_length_error_files(run_file):
     """Removes files with zero size or zero length (*.e files in run_files)."""
 
-    error_files = glob.glob(run_file + '*.e*')
+    error_files = glob.glob(run_file + '*.e*') + glob.glob(run_file + '*.o*')
     error_files = natsorted(error_files)
     for item in error_files:
         if os.path.getsize(item) == 0:       # remove zero-size files
