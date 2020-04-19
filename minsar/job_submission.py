@@ -107,6 +107,7 @@ class JOB_SUBMIT:
         self.number_of_threads_per_core = int(os.getenv('NUMBER_OF_THREADS_PER_CORE'))
         self.submission_scheme = os.getenv('JOB_SUBMISSION_SCHEME')
         self.max_jobs_per_queue = os.getenv('MAX_JOBS_PER_QUEUE')
+        self.max_memory_per_node = os.getenv('MAX_MEMORY_PER_NODE')
 
         self.num_bursts = None
 
@@ -192,7 +193,7 @@ class JOB_SUBMIT:
 
                 self.write_batch_singletask_jobs(batch_file)
 
-            elif 'multitask_multiNode' in self.submission_scheme or number_of_nodes==1:
+            elif 'multitask_multiNode' in self.submission_scheme or number_of_nodes == 1:
 
                 job_name = os.path.basename(batch_file)
 
@@ -206,6 +207,8 @@ class JOB_SUBMIT:
                 self.split_jobs(batch_file, tasks, number_of_nodes)
 
             self.submit_and_check_job_status(self.job_files, work_dir=self.out_dir)
+
+            return True
 
         else:
             print('\nWorking on a single machine ...\n')
@@ -332,13 +335,16 @@ class JOB_SUBMIT:
                 job_stat = 'wait'
                 while job_stat == 'wait':
                     os.system('sacct --format="State"   -j {} > {}'.format(job_number, job_status_file))
+                    time.sleep(2)
                     with open(job_status_file, 'r') as stat_file:
                         status = stat_file.readlines()
+                        if len(status) < 3:
+                            continue
                     if 'PENDING' in status[2] or 'RUNNING' in status[2]:
                         print("Waiting for job {} output file after {} minutes".format(job_file_name,
                                                                                        total_wait_time_min))
                         total_wait_time_min += wait_time_sec / 60
-                        time.sleep(wait_time_sec)
+                        time.sleep(wait_time_sec - 2)
                         i += 1
                     elif 'COMPLETED' in status[2]:
                         job_stat = 'complete'
@@ -373,17 +379,19 @@ class JOB_SUBMIT:
         :return:
         """
 
-        adjusted_number_of_nodes = 1
+        number_of_jobs = number_of_nodes
+
+        number_of_nodes_per_job = 1
 
         while number_of_nodes > int(self.max_jobs_per_queue):
-            number_of_nodes = np.ceil(number_of_nodes/2)
-            adjusted_number_of_nodes = adjusted_number_of_nodes + 1
+            number_of_nodes_per_job = number_of_nodes_per_job + 1
+            number_of_jobs = np.ceil(number_of_nodes/number_of_nodes_per_job)
 
-        if adjusted_number_of_nodes > 1:
+        if number_of_nodes_per_job > 1:
             print('Note: Number of jobs exceed the numbers allowed per queue for jobs with 1 node...\n'
-                  'Number of Nodes per job are adjusted to {}'.format(adjusted_number_of_nodes))
+                  'Number of Nodes per job are adjusted to {}'.format(number_of_nodes_per_job))
 
-        number_of_parallel_tasks = int(np.ceil(len(tasks) / number_of_nodes))
+        number_of_parallel_tasks = int(np.ceil(len(tasks) / number_of_jobs))
 
         start_lines = np.ogrid[0:len(tasks):number_of_parallel_tasks].tolist()
         end_lines = [x + number_of_parallel_tasks for x in start_lines]
@@ -395,7 +403,7 @@ class JOB_SUBMIT:
             job_name = os.path.basename(batch_file_name)
 
             job_file_lines = self.get_job_file_lines(job_name, batch_file_name, number_of_tasks=end_line-start_line,
-                                                     number_of_nodes=adjusted_number_of_nodes, work_dir=self.out_dir)
+                                                     number_of_nodes=number_of_nodes_per_job, work_dir=self.out_dir)
 
             job_file_name = self.add_tasks_to_job_file_lines(job_file_lines, tasks[start_line:end_line],
                                                              batch_file=batch_file_name)
@@ -457,11 +465,9 @@ class JOB_SUBMIT:
         :return: List of lines for job submission file
         """
 
-        if self.queue == 'parallel':
-            number_of_nodes *= 16
-
         # directives based on scheduler
         if self.scheduler == "LSF":
+            number_of_tasks = number_of_nodes
             prefix = "\n#BSUB "
             shell = "/bin/bash"
             name_option = "-J {0}"
@@ -501,6 +507,9 @@ class JOB_SUBMIT:
         else:
             raise Exception("ERROR: scheduler {0} not supported".format(self.scheduler))
 
+        if self.queue == 'parallel':
+            number_of_nodes *= 16
+
         job_file_lines = [
             "#! " + shell,
             prefix + name_option.format(job_name),
@@ -518,6 +527,7 @@ class JOB_SUBMIT:
         ])
         if memory_option:
             job_file_lines.extend([prefix + memory_option.format(self.default_memory)], )
+            # job_file_lines.extend([prefix + memory_option.format(self.max_memory_per_node)], )
 
         if self.scheduler == "PBS":
             # export all local environment variables to job
@@ -540,13 +550,12 @@ class JOB_SUBMIT:
         job_file_name = "{0}.job".format(batch_file)
 
         tasks_with_output = []
-        for line in tasks:
-            tasks_with_output.append("{} > {} 2>{}\n".format(line.split('\n')[0],
-                                                             os.path.basename(batch_file) + '.o$LAUNCHER_JID',
-                                                             os.path.basename(batch_file) + '.e$LAUNCHER_JID'))
 
         if 'launcher' in self.submission_scheme:
-
+            for line in tasks:
+                tasks_with_output.append("{} > {} 2>{}\n".format(line.split('\n')[0],
+                                                                 os.path.abspath(batch_file) + '.o$LAUNCHER_JID',
+                                                                 os.path.abspath(batch_file) + '.e$LAUNCHER_JID'))
             if os.path.exists(batch_file):
                 os.remove(batch_file)
 
@@ -564,12 +573,18 @@ class JOB_SUBMIT:
                 job_f.writelines(job_file_lines)
 
         else:
+
+            for count, line in enumerate(tasks):
+                tasks_with_output.append("{} > {} 2>{} &\n".format(line.split('\n')[0],
+                                                                 os.path.abspath(batch_file) + '.o{}'.format(count),
+                                                                 os.path.abspath(batch_file) + '.e{}'.format(count)))
+
             job_file_lines.append("\n\nexport OMP_NUM_THREADS={0}".format(self.default_num_threads))
 
             job_file_lines.append("\n")
 
             for line in tasks_with_output:
-                job_file_lines.append("{} &\n".format(line.split('\n')[0]))
+                job_file_lines.append(line)
 
             job_file_lines.append("\nwait")
 
