@@ -127,7 +127,7 @@ def add_execute_runfiles(parser):
     run_parser.add_argument('--dostep', dest='step', type=int, metavar='STEP',
                       help='run processing at the # step only')
     run_parser.add_argument('--numBursts', dest='num_bursts', metavar='number of bursts',
-                         help='walltime for submitting the script as a job')
+                         help='number of bursts to calculate walltime')
 
     return parser
 
