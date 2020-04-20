@@ -643,7 +643,8 @@ def move_out_job_files_to_stdout(run_file):
     """move the error file into stdout_files directory"""
 
     job_files = glob.glob(run_file + '*.job')
-    stdout_files = glob.glob(run_file + '*.o*') + glob.glob(run_file + '_*')
+    stdout_files = glob.glob(run_file + '*.o*')
+    extra_batch_files = glob.glob(run_file + '_*')
 
     if len(job_files) + len(stdout_files) == 0:
        return
@@ -651,7 +652,7 @@ def move_out_job_files_to_stdout(run_file):
     dir_name = os.path.dirname(run_file)
     out_folder = dir_name + '/stdout_' + os.path.basename(run_file)
     
-    if len(job_files) >= 2:
+    if len(stdout_files) >= 2:
         if not os.path.isdir(out_folder):
             os.mkdir(out_folder)
         else:
@@ -661,6 +662,8 @@ def move_out_job_files_to_stdout(run_file):
         for item in stdout_files:
             shutil.move(item, out_folder)
         for item in job_files:
+            shutil.move(item, out_folder)
+        for item in extra_batch_files:
             shutil.move(item, out_folder)
 
     return None

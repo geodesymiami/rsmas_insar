@@ -202,7 +202,9 @@ class JOB_SUBMIT:
                 job_file_lines = self.get_job_file_lines(job_name, batch_file, number_of_tasks=len(tasks),
                                                          number_of_nodes=number_of_nodes, work_dir=self.out_dir)
 
-                self.job_files.append(self.add_tasks_to_job_file_lines(job_file_lines, tasks, batch_file=batch_file))
+                batch_file_name = batch_file + '_0'
+
+                self.job_files.append(self.add_tasks_to_job_file_lines(job_file_lines, tasks, batch_file=batch_file_name))
 
             elif 'multitask_singleNode' in self.submission_scheme:
 
@@ -556,8 +558,8 @@ class JOB_SUBMIT:
         if 'launcher' in self.submission_scheme:
             for line in tasks:
                 tasks_with_output.append("{} > {} 2>{}\n".format(line.split('\n')[0],
-                                                                 os.path.abspath(batch_file) + '.o$LAUNCHER_JID',
-                                                                 os.path.abspath(batch_file) + '.e$LAUNCHER_JID'))
+                                                                 os.path.abspath(batch_file) + '_$LAUNCHER_JID.o',
+                                                                 os.path.abspath(batch_file) + '_$LAUNCHER_JID.e'))
             if os.path.exists(batch_file):
                 os.remove(batch_file)
 
@@ -578,8 +580,8 @@ class JOB_SUBMIT:
 
             for count, line in enumerate(tasks):
                 tasks_with_output.append("{} > {} 2>{} &\n".format(line.split('\n')[0],
-                                                                 os.path.abspath(batch_file) + '.o{}'.format(count),
-                                                                 os.path.abspath(batch_file) + '.e{}'.format(count)))
+                                                                 os.path.abspath(batch_file) + '_{}.o'.format(count),
+                                                                 os.path.abspath(batch_file) + '_{}.e'.format(count)))
 
             job_file_lines.append("\n\nexport OMP_NUM_THREADS={0}".format(self.default_num_threads))
 
