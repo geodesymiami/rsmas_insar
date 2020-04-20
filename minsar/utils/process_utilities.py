@@ -644,7 +644,6 @@ def move_out_job_files_to_stdout(run_file):
 
     job_files = glob.glob(run_file + '*.job')
     stdout_files = glob.glob(run_file + '*.o*')
-    extra_batch_files = glob.glob(run_file + '_*')
 
     if len(job_files) + len(stdout_files) == 0:
        return
@@ -663,8 +662,10 @@ def move_out_job_files_to_stdout(run_file):
             shutil.move(item, out_folder)
         for item in job_files:
             shutil.move(item, out_folder)
-        for item in extra_batch_files:
-            shutil.move(item, out_folder)
+
+    extra_batch_files = glob.glob(run_file + '_*')
+    for item in extra_batch_files:
+        shutil.move(item, out_folder)
 
     return None
 
