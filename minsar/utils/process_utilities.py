@@ -643,7 +643,7 @@ def move_out_job_files_to_stdout(run_file):
     """move the error file into stdout_files directory"""
 
     job_files = glob.glob(run_file + '*.job')
-    stdout_files = glob.glob(run_file + '*.o*')
+    stdout_files = glob.glob(run_file + '*.o*') + glob.glob(run_file + '_*')
 
     if len(job_files) + len(stdout_files) == 0:
        return
