@@ -385,7 +385,7 @@ class JOB_SUBMIT:
 
         number_of_nodes_per_job = 1
 
-        while number_of_nodes > int(self.max_jobs_per_queue):
+        while number_of_jobs > int(self.max_jobs_per_queue):
             number_of_nodes_per_job = number_of_nodes_per_job + 1
             number_of_jobs = np.ceil(number_of_nodes/number_of_nodes_per_job)
 
