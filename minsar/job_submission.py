@@ -56,7 +56,7 @@ def create_argument_parser():
     group.add_argument("--queuename", dest="queue", metavar="QUEUE", help="Name of queue to submit job to")
     group.add_argument("--outdir", dest="out_dir", default='run_files', metavar="OUTDIR",
                        help="output directory for run files")
-    group.add_argument('--numBursts', dest='num_bursts', metavar='number of bursts',
+    group.add_argument('--numBursts', dest='num_bursts', type=int, metavar='number of bursts',
                             help='number of bursts to calculate walltime')
 
     return parser
