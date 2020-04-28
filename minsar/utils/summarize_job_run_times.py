@@ -89,8 +89,10 @@ def main(iargs=None):
         
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
         stdout, stderr = process.communicate()
-        
-        out = stdout.splitlines()[2]
+        try:
+            out = stdout.splitlines()[2]
+        except:
+            continue
         num_nodes     = out.decode('utf-8').split()[0]
         wall_time     = out.decode('utf-8').split()[1]
         reserved_time = out.decode('utf-8').split()[2]
