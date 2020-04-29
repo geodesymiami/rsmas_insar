@@ -448,7 +448,7 @@ class JOB_SUBMIT:
             else:
                 self.default_wall_time = config['DEFAULT']['walltime']
 
-            self.default_wall_time = putils.walltime_adjust(self.num_bursts, self.default_wall_time, self.scheduler)
+            self.default_wall_time = putils.walltime_adjust(self.num_bursts, self.default_wall_time, self.scheduler, adjust=config[step_name]['adjust'])
         else:
             self.default_wall_time = self.wall_time
 

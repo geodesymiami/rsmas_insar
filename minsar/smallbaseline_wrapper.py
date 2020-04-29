@@ -33,7 +33,8 @@ def main(iargs=None):
         job_obj = JOB_SUBMIT(inps)
         job_name = 'smallbaseline_wrapper'
         job_file_name = job_name
-        job_obj.submit_script(job_name, job_file_name, sys.argv[:])
+        Command = [os.path.join(os.path.dirname(sys.argv[0]), 'smallbaseline_wrapper.py'), inps.custom_template_file]
+        job_obj.submit_script(job_name, job_file_name, Command)
         sys.exit(0)
 
     if not iargs is None:
