@@ -781,7 +781,7 @@ def get_number_of_bursts(inps_dict):
 ############################################################################
 
 
-def walltime_adjust(number_of_bursts, default_time, scheduler='SLURM'):
+def walltime_adjust(number_of_bursts, default_time, scheduler='SLURM', adjust='True'):
     """ multiplys default walltime by number of bursts and returns adjusted walltime """
 
     try:
@@ -794,7 +794,8 @@ def walltime_adjust(number_of_bursts, default_time, scheduler='SLURM'):
                                       seconds=time_split.tm_sec).total_seconds()
 
     if not number_of_bursts in [None, 'None']:
-        time_seconds = time_seconds * number_of_bursts
+        if adjust == 'True':
+            time_seconds = time_seconds * number_of_bursts
 
     walltime_factor = float(os.getenv('WALLTIME_FACTOR'))
 
