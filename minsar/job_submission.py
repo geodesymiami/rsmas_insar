@@ -104,6 +104,7 @@ class JOB_SUBMIT:
         for k in inps.__dict__.keys():
             setattr(self, k, inps.__dict__[k])
 
+        self.platform_name = os.getenv("PLATFORM_NAME")
         self.scheduler = os.getenv("JOBSCHEDULER")
         self.number_of_cores_per_node = int(os.getenv('NUMBER_OF_CORES_PER_NODE'))
         self.number_of_threads_per_core = int(os.getenv('NUMBER_OF_THREADS_PER_CORE'))
@@ -571,6 +572,8 @@ class JOB_SUBMIT:
             job_file_lines.append("\nexport OMP_NUM_THREADS={0}".format(self.default_num_threads))
             job_file_lines.append("\nexport LAUNCHER_WORKDIR={0}".format(self.out_dir))
             job_file_lines.append("\nexport LAUNCHER_JOB_FILE={0}\n".format(batch_file))
+            if self.platform_name == 'STAMPEDE2':
+               job_file_lines.append("export LD_PRELOAD=/home1/apps/tacc-patches/python_cacher/myopen.so\n")
             job_file_lines.append("\n$LAUNCHER_DIR/paramrun\n")
 
             with open(os.path.join(self.out_dir, job_file_name), "w+") as job_f:
@@ -583,8 +586,9 @@ class JOB_SUBMIT:
                                                                  os.path.abspath(batch_file) + '_{}.o'.format(count),
                                                                  os.path.abspath(batch_file) + '_{}.e'.format(count)))
 
-            job_file_lines.append("\n\nexport OMP_NUM_THREADS={0}".format(self.default_num_threads))
-
+            job_file_lines.append("\n\nexport OMP_NUM_THREADS={0}\n".format(self.default_num_threads))
+            if self.platform_name == 'STAMPEDE2':
+               job_file_lines.append("export LD_PRELOAD=/home1/apps/tacc-patches/python_cacher/myopen.so\n")
             job_file_lines.append("\n")
 
             for line in tasks_with_output:
