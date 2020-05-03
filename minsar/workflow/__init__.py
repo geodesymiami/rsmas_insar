@@ -7,6 +7,11 @@
 from pathlib import Path
 import importlib
 import logging
+import warnings
+
+
+warnings.filterwarnings("ignore")
+
 mpl_logger = logging.getLogger('matplotlib')
 mpl_logger.setLevel(logging.WARNING)
 
