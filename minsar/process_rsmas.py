@@ -220,7 +220,7 @@ class RsmasInsar:
     def run_image_products(self):
         """ create ortho/geo-rectified products.
         """
-        minsar.export_ortho_geo.main([self.custom_template_file])
+        minsar.export_ortho_geo.main([self.custom_template_file, '--submit'])
         return
 
     def run(self, steps=step_list):
