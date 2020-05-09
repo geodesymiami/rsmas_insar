@@ -54,7 +54,12 @@ def main(iargs=None):
     if inps.submit_flag:
         job_name = 'export_ortho_geo'
         job_file_name = job_name
-        job_obj.submit_script(job_name, job_file_name, sys.argv[:])
+        if job_name in sys.argv[0]:
+            job_obj.submit_script(job_name, job_file_name, sys.argv[:])
+        else:
+            Command = [os.path.join(os.path.dirname(sys.argv[0]), 'export_ortho_geo.py'),
+                       inps.custom_template_file]
+            job_obj.submit_script(job_name, job_file_name, Command)
         sys.exit(0)
 
     pic_dir = os.path.join(inps.work_dir, pathObj.tiffdir)

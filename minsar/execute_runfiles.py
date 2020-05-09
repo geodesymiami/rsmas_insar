@@ -12,7 +12,8 @@ import minsar.utils.process_utilities as putils
 from minsar.job_submission import JOB_SUBMIT
 
 import warnings
-warnings.filterwarnings("ignore", category=FutureWarning)
+# warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore")
 
 ##############################################################################
 
@@ -35,7 +36,12 @@ def main(iargs=None):
     if inps.submit_flag:
         job_name = 'execute_runfiles'
         job_file_name = job_name
-        job_obj.submit_script(job_name, job_file_name, sys.argv[:])
+        if job_name in sys.argv[0]:
+            job_obj.submit_script(job_name, job_file_name, sys.argv[:])
+        else:
+            Command = [os.path.join(os.path.dirname(sys.argv[0]), 'execute_runfiles.py'),
+                       inps.custom_template_file]
+            job_obj.submit_script(job_name, job_file_name, Command)
         sys.exit(0)
 
     run_file_list = putils.read_run_list(inps.work_dir)

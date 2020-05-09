@@ -49,12 +49,14 @@ def main(iargs=None):
         cwd = os.getcwd()
         if 'run_files' in os.path.basename(cwd):
             inps.work_dir = os.path.dirname(cwd)
+            inps.project_name = os.path.basename(inps.work_dir)
             run_files_dir = cwd
         else:
             inps.work_dir = cwd
+            inps.project_name = os.path.basename(inps.work_dir)
             run_files_dir = cwd + '/run_files'
 
-    run_stdout_files = glob.glob(run_files_dir + '/run_*.o')
+    run_stdout_files = glob.glob(run_files_dir + '/run_*.o') + glob.glob(run_files_dir + '/*/run_*.o')
     run_stdout_files = natsorted(run_stdout_files)
     
     #run_stdout_files2 = glob.glob(run_files_dir + '/stdout_run_*/run_*.o')
@@ -89,8 +91,10 @@ def main(iargs=None):
         
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
         stdout, stderr = process.communicate()
-        
-        out = stdout.splitlines()[2]
+        try:
+            out = stdout.splitlines()[2]
+        except:
+            continue
         num_nodes     = out.decode('utf-8').split()[0]
         wall_time     = out.decode('utf-8').split()[1]
         reserved_time = out.decode('utf-8').split()[2]
@@ -122,7 +126,7 @@ def main(iargs=None):
     print (string); out_lines.append(string)
     
     home_dir = os.getenv('HOME')
-    save_job_run_times_summary(home_dir + '/job_summaries', out_lines)
+    save_job_run_times_summary(home_dir + '/job_summaries', out_lines, inps.project_name)
 
     return None
 
@@ -145,20 +149,20 @@ def calculate_service_units(num_nodes_list, elapsed_time_list):
 
 ##########################################################################
 
-def save_job_run_times_summary(summary_dir, content):
+def save_job_run_times_summary(summary_dir, content, project_name):
     """ saves job run times summary at given location """
 
     if not os.path.exists(summary_dir):
          os.mkdir(summary_dir)
          Path(summary_dir + '/summary.0').touch()
 
-    summary_files = glob.glob(summary_dir + '/s*')
+    summary_files = glob.glob(summary_dir + '/summary*')
     summary_files = natsorted(summary_files)
     last_file = summary_files[-1]
-    last_number = os.path.basename(last_file).split('.')[-1]
+    last_number = os.path.basename(last_file).split('.')[1]
 
     new_number = int(last_number) + 1
-    new_file = summary_dir + '/summary.' +str(new_number)  
+    new_file = summary_dir + '/summary.' + str(new_number) + '.' +  project_name
 
     with open(new_file, 'w') as f:
         for line in content:

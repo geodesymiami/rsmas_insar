@@ -83,7 +83,6 @@ def main(iargs=None):
         print(job)
 
     else:
-        inps.num_bursts = putils.get_number_of_bursts(inps)
         objInsar = RsmasInsar(inps)
         objInsar.run(steps=inps.runSteps)
 
@@ -158,14 +157,13 @@ class RsmasInsar:
         self.work_dir = inps.work_dir
         self.project_name = inps.project_name
         self.template = inps.template
-        self.num_bursts = str(inps.num_bursts)
 
         if 'demMethod' in inps.template and inps.template['demMethod'] == 'boundingBox':
             self.dem_flag = '--boundingBox'
         else:
             self.dem_flag = '--ssara'
 
-        if inps.template['processingMethod'] == 'smallbaseline':
+        if inps.template['processingMethod'] in ['smallbaseline', None, 'None']:
             self.method = 'mintpy'
         else:
             self.method = 'minopy'
@@ -200,29 +198,29 @@ class RsmasInsar:
             minsar.create_runfiles.main([self.custom_template_file])
         except:
             print('Skip creating run files ...')
-        minsar.execute_runfiles.main([self.custom_template_file, '--numBursts', self.num_bursts])
+        minsar.execute_runfiles.main([self.custom_template_file])
         return
 
     def run_timeseries(self):
         """ Process smallbaseline using MintPy or non-linear inversion using MiNoPy and email results
         """
         if self.method == 'mintpy':
-            minsar.smallbaseline_wrapper.main([self.custom_template_file, '--email'])
+            minsar.smallbaseline_wrapper.main([self.custom_template_file, '--email', '--submit'])
         else:
             import minsar.minopy_wrapper as minopy_wrapper
-            minopy_wrapper.main([self.custom_template_file])
+            minopy_wrapper.main([self.custom_template_file, '--submit'])
         return
 
     def run_insarmaps(self):
         """ prepare outputs for insarmaps website.
         """
-        minsar.ingest_insarmaps.main([self.custom_template_file, '--email'])
+        minsar.ingest_insarmaps.main([self.custom_template_file, '--email', '--submit'])
         return
 
     def run_image_products(self):
         """ create ortho/geo-rectified products.
         """
-        minsar.export_ortho_geo.main([self.custom_template_file])
+        minsar.export_ortho_geo.main([self.custom_template_file, '--submit'])
         return
 
     def run(self, steps=step_list):
