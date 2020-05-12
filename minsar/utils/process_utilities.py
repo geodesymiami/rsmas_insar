@@ -90,7 +90,7 @@ def add_upload_data_products(parser):
     flag_parser.add_argument('--mintpyProducts',
                         dest='mintpy_products_flag',
                         action='store_true',
-                        default=False,
+                        default=True,
                         help='uploads mintpy data products to data portal')
     flag_parser.add_argument('--imageProducts',
                         dest='image_products_flag',
