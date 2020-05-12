@@ -77,7 +77,7 @@ def main(iargs=None):
         return
 
     download('ssara', inps.custom_template_file, slc_dir, outnum=1)
-    download('asfserial', inps.custom_template_file, slc_dir, outnum = 1)
+    #download('asfserial', inps.custom_template_file, slc_dir, outnum = 1)
 
     for i_download in [2,3]:
         download_success = run_check_download(slc_dir = slc_dir)
@@ -87,7 +87,7 @@ def main(iargs=None):
            message_rsmas.log(inps.work_dir,'check_download.py: there were bad files, download again')
 
            download('ssara', inps.custom_template_file, slc_dir, outnum = i_download)
-           download('asfserial', inps.custom_template_file, slc_dir, outnum = i_download)
+           #download('asfserial', inps.custom_template_file, slc_dir, outnum = i_download)
 
 ###########################################################################################
 

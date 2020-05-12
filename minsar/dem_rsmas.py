@@ -87,7 +87,7 @@ def main(iargs=None):
         east = math.ceil(float(east) + 0.5 )
 
         demBbox = str(int(south)) + ' ' + str(int(north)) + ' ' + str(int(west)) + ' ' + str(int(east))
-        command = 'dem.py -a stitch -b ' + demBbox + ' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
+        command = 'dem.py -a stitch -b ' + demBbox + ' --filling --filling_value 0 -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
         message_rsmas.log(os.getcwd(), command)
 
         if os.getenv('DOWNLOADHOST') == 'local':
