@@ -197,6 +197,10 @@ Usage Examples:
     if opt_dict['asfResponseTimeout']: query_dict['asfResponseTimeout'] = opt_dict['asfResponseTimeout']
 
 
+    ### FA: remove .bulk_download_cookiejar.txt ###
+    if os.path.exists('.bulk_download_cookiejar.txt'):
+       os.remove('.bulk_download_cookiejar.txt')
+
     ### QUERY THE APIs AND GET THE JSON RESULTS ###
     params = urlencode(query_dict)
     ssara_url = "https://web-services.unavco.org/brokered/ssara/api/sar/search?%s" % params
