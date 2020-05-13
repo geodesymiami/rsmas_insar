@@ -736,7 +736,7 @@ def get_number_of_bursts(inps_dict):
         topsStack_template = pathObj.correct_for_isce_naming_convention(inpd)
         command_options = []
         for item in topsStack_template:
-            if item == 'useGPU':
+            if item in ['useGPU', 'rmFilter']:
                 if topsStack_template[item] == 'True':
                     command_options = command_options + ['--' + item]
             elif not topsStack_template[item] is None:

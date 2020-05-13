@@ -22,6 +22,13 @@ def main(iargs=None):
 
     inps = putils.cmd_line_parse(iargs, script='execute_runfiles')
 
+    if not iargs is None:
+        input_arguments = iargs
+    else:
+        input_arguments = sys.argv[1::]
+
+    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
+
     os.chdir(inps.work_dir)
 
     time.sleep(putils.pause_seconds(inps.wait_time))
@@ -36,12 +43,10 @@ def main(iargs=None):
     if inps.submit_flag:
         job_name = 'execute_runfiles'
         job_file_name = job_name
-        if job_name in sys.argv[0]:
-            job_obj.submit_script(job_name, job_file_name, sys.argv[:])
-        else:
-            Command = [os.path.join(os.path.dirname(sys.argv[0]), 'execute_runfiles.py'),
-                       inps.custom_template_file]
-            job_obj.submit_script(job_name, job_file_name, Command)
+        if '--submit' in input_arguments:
+            input_arguments.remove('--submit')
+        command = [os.path.abspath(__file__)] + input_arguments
+        job_obj.submit_script(job_name, job_file_name, command)
         sys.exit(0)
 
     run_file_list = putils.read_run_list(inps.work_dir)
@@ -55,11 +60,6 @@ def main(iargs=None):
     if inps.step:
        inps.start_run = inps.step - 1
        inps.end_run = inps.step
-
-    if not iargs is None:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
-    else:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     run_file_list = run_file_list[inps.start_run:inps.end_run]
 

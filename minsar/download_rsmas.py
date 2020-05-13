@@ -33,6 +33,13 @@ def main(iargs=None):
 
     inps = putils.cmd_line_parse(iargs, script='download_rsmas')
 
+    if not iargs is None:
+        input_arguments = iargs
+    else:
+        input_arguments = sys.argv[1::]
+
+    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
+
     time.sleep(putils.pause_seconds(inps.wait_time))
 
     #########################################
@@ -43,18 +50,11 @@ def main(iargs=None):
         job_obj = JOB_SUBMIT(inps)
         job_name = 'download_rsmas'
         job_file_name = job_name
-        if job_name in sys.argv[0]:
-            job_obj.submit_script(job_name, job_file_name, sys.argv[:])
-        else:
-            Command = [os.path.join(os.path.dirname(sys.argv[0]), 'download_rsmas.py'),
-                       inps.custom_template_file]
-            job_obj.submit_script(job_name, job_file_name, Command)
+        if '--submit' in input_arguments:
+            input_arguments.remove('--submit')
+        command = [os.path.abspath(__file__)] + input_arguments
+        job_obj.submit_script(job_name, job_file_name, command)
         sys.exit(0)
-
-    if not iargs is None:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
-    else:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     if not inps.template['topsStack.slcDir'] is None:
         slc_dir = inps.template['topsStack.slcDir']
@@ -70,7 +70,7 @@ def main(iargs=None):
     # if satellite is not Sentinel (not tried yet)
     if 'SenDT' not in inps.project_name and 'SenAT' not in inps.project_name:
 
-        ssara_call = ['ssara_federated_query.py'] + inps.ssaraopt + ['--print', '--download']
+        ssara_call = 'ssara_federated_query.py ' + inps.ssaraopt + ' --print' + ' --download'
         ssara_process = subprocess.Popen(ssara_call, shell=True).wait()
         completion_status = ssara_process.poll()
 
