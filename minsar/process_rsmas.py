@@ -180,7 +180,7 @@ class RsmasInsar:
                 if os.path.isdir(os.path.join(self.work_dir, directory)):
                     shutil.rmtree(os.path.join(self.work_dir, directory))
 
-        minsar.download_rsmas.main([self.custom_template_file])
+        minsar.download_rsmas.main([self.custom_template_file, '--submit'])
         return
 
     def run_download_dem(self):
