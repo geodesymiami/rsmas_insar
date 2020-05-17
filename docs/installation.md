@@ -26,32 +26,28 @@ git clone https://github.com/geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
 
 git clone https://github.com/insarlab/MintPy.git sources/MintPy ;
+git clone https://github.com/isce-framework/isce2.git sources/isceStack/isce2
 git clone https://github.com/geodesymiami/geodmod.git sources/geodmod ;
 git clone https://github.com/bakerunavco/SSARA.git 3rdparty/SSARA ;
 git clone https://github.com/yunjunz/pyaps3.git 3rdparty/PyAPS/pyaps3 ;
 git clone https://github.com/geodesymiami/MimtPy.git sources/MimtPy ;
 git clone https://github.com/TACC/launcher.git 3rdparty/launcher ;
 
-mkdir -p sources/isceStack
-git clone https://github.com/isce-framework/isce2.git sources/isceStack/isce2
-
 ########  Done with critical code.  ########
 
 # Install tippecanoe for insarmaps (need gcc 4.9.1 or younger):
-module load gcc/4.9.4
+#module load gcc/4.9.4
 git clone https://github.com/mapbox/tippecanoe.git 3rdparty/tippecanoe
 make -C 3rdparty/tippecanoe install PREFIX=3rdparty/tippecanoe
 ```
 * Install your python environment:
 ```
 cd setup
-#cd ../3rdparty; ln -s /nethome/famelung/MINICONDA3_GOOD miniconda3; cd ..; 
-#../3rdparty/miniconda3/bin/conda env create -f ../docs/conda_env.yml; #works but creates minsar environment, not base
-rm -r ../3rdparty/miniconda3
-miniconda_version=Miniconda3-4.5.12-MacOSX-x86_64.sh
-miniconda_version=Miniconda3-4.5.12-Linux-x86_64.sh
-miniconda_version=Miniconda3-4.6.14-MacOSX-x86_64.sh
-miniconda_version=Miniconda3-4.6.14-Linux-x86_64.sh
+rm -rf ../3rdparty/miniconda3
+miniconda_version=Miniconda3-py37_4.8.2-MacOSX-x86_64.sh
+miniconda_version=Miniconda3-py37_4.8.2-Linux-x86_64.sh
+miniconda_version=Miniconda3-latest-MacOSX-x86_64.sh
+miniconda_version=Miniconda3-latest-Linux-x86_64.sh
 wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate #; if ($? != 0) exit; 
 chmod 755 $miniconda_version
 mkdir -p ../3rdparty
@@ -62,10 +58,7 @@ mkdir -p ../3rdparty
 ../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MintPy/docs/conda.txt
 ../3rdparty/miniconda3/bin/conda install --yes --file ../docs/conda.txt
 ../3rdparty/miniconda3/bin/pip install --upgrade pip
-../3rdparty/miniconda3/bin/pip install opencv-python
 ../3rdparty/miniconda3/bin/pip install geocoder
-../3rdparty/miniconda3/bin/pip install git+https://github.com/dask/dask-jobqueue
-../3rdparty/miniconda3/bin/conda install basemap python=3.7 --yes
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
 ```
 * Source the environment and create aux directories. Install credential files for data download:

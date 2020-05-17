@@ -30,6 +30,13 @@ def main(iargs=None):
 
     inps = putils.cmd_line_parse(iargs)
 
+    if not iargs is None:
+        input_arguments = iargs
+    else:
+        input_arguments = sys.argv[1::]
+
+    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
+
     inps.geom_masterDir = os.path.join(inps.work_dir, pathObj.geomlatlondir)
     inps.master = os.path.join(inps.work_dir, pathObj.masterdir)
 
@@ -54,18 +61,16 @@ def main(iargs=None):
     if inps.submit_flag:
         job_name = 'export_ortho_geo'
         job_file_name = job_name
-        job_obj.submit_script(job_name, job_file_name, sys.argv[:])
+        if '--submit' in input_arguments:
+            input_arguments.remove('--submit')
+        command = [os.path.abspath(__file__)] + input_arguments
+        job_obj.submit_script(job_name, job_file_name, command)
         sys.exit(0)
 
     pic_dir = os.path.join(inps.work_dir, pathObj.tiffdir)
 
     if not os.path.exists(pic_dir):
         os.mkdir(pic_dir)
-
-    if not iargs is None:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
-    else:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     demZero = create_demZero(inps.dem, inps.geom_masterDir)
 

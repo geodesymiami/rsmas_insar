@@ -32,7 +32,7 @@ class CreateRun:
 
         self.command_options = []
         for item in inps.topsStack_template:
-            if item == 'useGPU':
+            if item in ['useGPU', 'rmFilter']:
                 if inps.topsStack_template[item] == 'True':
                     self.command_options.append('--' + item)
             elif inps.topsStack_template[item]:

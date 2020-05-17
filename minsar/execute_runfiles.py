@@ -12,7 +12,8 @@ import minsar.utils.process_utilities as putils
 from minsar.job_submission import JOB_SUBMIT
 
 import warnings
-warnings.filterwarnings("ignore", category=FutureWarning)
+# warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore")
 
 ##############################################################################
 
@@ -20,6 +21,13 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 def main(iargs=None):
 
     inps = putils.cmd_line_parse(iargs, script='execute_runfiles')
+
+    if not iargs is None:
+        input_arguments = iargs
+    else:
+        input_arguments = sys.argv[1::]
+
+    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
 
     os.chdir(inps.work_dir)
 
@@ -35,7 +43,10 @@ def main(iargs=None):
     if inps.submit_flag:
         job_name = 'execute_runfiles'
         job_file_name = job_name
-        job_obj.submit_script(job_name, job_file_name, sys.argv[:])
+        if '--submit' in input_arguments:
+            input_arguments.remove('--submit')
+        command = [os.path.abspath(__file__)] + input_arguments
+        job_obj.submit_script(job_name, job_file_name, command)
         sys.exit(0)
 
     run_file_list = putils.read_run_list(inps.work_dir)
@@ -49,11 +60,6 @@ def main(iargs=None):
     if inps.step:
        inps.start_run = inps.step - 1
        inps.end_run = inps.step
-
-    if not iargs is None:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
-    else:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     run_file_list = run_file_list[inps.start_run:inps.end_run]
 
