@@ -353,6 +353,12 @@ class JOB_SUBMIT:
                         i += 1
                     elif 'COMPLETED' in status[2]:
                         job_stat = 'complete'
+                    elif 'TIMEOUT' in status[2]:
+                        job_stat = 'timeout'
+                        # need to adjust wall time and rerun job (can the new job number be added to list ?)
+                        #wall_time = putils.extract_walltime_from_job_file(job_file_name)
+                        #new_wall_time = multiply_walltime(wall_time, factor=2)
+                        raise RuntimeError('Error: {} job timed out with Error'.format(job_file_name))
                     else:
                         job_stat = 'failed'
                         raise RuntimeError('Error: {} job was terminated with Error'.format(job_file_name))
@@ -586,9 +592,11 @@ class JOB_SUBMIT:
                                                                  os.path.abspath(batch_file) + '_{}.o'.format(count),
                                                                  os.path.abspath(batch_file) + '_{}.e'.format(count)))
 
-            job_file_lines.append("\n\nexport OMP_NUM_THREADS={0}\n".format(self.default_num_threads))
             if self.platform_name == 'STAMPEDE2':
                job_file_lines.append("export LD_PRELOAD=/home1/apps/tacc-patches/python_cacher/myopen.so\n")
+        
+            job_file_lines.append("\n\nexport OMP_NUM_THREADS={0}".format(self.default_num_threads))
+
             job_file_lines.append("\n")
 
             for line in tasks_with_output:
