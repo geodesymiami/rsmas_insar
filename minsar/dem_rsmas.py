@@ -87,7 +87,7 @@ def main(iargs=None):
         east = math.ceil(float(east) + 0.5 )
 
         demBbox = str(int(south)) + ' ' + str(int(north)) + ' ' + str(int(west)) + ' ' + str(int(east))
-        command = 'dem.py -a stitch -b ' + demBbox + ' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
+        command = 'dem.py -a stitch --filling --filling_value 0 -b ' + demBbox + ' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
         message_rsmas.log(os.getcwd(), command)
 
         if os.getenv('DOWNLOADHOST') == 'local':
@@ -116,15 +116,15 @@ def main(iargs=None):
 
             #print('Exit status from dem.py: {0}'.format(status))
 
-        xmlFile = glob.glob('demLat_*.wgs84.xml')[0]
+        #xmlFile = glob.glob('demLat_*.wgs84.xml')[0]
 
-        fin = open(xmlFile, 'r')
-        fout = open("tmp.txt", "wt")
-        for line in fin:
-            fout.write(line.replace('demLat', dem_dir + '/demLat'))
-        fin.close()
-        fout.close()
-        os.rename('tmp.txt', xmlFile)
+        #fin = open(xmlFile, 'r')
+        #fout = open("tmp.txt", "wt")
+        #for line in fin:
+        #    fout.write(line.replace('demLat', dem_dir + '/demLat'))
+        #fin.close()
+        #fout.close()
+        #os.rename('tmp.txt', xmlFile)
 
     else:
         sys.exit('Error unspported demMethod option: ' + inps.template['demMethod'])
