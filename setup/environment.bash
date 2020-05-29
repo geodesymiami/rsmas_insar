@@ -45,7 +45,7 @@ export TEMPLATES=${WORKDIR}/infiles/${USER_PREFERRED}/TEMPLATES
 export TE=${TEMPLATES}
 
 ############## DASK ##############
-export DASK_CONFIG=${RSMASINSAR_HOME}/minsar/defaults/
+export DASK_CONFIG=${MINTPY_HOME}/mintpy/defaults/
 #export DASK_CONFIG=${RSMASINSAR_HOME}/sources/MintPy/mintpy/defaults
 
 ############## LAUNCHER ##############
