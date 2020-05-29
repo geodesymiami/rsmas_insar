@@ -54,9 +54,9 @@ def main(iargs=None):
         destination = DATA_SERVER + ':' + REMOTE_DIR
 
         rsync_list = [
-                '/mintpy/inputs',
                 '/mintpy/pic',
-                '/mintpy/*.he5'
+                '/mintpy/*.he5',
+                '/mintpy/inputs'
                 ]
 
         command = 'ssh ' + DATA_SERVER + ' mkdir -p ' + REMOTE_DIR + project_name
@@ -71,15 +71,6 @@ def main(iargs=None):
             status = subprocess.Popen(command, shell=True).wait()
             if status is not 0:
                 raise Exception('ERROR in upload_data_products.py')
-
-        # temporary rsync of full mintpy folder
-        # text for test PR 2
-        command = 'rsync -avuz -e ssh --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r ' + inps.work_dir + '/mintpy ' + destination + project_name + '/full_mintpy'
-        print (command)
-        status = subprocess.Popen(command, shell=True).wait()
-        if status is not 0:
-            raise Exception('ERROR in upload_data_products.py')
-        return None
 
     if inps.image_products_flag:
         REMOTE_DIR = '/data/image_products/'
