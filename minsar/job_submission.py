@@ -593,7 +593,7 @@ class JOB_SUBMIT:
                                                                  os.path.abspath(batch_file) + '_{}.e'.format(count)))
 
             if self.platform_name == 'STAMPEDE2':
-               job_file_lines.append("export LD_PRELOAD=/home1/apps/tacc-patches/python_cacher/myopen.so\n")
+               job_file_lines.append("\nexport LD_PRELOAD=/home1/apps/tacc-patches/python_cacher/myopen.so")
         
             job_file_lines.append("\n\nexport OMP_NUM_THREADS={0}".format(self.default_num_threads))
 

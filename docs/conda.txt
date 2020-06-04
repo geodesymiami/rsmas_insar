@@ -6,3 +6,4 @@ bokeh
 qt
 boto3
 botocore
+pdbpp
