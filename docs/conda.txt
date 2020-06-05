@@ -7,3 +7,4 @@ qt
 boto3
 botocore
 pdbpp
+tmux
