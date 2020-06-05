@@ -40,7 +40,7 @@ git clone https://github.com/TACC/launcher.git 3rdparty/launcher ;
 git clone https://github.com/mapbox/tippecanoe.git 3rdparty/tippecanoe
 make -C 3rdparty/tippecanoe install PREFIX=3rdparty/tippecanoe
 ```
-* Install your python environment:
+* #Install your python environment:
 ```
 cd setup
 rm -rf ../3rdparty/miniconda3
@@ -48,7 +48,7 @@ miniconda_version=Miniconda3-py37_4.8.2-MacOSX-x86_64.sh
 miniconda_version=Miniconda3-py37_4.8.2-Linux-x86_64.sh
 miniconda_version=Miniconda3-latest-MacOSX-x86_64.sh
 miniconda_version=Miniconda3-latest-Linux-x86_64.sh
-wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate #; if ($? != 0) exit; 
+wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate -O $miniconda_version #; if ($? != 0) exit; 
 chmod 755 $miniconda_version
 mkdir -p ../3rdparty
 ./$miniconda_version -b -p ../3rdparty/miniconda3
@@ -61,7 +61,7 @@ mkdir -p ../3rdparty
 ../3rdparty/miniconda3/bin/pip install geocoder
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
 ```
-* Source the environment and create aux directories. Install credential files for data download:
+* #Source the environment and create aux directories. Install credential files for data download:
 ```
 source ~/accounts/platforms_defaults.bash;
 source environment.bash;
