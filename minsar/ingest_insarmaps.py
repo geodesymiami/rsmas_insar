@@ -61,13 +61,6 @@ def main(iargs=None):
     if os.path.isdir(json_folder):
         shutil.rmtree(json_folder)
 
-    command1 = 'hdfeos5_2json_mbtiles.py ' + hdfeos_file + ' ' + json_folder + ' |& tee out_insarmaps.log'
-    command2 = 'json_mbtiles2insarmaps.py -u ' + password.insaruser + ' -p ' + password.insarpass + ' --host ' + \
-               'insarmaps.miami.edu -P rsmastest -U rsmas\@gmail.com --json_folder ' + \
-               json_folder + ' --mbtiles_file ' + mbtiles_file + ' |& tee -a out_insarmaps.log'
-    command3 = 'upload_data_products.py --mintpyProducts ' + ' ' + inps.custom_template_file + ' |& tee out_insarmaps.log'
-    command4 = 'summarize_job_run_times.py ' + ' ' + inps.custom_template_file 
-
     command1 = 'hdfeos5_2json_mbtiles.py ' + hdfeos_file + ' ' + json_folder 
     command2 = 'json_mbtiles2insarmaps.py -u ' + password.insaruser + ' -p ' + password.insarpass + ' --host ' + \
                'insarmaps.miami.edu -P rsmastest -U rsmas\@gmail.com --json_folder ' + \
