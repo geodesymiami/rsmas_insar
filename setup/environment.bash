@@ -76,7 +76,8 @@ export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/sources      # needed for mim
 export PYTHONPATH_RSMAS=${PYTHONPATH}
 
 ######### Ignore warnings ############
-export PYTHONWARNINGS="ignore:Unverified HTTPS request"
+#export PYTHONWARNINGS="ignore:Unverified HTTPS request"   (FA 6/20: Deprecation and VisibleDepreciation dis not work) 
+export PYTHONWARNINGS="ignore"
 
 #####################################
 ############  PATH  #################
