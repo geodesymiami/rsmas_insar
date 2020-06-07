@@ -15,6 +15,7 @@ import argparse
 import numpy as np
 import h5py
 import math
+from pathlib import Path
 from natsort import natsorted
 import xml.etree.ElementTree as ET
 import shutil
@@ -584,6 +585,7 @@ def concatenate_error_files(run_file, work_dir):
         os.remove(out_file)
 
     out_name = os.path.dirname(run_file) + '/out_' + run_file.split('/')[-1] + '.e'
+    Path(out_name).touch()
     error_files = glob.glob(run_file + '*.e*')
     if not len(error_files) == 0:
         with open(out_name, 'w') as outfile:
@@ -595,8 +597,8 @@ def concatenate_error_files(run_file, work_dir):
                     outfile.write(infile.read())
                 os.remove(fname)
                 
-        shutil.copy(os.path.abspath(out_name), os.path.abspath(work_dir))
-        os.remove(os.path.abspath(out_name))
+    shutil.copy(os.path.abspath(out_name), os.path.abspath(work_dir))
+    os.remove(os.path.abspath(out_name))
 
     return None
 
