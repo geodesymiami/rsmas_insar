@@ -68,6 +68,11 @@ source environment.bash;
 mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 $RSMASINSAR_HOME/setup/install_credential_files.csh;
 ```
+* #Adding HPC support for MintPy (parallel plotting and defaults to use dask Local Cluster)
+```
+cp -p ../minsar/mintpy_additions/smallbaselineApp_auto.cfg ../sources/MintPy/mintpy/defaults/
+cp -p ../minsar/mintpy_additions/plot_smallbaselineApp.sh ../sources/MintPy/sh/
+```
 
 ### Orbits and aux files
 This has created directories for the orbits for Sentinel-1 (`$SENTINEL_ORBITS`), which The can be downloaded using `dloadOrbits.py`. The IPF calibration files (`SENTINEL_AUX`) are downloaded from: https://qc.sentinel1.eo.esa.int/aux_cal/ .
