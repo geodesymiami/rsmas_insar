@@ -1,0 +1,61 @@
+# vim: set filetype=cfg:
+##------------------------------- ISCE/stripmapStack OPTIONS ------------------##
+#ssara_federated_query.py -r 10 --intersectsWith='POLYGON((-155.83929567186897
+#19.588753885631082,-155.5893567070246 19.630150461161826,-155.53991823046
+#19.38420260155462,-155.78436403124363 19.3349682592875,-155.83929567186897
+#19.588753885631082))'
+#--platform=COSMO-SKYMED-1,COSMO-SKYMED-2,COSMO-SKYMED-3,COSMO-SKYMED-4
+#--collectionName= "Supersites CSK Hawaii" -s 2014-06-01 -e 2015-01-01
+#--download
+
+isce.processor          = stripmapStack  #[stripmapStack, topsStack]
+#isce.ALOS.fbd2fbs       = yes
+isce.demSNWE            = 19, 20, -156, -155  #[S, N, W, E] in degree
+isce.demFile            = /scratch/projects/insarlab/bkv3/MaunaloaT10CskAsc/DEM/output.dem
+isce.azimuthLooks       = 4
+isce.rangeLooks         = 4
+isce.maxTempBaseline    = 180
+isce.maxPerpBaseline    = 3000
+isce.unwrapMethod       = snaphu
+#isce.filtStrength       = 0.5
+isce.applyWaterMask     = yes
+
+
+##------------------------------- PYSAR OPTIONS -------------------------------##
+## load_data.py -H to check more details and example inputs.
+pysar.load.processor        = isce
+##---------for ISCE only:
+pysar.load.metaFile         = $SC/MaunaloaT10CskAsc/masterShelve/data.dat
+pysar.load.baselineDir      = $SC/MaunaloaT10CskAsc/baselines
+##---------interferogram datasets:
+pysar.load.unwFile          = $SC/MaunaloaT10CskAsc/Igrams/*/filt_*.unw
+pysar.load.corFile          = $SC/MaunaloaT10CskAsc/Igrams/*/filt_*.cor
+pysar.load.connCompFile     = $SC/MaunaloaT10CskAsc/Igrams/*/filt_*.unw.conncomp
+##---------geometry datasets:
+pysar.load.demFile          = $SC/MaunaloaT10CskAsc/geom_master/hgt.rdr
+pysar.load.lookupYFile      = $SC/MaunaloaT10CskAsc/geom_master/lat.rdr
+pysar.load.lookupXFile      = $SC/MaunaloaT10CskAsc/geom_master/lon.rdr
+pysar.load.incAngleFile     = $SC/MaunaloaT10CskAsc/geom_master/los.rdr
+pysar.load.azAngleFile      = $SC/MaunaloaT10CskAsc/geom_master/los.rdr
+pysar.load.shadowMaskFile   = $SC/MaunaloaT10CskAsc/geom_master/shadowMask.rdr
+pysar.load.bperpFile        = None
+
+pysar.reference.lalo    = 19.5310, -155.4812
+#pysar.subset.lalo       = 31.70:32.10, 130.50:131.10
+#pysar.subset.yx         = 600:1800,100:1100
+pysar.network.coherenceBased            = yes
+pysar.network.keepMinSpanTree           = no
+pysar.network.minCoherence              = 0.5
+#pysar.network.maskFile                  = waterMask.h5
+#pysar.network.excludeDate               = 20060624
+#pysar.networkInversion.waterMaskFile    = waterMask.h5
+pysar.networkInversion.weightFunc       = no
+#pysar.topographicResidual.stepFuncDate  = 20110126  #eruption dates
+#pysar.deramp            = linear
+
+
+##------------------------------- Extra Metadata -------------------------##
+#ORBIT_DIRECTION = ASCENDING
+#trackNumber     = 424
+#first_frame     = 620
+#last_frame      = 630
