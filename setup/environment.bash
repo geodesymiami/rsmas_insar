@@ -22,7 +22,8 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 ############ FOR PROCESSING  #########
 export SSARAHOME=${RSMASINSAR_HOME}/3rdparty/SSARA
 export ISCE_HOME=${RSMASINSAR_HOME}/3rdparty/miniconda3/lib/python3.7/site-packages/isce
-export ISCE_STACK=${RSMASINSAR_HOME}/sources/isceStack/isce2/contrib/stack/topsStack
+#export ISCE_STACK=${RSMASINSAR_HOME}/sources/isce2/contrib/stack/stripmapStack
+export ISCE_STACK=${RSMASINSAR_HOME}/sources/isce2/contrib/stack/topsStack
 export MINTPY_HOME=${RSMASINSAR_HOME}/sources/MintPy
 export MINOPY_HOME=${RSMASINSAR_HOME}/sources/minopy
 export MIMTPY_HOME=${RSMASINSAR_HOME}/sources/MimtPy
