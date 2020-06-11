@@ -1,12 +1,16 @@
 # vim: set filetype=cfg:
 ##------------------------------- ISCE/stripmapStack OPTIONS ------------------##
-#ssara_federated_query.py -r 10 --intersectsWith='POLYGON((-155.83929567186897
-#19.588753885631082,-155.5893567070246 19.630150461161826,-155.53991823046
-#19.38420260155462,-155.78436403124363 19.3349682592875,-155.83929567186897
-#19.588753885631082))'
-#--platform=COSMO-SKYMED-1,COSMO-SKYMED-2,COSMO-SKYMED-3,COSMO-SKYMED-4
-#--collectionName= "Supersites CSK Hawaii" -s 2014-06-01 -e 2015-01-01
-#--download
+#ssara_federated_query.py -r 10 --intersectsWith='POLYGON((-155.839 19.58,-155.58 19.630,-155.539 19.384,-155.784 19.334,-155.839 19.58))'
+#--platform=COSMO-SKYMED-1,COSMO-SKYMED-2,COSMO-SKYMED-3,COSMO-SKYMED-4 --collectionName= "Supersites CSK Hawaii" -s 2014-06-01 -e 2015-01-01 --download
+processor               = isce
+cleanopt                = 0
+
+ssaraopt.platform       = COSMO-SKYMED-1,COSMO-SKYMED-2,COSMO-SKYMED-3,COSMO-SKYMED-4
+ssaraopt.relativeOrbit  = 10
+ssaraopt.collectionName = Supersites CSK Hawaii
+ssaraopt.startDate      = 20140601
+ssaraopt.startDate      = 20150101
+ssaraopt.parallel       = 24
 
 isce.processor          = stripmapStack  #[stripmapStack, topsStack]
 #isce.ALOS.fbd2fbs       = yes
