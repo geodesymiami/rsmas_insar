@@ -67,13 +67,24 @@ def main(iargs=None):
     if not os.path.isdir(slc_dir):
         os.makedirs(slc_dir)
 
-    # if satellite is not Sentinel (not tried yet)
-    if 'SenDT' not in inps.project_name and 'SenAT' not in inps.project_name:
+    # to test without ASF's ssara use SSARA_ASF=false. Then it will use the 
+    if 'SenDT' not in inps.project_name and 'SenAT' not in inps.project_name or os.getenv('SSARA_ASF') == 'False':
 
-        ssara_call = 'ssara_federated_query.py ' + inps.ssaraopt + ' --print' + ' --download'
-        ssara_process = subprocess.Popen(ssara_call, shell=True).wait()
-        completion_status = ssara_process.poll()
+        command = 'ssara_federated_query.py ' + inps.ssaraopt + ' --print' + ' --download'
 
+        os.chdir(slc_dir)
+        message_rsmas.log(slc_dir, command)
+        #print(ssara_call)
+
+        status = subprocess.Popen(command, shell=True).wait()
+        #completion_status = ssara_process.poll()
+        if status is not 0:
+            raise Exception('ERROR in ssara_federated_query.py')
+
+        os.chdir(inps.work_dir)
+        return
+
+    if os.getenv('SSARA_ASF') == 'False':
         return
 
     download('ssara', inps.custom_template_file, slc_dir, outnum=1)
