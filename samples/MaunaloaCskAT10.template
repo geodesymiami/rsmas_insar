@@ -1,18 +1,18 @@
-# vim: set filetype=cfg:
-##------------------------------- ISCE/stripmapStack OPTIONS ------------------##
-#ssara_federated_query.py -r 10 --intersectsWith='POLYGON((-155.839 19.58,-155.58 19.630,-155.539 19.384,-155.784 19.334,-155.839 19.58))'
-#--platform=COSMO-SKYMED-1,COSMO-SKYMED-2,COSMO-SKYMED-3,COSMO-SKYMED-4 --collectionName= "Supersites CSK Hawaii" -s 2014-06-01 -e 2015-01-01 --download
-processor               = isce
+############## DOWNLOAD, GENERAL OPTIONS ##############
 cleanopt                = 0
 
 ssaraopt.platform       = COSMO-SKYMED-1,COSMO-SKYMED-2,COSMO-SKYMED-3,COSMO-SKYMED-4
 ssaraopt.relativeOrbit  = 10
-ssaraopt.collectionName = Supersites CSK Hawaii
-ssaraopt.startDate      = 20140601
-ssaraopt.startDate      = 20150101
+ssaraopt.collectionName = "Supersites CSK Hawaii"
+ssaraopt.startDate      = 20141001
+ssaraopt.endDate        = 20150101
 ssaraopt.parallel       = 24
 
-isce.processor          = stripmapStack  #[stripmapStack, topsStack]
+demMethod               = ssara
+##################### ISCE OPTIONS ####################
+topsStack.subswath       = 2
+topsStack.boundingBox    = 19.1 19.9 -155.8 -154.5                           # '-1 0.15 -91.6 -90.9'                           
+
 #isce.ALOS.fbd2fbs       = yes
 isce.demSNWE            = 19, 20, -156, -155  #[S, N, W, E] in degree
 isce.demFile            = /scratch/projects/insarlab/bkv3/MaunaloaT10CskAsc/DEM/output.dem
@@ -24,42 +24,7 @@ isce.unwrapMethod       = snaphu
 #isce.filtStrength       = 0.5
 isce.applyWaterMask     = yes
 
+##################### MINTPY OPTIONS ###################
+mintpy.troposphericDelay.method    = no    # pyaps  #[pyaps / height_correlation / base_trop_cor / no], auto for pyaps
+mintpy.save.hdfEos5                = yes   #[yes / update / no], auto for no, save timeseries to UNAVCO InSAR Archive format
 
-##------------------------------- PYSAR OPTIONS -------------------------------##
-## load_data.py -H to check more details and example inputs.
-pysar.load.processor        = isce
-##---------for ISCE only:
-pysar.load.metaFile         = $SC/MaunaloaT10CskAsc/masterShelve/data.dat
-pysar.load.baselineDir      = $SC/MaunaloaT10CskAsc/baselines
-##---------interferogram datasets:
-pysar.load.unwFile          = $SC/MaunaloaT10CskAsc/Igrams/*/filt_*.unw
-pysar.load.corFile          = $SC/MaunaloaT10CskAsc/Igrams/*/filt_*.cor
-pysar.load.connCompFile     = $SC/MaunaloaT10CskAsc/Igrams/*/filt_*.unw.conncomp
-##---------geometry datasets:
-pysar.load.demFile          = $SC/MaunaloaT10CskAsc/geom_master/hgt.rdr
-pysar.load.lookupYFile      = $SC/MaunaloaT10CskAsc/geom_master/lat.rdr
-pysar.load.lookupXFile      = $SC/MaunaloaT10CskAsc/geom_master/lon.rdr
-pysar.load.incAngleFile     = $SC/MaunaloaT10CskAsc/geom_master/los.rdr
-pysar.load.azAngleFile      = $SC/MaunaloaT10CskAsc/geom_master/los.rdr
-pysar.load.shadowMaskFile   = $SC/MaunaloaT10CskAsc/geom_master/shadowMask.rdr
-pysar.load.bperpFile        = None
-
-pysar.reference.lalo    = 19.5310, -155.4812
-#pysar.subset.lalo       = 31.70:32.10, 130.50:131.10
-#pysar.subset.yx         = 600:1800,100:1100
-pysar.network.coherenceBased            = yes
-pysar.network.keepMinSpanTree           = no
-pysar.network.minCoherence              = 0.5
-#pysar.network.maskFile                  = waterMask.h5
-#pysar.network.excludeDate               = 20060624
-#pysar.networkInversion.waterMaskFile    = waterMask.h5
-pysar.networkInversion.weightFunc       = no
-#pysar.topographicResidual.stepFuncDate  = 20110126  #eruption dates
-#pysar.deramp            = linear
-
-
-##------------------------------- Extra Metadata -------------------------##
-#ORBIT_DIRECTION = ASCENDING
-#trackNumber     = 424
-#first_frame     = 620
-#last_frame      = 630

@@ -127,6 +127,9 @@ class Template:
             if 'ssaraopt.collectionName' in self.options.keys():
                 collectionName = self.options['ssaraopt.collectionName']
                 ssaraopt += ' --collectionName={}'.format(collectionName)
+            if 'ssaraopt.beamMode' in self.options.keys():
+                beamMode = self.options['ssaraopt.beamMode']
+                ssaraopt += ' --beamMode={}'.format(beamMode)
             if 'ssaraopt.frame' in self.options.keys():
                 frame = self.options['ssaraopt.frame']
                 ssaraopt += ' --frame={}'.format(frame)
