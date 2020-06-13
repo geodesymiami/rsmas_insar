@@ -14,6 +14,7 @@ import sys
 import shutil
 import time
 import argparse
+import subprocess
 import minsar
 import minsar.workflow
 from minsar.objects import message_rsmas
@@ -181,6 +182,7 @@ class RsmasInsar:
                     shutil.rmtree(os.path.join(self.work_dir, directory))
 
         minsar.download_rsmas.main([self.custom_template_file])
+
         return
 
     def run_download_dem(self):
@@ -198,6 +200,11 @@ class RsmasInsar:
             minsar.create_runfiles.main([self.custom_template_file])
         except:
             print('Skip creating run files ...')
+
+        command = 'tropo_pyaps3.py --date-list SAFE_files.txt --dir $WEATHER_DIR'
+        message_rsmas.log(os.getcwd(), command)
+        status = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+
         minsar.execute_runfiles.main([self.custom_template_file])
         return
 
