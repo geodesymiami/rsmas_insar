@@ -11,7 +11,6 @@ import glob
 from minsar.objects.auto_defaults import PathFind
 from minsar.utils.process_utilities import xmlread, cmd_line_parse
 from minsar.objects import message_rsmas
-import geocodeGdal as gg
 
 pathObj = PathFind()
 ########################################
@@ -124,6 +123,7 @@ def geocode_file(inps):
     Geocodes the input file
     :param inps: input name space
     """
+    import geocodeGdal as gg
 
     inps.cropbox = [val for val in inps.cropbox.split()]
     if len(inps.cropbox) != 4:

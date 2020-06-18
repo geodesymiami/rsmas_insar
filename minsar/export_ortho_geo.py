@@ -5,7 +5,7 @@ import os
 import isce
 import isceobj
 import sys
-import s1a_isce_utils as ut
+# import s1a_isce_utils as ut
 import glob
 import gdal
 import time
@@ -16,7 +16,6 @@ from isceobj.Util.ImageUtil import ImageLib as IML
 from minsar.objects.auto_defaults import PathFind
 import minsar.utils.process_utilities as putils
 from minsar.job_submission import JOB_SUBMIT
-import mergeBursts as mb
 
 # FA 9/19: commented out as `import boto3 hangs`
 #from upload_image_products import upload_to_s3
@@ -30,6 +29,9 @@ def main(iargs=None):
 
     inps = putils.cmd_line_parse(iargs)
 
+    import s1a_isce_utils as ut
+    import mergeBursts as mb
+    
     if not iargs is None:
         input_arguments = iargs
     else:
