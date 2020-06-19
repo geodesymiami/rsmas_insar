@@ -201,7 +201,7 @@ class RsmasInsar:
         except:
             print('Skip creating run files ...')
 
-        command = 'tropo_pyaps3.py --date-list SAFE_files.txt --dir $WEATHER_DIR'
+        command = 'tropo_pyaps3.py --date-list SAFE_files.txt --dir $WEATHER_DIR >> /dev/null'
         message_rsmas.log(os.getcwd(), command)
         status = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
 
