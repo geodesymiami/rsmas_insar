@@ -29,7 +29,7 @@ from minsar.download_rsmas import ssh_with_commands
 EXAMPLE = '''
   example:
   dem_rsmas.py  $SAMPLES/GalapagosT128SenVVD.template
-      uses topsStack.boundingBox to generate a dem in DEM folder as dem.py requires integer degrees
+      uses topsStack.boundingBox or stripmapStack.boundingBox to generate a dem in DEM folder as dem.py requires integer degrees
       options:
            topsStack.demMethod = boundingBox [default: ssara]
       subtracts/adds ` 0.5 degree and then rounds to full integer

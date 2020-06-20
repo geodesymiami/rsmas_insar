@@ -74,6 +74,7 @@ def parse_arguments(args):
     if not 'queue' in job_params:
         job_params.queue = os.getenv("QUEUENAME")
 
+    scheduler = os.getenv("JOBSCHEDULER")
     scratch_dir = os.getenv('SCRATCHDIR')
 
     # default queue name is based on scheduler
@@ -534,7 +535,7 @@ class JOB_SUBMIT:
 
         job_file_lines = [
             "#! " + shell,
-            prefix + name_option.format(job_name),
+            prefix + name_option.format(os.path.basename(job_name)),
             prefix + project_option.format(os.getenv('JOBSHEDULER_PROJECTNAME'))
         ]
         if self.email_notif:

@@ -31,8 +31,8 @@ def main(iargs=None):
     logfile_name = inps.work_dir + '/ssara_rsmas.log'
     logger = RsmasLogger(file_name=logfile_name)
 
-    if not inps.template['topsStack.slcDir'] is None:
-        inps.slc_dir = inps.template['topsStack.slcDir']
+    if not inps.template[inps.prefix + 'Stack.slcDir'] is None:
+        inps.slc_dir = inps.template[inps.prefix + 'Stack.slcDir']
     else:
         inps.slc_dir = os.path.join(inps.work_dir, 'SLC')
 
@@ -201,11 +201,13 @@ def get_ssara_kml_and_listing(slc_dir, ssaraopt):
 
 def add_polygon_to_ssaraopt(dataset_template, ssaraopt, delta_lat):
     """calculates intersectsWith polygon from bbox and replace frame in ssaraopt if give"""
-    #bbox_list = dataset_template['topsStack.boundingBox'][1:-1].split(' ')
-    try:
-        bbox_list = dataset_template['topsStack.boundingBox'].split(' ')
-    except:
-        bbox_list = dataset_template['stripmapStack.boundingBox'].split(' ')
+    if not 'acquisition_mode' in dataset_template.options:
+        print('WARNING: "acquisition_mode" is not given --> default: tops   (available options: tops, stripmap)')
+        prefix = 'tops'
+    else:
+        prefix = dataset_template.options['acquisition_mode']
+
+    bbox_list = dataset_template[prefix + 'Stack.boundingBox'].split(' ')
 
     bbox_list[0] = bbox_list[0].replace("\'", '')   # this does ["'-8.75", '-7.8', '115.0', "115.7'"] (needed for run_operations.py, run_operations
     bbox_list[1] = bbox_list[1].replace("\'", '')   # -->       ['-8.75',  '-7.8', '115.0', '115.7']  (should be modified so that this is not needed)
