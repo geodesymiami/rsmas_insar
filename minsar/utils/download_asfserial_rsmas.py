@@ -45,8 +45,8 @@ def main(iargs=None):
         
     os.chdir(inps.work_dir)
 
-    if not inps.template['topsStack.slcDir'] is None:
-        inps.slc_dir = inps.template['topsStack.slcDir']
+    if not inps.template[inps.prefix + 'Stack.slcDir'] is None:
+        inps.slc_dir = inps.template[inps.prefix + 'Stack.slcDir']
     else:
         inps.slc_dir = os.path.join(inps.work_dir, 'SLC')
 
