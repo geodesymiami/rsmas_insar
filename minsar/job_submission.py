@@ -616,7 +616,7 @@ class JOB_SUBMIT:
             for line in tasks_with_output:
                 job_file_lines.append(line)
 
-            # job_file_lines.append("\nwait")
+            job_file_lines.append("\nwait")
 
             with open(os.path.join(self.out_dir, job_file_name), "w+") as job_f:
                 job_f.writelines(job_file_lines)
