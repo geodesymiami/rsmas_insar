@@ -202,7 +202,10 @@ def get_ssara_kml_and_listing(slc_dir, ssaraopt):
 def add_polygon_to_ssaraopt(dataset_template, ssaraopt, delta_lat):
     """calculates intersectsWith polygon from bbox and replace frame in ssaraopt if give"""
     #bbox_list = dataset_template['topsStack.boundingBox'][1:-1].split(' ')
-    bbox_list = dataset_template['topsStack.boundingBox'].split(' ')
+    try:
+        bbox_list = dataset_template['topsStack.boundingBox'].split(' ')
+    except:
+        bbox_list = dataset_template['stripmapStack.boundingBox'].split(' ')
 
     bbox_list[0] = bbox_list[0].replace("\'", '')   # this does ["'-8.75", '-7.8', '115.0', "115.7'"] (needed for run_operations.py, run_operations
     bbox_list[1] = bbox_list[1].replace("\'", '')   # -->       ['-8.75',  '-7.8', '115.0', '115.7']  (should be modified so that this is not needed)

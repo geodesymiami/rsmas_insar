@@ -33,6 +33,9 @@ def main(iargs=None):
 
     time.sleep(putils.pause_seconds(inps.wait_time))
 
+    if inps.prefix == 'stripmap':
+        inps.num_bursts = 1
+
     inps.out_dir = os.path.join(inps.work_dir, 'run_files')
     job_obj = JOB_SUBMIT(inps)
 

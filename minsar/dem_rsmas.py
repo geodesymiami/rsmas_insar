@@ -76,7 +76,7 @@ def main(iargs=None):
         print('You have finished SSARA!')
     elif inps.flag_boundingBox:
         print('DEM generation using ISCE')
-        bbox = inps.template['topsStack.boundingBox'].strip("'")
+        bbox = inps.template[inps.prefix + 'Stack.boundingBox'].strip("'")
         bbox = [val for val in bbox.split()]
         south = bbox[0]
         north = bbox[1]

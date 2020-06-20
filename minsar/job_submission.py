@@ -70,7 +70,9 @@ def parse_arguments(args):
     """
     parser = create_argument_parser()
     job_params = parser.parse_args(args)
-    job_params.queue = os.getenv("QUEUENAME")
+
+    if not 'queue' in job_params:
+        job_params.queue = os.getenv("QUEUENAME")
 
     scratch_dir = os.getenv('SCRATCHDIR')
 
@@ -90,7 +92,7 @@ def parse_arguments(args):
     if job_params.out_dir == 'run_files':
         job_params.out_dir = os.path.join(job_params.work_dir, job_params.out_dir)
 
-    job_params.custom_template_file = glob.glob(job_params.work_dir + '/*.template')[0]
+    #job_params.custom_template_file = glob.glob(job_params.work_dir + '/*.template')[0]
 
     return job_params
 
@@ -103,6 +105,11 @@ class JOB_SUBMIT:
     def __init__(self, inps):
         for k in inps.__dict__.keys():
             setattr(self, k, inps.__dict__[k])
+
+        if 'prefix' in inps and inps.prefix == 'stripmap':
+            self.stack_path = os.path.join(os.getenv('ISCE_STACK'), 'stripmapStack')
+        else:
+            self.stack_path = os.path.join(os.getenv('ISCE_STACK'), 'topsStack')
 
         self.platform_name = os.getenv("PLATFORM_NAME")
         self.scheduler = os.getenv("JOBSCHEDULER")
@@ -198,14 +205,16 @@ class JOB_SUBMIT:
 
             elif 'multitask_multiNode' in self.submission_scheme or number_of_nodes == 1:
 
-                job_name = os.path.basename(batch_file)
+                batch_file_name = batch_file + '_0'
+                job_name = os.path.basename(batch_file_name)
 
-                job_file_lines = self.get_job_file_lines(job_name, batch_file, number_of_tasks=len(tasks),
+                #job_file_lines = self.get_job_file_lines(job_name, batch_file_name, number_of_tasks=len(tasks),
+                #                                         number_of_nodes=number_of_nodes, work_dir=self.out_dir)
+                job_file_lines = self.get_job_file_lines(batch_file, batch_file, number_of_tasks=len(tasks),
                                                          number_of_nodes=number_of_nodes, work_dir=self.out_dir)
 
-                batch_file_name = batch_file + '_0'
-
-                self.job_files.append(self.add_tasks_to_job_file_lines(job_file_lines, tasks, batch_file=batch_file_name))
+                #self.job_files.append(self.add_tasks_to_job_file_lines(job_file_lines, tasks, batch_file=batch_file_name))
+                self.job_files.append(self.add_tasks_to_job_file_lines(job_file_lines, tasks, batch_file=batch_file))
 
             elif 'multitask_singleNode' in self.submission_scheme:
 
@@ -442,7 +451,7 @@ class JOB_SUBMIT:
             if step_name in config:
                 self.default_memory = config[step_name]['memory']
             else:
-                self.default_memory = config['DEFAULT']['memory']
+                self.default_memory = config['default']['memory']
         else:
             self.default_memory = self.memory
 
@@ -453,16 +462,17 @@ class JOB_SUBMIT:
                     if self.num_bursts is None:
                         self.num_bursts = putils.get_number_of_bursts(self)
             else:
-                self.default_wall_time = config['DEFAULT']['walltime']
+                self.default_wall_time = config['default']['walltime']
 
-            self.default_wall_time = putils.walltime_adjust(self.num_bursts, self.default_wall_time, self.scheduler, adjust=config[step_name]['adjust'])
+            self.default_wall_time = putils.walltime_adjust(self.num_bursts, self.default_wall_time, self.scheduler,
+                                                            adjust=config[step_name]['adjust'])
         else:
             self.default_wall_time = self.wall_time
 
         if step_name in config:
             self.default_num_threads = config[step_name]['num_threads']
         else:
-            self.default_num_threads = config['DEFAULT']['num_threads']
+            self.default_num_threads = config['default']['num_threads']
 
         return
 
@@ -488,8 +498,9 @@ class JOB_SUBMIT:
             stderr_option = "-e {0}_%J.e"
             queue_option = "-q {0}"
             walltime_limit_option = "-W {0}"
-            # memory_option = "-R rusage[mem={0}]"
-            memory_option = False
+            #memory_option = "-R rusage[mem={0}]"
+            memory_option = "-M {}"
+            #memory_option = False
             email_option = "-B -u {0}"
         elif self.scheduler == "PBS":
             prefix = "\n#PBS "
@@ -537,7 +548,8 @@ class JOB_SUBMIT:
             prefix + walltime_limit_option.format(self.default_wall_time),
         ])
         if memory_option:
-            job_file_lines.extend([prefix + memory_option.format(self.default_memory)], )
+            if not 'launcher' in self.submission_scheme:
+                job_file_lines.extend([prefix + memory_option.format(self.default_memory)], )
             # job_file_lines.extend([prefix + memory_option.format(self.max_memory_per_node)], )
 
         if self.scheduler == "PBS":
@@ -576,6 +588,7 @@ class JOB_SUBMIT:
             job_file_lines.append("\n\nmodule load launcher")
 
             job_file_lines.append("\nexport OMP_NUM_THREADS={0}".format(self.default_num_threads))
+            job_file_lines.append("\nexport PATH={0}:$PATH".format(self.stack_path))
             job_file_lines.append("\nexport LAUNCHER_WORKDIR={0}".format(self.out_dir))
             job_file_lines.append("\nexport LAUNCHER_JOB_FILE={0}\n".format(batch_file))
             if self.platform_name == 'STAMPEDE2':
@@ -596,6 +609,7 @@ class JOB_SUBMIT:
                job_file_lines.append("\nexport LD_PRELOAD=/home1/apps/tacc-patches/python_cacher/myopen.so")
         
             job_file_lines.append("\n\nexport OMP_NUM_THREADS={0}".format(self.default_num_threads))
+            job_file_lines.append("\nexport PATH={0}:$PATH".format(self.stack_path))
 
             job_file_lines.append("\n")
 

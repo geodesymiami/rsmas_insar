@@ -15,6 +15,10 @@ warnings.filterwarnings("ignore")
 mpl_logger = logging.getLogger('matplotlib')
 mpl_logger.setLevel(logging.WARNING)
 
+sg_logger = logging.getLogger('shapely.geos')
+sg_logger.setLevel(logging.WARNING)
+
+
 # expose the following modules
 __all__ = [
     'dem_rsmas',

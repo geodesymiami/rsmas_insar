@@ -42,8 +42,8 @@ def process_rsmas_cmd_line_parse(iargs=None):
     """ Creates command line argument parser object. """
 
     parser = argparse.ArgumentParser(description='Process Rsmas Routine InSAR Time Series Analysis',
-                                     formatter_class=argparse.RawTextHelpFormatter,
-                                     epilog=EXAMPLE)
+                                     epilog=EXAMPLE,
+                                     formatter_class=argparse.RawTextHelpFormatter)
 
     parser = putils.add_common_parser(parser)
     parser = putils.add_process_rsmas(parser)

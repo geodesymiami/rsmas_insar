@@ -3,16 +3,17 @@
 #Author: Sara Mirzaee
 # based on stackSentinel.py
 #####################################
-
 import os
 import sys
 from argparse import Namespace
 import shutil
-import stackSentinel
 from minsar.utils.process_utilities import make_run_list
 from minsar.objects.auto_defaults import PathFind
 import contextlib
 from minsar.objects import message_rsmas
+import logging
+mpl_logger = logging.getLogger('matplotlib')
+mpl_logger.setLevel(logging.WARNING)
 
 pathObj = PathFind()
 ###########################################
@@ -23,7 +24,9 @@ class CreateRun:
     def __init__(self, inps):
 
         self.work_dir = inps.work_dir
-        self.workflow = inps.template['topsStack.workflow']
+        self.prefix = inps.prefix
+        if inps.prefix == 'tops':
+            self.workflow = inps.template['topsStack.workflow']
         self.geo_master_dir = os.path.join(self.work_dir, pathObj.geomasterdir)
         self.minopy_dir = os.path.join(self.work_dir, pathObj.minopydir)
 
@@ -31,13 +34,13 @@ class CreateRun:
         self.inps.custom_template_file = inps.custom_template_file
 
         self.command_options = []
-        for item in inps.topsStack_template:
-            if item in ['useGPU', 'rmFilter']:
-                if inps.topsStack_template[item] == 'True':
+        for item in inps.Stack_template:
+            if item in ['useGPU', 'rmFilter', 'nofocus', 'zero', 'applyWaterMask']:
+                if inps.Stack_template[item] in ['True', True]:
                     self.command_options.append('--' + item)
-            elif inps.topsStack_template[item]:
+            elif inps.Stack_template[item]:
                 self.command_options.append('--' + item)
-                self.command_options.append(inps.topsStack_template[item])
+                self.command_options.append(inps.Stack_template[item])
 
         clean_list = pathObj.isce_clean_list()
         for item in clean_list[0]:
@@ -46,18 +49,26 @@ class CreateRun:
 
         return
 
-    def run_stack_workflow(self):        # This part is for isceStack run_files
+    def run_stack_workflow(self):        # This part is for isce stack run_files
 
-        message_rsmas.log(self.work_dir, 'stackSentinel.py' + ' ' + ' '.join(self.command_options))
+        if self.prefix == 'tops':
+            import stackSentinel as isceStack
+            message_rsmas.log(self.work_dir, 'stackSentinel.py' + ' ' + ' '.join(self.command_options))
+            out_file_name = 'out_stackSentinel'
+
+        else:
+            import stackStripMap as isceStack
+            message_rsmas.log(self.work_dir, 'stackStripMap.py' + ' ' + ' '.join(self.command_options))
+            out_file_name = 'out_stackStripMap'
 
         try:
-            with open('out_stackSentinel.o', 'w') as f:
+            with open(out_file_name + '.o', 'w') as f:
                 with contextlib.redirect_stdout(f):
-                    stackSentinel.main(self.command_options)
+                    isceStack.main(self.command_options)
         except:
-            with open('out_stackSentinel.e', 'w') as g:
+            with open(out_file_name + '.e', 'w') as g:
                 with contextlib.redirect_stderr(g):
-                    stackSentinel.main(self.command_options)
+                    isceStack.main(self.command_options)
 
         return
 

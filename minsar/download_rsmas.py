@@ -56,24 +56,27 @@ def main(iargs=None):
         job_obj.submit_script(job_name, job_file_name, command)
         sys.exit(0)
 
-    if not inps.template['topsStack.slcDir'] is None:
-        slc_dir = inps.template['topsStack.slcDir']
+    if inps.prefix == 'tops':
+        if not inps.template[inps.prefix + 'Stack.slcDir'] is None:
+            download_dir = inps.template[inps.prefix + 'Stack.slcDir']
+        else:
+            download_dir = os.path.join(inps.work_dir, 'SLC')
     else:
-        slc_dir = os.path.join(inps.work_dir, 'SLC')
+        if not inps.template['raw_image_dir'] in [None, 'None']:
+            download_dir = inps.template['raw_image_dir']
+        else:
+            download_dir = os.path.join(inps.work_dir, 'RAW_data')
 
-    if not os.path.isdir(inps.work_dir):
-        os.makedirs(inps.work_dir)
-
-    if not os.path.isdir(slc_dir):
-        os.makedirs(slc_dir)
+    os.makedirs(inps.work_dir, exist_ok=True)
+    os.makedirs(download_dir, exist_ok=True)
 
     # to test without ASF's ssara use SSARA_ASF=false. Then it will use the 
     if 'SenDT' not in inps.project_name and 'SenAT' not in inps.project_name or os.getenv('SSARA_ASF') == 'False':
 
         command = 'ssara_federated_query.py ' + inps.ssaraopt + ' --print' + ' --download'
 
-        os.chdir(slc_dir)
-        message_rsmas.log(slc_dir, command)
+        os.chdir(download_dir)
+        message_rsmas.log(download_dir, command)
         #print(ssara_call)
 
         status = subprocess.Popen(command, shell=True).wait()
@@ -87,29 +90,29 @@ def main(iargs=None):
     if os.getenv('SSARA_ASF') == 'False':
         return
 
-    download('ssara', inps.custom_template_file, slc_dir, outnum=1)
-    #download('asfserial', inps.custom_template_file, slc_dir, outnum = 1)
+    download('ssara', inps.custom_template_file, download_dir, outnum=1)
+    #download('asfserial', inps.custom_template_file, download_dir, outnum = 1)
 
-    for i_download in [2,3]:
-        download_success = run_check_download(slc_dir = slc_dir)
+    for i_download in [2, 3]:
+        download_success = run_check_download(download_dir = download_dir)
 
         if not download_success:
            print('check_download.py: There were bad files, download again')
            message_rsmas.log(inps.work_dir,'check_download.py: there were bad files, download again')
 
-           download('ssara', inps.custom_template_file, slc_dir, outnum = i_download)
-           #download('asfserial', inps.custom_template_file, slc_dir, outnum = i_download)
+           download('ssara', inps.custom_template_file, download_dir, outnum = i_download)
+           #download('asfserial', inps.custom_template_file, download_dir, outnum = i_download)
 
 ###########################################################################################
 
-def run_check_download(slc_dir):
+def run_check_download(download_dir):
     """ 
     Runs check_download script and returns True if all *zip files are fine and False otherwise.
-    :param slc_dir: SLC directory to check
+    :param download_dir: SLC/download directory to check
     """
     f = io.StringIO()
     with redirect_stdout(f):
-        check_download.main([slc_dir,'--delete'])
+        check_download.main([download_dir, '--delete'])
         out = f.getvalue()
    
     if 'Broken zipfiles' in out or 'Files with ' in out:
@@ -121,17 +124,17 @@ def run_check_download(slc_dir):
 ###########################################################################################
 
 
-def download(script_name, custom_template_file, slc_dir, outnum):
+def download(script_name, custom_template_file, download_dir, outnum):
     """
     Runs download script with given script name.
     :param script_name: Name of download script to run (ssara, asfserial)
     :param custom_template_file: Template file to download data from.
-    :param slc_dir: SLC directory inside work directory.
+    :param download_dir: SLC/download directory inside work directory.
     """
     if script_name not in {'ssara', 'asfserial'}:
         print('{} download not supported'.format(script_name))
 
-    out_file = os.path.join(os.path.dirname(slc_dir), 'out_download_{0}{1}'.format(script_name, outnum))
+    out_file = os.path.join(os.path.dirname(download_dir), 'out_download_{0}{1}'.format(script_name, outnum))
     command = 'download_{0}_rsmas.py {1}'.format(script_name, custom_template_file)
     command = '({0} > {1}.o) >& {1}.e'.format(command, out_file)
 
@@ -142,7 +145,7 @@ def download(script_name, custom_template_file, slc_dir, outnum):
         if proc.returncode is not 0:
             raise Exception('ERROR downloading using: download_{0}_rsmas.py'.format(script_name))
     else:
-        ssh_command_list = ['s.bgood', 'cd {0}'.format(slc_dir), command]
+        ssh_command_list = ['s.bgood', 'cd {0}'.format(download_dir), command]
         host = os.getenv('DOWNLOADHOST')
         status = ssh_with_commands(host, ssh_command_list)
 
