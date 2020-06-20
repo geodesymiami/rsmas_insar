@@ -254,7 +254,7 @@ class Sensors:
         # will search for different version of workreport to be compatible with ASf, WInSAR etc
         TXfile = glob.iglob(os.path.join(TXfolder, 'T*X-1.SAR.L1B/T*X*/T*X*.xml'), recursive=True)[0]
         if len(TXfile) > 0:
-            acquisitionDate = TXfile.split('.')[0].split('_')[-1]
+            acquisitionDate = TXfile.split('.')[-2].split('_')[-1]
             acquisitionDate = acquisitionDate[0:8]
             successflag = True
             return successflag, acquisitionDate
