@@ -5,14 +5,13 @@ acquisition_mode        = stripmap
 ssaraopt.platform       = COSMO-SKYMED-1,COSMO-SKYMED-2,COSMO-SKYMED-3,COSMO-SKYMED-4
 ssaraopt.relativeOrbit  = 10
 ssaraopt.collectionName = "Supersites CSK Hawaii"
-ssaraopt.startDate      = 20141001
-ssaraopt.endDate        = 20150101
+ssaraopt.startDate      = 20180401
+ssaraopt.endDate        = 20180518
 ssaraopt.parallel       = 24
 
 demMethod               = ssara
 ##################### ISCE OPTIONS ####################
-stripmapStack.boundingBox          = 19.1 19.9 -155.8 -154.5                           # '-1 0.15 -91.6 -90.9'                           
-stripmapStack.boundingBox          = 19.4 19.6 -155.7 -155.475                         # '-1 0.15 -91.6 -90.9'                           
+stripmapStack.boundingBox          = 19.22 19.45 -155.39 -154.95                           # '-1 0.15 -91.6 -90.9'                           
 stripmapStack.azimuthLooks         = 4
 stripmapStack.rangeLooks           = 4
 stripmapStack.timeThreshold        = 180
@@ -25,7 +24,6 @@ stripmapStack.sensor               = csk
 #stripmapStack.golsteinFilterStrength  = 0.5
 #stripmapStack.boundingBox                 = 19 20 -156 -155
 #stripmapStack.demDir                      = /scratch/projects/insarlab/bkv3/MaunaloaT10CskAsc/DEM/output.dem 
-
 
 ##################### MINTPY OPTIONS ###################
 mintpy.troposphericDelay.method    = no    # pyaps  #[pyaps / height_correlation / base_trop_cor / no], auto for pyaps
