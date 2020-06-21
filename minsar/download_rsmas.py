@@ -15,6 +15,7 @@ from minsar.job_submission import JOB_SUBMIT
 from minsar.utils import check_download
 from contextlib import redirect_stdout
 import io
+from minsar.utils.download_ssara_rsmas import add_polygon_to_ssaraopt
 
 class Capturing(list):
     def __enter__(self):
@@ -72,7 +73,8 @@ def main(iargs=None):
 
     # to test without ASF's ssara use SSARA_ASF=false. Then it will use the 
     if 'SenDT' not in inps.project_name and 'SenAT' not in inps.project_name or os.getenv('SSARA_ASF') == 'False':
-
+        
+        inps.ssaraopt = ' '.join(add_polygon_to_ssaraopt(inps.template, inps.ssaraopt.split(' '), delta_lat=inps.delta_lat)) 
         command = 'ssara_federated_query.py ' + inps.ssaraopt + ' --print' + ' --download'
 
         os.chdir(download_dir)

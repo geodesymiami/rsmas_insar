@@ -201,11 +201,12 @@ def get_ssara_kml_and_listing(slc_dir, ssaraopt):
 
 def add_polygon_to_ssaraopt(dataset_template, ssaraopt, delta_lat):
     """calculates intersectsWith polygon from bbox and replace frame in ssaraopt if give"""
-    if not 'acquisition_mode' in dataset_template.options:
+    
+    if not 'acquisition_mode' in dataset_template:
         print('WARNING: "acquisition_mode" is not given --> default: tops   (available options: tops, stripmap)')
         prefix = 'tops'
     else:
-        prefix = dataset_template.options['acquisition_mode']
+        prefix = dataset_template['acquisition_mode']
 
     bbox_list = dataset_template[prefix + 'Stack.boundingBox'].split(' ')
 
