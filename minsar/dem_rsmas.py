@@ -121,7 +121,7 @@ def main(iargs=None):
                 sys.exit('Error produced by dem.py using ' + host)
 
         cmd = 'fixImageXml.py -f -i {}'.format(glob.glob(dem_dir + '/demLat_*.wgs84')[0])
-        #os.system(cmd)
+        os.system(cmd)
             #print('Exit status from dem.py: {0}'.format(status))
 
         #xmlFile = glob.glob('demLat_*.wgs84.xml')[0]
