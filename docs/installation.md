@@ -76,6 +76,7 @@ cp -p ../minsar/additions/mintpy/plot_smallbaselineApp.sh ../sources/MintPy/sh/
 cp -p ../minsar/additions/isce/logging.conf ../3rdparty/miniconda3/lib/python3.*/site-packages/isce/defaults/logging/logging.conf
 #cp -p ../minsar/additions/isce/logging.conf ../3rdparty/miniconda3/pkgs/isce2*/lib/python3.*/site-packages/isce/defaults/logging/logging.conf
 cp -p ../minsar/additions/isce/prepRawCSK.py ../sources/isce2/contrib/stack/stripmapStack
+cp -p ../minsar/additions/isce/invertMisreg.py ../sources/isce2/contrib/stack/stripmapStack
 ```
 
 ### Orbits and aux files
