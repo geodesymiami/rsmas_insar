@@ -74,6 +74,9 @@ def main(iargs=None):
         call_ssara_dem(inps, dem_dir)
 
         print('You have finished SSARA!')
+        cmd = 'fixImageXml.py -f -i {}'.format(glob.glob(dem_dir + '/demLat_*.wgs84')[0])
+        os.system(cmd)
+
     elif inps.flag_boundingBox:
         print('DEM generation using ISCE')
         bbox = inps.template[inps.prefix + 'Stack.boundingBox'].strip("'")
@@ -117,6 +120,8 @@ def main(iargs=None):
                 print("Command failed. Exit code, StdErr:", exc.returncode, exc.output)
                 sys.exit('Error produced by dem.py using ' + host)
 
+        cmd = 'fixImageXml.py -f -i {}'.format(glob.glob(dem_dir + '/demLat_*.wgs84')[0])
+        #os.system(cmd)
             #print('Exit status from dem.py: {0}'.format(status))
 
         #xmlFile = glob.glob('demLat_*.wgs84.xml')[0]
