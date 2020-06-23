@@ -46,5 +46,5 @@ mintpy.load.shadowMaskFile   = $SCRATCHDIR/KilaueaCskAT10/geom_master/shadowMask
 mintpy.load.bperpFile        = None
 
 mintpy.troposphericDelay.method    = no    # pyaps  #[pyaps / height_correlation / base_trop_cor / no], auto for pyaps
-mintpy.save.hdfEos5                = yes   #[yes / update / no], auto for no, save timeseries to UNAVCO InSAR Archive format
+mintpy.save.hdfEos5                = no   #[yes / update / no], auto for no, save timeseries to UNAVCO InSAR Archive format
 
