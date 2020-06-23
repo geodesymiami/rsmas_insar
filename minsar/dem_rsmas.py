@@ -29,7 +29,7 @@ from minsar.download_rsmas import ssh_with_commands
 EXAMPLE = '''
   example:
   dem_rsmas.py  $SAMPLES/GalapagosT128SenVVD.template
-      uses topsStack.boundingBox to generate a dem in DEM folder as dem.py requires integer degrees
+      uses topsStack.boundingBox or stripmapStack.boundingBox to generate a dem in DEM folder as dem.py requires integer degrees
       options:
            topsStack.demMethod = boundingBox [default: ssara]
       subtracts/adds ` 0.5 degree and then rounds to full integer
@@ -44,9 +44,11 @@ def main(iargs=None):
     inps = cmd_line_parse(iargs, script='dem_rsmas')
 
     if not iargs is None:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+        input_arguments = iargs
     else:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+        input_arguments = sys.argv[1::]
+
+    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
 
     if not inps.flag_boundingBox and not inps.flag_ssara:
         if 'demMethod' in list(inps.template.keys()):
@@ -61,75 +63,83 @@ def main(iargs=None):
     else:
         inps.flag_ssara = True
 
-    dem_dir = make_dem_dir(inps.work_dir)
+    dem_dir = os.path.join(inps.work_dir, 'DEM')
+    if not exist_valid_dem_dir( dem_dir ):
+       os.mkdir(dem_dir)
 
-    if dem_dir:
+    os.chdir(dem_dir)
 
-        if inps.flag_ssara:
+    if inps.flag_ssara:
 
-            call_ssara_dem(inps, dem_dir)
+        call_ssara_dem(inps, dem_dir)
 
-            print('You have finished SSARA!')
-        elif inps.flag_boundingBox:
-            print('DEM generation using ISCE')
-            bbox = inps.template['topsStack.boundingBox'].strip("'")
-            bbox = [val for val in bbox.split()]
-            south = bbox[0]
-            north = bbox[1]
-            west = bbox[2]
-            east = bbox[3].split('\'')[0]
+        print('You have finished SSARA!')
+        cmd = 'fixImageXml.py -f -i {}'.format(glob.glob(dem_dir + '/dem*.wgs84')[0])
+        os.system(cmd)
 
-            south = math.floor(float(south) - 0.5)
-            north = math.ceil(float(north) + 0.5)
-            west = math.floor(float(west) - 0.5)
-            east = math.ceil(float(east) + 0.5 )
+    elif inps.flag_boundingBox:
+        print('DEM generation using ISCE')
+        bbox = inps.template[inps.prefix + 'Stack.boundingBox'].strip("'")
+        bbox = [val for val in bbox.split()]
+        south = bbox[0]
+        north = bbox[1]
+        west = bbox[2]
+        east = bbox[3].split('\'')[0]
 
-            demBbox = str(int(south)) + ' ' + str(int(north)) + ' ' + str(int(west)) + ' ' + str(int(east))
-            command = 'dem.py -a stitch -b ' + demBbox + ' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
-            message_rsmas.log(os.getcwd(), command)
+        south = math.floor(float(south) - 0.5)
+        north = math.ceil(float(north) + 0.5)
+        west = math.floor(float(west) - 0.5)
+        east = math.ceil(float(east) + 0.5 )
 
-            if os.getenv('DOWNLOADHOST') == 'local':
-                try:
-                    proc = subprocess.Popen(command,  stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True, universal_newlines=True)
-                    output, error = proc.communicate()
-                    if proc.returncode is not 0:
-                        raise Exception('ERROR starting dem.py subprocess')   # FA 8/19: I don't think this happens, errors are is output
-                except subprocess.CalledProcessError as exc:
-                    print("Command failed. Exit code, StdErr:", exc.returncode, exc.output)
-                    sys.exit('Error produced by dem.py')
-                else:
-                    if 'Could not create a stitched DEM. Some tiles are missing' in output:
-                        os.chdir('..')
-                        shutil.rmtree('DEM')
-                        sys.exit('Error in dem.py: Tiles are missing. Ocean???')
+        demBbox = str(int(south)) + ' ' + str(int(north)) + ' ' + str(int(west)) + ' ' + str(int(east))
+        command = 'dem.py -a stitch --filling --filling_value 0 -b ' + demBbox + ' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
+
+        message_rsmas.log(os.getcwd(), command)
+
+        if os.getenv('DOWNLOADHOST') == 'local':
+            try:
+                proc = subprocess.Popen(command,  stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True, universal_newlines=True)
+                output, error = proc.communicate()
+                if proc.returncode is not 0:
+                    raise Exception('ERROR starting dem.py subprocess')   # FA 8/19: I don't think this happens, errors are is output
+            except subprocess.CalledProcessError as exc:
+                print("Command failed. Exit code, StdErr:", exc.returncode, exc.output)
+                sys.exit('Error produced by dem.py')
             else:
-                dem_dir = os.getcwd()
-                ssh_command_list = ['s.bgood', 'cd {0}'.format(dem_dir), command]
-                host = os.getenv('DOWNLOADHOST')
-                try:
-                    status = ssh_with_commands(host, ssh_command_list)
-                except subprocess.CalledProcessError as exc:
-                    print("Command failed. Exit code, StdErr:", exc.returncode, exc.output)
-                    sys.exit('Error produced by dem.py using ' + host)
+                if 'Could not create a stitched DEM. Some tiles are missing' in output:
+                    os.chdir('..')
+                    shutil.rmtree('DEM')
+                    sys.exit('Error in dem.py: Tiles are missing. Ocean???')
+        else:
+            dem_dir = os.getcwd()
+            ssh_command_list = ['s.bgood', 'cd {0}'.format(dem_dir), command]
+            host = os.getenv('DOWNLOADHOST')
+            try:
+                status = ssh_with_commands(host, ssh_command_list)
+            except subprocess.CalledProcessError as exc:
+                print("Command failed. Exit code, StdErr:", exc.returncode, exc.output)
+                sys.exit('Error produced by dem.py using ' + host)
 
+        cmd = 'fixImageXml.py -f -i {}'.format(glob.glob(dem_dir + '/demLat_*.wgs84')[0])
+        os.system(cmd)
             #print('Exit status from dem.py: {0}'.format(status))
 
-            xmlFile = glob.glob('demLat_*.wgs84.xml')[0]
+        #xmlFile = glob.glob('demLat_*.wgs84.xml')[0]
 
-            fin = open(xmlFile, 'r')
-            fout = open("tmp.txt", "wt")
-            for line in fin:
-                fout.write(line.replace('demLat', dem_dir + '/demLat'))
-            fin.close()
-            fout.close()
-            os.rename('tmp.txt', xmlFile)
+        #fin = open(xmlFile, 'r')
+        #fout = open("tmp.txt", "wt")
+        #for line in fin:
+        #    fout.write(line.replace('demLat', dem_dir + '/demLat'))
+        #fin.close()
+        #fout.close()
+        #os.rename('tmp.txt', xmlFile)
 
-        else:
-            sys.exit('Error unspported demMethod option: ' + inps.template['demMethod'])
+    else:
+        sys.exit('Error unspported demMethod option: ' + inps.template['demMethod'])
 
-        print('\n###############################################')
-        print('End of dem_rsmas.py')
-        print('################################################\n')
+    print('\n###############################################')
+    print('End of dem_rsmas.py')
+    print('################################################\n')
 
     return None
 
@@ -169,28 +179,26 @@ def call_ssara_dem(inps, cwd):
         ssh_command_list = ['s.bgood', 'cd {0}'.format(cwd), command]
         host = os.getenv('DOWNLOADHOST')
         status = ssh_with_commands(host, ssh_command_list)
-        print('status from ssh_with_commands:' + str(status)); sys.stdout.flush()
-
+        #print('status from ssh_with_commands:' + str(status)); sys.stdout.flush()
+    
     print('Done downloading dem.grd'); sys.stdout.flush()
     grd_to_envi_and_vrt()
     grd_to_xml(cwd)
 
 
-def make_dem_dir(work_dir):
-    dem_dir = os.path.join(work_dir, 'DEM')
+def exist_valid_dem_dir(dem_dir):
+    """ Returns True of a valid dem dir exist. Otherwise remove die and return False """
     if os.path.isdir(dem_dir):
         products = glob.glob(os.path.join(dem_dir, '*dem.wgs84*'))
         if len(products) >= 3:
             print('DEM products already exist. if not satisfying, remove the folder and run again')
-            return False
+            return True
         else:
             shutil.rmtree(dem_dir)
+            return False
     else:
-        os.mkdir(dem_dir)
-        os.chdir(dem_dir)
-        return os.getcwd()
-
-
+        return False
+        
 def grd_to_xml(cwd):
     print('you have started grd_to_xml')
 
@@ -214,17 +222,17 @@ def grd_to_xml(cwd):
     xmlparamters = dict()
 
     xmlparamters['c1delta'] = re.findall(r'Pixel Size = \((.+),.+\)', tempstr)[0]
-    xmlparamters['c1ev'] = round(float(re.findall(r'Upper Right\s+\(\s*(.\d+.\d+),', tempstr)[0]), 1)
+    xmlparamters['c1ev'] = float(re.findall(r'Upper Right\s+\(\s*(.\d+.\d+),', tempstr)[0])
     xmlparamters['c1size'] = int(re.findall(r'Size is (\d+),\s+\d+', tempstr)[0])
-    xmlparamters['c1sv'] = round(float(re.findall(r'Lower Left\s+\(\s*(.\d+.\d+),', tempstr)[0]), 1)
+    xmlparamters['c1sv'] = float(re.findall(r'Lower Left\s+\(\s*(.\d+.\d+),', tempstr)[0])
 
     xmlparamters['c2delta'] = re.findall(r'Pixel Size = \(.+,(.+)\)', tempstr)[0]
-    xmlparamters['c2ev'] = round(float(re.findall(r'Lower Left\s+\(\s*.\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0]), 1)
+    xmlparamters['c2ev'] = float(re.findall(r'Lower Left\s+\(\s*.\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0])
     xmlparamters['c2size'] = int(re.findall(r'Size is \d+,\s+(\d+)', tempstr)[0])
-    xmlparamters['c2sv'] = round(float(re.findall(r'Upper Right\s+\(\s*.\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0]), 1)
+    xmlparamters['c2sv'] = float(re.findall(r'Upper Right\s+\(\s*.\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0])
 
     xmlparamters['numbands'] = re.findall(r'Band (\d+) \w', tempstr)[0]
-    xmlparamters['ref'] = re.findall(r'GEOGCS\["(.+)",', tempstr)[0].replace(' ', '')
+    xmlparamters['ref'] = 'WGS84'                                            #  FA 3/20: hardwired in
     xmlparamters['length'] = xmlparamters['c2size']
     xmlparamters['width'] = xmlparamters['c1size']
     xmlparamters['xmax'] = xmlparamters['c1ev']

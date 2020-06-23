@@ -21,7 +21,6 @@ class Template:
         """
 
         self.options = self.read_options(custom_template_file)
-        self.options = correct_keyvalue_quotes(self.options.copy())
 
     def read_options(self, template_file):
         """ Read template options.
@@ -47,6 +46,8 @@ class Template:
 
                     # Add key and value to the dictionary
                     options[str(key)] = value
+
+        options = self.correct_keyvalue_quotes(options)
 
         return options
 
@@ -123,19 +124,25 @@ class Template:
             platform = self.options['ssaraopt.platform']
             relativeOrbit = self.options['ssaraopt.relativeOrbit']
             ssaraopt = '--platform={} --relativeOrbit={}'.format(platform, relativeOrbit)
+            if 'ssaraopt.collectionName' in self.options.keys():
+                collectionName = self.options['ssaraopt.collectionName']
+                ssaraopt += ' --collectionName={}'.format(collectionName)
+            if 'ssaraopt.beamMode' in self.options.keys():
+                beamMode = self.options['ssaraopt.beamMode']
+                ssaraopt += ' --beamMode={}'.format(beamMode)
             if 'ssaraopt.frame' in self.options.keys():
                 frame = self.options['ssaraopt.frame']
                 ssaraopt += ' --frame={}'.format(frame)
             if 'ssaraopt.startDate' in self.options:
                 startDate = self.options['ssaraopt.startDate']
-                ssaraopt += ' -s={}'.format(startDate)
+                ssaraopt += ' --start={}'.format(startDate)
             if 'ssaraopt.endDate' in self.options:
                 endDate = self.options['ssaraopt.endDate']
-                ssaraopt += ' -e={}'.format(endDate)
+                ssaraopt += ' --end={}'.format(endDate)
             if 'ssaraopt.parallel' in self.options:
                 parallel = self.options['ssaraopt.parallel']
             else:
-                 parallel = 30
+                 parallel = 24
             ssaraopt += ' --parallel={}'.format(parallel)
 
             #this was in Josh's code (above yje ssaraopt assignment) but unclear  what it does
@@ -143,36 +150,37 @@ class Template:
 
         return ssaraopt
 
-def correct_keyvalue_quotes(options_in):
-         """ quote-independent reformatting of sentinel.subswath key-value:
-                 1 2 ---> '1 2'
-                 1  ---> 1
-                '1' ---> 1
-                -1 0.15 -91.6 -90.9 ---> '-1 0.15 -91.6 -90.9'
-         """
-         for item in ['topsStack.subswath', 'topsStack.boundingBox']:
-             if item in options_in.keys():
-                 value_orig = options_in[item]
-                 value_new = check_correct_quotes(value_orig)
-                 options_in[item] = value_new
-                 print(value_orig + '-->' + value_new)
-         return options_in
+    def correct_keyvalue_quotes(self, options_in):
+        """ quote-independent reformatting of sentinel.subswath key-value:
+             1 2 ---> '1 2'
+             1  ---> 1
+            '1' ---> 1
+            -1 0.15 -91.6 -90.9 ---> '-1 0.15 -91.6 -90.9'
+        """
+        for item in ['topsStack.subswath', 'topsStack.boundingBox']:
+            if item in options_in.keys():
+                value_orig = options_in[item]
+                value_new = self.check_correct_quotes(value_orig)
+                options_in[item] = value_new
+                print(value_orig + '-->' + value_new)
+        return options_in
 
 
-def check_correct_quotes(string):
-         """ checks weather quotes are as required and corrects/replaces if needed
-         """
+    def check_correct_quotes(self, string):
+        """ checks weather quotes are as required and corrects/replaces if needed
+        """
 
-         if string[0:1] == '\'':
+        if string[0:1] == '\'':
             num_item = string.split(' ')
             if len(num_item) == 1:
                 out_string = string[1:2]
             else:
                 out_string = string
-         else:
+        else:
             num_item = string.split(' ')
             if len(num_item) >= 2:
                 out_string = '\'' + string + '\''
             else:
                 out_string = string
-         return out_string
+
+        return out_string

@@ -11,7 +11,7 @@ from minsar.objects.rsmas_logging import RsmasLogger, loglevel
 from minsar.objects import message_rsmas
 from minsar.utils import process_utilities as putils
 from minsar.objects.auto_defaults import PathFind
-import minsar.job_submission as js
+from minsar.job_submission import JOB_SUBMIT
 
 pathObj = PathFind()
 inps = None
@@ -21,18 +21,18 @@ def main(iargs=None):
 
     inps = putils.cmd_line_parse(iargs, script='download_rsmas')
 
-    config = putils.get_config_defaults(config_file='job_defaults.cfg')
-
     if not iargs is None:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+        input_arguments = iargs
     else:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+        input_arguments = sys.argv[1::]
+
+    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
 
     logfile_name = inps.work_dir + '/ssara_rsmas.log'
     logger = RsmasLogger(file_name=logfile_name)
 
-    if not inps.template['topsStack.slcDir'] is None:
-        inps.slc_dir = inps.template['topsStack.slcDir']
+    if not inps.template[inps.prefix + 'Stack.slcDir'] is None:
+        inps.slc_dir = inps.template[inps.prefix + 'Stack.slcDir']
     else:
         inps.slc_dir = os.path.join(inps.work_dir, 'SLC')
 
@@ -43,11 +43,11 @@ def main(iargs=None):
     if inps.submit_flag:
         job_file_name = 'download_ssara_rsmas'
         job_name = inps.custom_template_file.split(os.sep)[-1].split('.')[0]
-
-        if inps.wall_time == 'None':
-            inps.wall_time = config['download_rsmas']['walltime']
-
-        js.submit_script(job_name, job_file_name, sys.argv[:], inps.work_dir, inps.wall_time)
+        job_obj = JOB_SUBMIT(inps)
+        if '--submit' in input_arguments:
+            input_arguments.remove('--submit')
+        command = [os.path.abspath(__file__)] + input_arguments
+        job_obj.submit_script(job_name, job_file_name, command)
         sys.exit(0)
 
     if not os.path.isdir(project_slc_dir):
@@ -201,8 +201,14 @@ def get_ssara_kml_and_listing(slc_dir, ssaraopt):
 
 def add_polygon_to_ssaraopt(dataset_template, ssaraopt, delta_lat):
     """calculates intersectsWith polygon from bbox and replace frame in ssaraopt if give"""
-    #bbox_list = dataset_template['topsStack.boundingBox'][1:-1].split(' ')
-    bbox_list = dataset_template['topsStack.boundingBox'].split(' ')
+    
+    if not 'acquisition_mode' in dataset_template:
+        print('WARNING: "acquisition_mode" is not given --> default: tops   (available options: tops, stripmap)')
+        prefix = 'tops'
+    else:
+        prefix = dataset_template['acquisition_mode']
+
+    bbox_list = dataset_template[prefix + 'Stack.boundingBox'].split(' ')
 
     bbox_list[0] = bbox_list[0].replace("\'", '')   # this does ["'-8.75", '-7.8', '115.0', "115.7'"] (needed for run_operations.py, run_operations
     bbox_list[1] = bbox_list[1].replace("\'", '')   # -->       ['-8.75',  '-7.8', '115.0', '115.7']  (should be modified so that this is not needed)

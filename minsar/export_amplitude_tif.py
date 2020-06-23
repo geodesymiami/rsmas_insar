@@ -11,7 +11,6 @@ import glob
 from minsar.objects.auto_defaults import PathFind
 from minsar.utils.process_utilities import xmlread, cmd_line_parse
 from minsar.objects import message_rsmas
-import geocodeGdal as gg
 
 pathObj = PathFind()
 ########################################
@@ -35,9 +34,11 @@ def main(iargs=None):
         os.mkdir(pic_dir)
 
     if not iargs is None:
-        message_rsmas.log(pic_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+        input_arguments = iargs
     else:
-        message_rsmas.log(pic_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+        input_arguments = sys.argv[1::]
+
+    message_rsmas.log(pic_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
 
     os.chdir(slave_dir)
 
@@ -122,6 +123,7 @@ def geocode_file(inps):
     Geocodes the input file
     :param inps: input name space
     """
+    import geocodeGdal as gg
 
     inps.cropbox = [val for val in inps.cropbox.split()]
     if len(inps.cropbox) != 4:

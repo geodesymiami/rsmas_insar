@@ -1,0 +1,43 @@
+############## DOWNLOAD, GENERAL OPTIONS ##############
+processor               = isce
+cleanopt                = 0
+#ssaraopt            = --platform=ALOS-2 --beamMode=SM3 --r 89 --collection="WInSAR JAXA mpoland_1223"
+ssaraopt.platform       = ALOS-2
+ssaraopt.beamMode       = SM3
+ssaraopt.relativeOrbit  = 89
+ssaraopt.collectionName = "WInSAR JAXA mpoland_1223"
+ssaraopt.startDate      = 20141201
+ssaraopt.endDate        = 20150401
+
+demMethod               = ssara
+##################### ISCE OPTIONS ####################
+
+####### ISCE OPTIONS ##############################
+#DEM                = ~/development/rsmas_insar/data/testdata/roi_pac/KilaueaSM3T89F380Alos2A/DEMDIR/koae.dem
+topsStack.subswath       = 2
+topsStack.boundingBox    = 19.1 19.9 -155.8 -154.5                           # '-1 0.15 -91.6 -90.9'                           
+
+flattening         = orbit
+OrbitType          = HDR
+Rlooks_sim         = 4
+Rlooks_int         = 8
+Rlooks_unw         = 8
+unw_method         = treef
+unw_method         = snaphu
+#snap_conncomthresh = 60
+#Filt_method        = psfilt
+Filt_method        = psfilt_adapt_filt
+FilterStrength     = 0.5/4
+UnwrappedThreshold = 0.10
+maskingwith0height = TRUE
+synthoffsetopt     = 40
+ampmagFineopt      = 70/70/64/32
+pixel_ratio        = 1
+#tiltdegree         = 2
+cleanopt            = 1
+slcType             = CR4
+
+##################### MINTPY OPTIONS ###################
+mintpy.troposphericDelay.method    = no    # pyaps  #[pyaps / height_correlation / base_trop_cor / no], auto for pyaps
+mintpy.save.hdfEos5                = yes   #[yes / update / no], auto for no, save timeseries to UNAVCO InSAR Archive format
+

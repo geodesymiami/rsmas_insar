@@ -26,35 +26,29 @@ git clone https://github.com/geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
 
 git clone https://github.com/insarlab/MintPy.git sources/MintPy ;
+git clone https://github.com/isce-framework/isce2.git sources/isce2
 git clone https://github.com/geodesymiami/geodmod.git sources/geodmod ;
 git clone https://github.com/bakerunavco/SSARA.git 3rdparty/SSARA ;
 git clone https://github.com/yunjunz/pyaps3.git 3rdparty/PyAPS/pyaps3 ;
 git clone https://github.com/geodesymiami/MimtPy.git sources/MimtPy ;
 git clone https://github.com/TACC/launcher.git 3rdparty/launcher ;
 
-git clone https://github.com/isce-framework/isce2.git 3rdparty/isce2
-mkdir -p sources/isceStack
-cp -r 3rdparty/isce2/contrib/stack/topsStack sources/isceStack
-cp -r 3rdparty/isce2/contrib/stack/stripmapStack sources/isceStack
-rm -rf 3rdparty/isce2
 ########  Done with critical code.  ########
 
 # Install tippecanoe for insarmaps (need gcc 4.9.1 or younger):
-module load gcc/4.9.4
+#module load gcc/4.9.4
 git clone https://github.com/mapbox/tippecanoe.git 3rdparty/tippecanoe
 make -C 3rdparty/tippecanoe install PREFIX=3rdparty/tippecanoe
 ```
-* Install your python environment:
+* #Install your python environment:
 ```
 cd setup
-#cd ../3rdparty; ln -s /nethome/famelung/MINICONDA3_GOOD miniconda3; cd ..; 
-#../3rdparty/miniconda3/bin/conda env create -f ../docs/conda_env.yml; #works but creates minsar environment, not base
-rm -r ../3rdparty/miniconda3
-miniconda_version=Miniconda3-4.5.12-MacOSX-x86_64.sh
-miniconda_version=Miniconda3-4.5.12-Linux-x86_64.sh
-miniconda_version=Miniconda3-4.6.14-MacOSX-x86_64.sh
-miniconda_version=Miniconda3-4.6.14-Linux-x86_64.sh
-wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate #; if ($? != 0) exit; 
+rm -rf ../3rdparty/miniconda3
+miniconda_version=Miniconda3-py37_4.8.2-MacOSX-x86_64.sh
+miniconda_version=Miniconda3-py37_4.8.2-Linux-x86_64.sh
+miniconda_version=Miniconda3-latest-MacOSX-x86_64.sh
+miniconda_version=Miniconda3-latest-Linux-x86_64.sh
+wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate -O $miniconda_version #; if ($? != 0) exit; 
 chmod 755 $miniconda_version
 mkdir -p ../3rdparty
 ./$miniconda_version -b -p ../3rdparty/miniconda3
@@ -64,18 +58,25 @@ mkdir -p ../3rdparty
 ../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MintPy/docs/conda.txt
 ../3rdparty/miniconda3/bin/conda install --yes --file ../docs/conda.txt
 ../3rdparty/miniconda3/bin/pip install --upgrade pip
-../3rdparty/miniconda3/bin/pip install opencv-python
 ../3rdparty/miniconda3/bin/pip install geocoder
-#../3rdparty/miniconda3/bin/pip install git+https://github.com/matplotlib/basemap.git#egg=mpl_toolkits #needed for ARIA products
-../3rdparty/miniconda3/bin/conda install basemap python=3.7 --yes
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
 ```
-* Source the environment and create aux directories. Install credential files for data download:
+* #Source the environment and create aux directories. Install credential files for data download:
 ```
 source ~/accounts/platforms_defaults.bash;
 source environment.bash;
 mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 $RSMASINSAR_HOME/setup/install_credential_files.csh;
+```
+* #Adding HPC support for MintPy (parallel plotting and defaults to use dask Local Cluster) and uncommited isce fixes
+```
+cp -p ../minsar/additions/mintpy/smallbaselineApp_auto.cfg ../sources/MintPy/mintpy/defaults/
+cp -p ../minsar/additions/mintpy/plot_smallbaselineApp.sh ../sources/MintPy/sh/
+
+cp -p ../minsar/additions/isce/logging.conf ../3rdparty/miniconda3/lib/python3.*/site-packages/isce/defaults/logging/logging.conf
+#cp -p ../minsar/additions/isce/logging.conf ../3rdparty/miniconda3/pkgs/isce2*/lib/python3.*/site-packages/isce/defaults/logging/logging.conf
+cp -p ../minsar/additions/isce/prepRawCSK.py ../sources/isce2/contrib/stack/stripmapStack
+cp -p ../minsar/additions/isce/invertMisreg.py ../sources/isce2/contrib/stack/stripmapStack
 ```
 
 ### Orbits and aux files

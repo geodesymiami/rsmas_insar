@@ -197,6 +197,10 @@ Usage Examples:
     if opt_dict['asfResponseTimeout']: query_dict['asfResponseTimeout'] = opt_dict['asfResponseTimeout']
 
 
+    ### FA: remove .bulk_download_cookiejar.txt ###
+    if os.path.exists('.bulk_download_cookiejar.txt'):
+       os.remove('.bulk_download_cookiejar.txt')
+
     ### QUERY THE APIs AND GET THE JSON RESULTS ###
     params = urlencode(query_dict)
     ssara_url = "https://web-services.unavco.org/brokered/ssara/api/sar/search?%s" % params
@@ -525,7 +529,7 @@ def asf_dl(d, opt_dict):
     global asf_urs4
     asf_urs4 = { 'url': 'https://urs.earthdata.nasa.gov/oauth/authorize',
             'client': 'BO_n7nTIlMljdvU6kRRB3g',
-            'redir': 'https://vertex-retired.daac.asf.alaska.edu/services/urs4_token_request'}
+            'redir': 'https://auth.asf.alaska.edu/login'}
 
     # Make sure we can write it our current directory
     if os.access(os.getcwd(), os.W_OK) is False:

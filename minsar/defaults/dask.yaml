@@ -1,0 +1,61 @@
+# To test different dask configurations copy one of the blocks below
+# and give it a new name (comet --> comet-test), before changing any
+# of the parameter values. Then specify the name of the configuration
+# block to use in the smallbaselineApp.cfg file.
+#
+# Anything below the ----------------- DO NOT CHANGE -----------------
+# notifier should not be modified during testing unless Dask is not
+# running properly.
+
+jobqueue:
+  #################### Configuration for Comet ####################
+  comet:
+    name: mintpy
+    project: TG-EAR180014
+    queue: compute
+
+    cores: 24                       # number of compute cores to use per job (should be number of cores on on 1 node)
+    memory: 25GB                    # amount of memory to be used per job (should be memory size of 1 node)
+    processes: 1                    # number of processes to run per core (should be small)
+    job-extra: ['-N 1']             # number of nodes to use
+    walltime: '00:30:00'            # MUST BE IN "hh:mm:ss" FORMAT
+
+    # ----------------- DO NOT CHANGE ----------------- #
+    interface: ib0                  # networking interface (DO NOT CHANGE)
+    death-timeout: 60
+    local-directory: $SCRATCHDIR
+    shebang: "#!/usr/bin/env bash"
+    log-directory: null
+
+    extra: []
+    env-extra: []
+    ncpus: null
+    job-cpu: null
+    job-mem: null
+
+
+  #################### Configuration for Stampede ####################
+  stampede:
+    name: mintpy
+    project: TG-EAR180014
+    queue: skx-normal
+
+    cores: 5                        # number of compute cores to use per job (should be number of cores on on 1 node)
+    memory: 25GB                    # amount of memory to be used per job (should be memory size of 1 node)
+    processes: 15                   # number of processes to run per core (should be small)
+    job-extra: ['-N 1']            # number of nodes to use
+    walltime: '00:30:00'            # MUST BE IN "hh:mm:ss" FORMAT
+
+     # ----------------- DO NOT CHANGE ----------------- #
+    interface: ib0                  # networking interface (almost always ib0)
+    death-timeout: 60
+    local-directory: $SCRATCHDIR
+    shebang: "#!/usr/bin/env bash"
+    header-skip: ['--mem']          # stampede doesn't use the '--mem' directive, but dask requires it
+    log-directory: null             # location to store output files from jobs
+    
+    extra: []
+    env-extra: []
+    ncpus: null
+    job-cpu: null
+    job-mem: null

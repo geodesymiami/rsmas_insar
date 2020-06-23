@@ -14,11 +14,12 @@ import sys
 import shutil
 import time
 import argparse
+import subprocess
 import minsar
 import minsar.workflow
 from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
-import minsar.job_submission as js
+from minsar.job_submission import JOB_SUBMIT
 from minsar.objects.auto_defaults import PathFind
 
 pathObj = PathFind()
@@ -31,7 +32,7 @@ EXAMPLE = """example:
       process_rsmas.py  -h / --help                       # help
       process_rsmas.py  -H                                # print    default template options
       # Run with --start/stop/step options
-      process_rsmas.py GalapagosSenDT128.template --step  download        # run the step 'download' only
+      process_rsmas.py GalapagosSenDT128.template --dostep  download        # run the step 'download' only
       process_rsmas.py GalapagosSenDT128.template --start download        # start from the step 'download'
       process_rsmas.py GalapagosSenDT128.template --stop  ifgrams         # end after step 'interferogram'
     """
@@ -41,8 +42,8 @@ def process_rsmas_cmd_line_parse(iargs=None):
     """ Creates command line argument parser object. """
 
     parser = argparse.ArgumentParser(description='Process Rsmas Routine InSAR Time Series Analysis',
-                                     formatter_class=argparse.RawTextHelpFormatter,
-                                     epilog=EXAMPLE)
+                                     epilog=EXAMPLE,
+                                     formatter_class=argparse.RawTextHelpFormatter)
 
     parser = putils.add_common_parser(parser)
     parser = putils.add_process_rsmas(parser)
@@ -74,8 +75,9 @@ def main(iargs=None):
     # Submit job
     #########################################
     if inps.submit_flag:
+        job_obj = JOB_SUBMIT(inps)
         job_file_name = 'process_rsmas'
-        job = js.submit_script(inps.project_name, job_file_name, sys.argv[:], inps.work_dir)
+        job = job_obj.submit_script(inps.project_name, job_file_name, sys.argv[:])
         # run_operations.py needs this print statement for now.
         # This is not for debugging purposes.
         # DO NOT REMOVE.
@@ -162,7 +164,7 @@ class RsmasInsar:
         else:
             self.dem_flag = '--ssara'
 
-        if inps.template['processingMethod'] == 'smallbaseline':
+        if inps.template['processingMethod'] in ['smallbaseline', None, 'None']:
             self.method = 'mintpy'
         else:
             self.method = 'minopy'
@@ -180,6 +182,7 @@ class RsmasInsar:
                     shutil.rmtree(os.path.join(self.work_dir, directory))
 
         minsar.download_rsmas.main([self.custom_template_file])
+
         return
 
     def run_download_dem(self):
@@ -197,6 +200,11 @@ class RsmasInsar:
             minsar.create_runfiles.main([self.custom_template_file])
         except:
             print('Skip creating run files ...')
+
+        command = 'tropo_pyaps3.py --date-list SAFE_files.txt --dir $WEATHER_DIR >> /dev/null'
+        message_rsmas.log(os.getcwd(), command)
+        status = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+
         minsar.execute_runfiles.main([self.custom_template_file])
         return
 
@@ -204,28 +212,22 @@ class RsmasInsar:
         """ Process smallbaseline using MintPy or non-linear inversion using MiNoPy and email results
         """
         if self.method == 'mintpy':
-            minsar.smallbaseline_wrapper.main([self.custom_template_file, '--email'])
+            minsar.smallbaseline_wrapper.main([self.custom_template_file, '--email', '--submit'])
         else:
             import minsar.minopy_wrapper as minopy_wrapper
-            minopy_wrapper.main([self.custom_template_file])
+            minopy_wrapper.main([self.custom_template_file, '--submit'])
         return
 
     def run_insarmaps(self):
         """ prepare outputs for insarmaps website.
         """
-        if self.insarmaps_flag:
-            minsar.ingest_insarmaps.main([self.custom_template_file, '--email'])
-        else:
-            print('insarmaps step is off (insarmaps_flag in template is False)')
+        minsar.ingest_insarmaps.main([self.custom_template_file, '--email', '--submit'])
         return
 
     def run_image_products(self):
         """ create ortho/geo-rectified products.
         """
-        if self.image_products_flag == 'True':
-            minsar.export_ortho_geo.main([self.custom_template_file])
-        else:
-            print('imageProducts step is off (image_products_flag in template is False)')
+        minsar.export_ortho_geo.main([self.custom_template_file, '--submit'])
         return
 
     def run(self, steps=step_list):
