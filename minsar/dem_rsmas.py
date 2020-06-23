@@ -74,7 +74,7 @@ def main(iargs=None):
         call_ssara_dem(inps, dem_dir)
 
         print('You have finished SSARA!')
-        cmd = 'fixImageXml.py -f -i {}'.format(glob.glob(dem_dir + '/demLat_*.wgs84')[0])
+        cmd = 'fixImageXml.py -f -i {}'.format(glob.glob(dem_dir + '/dem*.wgs84')[0])
         os.system(cmd)
 
     elif inps.flag_boundingBox:
