@@ -106,11 +106,13 @@ class JOB_SUBMIT:
     def __init__(self, inps):
         for k in inps.__dict__.keys():
             setattr(self, k, inps.__dict__[k])
-
+        
         if 'prefix' in inps and inps.prefix == 'stripmap':
             self.stack_path = os.path.join(os.getenv('ISCE_STACK'), 'stripmapStack')
+            self.prefix = 'stripmap'
         else:
             self.stack_path = os.path.join(os.getenv('ISCE_STACK'), 'topsStack')
+            self.prefix = 'tops'
 
         self.platform_name = os.getenv("PLATFORM_NAME")
         self.scheduler = os.getenv("JOBSCHEDULER")
@@ -209,12 +211,9 @@ class JOB_SUBMIT:
                 batch_file_name = batch_file + '_0'
                 job_name = os.path.basename(batch_file_name)
 
-                #job_file_lines = self.get_job_file_lines(job_name, batch_file_name, number_of_tasks=len(tasks),
-                #                                         number_of_nodes=number_of_nodes, work_dir=self.out_dir)
                 job_file_lines = self.get_job_file_lines(batch_file, batch_file, number_of_tasks=len(tasks),
                                                          number_of_nodes=number_of_nodes, work_dir=self.out_dir)
 
-                #self.job_files.append(self.add_tasks_to_job_file_lines(job_file_lines, tasks, batch_file=batch_file_name))
                 self.job_files.append(self.add_tasks_to_job_file_lines(job_file_lines, tasks, batch_file=batch_file))
 
             elif 'multitask_singleNode' in self.submission_scheme:
@@ -227,11 +226,16 @@ class JOB_SUBMIT:
 
         else:
             print('\nWorking on a single machine ...\n')
-
+            system_path = os.getenv('PATH')
             with open(batch_file, 'r') as f:
                 command_lines = f.readlines()
+                if  self.prefix == 'stripmap':
+                    cmd = 'export PATH=$ISCE_STACK/stripmapStack:$PATH; '
+                else:
+                    cmd = 'export PATH=$ISCE_STACK/topsStack:$PATH; '
                 for command_line in command_lines:
-                    os.system(command_line)
+                    os.system(cmd + command_line)
+                    os.environ['PATH'] = system_path
 
             return False
 
