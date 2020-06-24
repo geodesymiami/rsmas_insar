@@ -321,6 +321,13 @@ def create_default_template(temp_inps):
     # build ssaraopt string from ssara options
     custom_tempObj.options.update(pathObj.correct_for_ssara_date_format(custom_tempObj.options))
     inps.ssaraopt = custom_tempObj.generate_ssaraopt_string()
+    
+    # Add topsStack or stripmapStack to PYTHONPATH:
+
+    if 'stripmap' in inps.prefix:
+        sys.path.append(os.path.join(os.getenv('ISCE_STACK'), 'stripmapStack'))
+    else:
+        sys.path.append(os.path.join(os.getenv('ISCE_STACK'), 'topsStack'))
 
     return inps
 
