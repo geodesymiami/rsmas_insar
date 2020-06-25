@@ -767,7 +767,9 @@ def xmlread(filename):
 
 def get_number_of_bursts(inps_dict):
     """ calculates the number of bursts based on boundingBox and returns an adjusting factor for walltimes """
-
+    
+    sys.path.append(os.path.join(os.getenv('ISCE_STACK'), 'topsStack'))
+    
     from stackSentinel import cmdLineParse as stack_cmd, get_dates
 
     try:
