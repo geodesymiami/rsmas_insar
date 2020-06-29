@@ -70,6 +70,8 @@ def main(iargs=None):
             unpackObj = Sensors(raw_image_dir, slc_dir, remove_file='False',
                                 multiple_raw_frame=inps.template['multiple_raw_frame'])
             unpack_run_file = unpackObj.start()
+            unpackObj.close()
+
             job_status = job_obj.submit_batch_jobs(batch_file=unpack_run_file)
             if not job_status:
                 raise Exception('ERROR: Unpacking was failed')

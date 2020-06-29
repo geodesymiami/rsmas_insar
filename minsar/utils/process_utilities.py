@@ -767,9 +767,10 @@ def xmlread(filename):
 
 def get_number_of_bursts(inps_dict):
     """ calculates the number of bursts based on boundingBox and returns an adjusting factor for walltimes """
-    
+
+    system_path = os.getenv('PATH')
     sys.path.append(os.path.join(os.getenv('ISCE_STACK'), 'topsStack'))
-    
+
     from stackSentinel import cmdLineParse as stack_cmd, get_dates
 
     try:
@@ -807,18 +808,18 @@ def get_number_of_bursts(inps_dict):
             obj.polarization = inps.polarization
             if inps.bbox is not None:
                 obj.regionOfInterest = [float(x) for x in inps.bbox.split()]
+
+            os.environ['PATH'] = system_path
             try:
                 obj.parse()
                 number_of_bursts = number_of_bursts + obj.product.numberOfBursts
             except Exception as e:
                 print(e)
-
     except:
         number_of_bursts = 1
     print('number of bursts: {}'.format(number_of_bursts))
 
     return number_of_bursts
-
 
 ############################################################################
 
