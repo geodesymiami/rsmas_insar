@@ -516,10 +516,12 @@ def extract_walltime_from_job_file(file):
                 walltime = line.split('-W')[1]
                 walltime = walltime.strip()
                 return walltime
-
+            if '#SBATCH -t' in line:
+                walltime = line.split('-t')[1]
+                walltime = walltime.strip()
+                return walltime
 
 ##########################################################################
-
 
 def extract_memory_from_job_file(file):
     """ Extracts the memory from an LSF (BSUB) job file """
@@ -531,9 +533,22 @@ def extract_memory_from_job_file(file):
                 memory = memory.split(']')[0]
                 return memory
 
+##########################################################################
+ 
+def extract_step_name_from_stdout_name(job_name):
+    """ Extracts the step name from a stdout name """
+    job_name = os.path.basename(job_name).split('.o')[0]
+    step_name = job_name.replace('run_','')
+    if step_name.split('_')[-1].isdigit():
+       step_name = '_'.join(step_name.split('_')[:-1])
+    if step_name.split('_')[-1].isdigit():
+       step_name = '_'.join(step_name.split('_')[:-1])
+    if step_name.split('_')[0].isdigit():
+       step_name = '_'.join(step_name.split('_')[1:])
+
+    return step_name
 
 ##########################################################################
-
 
 def get_line_before_last(file):
     """get the line before last from a file"""
@@ -898,9 +913,27 @@ def multiply_walltime(wall_time, factor):
 
     return new_wall_time
 
+##########################################################################
+
+def replace_walltime_in_job_file(file, new_wall_time):
+    """ replaces the walltime from a SLURM job file """
+    new_lines=[]
+    with open(file) as fr:
+        lines = fr.readlines()
+        for line in lines:
+            if '#SBATCH -t' in line:
+                wall_time = line.split('-t')[1]
+                wall_time = wall_time.strip()
+                line = line.replace(wall_time,new_wall_time)
+            new_lines.append(line)
+    fr.close()
+
+    with open(file, 'w') as job_file:
+            job_file.writelines(new_lines)
+
+    return
 
 ############################################################################
-
 
 def sum_time(time_str_list):
     """ sum time in D-HH:MM or D-HH:MM:SS format """

@@ -33,6 +33,7 @@ import numpy as np
 from minsar.objects import message_rsmas
 import warnings
 import minsar.utils.process_utilities as putils
+from datetime import datetime
 import re
 
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -349,6 +350,7 @@ class JOB_SUBMIT:
         time.sleep(5)
 
         if self.scheduler == 'SLURM':
+            rerun_job_files=[]
             job_status_file = os.path.join(work_dir, 'job_status')
             for job_number, job_file_name in zip(job_numbers, job_files):
                 job_stat = 'wait'
@@ -369,13 +371,25 @@ class JOB_SUBMIT:
                         job_stat = 'complete'
                     elif 'TIMEOUT' in status[2]:
                         job_stat = 'timeout'
-                        # need to adjust wall time and rerun job (can the new job number be added to list ?)
-                        #wall_time = putils.extract_walltime_from_job_file(job_file_name)
-                        #new_wall_time = multiply_walltime(wall_time, factor=2)
-                        raise RuntimeError('Error: {} job timed out with Error'.format(job_file_name))
+                        rerun_job_files.append(job_file_name)
                     else:
                         job_stat = 'failed'
                         raise RuntimeError('Error: {} job was terminated with Error'.format(job_file_name))
+
+            if len(rerun_job_files) > 0:
+               for job_file_name in rerun_job_files:
+                   wall_time = putils.extract_walltime_from_job_file(job_file_name)
+                   new_wall_time = putils.multiply_walltime(wall_time, factor=1.2)
+                   putils.replace_walltime_in_job_file(job_file_name, new_wall_time)
+
+                   dateStr=datetime.strftime(datetime.now(), '%Y%m%d:%H-%M')
+                   string = dateStr + ': re-running: ' + os.path.basename(job_file_name) + ': ' + wall_time + ' --> ' + new_wall_time
+
+                   with open(self.work_dir + '/run_files/rerun.log', 'a') as rerun:
+                      rerun.writelines(string)
+
+               self.submit_and_check_job_status(rerun_job_files, work_dir=self.work_dir)
+
         else:
 
             for out, job_file_name in zip(jobs_out, job_files):
