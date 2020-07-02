@@ -1,0 +1,8 @@
+# The purpose of this log file is to explain why job defaults were changed, to make sure that we don't go back unintentionally to 
+# old settings
+##
+# Changes to walltime needed to avoid timing out
+run_7_pairs_misreg                00:00:35 --> 00:00:45    May 14 2020   timeouts for JacobshavenSenAT90
+run_7_pairs_misreg                00:00:45 --> 00:00:50    May 14 2020   timeouts for JacobshavenSenDT127
+run_7_pairs_misreg                00:00:50 --> 00:00:55    May 19 2020   timeouts for HanumangarhSenDT34 (run_7_*_0.job)
+run_12_merge_master_slave_slc_0   00:02:00 --> 00:02:45    May 27 2010   timeout for Longonot (61 patches)  (need t=c+s*#patch)
