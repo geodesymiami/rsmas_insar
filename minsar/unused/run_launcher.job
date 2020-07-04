@@ -3,12 +3,12 @@
 #SBATCH -A TG-EAR180014
 #SBATCH --mail-user=famelung@rsmas.miami.edu
 #SBATCH --mail-type=fail
-#SBATCH -N 2
-#SBATCH -n 96
+#SBATCH -N 4
+#SBATCH -n 192
 #SBATCH -o run_all_%J.o
 #SBATCH -e run_all_%J.e
 #SBATCH -p skx-dev
-#SBATCH -t 00:30:00
+#SBATCH -t 01:59:00
 
 declare -a run_files num_threads
 run_files=( run_01_unpack_topo_master run_02_unpack_slave_slc run_03_average_baseline \
@@ -36,7 +36,8 @@ for i in ${!run_files[@]}; do
  >&2 echo elapsed time [sec]: ${run_files[$i]} "$(($SECONDS-$prior))"
 done
 
+sec_total=$SECONDS
 ((sec=SECONDS%60, SECONDS/=60, min=SECONDS%60, hrs=SECONDS/60))
 timestamp=$(printf "%d:%02d:%02d" $hrs $min $sec)
 
->&2 echo Total elapsed time [sec]: $SECONDS  $timestamp
+>&2 echo Total elapsed time [sec, HH:MM:SS]: $sec_total  $timestamp
