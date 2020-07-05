@@ -466,25 +466,34 @@ class JOB_SUBMIT:
         else:
             step_name = job_name
 
+        if self.prefix == 'tops':
+            if self.num_bursts is None:
+                self.num_bursts = putils.get_number_of_bursts(self)
+        else:
+            self.num_bursts = 1
+
         if self.memory in [None, 'None']:
             if step_name in config:
-                self.default_memory = config[step_name]['memory']
+                c_memory = config[step_name]['c_memory']
+                s_memory = config[step_name]['s_memory']
             else:
-                self.default_memory = config['default']['memory']
+                c_memory = config['default']['c_memory']
+                s_memory = config['default']['s_memory']
+
+            self.default_memory = putils.scale_memory(self.num_bursts, c_memory, s_memory)
         else:
             self.default_memory = self.memory
 
         if self.wall_time in [None, 'None']:
             if step_name in config:
-                self.default_wall_time = config[step_name]['walltime']
-                if config[step_name]['adjust'] == 'True':
-                    if self.num_bursts is None:
-                        self.num_bursts = putils.get_number_of_bursts(self)
-            else:
-                self.default_wall_time = config['default']['walltime']
+                c_walltime = config[step_name]['c_walltime']
+                s_walltime = config[step_name]['s_walltime']
 
-            self.default_wall_time = putils.walltime_adjust(self.num_bursts, self.default_wall_time, self.scheduler,
-                                                            adjust=config[step_name]['adjust'])
+            else:
+                c_walltime = config['default']['c_walltime']
+                s_walltime = config['default']['s_walltime']
+
+            self.default_wall_time = putils.scale_walltime(self.num_bursts, c_walltime, s_walltime, self.scheduler)
         else:
             self.default_wall_time = self.wall_time
 
