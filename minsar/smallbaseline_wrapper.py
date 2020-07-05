@@ -44,7 +44,6 @@ def main(iargs=None):
             input_arguments.remove('--submit')
         command = [os.path.abspath(__file__)] + input_arguments
         job_obj.submit_script(job_name, job_file_name, command)
-        sys.exit(0)
 
     os.chdir(inps.work_dir)
 
