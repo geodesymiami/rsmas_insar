@@ -221,13 +221,16 @@ class RsmasInsar:
     def run_insarmaps(self):
         """ prepare outputs for insarmaps website.
         """
-        minsar.ingest_insarmaps.main([self.custom_template_file, '--email', '--submit'])
+        if self.template['insarmaps_flag'] in ['True', True]:
+            minsar.ingest_insarmaps.main([self.custom_template_file, '--email', '--submit'])
         return
 
     def run_image_products(self):
         """ create ortho/geo-rectified products.
         """
-        minsar.export_ortho_geo.main([self.custom_template_file, '--submit'])
+        if self.template['image_products_flag'] in ['True', True]:
+            # export_ortho_geo.py has another job submission inside and we cannot use --submit here:
+            minsar.export_ortho_geo.main([self.custom_template_file])
         return
 
     def run(self, steps=step_list):
