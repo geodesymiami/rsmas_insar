@@ -38,7 +38,7 @@ class CreateRun:
             if item in ['useGPU', 'rmFilter', 'nofocus', 'zero', 'applyWaterMask']:
                 if inps.Stack_template[item] in ['True', True]:
                     self.command_options.append('--' + item)
-            elif item in ['bbox']:
+            elif item in ['bbox', 'swath_num']:
                 self.command_options.append('--' + item)
                 self.command_options.append('"{}"'.format(inps.Stack_template[item]))
             elif inps.Stack_template[item]:
