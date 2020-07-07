@@ -1,11 +1,11 @@
 ## Benchmarking
 
 ### 1. Running as one job
-* # Copy the job file into your project directory:
+*#Copy the job file into your project directory:
 ```
 cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
 ```
-* #Select number of nodes, walltime and run in project directory
+*#Select number of nodes, walltime and run in project directory
 
 ```
 nodes=2
