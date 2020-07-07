@@ -30,8 +30,8 @@ cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
 
 ```
 run_step=13
-nodes=8
-partition=skx-normal
+nodes=2
+partition=skx-dev
 time=00:10:00
 
 ntasks=48
