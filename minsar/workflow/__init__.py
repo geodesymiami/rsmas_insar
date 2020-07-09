@@ -29,6 +29,7 @@ __all__ = [
     'export_amplitude_tif',
     'export_ortho_geo',
     'ifgramStack_to_ifgram_and_coherence',
+    'upload_data_products',
     'ingest_insarmaps',
     'job_submission',
     'smallbaseline_wrapper',
