@@ -33,6 +33,7 @@ import numpy as np
 from minsar.objects import message_rsmas
 import warnings
 import minsar.utils.process_utilities as putils
+from datetime import datetime
 import re
 
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -106,11 +107,13 @@ class JOB_SUBMIT:
     def __init__(self, inps):
         for k in inps.__dict__.keys():
             setattr(self, k, inps.__dict__[k])
-
+        
         if 'prefix' in inps and inps.prefix == 'stripmap':
             self.stack_path = os.path.join(os.getenv('ISCE_STACK'), 'stripmapStack')
+            self.prefix = 'stripmap'
         else:
             self.stack_path = os.path.join(os.getenv('ISCE_STACK'), 'topsStack')
+            self.prefix = 'tops'
 
         self.platform_name = os.getenv("PLATFORM_NAME")
         self.scheduler = os.getenv("JOBSCHEDULER")
@@ -209,12 +212,9 @@ class JOB_SUBMIT:
                 batch_file_name = batch_file + '_0'
                 job_name = os.path.basename(batch_file_name)
 
-                #job_file_lines = self.get_job_file_lines(job_name, batch_file_name, number_of_tasks=len(tasks),
-                #                                         number_of_nodes=number_of_nodes, work_dir=self.out_dir)
                 job_file_lines = self.get_job_file_lines(batch_file, batch_file, number_of_tasks=len(tasks),
                                                          number_of_nodes=number_of_nodes, work_dir=self.out_dir)
 
-                #self.job_files.append(self.add_tasks_to_job_file_lines(job_file_lines, tasks, batch_file=batch_file_name))
                 self.job_files.append(self.add_tasks_to_job_file_lines(job_file_lines, tasks, batch_file=batch_file))
 
             elif 'multitask_singleNode' in self.submission_scheme:
@@ -227,11 +227,16 @@ class JOB_SUBMIT:
 
         else:
             print('\nWorking on a single machine ...\n')
-
+            system_path = os.getenv('PATH')
             with open(batch_file, 'r') as f:
                 command_lines = f.readlines()
+                if  self.prefix == 'stripmap':
+                    cmd = 'export PATH=$ISCE_STACK/stripmapStack:$PATH; '
+                else:
+                    cmd = 'export PATH=$ISCE_STACK/topsStack:$PATH; '
                 for command_line in command_lines:
-                    os.system(command_line)
+                    os.system(cmd + command_line)
+                    os.environ['PATH'] = system_path
 
             return False
 
@@ -345,6 +350,7 @@ class JOB_SUBMIT:
         time.sleep(5)
 
         if self.scheduler == 'SLURM':
+            rerun_job_files=[]
             job_status_file = os.path.join(work_dir, 'job_status')
             for job_number, job_file_name in zip(job_numbers, job_files):
                 job_stat = 'wait'
@@ -365,13 +371,25 @@ class JOB_SUBMIT:
                         job_stat = 'complete'
                     elif 'TIMEOUT' in status[2]:
                         job_stat = 'timeout'
-                        # need to adjust wall time and rerun job (can the new job number be added to list ?)
-                        #wall_time = putils.extract_walltime_from_job_file(job_file_name)
-                        #new_wall_time = multiply_walltime(wall_time, factor=2)
-                        raise RuntimeError('Error: {} job timed out with Error'.format(job_file_name))
+                        rerun_job_files.append(job_file_name)
                     else:
                         job_stat = 'failed'
                         raise RuntimeError('Error: {} job was terminated with Error'.format(job_file_name))
+
+            if len(rerun_job_files) > 0:
+               for job_file_name in rerun_job_files:
+                   wall_time = putils.extract_walltime_from_job_file(job_file_name)
+                   new_wall_time = putils.multiply_walltime(wall_time, factor=1.2)
+                   putils.replace_walltime_in_job_file(job_file_name, new_wall_time)
+
+                   dateStr=datetime.strftime(datetime.now(), '%Y%m%d:%H-%M')
+                   string = dateStr + ': re-running: ' + os.path.basename(job_file_name) + ': ' + wall_time + ' --> ' + new_wall_time
+
+                   with open(self.work_dir + '/run_files/rerun.log', 'a') as rerun:
+                      rerun.writelines(string)
+
+               self.submit_and_check_job_status(rerun_job_files, work_dir=self.work_dir)
+
         else:
 
             for out, job_file_name in zip(jobs_out, job_files):
@@ -448,25 +466,34 @@ class JOB_SUBMIT:
         else:
             step_name = job_name
 
+        if self.prefix == 'tops':
+            if self.num_bursts is None:
+                self.num_bursts = putils.get_number_of_bursts(self)
+        else:
+            self.num_bursts = 1
+
         if self.memory in [None, 'None']:
             if step_name in config:
-                self.default_memory = config[step_name]['memory']
+                c_memory = config[step_name]['c_memory']
+                s_memory = config[step_name]['s_memory']
             else:
-                self.default_memory = config['default']['memory']
+                c_memory = config['default']['c_memory']
+                s_memory = config['default']['s_memory']
+
+            self.default_memory = putils.scale_memory(self.num_bursts, c_memory, s_memory)
         else:
             self.default_memory = self.memory
 
         if self.wall_time in [None, 'None']:
             if step_name in config:
-                self.default_wall_time = config[step_name]['walltime']
-                if config[step_name]['adjust'] == 'True':
-                    if self.num_bursts is None:
-                        self.num_bursts = putils.get_number_of_bursts(self)
-            else:
-                self.default_wall_time = config['default']['walltime']
+                c_walltime = config[step_name]['c_walltime']
+                s_walltime = config[step_name]['s_walltime']
 
-            self.default_wall_time = putils.walltime_adjust(self.num_bursts, self.default_wall_time, self.scheduler,
-                                                            adjust=config[step_name]['adjust'])
+            else:
+                c_walltime = config['default']['c_walltime']
+                s_walltime = config['default']['s_walltime']
+
+            self.default_wall_time = putils.scale_walltime(self.num_bursts, c_walltime, s_walltime, self.scheduler)
         else:
             self.default_wall_time = self.wall_time
 

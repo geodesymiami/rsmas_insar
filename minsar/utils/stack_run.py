@@ -38,7 +38,7 @@ class CreateRun:
             if item in ['useGPU', 'rmFilter', 'nofocus', 'zero', 'applyWaterMask']:
                 if inps.Stack_template[item] in ['True', True]:
                     self.command_options.append('--' + item)
-            elif item in ['bbox']:
+            elif item in ['bbox', 'swath_num']:
                 self.command_options.append('--' + item)
                 self.command_options.append('"{}"'.format(inps.Stack_template[item]))
             elif inps.Stack_template[item]:
@@ -53,17 +53,18 @@ class CreateRun:
         return
 
     def run_stack_workflow(self):        # This part is for isce stack run_files
-       
+               
         if self.prefix == 'tops':
             message_rsmas.log(self.work_dir, 'stackSentinel.py' + ' ' + ' '.join(self.command_options))
             out_file_name = 'out_stackSentinel'
-            cmd = 'exporttops; stackSentinel.py' + ' ' + ' '.join(self.command_options)
+            cmd = 'export PATH=$ISCE_STACK/topsStack:$PATH; stackSentinel.py' + ' ' + ' '.join(self.command_options)
 
         else:
             message_rsmas.log(self.work_dir, 'stackStripMap.py' + ' ' + ' '.join(self.command_options))
             out_file_name = 'out_stackStripMap'
-            cmd = 'exportstripmap; stackStripMap.py' + ' ' + ' '.join(self.command_options)
-            
+            cmd = 'export PATH=$ISCE_STACK/stripmapStack:$PATH; stackStripMap.py' + ' ' + ' '.join(self.command_options)
+        
+        system_path = os.getenv('PATH')
 
         try:
             with open(out_file_name + '.o', 'w') as f:
@@ -74,5 +75,7 @@ class CreateRun:
                 with contextlib.redirect_stderr(g):
                     os.system(cmd)
 
+        os.environ['PATH'] = system_path
+        
         return
 

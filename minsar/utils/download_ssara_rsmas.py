@@ -231,6 +231,29 @@ def add_polygon_to_ssaraopt(dataset_template, ssaraopt, delta_lat):
 
     return ssaraopt
 
+def add_point_to_ssaraopt(dataset_template, ssaraopt):
+    """calculates intersectsWith polygon from bbox and replace frame in ssaraopt if give"""
+    
+    if not 'acquisition_mode' in dataset_template:
+        print('WARNING: "acquisition_mode" is not given --> default: tops   (available options: tops, stripmap)')
+        prefix = 'tops'
+    else:
+        prefix = dataset_template['acquisition_mode']
+
+    point = dataset_template['ssaraopt.intersectsWithPoint'].split(' ')
+    bbox_list = dataset_template[prefix + 'Stack.boundingBox'].split(' ')
+
+    point[0] = point[0].replace("\'", '')   # this does ["'-8.75", '-7.8', '115.0', "115.7'"] (needed for run_operations.py, run_operations
+    point[1] = point[1].replace("\'", '')   # -->       ['-8.75',  '-7.8', '115.0', '115.7']  (should be modified so that this is not needed)
+
+    point = '--intersectsWith=\'Point({:.2f} {:.2f})\''.format( float(point[0]), float(point[1]))
+
+    # add --point and remove --frame option
+    ssaraopt.insert(2, point)
+
+    ssaraopt = [x for x in ssaraopt if not x[0:7] == '--frame']
+
+    return ssaraopt
 
 if __name__ == "__main__":
     main()

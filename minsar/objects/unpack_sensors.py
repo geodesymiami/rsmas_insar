@@ -3,16 +3,19 @@
 
 import os
 import sys
-sys.path.append(os.path.join(os.getenv('ISCE_STACK'), 'stripmapStack'))
 import glob
 import argparse
-from uncompressFile import uncompressfile
 import xml.etree.ElementTree as etree
 import shutil
 
 
 class Sensors:
     def __init__(self, input_dir, output_dir, remove_file='False', multiple_raw_frame='False'):
+        self.system_path = os.getenv('PATH')
+        sys.path.append(os.path.join(os.getenv('ISCE_STACK'), 'stripmapStack'))
+        from uncompressFile import uncompressfile
+        self.uncompressfile = uncompressfile
+
         self.input_dir = input_dir
         self.output_dir = output_dir
         self.rmfile = remove_file
@@ -87,7 +90,7 @@ class Sensors:
 
             if os.path.isfile(in_file):
                 # unzip the file in the outfolder
-                successflag_unzip = uncompressfile(in_file, out_folder)
+                successflag_unzip = self.uncompressfile(in_file, out_folder)
 
                 # put failed files in a seperate directory
                 if not successflag_unzip:
@@ -294,3 +297,6 @@ class Sensors:
                 print(cmd)
                 f.write(cmd + '\n')
         return run_unPack
+    
+    def close(self):
+        os.environ['PATH'] = self.system_path

@@ -20,11 +20,9 @@ from pathlib import Path
 from natsort import natsorted
 import xml.etree.ElementTree as ET
 import shutil
-from mintpy.defaults.auto_path import autoPath
 from minsar.objects.dataset_template import Template
 from minsar.objects.auto_defaults import PathFind
 from isceobj.Sensor.TOPS.Sentinel1 import Sentinel1
-from minsar.job_submission import JOB_SUBMIT
 import time, datetime
 
 pathObj = PathFind()
@@ -136,7 +134,7 @@ def add_execute_runfiles(parser):
 
 def add_export_amplitude(parser):
     products = parser.add_argument_group('Options for exporting geo/ortho-rectified products')
-    products.add_argument('-f', '--file', dest='prod_list', type=str, help='Input SLC')
+    products.add_argument('-f', '--file', dest='input_file', type=str, help='Input SLC')
     products.add_argument('-l', '--lat', dest='lat_file', type=str,
                           default='lat.rdr.ml', help='latitude file in radar coordinate')
     products.add_argument('-L', '--lon', dest='lon_file', type=str,
@@ -221,7 +219,7 @@ def get_work_directory(work_dir, project_name):
     """ Sets the working directory under project name. """
 
     if not work_dir:
-        if autoPath and 'SCRATCHDIR' in os.environ and project_name:
+        if 'SCRATCHDIR' in os.environ and project_name:
             work_dir = os.getenv('SCRATCHDIR') + '/' + project_name
         else:
             work_dir = os.getcwd()
@@ -321,14 +319,7 @@ def create_default_template(temp_inps):
     # build ssaraopt string from ssara options
     custom_tempObj.options.update(pathObj.correct_for_ssara_date_format(custom_tempObj.options))
     inps.ssaraopt = custom_tempObj.generate_ssaraopt_string()
-
-    # Add topsStack or stripmapStack to PYTHONPATH:
-
-    if 'stripmap' in inps.prefix:
-        sys.path.append(os.path.join(os.getenv('ISCE_STACK'), 'stripmapStack'))
-    else:
-        sys.path.append(os.path.join(os.getenv('ISCE_STACK'), 'topsStack'))
-
+     
     return inps
 
 
@@ -379,14 +370,15 @@ def get_config_defaults(config_file='job_defaults.cfg'):
 
     if os.path.basename(config_file) in ['job_defaults.cfg']:
 
-        fields = ['walltime', 'adjust', 'memory', 'num_threads']
+        fields = ['c_walltime', 's_walltime', 'c_memory', 's_memory', 'num_threads']
 
         with open(config_file, 'r') as f:
             lines = f.readlines()
 
         config = configparser.RawConfigParser()
-
         for line in lines:
+            if line.startswith('#') or line.startswith('----'):
+                continue
             sections = line.split()
             if len(sections) > 4:
                 config.add_section(sections[0])
@@ -417,6 +409,7 @@ def run_or_skip(custom_template_file):
 
 def rerun_job_if_exit_code_140(run_file, inps_dict):
     """Find files that exited because walltime exceeed and run again with twice the walltime"""
+    from minsar.job_submission import JOB_SUBMIT
 
     inps = inps_dict
 
@@ -516,10 +509,12 @@ def extract_walltime_from_job_file(file):
                 walltime = line.split('-W')[1]
                 walltime = walltime.strip()
                 return walltime
-
+            if '#SBATCH -t' in line:
+                walltime = line.split('-t')[1]
+                walltime = walltime.strip()
+                return walltime
 
 ##########################################################################
-
 
 def extract_memory_from_job_file(file):
     """ Extracts the memory from an LSF (BSUB) job file """
@@ -531,9 +526,22 @@ def extract_memory_from_job_file(file):
                 memory = memory.split(']')[0]
                 return memory
 
+##########################################################################
+ 
+def extract_step_name_from_stdout_name(job_name):
+    """ Extracts the step name from a stdout name """
+    job_name = os.path.basename(job_name).split('.o')[0]
+    step_name = job_name.replace('run_','')
+    if step_name.split('_')[-1].isdigit():
+       step_name = '_'.join(step_name.split('_')[:-1])
+    if step_name.split('_')[-1].isdigit():
+       step_name = '_'.join(step_name.split('_')[:-1])
+    if step_name.split('_')[0].isdigit():
+       step_name = '_'.join(step_name.split('_')[1:])
+
+    return step_name
 
 ##########################################################################
-
 
 def get_line_before_last(file):
     """get the line before last from a file"""
@@ -768,6 +776,9 @@ def xmlread(filename):
 def get_number_of_bursts(inps_dict):
     """ calculates the number of bursts based on boundingBox and returns an adjusting factor for walltimes """
 
+    system_path = os.getenv('PATH')
+    sys.path.append(os.path.join(os.getenv('ISCE_STACK'), 'topsStack'))
+
     from stackSentinel import cmdLineParse as stack_cmd, get_dates
 
     try:
@@ -805,37 +816,54 @@ def get_number_of_bursts(inps_dict):
             obj.polarization = inps.polarization
             if inps.bbox is not None:
                 obj.regionOfInterest = [float(x) for x in inps.bbox.split()]
+
+            os.environ['PATH'] = system_path
             try:
                 obj.parse()
                 number_of_bursts = number_of_bursts + obj.product.numberOfBursts
             except Exception as e:
                 print(e)
-
     except:
         number_of_bursts = 1
     print('number of bursts: {}'.format(number_of_bursts))
 
     return number_of_bursts
 
-
 ############################################################################
 
 
-def walltime_adjust(number_of_bursts, default_time, scheduler='SLURM', adjust='True'):
-    """ multiplys default walltime by number of bursts and returns adjusted walltime """
-    
-    try:
-        time_split = time.strptime(default_time, '%H:%M:%S')
-    except:
-        time_split = time.strptime(default_time, '%H:%M')
+def scale_walltime(number_of_bursts, c_walltime, s_walltime, scheduler='SLURM'):
+    """
+    scales default walltime by number of bursts
+    scaled_walltime = c_walltime + number_of_bursts * s_walltime
+    """
+    # s_walltime
+    if not s_walltime == '0':
+        try:
+            s_time_split = time.strptime(s_walltime, '%H:%M:%S')
+        except:
+            s_time_split = time.strptime(s_walltime, '%H:%M')
 
-    time_seconds = datetime.timedelta(hours=time_split.tm_hour,
-                                      minutes=time_split.tm_min,
-                                      seconds=time_split.tm_sec).total_seconds()
+        s_time_seconds = datetime.timedelta(hours=s_time_split.tm_hour,
+                                            minutes=s_time_split.tm_min,
+                                            seconds=s_time_split.tm_sec).total_seconds()
+    else:
+        s_time_seconds = 0
 
-    if not number_of_bursts in [None, 'None']:
-        if adjust == 'True':
-            time_seconds = time_seconds * float(number_of_bursts)
+    #  c_walltime:
+    if not c_walltime == '0':
+        try:
+            c_time_split = time.strptime(c_walltime, '%H:%M:%S')
+        except:
+            c_time_split = time.strptime(c_walltime, '%H:%M')
+
+        c_time_seconds = datetime.timedelta(hours=c_time_split.tm_hour,
+                                            minutes=c_time_split.tm_min,
+                                            seconds=c_time_split.tm_sec).total_seconds()
+    else:
+        c_time_seconds = 0
+
+    time_seconds = float(c_time_seconds) + float(number_of_bursts) * float(s_time_seconds)
 
     walltime_factor = float(os.getenv('WALLTIME_FACTOR'))
 
@@ -845,14 +873,27 @@ def walltime_adjust(number_of_bursts, default_time, scheduler='SLURM', adjust='T
     hour, min = divmod(min, 60)
 
     if scheduler in ['LSF']:
-        #adjusted_time = time.strftime("%H:%M", time.gmtime(time_seconds))
-        adjusted_time = "%d:%02d" % (hour, min)
+        scaled_time = "%d:%02d" % (hour, min)
     else:
-        #adjusted_time = time.strftime("%H:%M:%S", time.gmtime(time_seconds))
-        adjusted_time = "%d:%02d:%02d" % (hour, min, sec)
+        scaled_time = "%d:%02d:%02d" % (hour, min, sec)
 
-    return adjusted_time
+    return scaled_time
 
+############################################################################
+
+
+def scale_memory(number_of_bursts, c_memory, s_memory):
+    """
+    scales default memory by number of bursts
+    scaled_memory = c_memory + number_of_bursts * s_memory
+    """
+
+    if not c_memory == 'all':
+        scaled_memory = float(c_memory) + float(number_of_bursts) * float(s_memory)
+    else:
+        scaled_memory = os.getenv('MAX_MEMORY_PER_NODE')
+
+    return scaled_memory
 
 ############################################################################
 
@@ -895,9 +936,27 @@ def multiply_walltime(wall_time, factor):
 
     return new_wall_time
 
+##########################################################################
+
+def replace_walltime_in_job_file(file, new_wall_time):
+    """ replaces the walltime from a SLURM job file """
+    new_lines=[]
+    with open(file) as fr:
+        lines = fr.readlines()
+        for line in lines:
+            if '#SBATCH -t' in line:
+                wall_time = line.split('-t')[1]
+                wall_time = wall_time.strip()
+                line = line.replace(wall_time,new_wall_time)
+            new_lines.append(line)
+    fr.close()
+
+    with open(file, 'w') as job_file:
+            job_file.writelines(new_lines)
+
+    return
 
 ############################################################################
-
 
 def sum_time(time_str_list):
     """ sum time in D-HH:MM or D-HH:MM:SS format """

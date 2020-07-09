@@ -169,6 +169,7 @@ class PathFind:
             'dem',
             'ifgrams',
             'timeseries',
+            'upload',
             'insarmaps',
             'imageProducts',
         ]
@@ -180,53 +181,10 @@ class PathFind:
             previous run was done using one of the steps options to process at least
             through the step immediately preceding the starting step of the current run.
             
-            """.format(STEP_LIST[0:6])
+            """.format(STEP_LIST[0:7])
 
         return STEP_LIST, STEP_HELP
 
-    @staticmethod
-    def minopy_help():
-
-        STEP_LIST = [
-            'crop',
-            'patch',
-            'inversion',
-            'ifgrams',
-            'unwrap',
-            'mintpy',
-            'email']
-
-        STEP_HELP = """Command line options for steps processing with names are chosen from the following list:
-                {}
-                
-                In order to use either --start or --step, it is necessary that a
-                previous run was done using one of the steps options to process at least
-                through the step immediately preceding the starting step of the current run.
-                """.format(STEP_LIST[0:7])
-
-        return STEP_LIST, STEP_HELP
-
-    @staticmethod
-    def minopy_corrections():
-
-        runSteps = ['load_data',
-                    'modify_network',
-                    'reference_point',
-                    'stack_interferograms',
-                    'correct_unwrap_error',
-                    'correct_troposphere',
-                    'deramp',
-                    'correct_topography',
-                    'residual_RMS',
-                    'reference_date',
-                    'velocity',
-                    'geocode',
-                    'google_earth',
-                    'hdfeos5']
-
-        return runSteps
-
-    
 
 
 

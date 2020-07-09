@@ -21,6 +21,7 @@ from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
 from minsar.job_submission import JOB_SUBMIT
 from minsar.objects.auto_defaults import PathFind
+from minsar.utils import upload_data_products
 
 pathObj = PathFind()
 step_list, step_help = pathObj.process_rsmas_help()
@@ -216,18 +217,32 @@ class RsmasInsar:
         else:
             import minsar.minopy_wrapper as minopy_wrapper
             minopy_wrapper.main([self.custom_template_file, '--submit'])
+
+        return
+
+    def run_upload_data_products(self):
+        """ upload data to jetstream server for data download
+        """
+        if self.template['upload_flag'] in ['True', True]:
+            #upload_data_products.main([self.custom_template_file, '--mintpyProducts'])   # this is simpler, but how to put process into background?
+            command = 'upload_data_products.py --mintpyProducts ' + self.custom_template_file + ' > out_upload_data_products.o 2> out_upload_data_products.e'
+            message_rsmas.log(os.getcwd(), command)
+            status = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
         return
 
     def run_insarmaps(self):
         """ prepare outputs for insarmaps website.
         """
-        minsar.ingest_insarmaps.main([self.custom_template_file, '--email', '--submit'])
+        if self.template['insarmaps_flag'] in ['True', True]:
+            minsar.ingest_insarmaps.main([self.custom_template_file, '--email', '--submit'])
         return
 
     def run_image_products(self):
         """ create ortho/geo-rectified products.
         """
-        minsar.export_ortho_geo.main([self.custom_template_file, '--submit'])
+        if self.template['image_products_flag'] in ['True', True]:
+            # export_ortho_geo.py has another job submission inside and we cannot use --submit here:
+            minsar.export_ortho_geo.main([self.custom_template_file])
         return
 
     def run(self, steps=step_list):
@@ -247,6 +262,9 @@ class RsmasInsar:
 
             elif sname == 'timeseries':
                 self.run_timeseries()
+
+            elif sname == 'upload':
+                self.run_upload_data_products()
 
             elif sname == 'insarmaps':
                 self.run_insarmaps()
