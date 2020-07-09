@@ -66,7 +66,7 @@ def email_insarmaps_results(email_address):
     ref_lat = str(round(float(ref_lat),1))
     ref_lon = str(round(float(ref_lon),1))
          
-    textStr = 'http://insarmaps.miami.edu/start/' + ref_lat + '/' + ref_lon + '/7"\?"startDataset=' + hdfeos_name
+    textStr = 'http://insarmaps.miami.edu/start/' + ref_lat + '/' + ref_lon + '/7?startDataset=' + hdfeos_name
 
     mailCmd = 'echo \"' + textStr + '\" | mail -s Miami_InSAR_results:_' + os.path.basename(cwd) + ' ' + email_address
 
