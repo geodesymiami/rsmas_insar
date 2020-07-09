@@ -7,7 +7,7 @@ ssaraopt.startDate                = 20160601
 ssaraopt.endDate                  = 20160831
 demMethod                         = ssara
 insarmaps_flag                    = True
-image_products_flag               = True
+image_products_flag               = False
 
 ######################################################
 
