@@ -169,6 +169,7 @@ class PathFind:
             'dem',
             'ifgrams',
             'timeseries',
+            'upload',
             'insarmaps',
             'imageProducts',
         ]
@@ -180,7 +181,7 @@ class PathFind:
             previous run was done using one of the steps options to process at least
             through the step immediately preceding the starting step of the current run.
             
-            """.format(STEP_LIST[0:6])
+            """.format(STEP_LIST[0:7])
 
         return STEP_LIST, STEP_HELP
 
