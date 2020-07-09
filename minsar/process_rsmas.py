@@ -21,6 +21,7 @@ from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
 from minsar.job_submission import JOB_SUBMIT
 from minsar.objects.auto_defaults import PathFind
+from minsar.utils import upload_data_products
 
 pathObj = PathFind()
 step_list, step_help = pathObj.process_rsmas_help()
@@ -216,6 +217,11 @@ class RsmasInsar:
         else:
             import minsar.minopy_wrapper as minopy_wrapper
             minopy_wrapper.main([self.custom_template_file, '--submit'])
+
+        #upload_data_products.main([self.custom_template_file, '--mintpyProducts'])   # this is simpler, but how to put process into background?
+        command = 'upload_data_products.py --mintpyProducts ' + self.custom_template_file + ' > out_upload_data_products.o 2> out_upload_data_products.e'
+        message_rsmas.log(os.getcwd(), command)
+        status = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
         return
 
     def run_insarmaps(self):
