@@ -21,6 +21,7 @@ from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
 from minsar.job_submission import JOB_SUBMIT
 from minsar.objects.auto_defaults import PathFind
+from minsar.utils import upload_data_products
 
 pathObj = PathFind()
 step_list, step_help = pathObj.process_rsmas_help()
