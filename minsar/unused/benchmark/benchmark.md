@@ -21,7 +21,7 @@ echo $cmd
 $cmd
 ```
 
-### 1. Benchmarking one processing step
+### 2. Benchmarking one processing step
 *# Copy the job file into your project directory:
 ```
 cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
@@ -43,7 +43,7 @@ echo $cmd
 $cmd
 ```
 
-### 1. Benchmarking one step with a range 
+### 3. Benchmarking step as a function of nodes
 *# Copy the job file into your project directory:
 ```
 cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
@@ -54,8 +54,8 @@ cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
 run_step=13
 nodes=2
 nodes_list=( 1 2 3 4 )
-partition=skx-dev
-time=00:10:00
+partition=skx-normal
+time=00:20:00
 
 ntasks=48
 
