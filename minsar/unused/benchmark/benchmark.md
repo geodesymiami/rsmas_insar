@@ -22,7 +22,7 @@ $cmd
 ```
 
 ### 1. Benchmarking one processing step
-* # Copy the job file into your project directory:
+*# Copy the job file into your project directory:
 ```
 cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
 ```
@@ -41,7 +41,31 @@ cmd="sbatch --job-name=$name --nodes=$nodes --tasks-per-node=$ntasks --output="$
       --partition=$partition --time=$time  --export=run_num=$run_step,PATH=$PATH,SCRATCHDIR=$SCRATCHDIR run_launcher.job"
 echo $cmd
 $cmd
+```
 
+### 1. Benchmarking one step with a range 
+*# Copy the job file into your project directory:
+```
+cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
+```
+* #Select number of nodes, walltime and copy
 
+```
+run_step=13
+nodes=2
+nodes_list=( 1 2 3 4 )
+partition=skx-dev
+time=00:10:00
+
+ntasks=48
+
+for i in ${!nodes_list[@]}; do
+
+  name='run_'$run_step'_nodes'$nodes
+  cmd="sbatch --job-name=$name --nodes=$nodes --tasks-per-node=$ntasks --output="$name"_%J.o --error="$name"_%J.e \
+      --partition=$partition --time=$time  --export=run_num=$run_step,PATH=$PATH,SCRATCHDIR=$SCRATCHDIR run_launcher.job"
+  echo $cmd
+   $cmd
+done
 ```
 
