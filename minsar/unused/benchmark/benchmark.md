@@ -31,14 +31,14 @@ cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
 ```
 run_step=13
 nodes=2
-partition=skx-dev
+partition=skx-noram
 time=00:10:00
 
 ntasks=48
 name='run_'$run_step'_nodes'$nodes
 
 cmd="sbatch --job-name=$name --nodes=$nodes --tasks-per-node=$ntasks --output="$name"_%J.o --error="$name"_%J.e \
-      --partition=$partition --time=$time  --export=run_num=$run_step,PATH=$PATH,SCRATCHDIR=$SCRATCHDIR run_launcher.job"
+      --partition=$partition --time=$time  --export=run_step=$run_step,PATH=$PATH,SCRATCHDIR=$SCRATCHDIR run_launcher.job"
 echo $cmd
 $cmd
 ```
@@ -62,8 +62,8 @@ for nodes in ${!nodes_list[@]}; do
 
   name='run_'$run_step'_nodes'$nodes
   cmd="sbatch --job-name=$name --nodes=$nodes --tasks-per-node=$ntasks --output="$name"_%J.o --error="$name"_%J.e \
-      --partition=$partition --time=$time  --export=run_num=$run_step,PATH=$PATH,SCRATCHDIR=$SCRATCHDIR run_launcher.job"
-  echo $cmd
+      --partition=$partition --time=$time  --export=run_step=$run_step,PATH=$PATH,SCRATCHDIR=$SCRATCHDIR run_launcher.job"
+  echo "\n $cmd \n"
    $cmd
 done
 ```
