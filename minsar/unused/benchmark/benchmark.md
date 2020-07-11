@@ -31,7 +31,7 @@ cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
 ```
 run_step=13
 nodes=2
-partition=skx-noram
+partition=skx-dev
 time=00:10:00
 
 ntasks=48
@@ -39,7 +39,7 @@ name='run_'$run_step'_nodes'$nodes
 
 cmd="sbatch --job-name=$name --nodes=$nodes --tasks-per-node=$ntasks --output="$name"_%J.o --error="$name"_%J.e \
       --partition=$partition --time=$time  --export=run_step=$run_step,PATH=$PATH,SCRATCHDIR=$SCRATCHDIR run_launcher.job"
-echo $cmd
+echo $cmd | cut -d ' ' -f 1-8 ; echo $cmd | cut -d ' ' -f 9 | cut -c 1-26 ; echo -e $cmd | cut -d ' ' -f 10
 $cmd
 ```
 
@@ -58,13 +58,14 @@ time=00:20:00
 
 ntasks=48
 
-for nodes in ${!nodes_list[@]}; do
+for nodes in ${nodes_list[@]}; do
 
   name='run_'$run_step'_nodes'$nodes
   cmd="sbatch --job-name=$name --nodes=$nodes --tasks-per-node=$ntasks --output="$name"_%J.o --error="$name"_%J.e \
       --partition=$partition --time=$time  --export=run_step=$run_step,PATH=$PATH,SCRATCHDIR=$SCRATCHDIR run_launcher.job"
-  echo "\n $cmd \n"
-   $cmd
+  
+  echo  $cmd | cut -d ' ' -f 1-8 ; echo $cmd | cut -d ' ' -f 9 | cut -c 1-26 ; echo -e $cmd | cut -d ' ' -f 10
+  $cmd
 done
 ```
 
