@@ -27,12 +27,12 @@ export LD_PRELOAD=/home1/apps/tacc-patches/python_cacher/myopen.so
 export PATH=/home1/05861/tg851601/test/operations/rsmas_insar/sources/isce2/contrib/stack/topsStack:$PATH
 export LAUNCHER_WORKDIR="$SCRATCH/$project/run_files"
 
-if [ -z ${run_num+x} ]; then 
-   echo "run_num is unset; using all";
+if [ -z ${run_step+x} ]; then 
+   echo "run_step is unset; using all";
    run_files=(${run_files_list[@]})
 else
-   echo "run_num is set: $run_num";
-   run_files=${run_files_list[$((run_num-1))]}
+   echo "run_step is set: $run_step";
+   run_files=${run_files_list[$((run_step-1))]}
 fi
 
 echo "SCRATCHDIR:" $SCRATCH
