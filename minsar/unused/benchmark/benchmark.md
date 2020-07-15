@@ -31,9 +31,9 @@ cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
 
 ```
 run_step=7
-nodes=12
+nodes=13
 partition=skx-normal
-time=00:04:00
+time=00:03:00
 
 name='run_'$run_step'_nodes'$nodes
 ntasks=$((nodes*48));
@@ -71,33 +71,20 @@ done
 ```
 
 ### 4. Backup - calculation for stampede proposal
-3390 tasks   = 71 * 48
-using:
-1920 tasks = 40 * 48
-
-4 bursts 
-run_13: 120 sec -->  120 * 40 = 80 min 
-run_15: 160 sec -->  160 * 40 = 107 min 
 ```
-run_step=13
-partition=skx-normal
+aa = [1 2364
+2 1134
+3 790
+4 535
+5 558]
 
-nodes_list=( 1 2 ); time=02:0:00
-nodes_list=( 3 4 5 ); time=01:00:00
-nodes_list=( 6 8 10 ); time=0:30:00
-nodes_list=( 12 14 16); time=0:10:00
-nodes_list=( 20 ); time=0:05:00
+nodes=aa(:,1)
+time=aa(:,2)
 
-ntasks=48
+subplot(2,1,1)
 
-for nodes in ${nodes_list[@]}; do
+subplot(2,1,2)
+plot(nodes,time(1)./time(:),'o-'), xlabel('nodes'),ylabel('speedup'),title('Speedup (run6)'), xlim([0 7]),ylim([0 7]), xticks([0:7]),yticks([0:7]),axis equal
 
-  name='run_'$run_step'_nodes'$nodes
-  cmd="sbatch --job-name=$name --nodes=$nodes --tasks-per-node=$ntasks --output="$name"_%J.o --error="$name"_%J.e \
-      --partition=$partition --time=$time  --export=run_step=$run_step,PATH=$PATH,SCRATCHDIR=$SCRATCHDIR run_launcher.job"
-  
-  echo  $cmd | cut -d ' ' -f 1-8 ; echo $cmd | cut -d ' ' -f 9 | cut -c 1-26 ; echo -e $cmd | cut -d ' ' -f 10
-  $cmd
-done
 ```
 
