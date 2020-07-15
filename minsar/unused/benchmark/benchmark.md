@@ -70,7 +70,7 @@ for nodes in ${nodes_list[@]}; do
 done
 ```
 
-### 4. Backup - calculation for stampede proposal
+### 4. Scaling plots for stampede proposal
 ```
 aa = [1 2364
 2 1134
@@ -81,10 +81,14 @@ aa = [1 2364
 nodes=aa(:,1)
 time=aa(:,2)
 
-subplot(2,1,1)
 
 subplot(2,1,2)
-plot(nodes,time(1)./time(:),'o-'), xlabel('nodes'),ylabel('speedup'),title('Speedup (run6)'), xlim([0 7]),ylim([0 7]), xticks([0:7]),yticks([0:7]),axis equal
+plot(nodes,time(1)./time(:),'o-'), xlabel('nodes'),ylabel('speedup'), xlim([0 7]),ylim([0 7]), xticks([0:7]),yticks([0:7]),axis equal,set(gca,'FontSize',18)
+xl=xlim
 
+subplot(2,1,1)
+plot(nodes,time,'o--'), xlabel('nodes'),ylabel('seconds'),xticks([0:7]),set(gca,'FontSize',18)
+xlim(xl)
+set(gcf,'color','w')
 ```
 
