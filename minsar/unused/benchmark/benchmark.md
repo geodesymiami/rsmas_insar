@@ -10,12 +10,12 @@ cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
 ```
 nodes=2
 partition=skx-normal
-time=00:30:00
+time=03:00:00
 
-ntasks=48
 name='run_nodes'$nodes
+ntasks=$((nodes*48));
 
-cmd="sbatch --job-name=$name --nodes=$nodes --tasks-per-node=$ntasks --output="$name"_%J.o --error="$name"_%J.e \
+cmd="sbatch --job-name=$name --nodes=$nodes --ntasks=$ntasks --output="$name"_%J.o --error="$name"_%J.e \
       --partition=$partition --time=$time  run_launcher.job"
 echo $cmd
 $cmd
@@ -29,10 +29,10 @@ cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
 * #Select number of nodes, walltime and copy
 
 ```
-run_step=6
-nodes=4
-partition=skx-dev
-time=00:40:00
+run_step=7
+nodes=12
+partition=skx-normal
+time=00:04:00
 
 name='run_'$run_step'_nodes'$nodes
 ntasks=$((nodes*48));
@@ -43,12 +43,12 @@ echo $cmd | cut -d ' ' -f 1-8 ; echo $cmd | cut -d ' ' -f 9 | cut -c 1-26 ; echo
 $cmd
 ```
 
-### 3. Benchmarking one step with a variety of nodes
-*# Copy the job file into your project directory:
+### 3. Benchmarking one step with a variety of nodes (not tested)
+*# Copy the job file into your project directory
 ```
 cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
 ```
-* #Select number of nodes, walltime and copy
+* #Select number of nodes, walltime and copy 
 
 ```
 run_step=13
@@ -56,12 +56,12 @@ nodes_list=( 1 2 3 4 5 )
 partition=skx-normal
 time=00:20:00
 
-ntasks=48
+ntasks=$((nodes*48));
 
 for nodes in ${nodes_list[@]}; do
 
   name='run_'$run_step'_nodes'$nodes
-  cmd="sbatch --job-name=$name --nodes=$nodes --tasks-per-node=$ntasks --output="$name"_%J.o --error="$name"_%J.e \
+  cmd="sbatch --job-name=$name --nodes=$nodes --ntasks=$ntasks --output="$name"_%J.o --error="$name"_%J.e \
       --partition=$partition --time=$time  --export=run_step=$run_step,PATH=$PATH,SCRATCHDIR=$SCRATCHDIR run_launcher.job"
   
   echo  $cmd | cut -d ' ' -f 1-8 ; echo $cmd | cut -d ' ' -f 9 | cut -c 1-26 ; echo -e $cmd | cut -d ' ' -f 10
