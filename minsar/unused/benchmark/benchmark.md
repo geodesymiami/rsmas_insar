@@ -1,5 +1,6 @@
 ## Benchmarking
 
+I tried using --tasks-per-node and --ntasks-per-node but this did not work - I don't know why
 ### 1. Running as one job
 *#Copy the job file into your project directory:
 ```
