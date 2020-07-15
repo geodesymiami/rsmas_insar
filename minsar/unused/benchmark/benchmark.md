@@ -29,15 +29,15 @@ cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
 * #Select number of nodes, walltime and copy
 
 ```
-run_step=13
-nodes=2
+run_step=6
+nodes=4
 partition=skx-dev
-time=00:10:00
+time=00:40:00
 
-ntasks=48
 name='run_'$run_step'_nodes'$nodes
+ntasks=$((nodes*48));
 
-cmd="sbatch --job-name=$name --nodes=$nodes --tasks-per-node=$ntasks --output="$name"_%J.o --error="$name"_%J.e \
+cmd="sbatch --job-name=$name --nodes=$nodes --ntasks=$ntasks --output="$name"_%J.o --error="$name"_%J.e \
       --partition=$partition --time=$time  --export=run_step=$run_step,PATH=$PATH,SCRATCHDIR=$SCRATCHDIR run_launcher.job"
 echo $cmd | cut -d ' ' -f 1-8 ; echo $cmd | cut -d ' ' -f 9 | cut -c 1-26 ; echo -e $cmd | cut -d ' ' -f 10
 $cmd
