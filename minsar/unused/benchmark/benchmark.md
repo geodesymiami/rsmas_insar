@@ -73,6 +73,8 @@ for nodes in ${nodes_list[@]}; do
   
   i=$((i+1))
 done
+grep "Total" run_*.e
+
 ```
 
 ### 4. Scaling plots for stampede proposal
