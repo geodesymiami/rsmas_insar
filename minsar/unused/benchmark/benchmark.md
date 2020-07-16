@@ -49,23 +49,26 @@ $cmd
 ```
 cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
 ```
-* #Select number of nodes, walltime and copy 
+* #Select number of nodes, walltime and copy-paste. Job
 
 ```
 run_step=13
-nodes_list=( 3 4 5 6 7 8 9 10 )
+nodes_list=( 3 4 5 )
 partition=skx-normal      # can't use skx-dev in loop 
-time=00:6:00
+time=00:06:00
+delay_const=1200          # submit next job with delay to not start simultaneously
 
-
+i=0
 for nodes in ${nodes_list[@]}; do
-
+   
   name='run_'$run_step'_nodes'$nodes
   ntasks=$((nodes*48));
-
-  cmd="sbatch --job-name=$name --nodes=$nodes --ntasks=$ntasks --output="$name"_%J.o --error="$name"_%J.e \
-      --partition=$partition --time=$time  --export=run_step=$run_step,PATH=$PATH,SCRATCHDIR=$SCRATCHDIR run_launcher.job"
   
+  i=$((i+1))
+  delay=$((i*$delay_const))
+  
+  cmd="sbatch --job-name=$name --nodes=$nodes --ntasks=$ntasks --output="$name"_%J.o --error="$name"_%J.e \
+          --begin=now+$delay --partition=$partition --time=$time  --export=run_step=$run_step,PATH=$PATH,SCRATCHDIR=$SCRATCHDIR run_launcher.job"
   echo  $cmd | cut -d ' ' -f 1-8 ; echo $cmd | cut -d ' ' -f 9 | cut -c 1-26 ; echo -e $cmd | cut -d ' ' -f 10
   $cmd
 done
