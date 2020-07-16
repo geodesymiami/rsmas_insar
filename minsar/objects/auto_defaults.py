@@ -120,13 +120,15 @@ class PathFind:
                        'baseline_threshold', 'azimuth_looks', 'range_looks', 'sensor', 'low_band_frequency',
                        'high_band_frequency', 'subband_bandwidth', 'unw_method', 'filter_strength',
                        'filter_sigma_x', 'filter_sigma_y', 'filter_size_x', 'filter_size_y', 'filter_kernel_rotation',
-                       'workflow', 'applyWaterMask', 'zero', 'nofocus', 'text_cmd', 'useGPU']
+                       'workflow', 'zero', 'nofocus', 'text_cmd', 'useGPU']
+            #'applyWaterMask',
 
             templateKey = ['slcDir', 'workingDir', 'demDir', 'boundingBox', 'master', 'timeThreshold',
                            'baselineThreshold', 'azimuthLooks', 'rangeLooks', 'sensor',
                            'LowBandFrequency', 'HighBandFrequency', 'subbandBandwith', 'unwMethod',
                            'golsteinFilterStrength', 'filterSigmaX', 'filterSigmaY', 'filterSizeX', 'filterSizeY',
-                           'filterKernelRotation', 'workflow', 'watermask', 'zerodop', 'nofocus', 'textCmd', 'useGPU']
+                           'filterKernelRotation', 'workflow', 'zerodop', 'nofocus', 'textCmd', 'useGPU']
+            #'watermask',
 
         else:
             stackprefix = 'topsStack'
