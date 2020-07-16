@@ -154,6 +154,7 @@ class RsmasInsar:
     """
 
     def __init__(self, inps):
+        self.inps = inps
         self.custom_template_file = inps.custom_template_file
         self.work_dir = inps.work_dir
         self.project_name = inps.project_name
@@ -216,17 +217,6 @@ class RsmasInsar:
         else:
             import minsar.minopy_wrapper as minopy_wrapper
             minopy_wrapper.main([self.custom_template_file, '--submit'])
-
-        return
-
-    def run_upload_data_products(self):
-        """ upload data to jetstream server for data download
-        """
-        if self.template['upload_flag'] in ['True', True]:
-            #upload_data_products.main([self.custom_template_file, '--mintpyProducts'])   # this is simpler, but how to put process into background?
-            command = 'upload_data_products.py --mintpyProducts ' + self.custom_template_file + ' > out_upload_data_products.o 2> out_upload_data_products.e'
-            message_rsmas.log(os.getcwd(), command)
-            status = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
         return
 
     def run_insarmaps(self):
@@ -240,8 +230,28 @@ class RsmasInsar:
         """ create ortho/geo-rectified products.
         """
         if self.template['image_products_flag'] in ['True', True]:
-            # export_ortho_geo.py has another job submission inside and we cannot use --submit here:
-            minsar.export_ortho_geo.main([self.custom_template_file])
+
+            run_file_list = minsar.export_ortho_geo.main([self.custom_template_file, '--submit'])
+
+            self.inps.out_dir = os.path.join(self.work_dir, 'run_files')
+            job_obj = JOB_SUBMIT(self.inps)
+
+            for item in run_file_list:
+
+                putils.remove_last_job_running_products(run_file=item)
+
+                job_status = job_obj.submit_batch_jobs(batch_file=item)
+
+                if job_status:
+                    putils.remove_zero_size_or_length_error_files(run_file=item)
+                    putils.rerun_job_if_exit_code_140(run_file=item, inps_dict=self.inps)
+                    putils.raise_exception_if_job_exited(run_file=item)
+                    putils.concatenate_error_files(run_file=item, work_dir=self.work_dir)
+                    putils.move_out_job_files_to_stdout(run_file=item)
+
+            # upload_to_s3(pic_dir)
+            minsar.upload_data_products.main([inps.custom_template_file, '--imageProducts'])
+
         return
 
     def run(self, steps=step_list):
@@ -261,9 +271,6 @@ class RsmasInsar:
 
             elif sname == 'timeseries':
                 self.run_timeseries()
-
-            elif sname == 'upload':
-                self.run_upload_data_products()
 
             elif sname == 'insarmaps':
                 self.run_insarmaps()
