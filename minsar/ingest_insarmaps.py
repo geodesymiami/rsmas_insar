@@ -50,8 +50,8 @@ def main(iargs=None):
 
     os.chdir(inps.work_dir)
 
-    hdfeos_file = glob.glob(inps.work_dir + '/mintpy/S1*.he5')
-    hdfeos_file.append(glob.glob(inps.work_dir +'/mintpy/SUBSET_*/S1*.he5'))
+    hdfeos_file = glob.glob(inps.work_dir + '/mintpy/*.he5')
+    hdfeos_file.append(glob.glob(inps.work_dir +'/mintpy/SUBSET_*/*.he5'))
     hdfeos_file = hdfeos_file[0]
 
     json_folder = inps.work_dir + '/mintpy/JSON'
