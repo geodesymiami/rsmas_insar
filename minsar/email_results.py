@@ -57,7 +57,7 @@ def email_insarmaps_results(email_address):
 
     cwd = os.getcwd()
 
-    hdfeos_file = glob.glob('./mintpy/S1*.he5')
+    hdfeos_file = glob.glob('./mintpy/*.he5')
     hdfeos_file = hdfeos_file[0]
     hdfeos_name = os.path.splitext(os.path.basename(hdfeos_file))[0]
 
