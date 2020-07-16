@@ -64,13 +64,14 @@ for nodes in ${nodes_list[@]}; do
   name='run_'$run_step'_nodes'$nodes
   ntasks=$((nodes*48));
   
-  i=$((i+1))
   delay=$((i*$delay_const))
-  
+
   cmd="sbatch --job-name=$name --nodes=$nodes --ntasks=$ntasks --output="$name"_%J.o --error="$name"_%J.e \
           --begin=now+$delay --partition=$partition --time=$time  --export=run_step=$run_step,PATH=$PATH,SCRATCHDIR=$SCRATCHDIR run_launcher.job"
   echo  $cmd | cut -d ' ' -f 1-8 ; echo $cmd | cut -d ' ' -f 9 | cut -c 1-26 ; echo -e $cmd | cut -d ' ' -f 10
   $cmd
+  
+  i=$((i+1))
 done
 ```
 
