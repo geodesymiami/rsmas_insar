@@ -71,7 +71,6 @@ def main(iargs=None):
             input_arguments.remove('--submit')
         command = [os.path.abspath(__file__)] + input_arguments
         job_obj.submit_script(job_name, job_file_name, command)
-        sys.exit(0)
 
     pic_dir = os.path.join(inps.work_dir, pathObj.tiffdir)
 
@@ -90,24 +89,7 @@ def main(iargs=None):
 
     run_file_list = make_run_list(inps)
 
-    for item in run_file_list:
-
-        putils.remove_last_job_running_products(run_file=item)
-
-        job_status = job_obj.submit_batch_jobs(batch_file=item)
-
-        if job_status:
-
-            putils.remove_zero_size_or_length_error_files(run_file=item)
-            putils.rerun_job_if_exit_code_140(run_file=item, inps_dict=inps)
-            putils.raise_exception_if_job_exited(run_file=item)
-            putils.concatenate_error_files(run_file=item, work_dir=inps.work_dir)
-            putils.move_out_job_files_to_stdout(run_file=item)
-
-    #upload_to_s3(pic_dir)
-    minsar.upload_data_products.main([inps.custom_template_file, '--imageProducts'])
-
-    return
+    return run_file_list
 
 
 def create_demZero(dem, outdir):
