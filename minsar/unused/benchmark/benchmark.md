@@ -9,11 +9,11 @@ cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
 *#Select number of nodes, walltime and run in project directory
 
 ```
-nodes=2
+nodes=5
 partition=skx-normal
-time=03:00:00
+time=01:30:00
 
-name='run_nodes'$nodes
+name='run_all_nodes'$nodes
 ntasks=$((nodes*48));
 
 cmd="sbatch --job-name=$name --nodes=$nodes --ntasks=$ntasks --output="$name"_%J.o --error="$name"_%J.e \
