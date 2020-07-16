@@ -9,9 +9,9 @@ cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
 *#Select number of nodes, walltime and run in project directory
 
 ```
-nodes=5
+nodes=6
 partition=skx-normal
-time=01:30:00
+time=01:00:00
 
 name='run_all_nodes'$nodes
 ntasks=$((nodes*48));
@@ -30,10 +30,10 @@ cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
 * #Select number of nodes, walltime and copy
 
 ```
-run_step=7
-nodes=13
-partition=skx-normal
-time=00:03:00
+run_step=13
+nodes=4
+partition=skx-dev
+time=00:20:00
 
 name='run_'$run_step'_nodes'$nodes
 ntasks=$((nodes*48));
@@ -53,15 +53,16 @@ cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
 
 ```
 run_step=13
-nodes_list=( 1 2 3 4 5 )
-partition=skx-normal
-time=00:20:00
+nodes_list=( 3 4 5 6 7 8 9 10 )
+partition=skx-normal      # can't use skx-dev in loop 
+time=00:6:00
 
-ntasks=$((nodes*48));
 
 for nodes in ${nodes_list[@]}; do
 
   name='run_'$run_step'_nodes'$nodes
+  ntasks=$((nodes*48));
+
   cmd="sbatch --job-name=$name --nodes=$nodes --ntasks=$ntasks --output="$name"_%J.o --error="$name"_%J.e \
       --partition=$partition --time=$time  --export=run_step=$run_step,PATH=$PATH,SCRATCHDIR=$SCRATCHDIR run_launcher.job"
   
@@ -72,12 +73,19 @@ done
 
 ### 4. Scaling plots for stampede proposal
 ```
-aa = [1 2364
-2 1134
-3 790
-4 535
-5 558]
-
+aa = [ 1   895
+     2   441
+     3   295
+     4   235
+     5   240
+     6   212
+     7   176
+     8   173
+     9   173
+    10   167
+    12   249
+    14   154 ]
+    
 nodes=aa(:,1)
 time=aa(:,2)
 
