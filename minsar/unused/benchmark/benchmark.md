@@ -44,7 +44,7 @@ echo $cmd | cut -d ' ' -f 1-8 ; echo $cmd | cut -d ' ' -f 9 | cut -c 1-26 ; echo
 $cmd
 ```
 
-### 3. Benchmarking one step with a variety of nodes (not tested)
+### 3. Benchmarking one step as function of nodes
 *# Copy the job file into your project directory
 ```
 cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
