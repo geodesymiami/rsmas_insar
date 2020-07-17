@@ -71,6 +71,9 @@ def main(iargs=None):
 
     bursts = glob.glob(inps.work_dir + '/geom_master/*/hgt*rdr')
     number_of_bursts = len(bursts)
+    
+    if len(bursts) == 0:
+        number_of_bursts = 1
 
     out_lines = []
     string = 'run_files_dir:  ' + run_files_dir
