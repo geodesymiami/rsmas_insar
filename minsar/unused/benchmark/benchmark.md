@@ -53,9 +53,10 @@ cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
 
 ```
 run_step=13
-nodes_list=( 3 4 5 )
+nodes_list=( 3 4 5 6 7 8 9 10 )
 partition=skx-normal      # can't use skx-dev in loop 
 time=00:06:00
+
 delay_const=1200          # submit next job with delay to not start simultaneously
 
 i=0
@@ -73,35 +74,37 @@ for nodes in ${nodes_list[@]}; do
   
   i=$((i+1))
 done
-grep "Total" run_*.e
+grep "Total" run_*.e | sort -V
 
 ```
 
 ### 4. Scaling plots for stampede proposal
 ```
-aa = [ 1   895
-     2   441
-     3   295
-     4   235
-     5   240
-     6   212
-     7   176
-     8   173
-     9   173
-    10   167
-    12   249
-    14   154 ]
-    
+aa=[
+1 783 
+2 472 
+3 364
+4 297
+5 271
+6 241
+8 205
+10 183
+12 161
+14 144
+16 129
+18 123
+20 122
+]
 nodes=aa(:,1)
 time=aa(:,2)
 
 
 subplot(2,1,2)
-plot(nodes,time(1)./time(:),'o-'), xlabel('nodes'),ylabel('speedup'), xlim([0 7]),ylim([0 7]), xticks([0:7]),yticks([0:7]),axis equal,set(gca,'FontSize',18)
+plot(nodes,time(1)./time(:),'o-'), xlabel('nodes'),ylabel('speedup'), xlim([0 21]),ylim([0 7]), xticks([0:21]),yticks([0:7]),axis equal,set(gca,'FontSize',18)
 xl=xlim
 
 subplot(2,1,1)
-plot(nodes,time,'o--'), xlabel('nodes'),ylabel('seconds'),xticks([0:7]),set(gca,'FontSize',18)
+plot(nodes,time,'o--'), xlabel('nodes'),ylabel('seconds'),xticks([0:21]),set(gca,'FontSize',18)
 xlim(xl)
 set(gcf,'color','w')
 ```
