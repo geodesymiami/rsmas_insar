@@ -108,4 +108,63 @@ plot(nodes,time,'o--'), xlabel('nodes'),ylabel('seconds'),xticks([0:21]),set(gca
 xlim(xl)
 set(gcf,'color','w')
 ```
+### 3. Benchmarking one step as function of tasks
+*# Copy the job file into your project directory
+```
+```
+* #Select number of nodes, walltime and copy-paste. Job
+
+```
+run_step=13
+tasks_list=( 47 97 200 400 600 800 1000 )
+
+partition=skx-normal      # can't use skx-dev in loop 
+time=00:05:00
+
+delay_const=1200          # submit next job with delay to not start simultaneously
+
+XXXXXXX MODIFY run_launcher.py.  XXXXXXX
+XXXXXXX to accept num_tasks and modiy run_file accordingly
+i=0
+for nodes in ${nodes_list[@]}; do
+   
+  name='run_'$run_step'_nodes'$nodes
+  ntasks=$((nodes*48));
+  
+  delay=$((i*$delay_const))
+
+  cmd="sbatch --job-name=$name --nodes=$nodes --ntasks=$ntasks --output="$name"_%J.o --error="$name"_%J.e \
+          --begin=now+$delay --partition=$partition --time=$time  --export=run_step=$run_step,PATH=$PATH,SCRATCHDIR=$SCRATCHDIR run_launcher.job"
+  echo  $cmd | cut -d ' ' -f 1-8 ; echo $cmd | cut -d ' ' -f 9 | cut -c 1-26 ; echo -e $cmd | cut -d ' ' -f 10
+  $cmd
+  
+  i=$((i+1))
+done
+grep "Total" run_*.e | sort -V
+
+```
+
+### 4. Scaling plots for stampede proposal
+```
+aa=[
+2 26
+10 28
+47 46
+146 54
+470 78
+950 101
+]
+tasks=aa(:,1)
+time=aa(:,2)
+
+
+subplot(2,1,2)
+plot(nodes,time(1)./time(:),'o-'), xlabel('tasks'),ylabel('speedup'),axis equal,set(gca,'FontSize',18)
+xl=xlim
+
+subplot(2,1,1)
+plot(nodes,time,'o--'), xlabel('nodes'),ylabel('seconds'),xticks([0:21]),set(gca,'FontSize',18)
+xlim(xl)
+set(gcf,'color','w')
+```
 
