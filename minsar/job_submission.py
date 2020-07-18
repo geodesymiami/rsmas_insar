@@ -57,7 +57,7 @@ def create_argument_parser():
                        help="Amount of memory to allocate, specified in kilobytes")
     group.add_argument("--walltime", dest="wall_time", metavar="WALLTIME (HH:MM)",
                        help="Amount of wall time to use, in HH:MM format")
-    group.add_argument("--queuename", dest="queue", metavar="QUEUE", help="Name of queue to submit job to")
+    group.add_argument("--queue", dest="queue", metavar="QUEUE", help="Name of queue to submit job to")
     group.add_argument("--outdir", dest="out_dir", default='run_files', metavar="OUTDIR",
                        help="output directory for run files")
     group.add_argument('--numBursts', dest='num_bursts', type=int, metavar='number of bursts',
@@ -681,17 +681,20 @@ def set_job_queue_values(args):
         if work_system and platform in work_system:
             platform_name = platform
 
-    check_auto = {'queue_name': inps.template['queue_name'],
-                  'number_of_cores_per_node': inps.template['number_of_cores_per_node'],
-                  'number_of_threads_per_core': inps.template['number_of_threads_per_core'],
-                  'max_jobs_per_queue': inps.template['max_jobs_per_queue'],
-                  'wall_time_factor': inps.template['wall_time_factor'],
-                  'max_memory_per_node': inps.template['max_memory_per_node']}
+    check_auto = {'queue_name': inps.template['QUEUENAME'],
+                  'number_of_cores_per_node': inps.template['JOB_CPUS_PER_NODE'],
+                  'number_of_threads_per_core': inps.template['THREADS_PER_CORE'],
+                  'max_jobs_per_queue': inps.template['MAX_JOBS_PER_QUEUE'],
+                  'wall_time_factor': inps.template['WALLTIME_FACTOR'],
+                  'max_memory_per_node': inps.template['MEM_PER_NODE']}
 
     if platform_name in supported_platforms:
         with open(queue_config_file, 'r') as f:
             lines = f.readlines()
-        queue_header = lines[0].split()
+        for line in lines:
+            if line.startswith('PLATFORM_NAME'):
+                queue_header = lines[0].split()
+                break
         for line in lines:
             if not line.startswith('#') and line.startswith(platform_name):
                 split_values = line.split()
