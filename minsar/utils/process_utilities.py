@@ -65,6 +65,7 @@ def add_common_parser(parser):
     commonp.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
     commonp.add_argument('--walltime', dest='wall_time', metavar="WALLTIME (HH:MM)",
                          help='walltime for submitting the script as a job')
+    commonp.add_argument("--queue", dest="queue", metavar="QUEUE", help="Name of queue to submit job to")
     commonp.add_argument('--wait', dest='wait_time', default='00:00', metavar="Wait time (hh:mm)",
                          help="wait time to submit a job")
     commonp.add_argument('--remora', dest='remora', action='store_true', help='use remora to get job information')
@@ -440,12 +441,12 @@ def rerun_job_if_exit_code_140(run_file, inps_dict):
     os.rename(stdout_dir, stdout_dir + '_pre_rerun')
 
     remove_last_job_running_products(run_file)
-    queuename = os.getenv('QUEUENAME')
+    #queuename = os.getenv('QUEUENAME')
 
     inps.wall_time = new_wall_time
     inps.work_dir = os.path.dirname(os.path.dirname(rerun_file))
     inps.out_dir = os.path.dirname(rerun_file)
-    inps.queue = queuename
+    #inps.queue = queuename
 
     job_obj = JOB_SUBMIT(inps)
     jobs = job_obj.submit_batch_jobs(batch_file=rerun_file)
@@ -941,6 +942,7 @@ def multiply_walltime(wall_time, factor):
 
 ##########################################################################
 
+
 def replace_walltime_in_job_file(file, new_wall_time):
     """ replaces the walltime from a SLURM job file """
     new_lines=[]
@@ -961,41 +963,42 @@ def replace_walltime_in_job_file(file, new_wall_time):
 
 ############################################################################
 
+
 def sum_time(time_str_list):
     """ sum time in D-HH:MM or D-HH:MM:SS format """
+    if time_str_list:
+        seconds_sum = 0
+        for item in time_str_list:
+            item_parts = item.split(':')
 
-    seconds_sum = 0
+            try:
+                days, hours = item_parts[0].split('-')
+                hours = int(days) * 24 + int(hours)
+            except:
+                hours = int(item_parts[0])
 
-    for item in time_str_list:
-        item_parts = item.split(':')
+            minutes = int(item_parts[1])
 
-        try:
-            days, hours = item_parts[0].split('-')
-            hours = int(days) * 24 + int(hours)
-        except:
-            hours = int(item_parts[0])
+            try:
+                seconds = int(item_parts[2])
+            except:
+                seconds = 0
 
-        minutes = int(item_parts[1])
+            seconds_total = seconds + minutes * 60 + hours * 3600
+            seconds_sum = seconds_sum + seconds_total
 
-        try:
-            seconds = int(item_parts[2])
-        except:
-            seconds = 0
+        hours = math.floor(seconds_sum / 3600)
+        minutes = math.floor((seconds_sum - hours * 3600) / 60)
+        seconds = math.floor((seconds_sum - hours * 3600 - minutes * 60))
 
-        seconds_total = seconds + minutes * 60 + hours * 3600
-        seconds_sum = seconds_sum + seconds_total
-
-    hours = math.floor(seconds_sum / 3600)
-    minutes = math.floor((seconds_sum - hours * 3600) / 60)
-    seconds = math.floor((seconds_sum - hours * 3600 - minutes * 60))
-
-    if len(item_parts) == 2:
-        new_time_str = '{:02d}:{:02d}'.format(hours, minutes)
+        if len(item_parts) == 2:
+            new_time_str = '{:02d}:{:02d}'.format(hours, minutes)
+        else:
+            new_time_str = '{:02d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
     else:
-        new_time_str = '{:02d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
+        new_time_str = '00:00:00'
 
     return new_time_str
-
 
 ############################################################################
 
