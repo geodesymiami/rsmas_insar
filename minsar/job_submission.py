@@ -31,6 +31,7 @@ import time
 import glob
 import numpy as np
 from minsar.objects import message_rsmas
+from minsar.objects.auto_defaults import queue_config_file, supported_platforms
 import warnings
 import minsar.utils.process_utilities as putils
 from datetime import datetime
@@ -50,6 +51,8 @@ def create_argument_parser():
 
     group = parser.add_argument_group("Input File", "File/Dataset to display")
     group.add_argument("file", type=str, help="The file to batch create")
+    commonp.add_argument('--template', dest='custom_template_file', type=str,
+                         metavar='template file', help='custom template with option settings.\n')
     group.add_argument("--memory", dest="memory", metavar="MEMORY (KB)",
                        help="Amount of memory to allocate, specified in kilobytes")
     group.add_argument("--walltime", dest="wall_time", metavar="WALLTIME (HH:MM)",
@@ -59,6 +62,7 @@ def create_argument_parser():
                        help="output directory for run files")
     group.add_argument('--numBursts', dest='num_bursts', type=int, metavar='number of bursts',
                             help='number of bursts to calculate walltime')
+    group.add_argument('--remora', dest='remora', action='store_true', help='use remora to get job information')
 
     return parser
 
@@ -72,20 +76,10 @@ def parse_arguments(args):
     parser = create_argument_parser()
     job_params = parser.parse_args(args)
 
-    if not 'queue' in job_params:
-        job_params.queue = os.getenv("QUEUENAME")
-
-    scheduler = os.getenv("JOBSCHEDULER")
-    scratch_dir = os.getenv('SCRATCHDIR')
-
-    # default queue name is based on scheduler
-    if not job_params.queue:
-        if scheduler == "LSF":
-            job_params.queue = "general"
-        if scheduler == "PBS":
-            job_params.queue = "batch"
-        if scheduler == 'SLURM':
-           job_params.queue = "skx-normal"
+    try:
+        scratch_dir = os.getenv('SCRATCH')
+    except:
+        scratch_dir = os.getcwd()
 
     job_params.file = os.path.abspath(job_params.file)
     job_params.work_dir = os.path.join(scratch_dir,
@@ -93,8 +87,6 @@ def parse_arguments(args):
 
     if job_params.out_dir == 'run_files':
         job_params.out_dir = os.path.join(job_params.work_dir, job_params.out_dir)
-
-    #job_params.custom_template_file = glob.glob(job_params.work_dir + '/*.template')[0]
 
     return job_params
 
@@ -107,7 +99,7 @@ class JOB_SUBMIT:
     def __init__(self, inps):
         for k in inps.__dict__.keys():
             setattr(self, k, inps.__dict__[k])
-        
+
         if 'prefix' in inps and inps.prefix == 'stripmap':
             self.stack_path = os.path.join(os.getenv('ISCE_STACK'), 'stripmapStack')
             self.prefix = 'stripmap'
@@ -115,13 +107,9 @@ class JOB_SUBMIT:
             self.stack_path = os.path.join(os.getenv('ISCE_STACK'), 'topsStack')
             self.prefix = 'tops'
 
-        self.platform_name = os.getenv("PLATFORM_NAME")
-        self.scheduler = os.getenv("JOBSCHEDULER")
-        self.number_of_cores_per_node = int(os.getenv('NUMBER_OF_CORES_PER_NODE'))
-        self.number_of_threads_per_core = int(os.getenv('NUMBER_OF_THREADS_PER_CORE'))
-        self.submission_scheme = os.getenv('JOB_SUBMISSION_SCHEME')
-        self.max_jobs_per_queue = os.getenv('MAX_JOBS_PER_QUEUE')
-        self.max_memory_per_node = os.getenv('MAX_MEMORY_PER_NODE')
+        self.submission_scheme, self.platform_name, self.scheduler, self.queue_name, \
+        self.number_of_cores_per_node, self.number_of_threads_per_core, self.max_jobs_per_queue, \
+        self.max_memory_per_node, self.wall_time_factor = set_job_queue_values(inps)
 
         if not 'num_bursts' in inps:
             self.num_bursts = None
@@ -130,7 +118,7 @@ class JOB_SUBMIT:
         if not 'memory' in inps:
             self.memory = None
         if not 'queue' in inps:
-            self.queue = os.getenv('QUEUENAME')
+            self.queue = self.queue_name
         if not 'out_dir' in inps:
             self.out_dir = '.'
 
@@ -186,13 +174,10 @@ class JOB_SUBMIT:
 
         message_rsmas.log(self.work_dir, 'job_submission.py {a} --outdir {b}'.format(a=batch_file, b=self.out_dir))
 
-        supported_platforms = ['pegasus', 'STAMPEDE2', 'COMET', 'eos_sanghoon', 'beijing_server', 'deqing_server',
-                               'glic_gfz', 'mefe_gfz']
-
         self.job_files = []
 
-        if os.getenv('PLATFORM_NAME') in supported_platforms:
-            print('\nWorking on a {} machine ...\n'.format(os.getenv('JOBSCHEDULER')))
+        if self.platform_name in supported_platforms:
+            print('\nWorking on a {} machine ...\n'.format(self.scheduler))
 
             self.get_memory_walltime(batch_file, job_type='batch')
 
@@ -212,10 +197,10 @@ class JOB_SUBMIT:
                 batch_file_name = batch_file + '_0'
                 job_name = os.path.basename(batch_file_name)
 
-                job_file_lines = self.get_job_file_lines(batch_file, batch_file, number_of_tasks=len(tasks),
+                job_file_lines = self.get_job_file_lines(batch_file, batch_file_name, number_of_tasks=len(tasks),
                                                          number_of_nodes=number_of_nodes, work_dir=self.out_dir)
 
-                self.job_files.append(self.add_tasks_to_job_file_lines(job_file_lines, tasks, batch_file=batch_file))
+                self.job_files.append(self.add_tasks_to_job_file_lines(job_file_lines, tasks, batch_file=batch_file_name))
 
             elif 'multitask_singleNode' in self.submission_scheme:
 
@@ -230,7 +215,7 @@ class JOB_SUBMIT:
             system_path = os.getenv('PATH')
             with open(batch_file, 'r') as f:
                 command_lines = f.readlines()
-                if  self.prefix == 'stripmap':
+                if self.prefix == 'stripmap':
                     cmd = 'export PATH=$ISCE_STACK/stripmapStack:$PATH; '
                 else:
                     cmd = 'export PATH=$ISCE_STACK/topsStack:$PATH; '
@@ -246,7 +231,7 @@ class JOB_SUBMIT:
         :param job_file_name: Name of job file to submit.
         :return: Job number of submission
         """
-
+        job_num_exists = True
         # use bsub or qsub to submit based on scheduler
         if self.scheduler == "LSF":
             command = "bsub < " + os.path.join(work_dir, job_file_name)
@@ -258,29 +243,18 @@ class JOB_SUBMIT:
                 command = "sbatch {}".format(os.path.join(work_dir, job_file_name))
             else:
                 # In case we are in compute note, only one job allowed at a time
-                job_num = '{}_99999'.format(job_file_name.split('_')[1])
-                command = "srun {} > {} 2>{} ".format(os.path.join(work_dir, job_file_name),
-                                                      os.path.join(work_dir, job_file_name.split('.')[0] +
-                                                                   '_{}.o'.format(job_num)),
-                                                      os.path.join(work_dir, job_file_name.split('.')[0] +
-                                                                   '_{}.e'.format(job_num)))
+                command = "{}".format(os.path.join(work_dir, job_file_name))
+                job_num_exists = False
         else:
             raise Exception("ERROR: scheduler {0} not supported".format(self.scheduler))
 
-        try:
-            output_job = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+        output_job = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
 
-        except subprocess.CalledProcessError as grepexc:
-            print("error code", grepexc.returncode, grepexc.output)
-
-        try:
+        if job_num_exists:
             job_number = re.findall('\d+', output_job.decode("utf-8"))
             job_number = str(max([int(x) for x in job_number]))
-
-        except:
-            job_number = job_num
-
-        print("{0} submitted as {1} job #{2}".format(job_file_name, self.scheduler, job_number))
+        else:
+            job_number = 'None'
 
         return job_number
 
@@ -296,7 +270,11 @@ class JOB_SUBMIT:
         # get lines to write in job file
         job_file_lines = self.get_job_file_lines(job_name, job_file_name, work_dir=work_dir)
         job_file_lines.append("\nfree")
-        job_file_lines.append("\n" + command_line + "\n")
+        if self.remora:
+            job_file_lines.append('\nmodule load remora')
+            job_file_lines.append("\nremora " + command_line + "\n")
+        else:
+            job_file_lines.append("\n" + command_line + "\n")
 
         # write lines to .job file
         job_file_name = "{0}.job".format(job_file_name)
@@ -347,34 +325,35 @@ class JOB_SUBMIT:
         i = 0
         wait_time_sec = 60
         total_wait_time_min = 0
-        time.sleep(5)
+        time.sleep(2)
 
         if self.scheduler == 'SLURM':
-            rerun_job_files=[]
+            rerun_job_files = []
             job_status_file = os.path.join(work_dir, 'job_status')
             for job_number, job_file_name in zip(job_numbers, job_files):
-                job_stat = 'wait'
-                while job_stat == 'wait':
-                    os.system('sacct --format="State"   -j {} > {}'.format(job_number, job_status_file))
-                    time.sleep(2)
-                    with open(job_status_file, 'r') as stat_file:
-                        status = stat_file.readlines()
-                        if len(status) < 3:
-                            continue
-                    if 'PENDING' in status[2] or 'RUNNING' in status[2]:
-                        print("Waiting for job {} output file after {} minutes".format(job_file_name,
-                                                                                       total_wait_time_min))
-                        total_wait_time_min += wait_time_sec / 60
-                        time.sleep(wait_time_sec - 2)
-                        i += 1
-                    elif 'COMPLETED' in status[2]:
-                        job_stat = 'complete'
-                    elif 'TIMEOUT' in status[2]:
-                        job_stat = 'timeout'
-                        rerun_job_files.append(job_file_name)
-                    else:
-                        job_stat = 'failed'
-                        raise RuntimeError('Error: {} job was terminated with Error'.format(job_file_name))
+                if not job_number == 'None':
+                    job_stat = 'wait'
+                    while job_stat == 'wait':
+                        os.system('sacct --format="State"   -j {} > {}'.format(job_number, job_status_file))
+                        time.sleep(2)
+                        with open(job_status_file, 'r') as stat_file:
+                            status = stat_file.readlines()
+                            if len(status) < 3:
+                                continue
+                        if 'PENDING' in status[2] or 'RUNNING' in status[2]:
+                            print("Waiting for job {} output file after {} minutes".format(job_file_name,
+                                                                                           total_wait_time_min))
+                            total_wait_time_min += wait_time_sec / 60
+                            time.sleep(wait_time_sec - 2)
+                            i += 1
+                        elif 'COMPLETED' in status[2]:
+                            job_stat = 'complete'
+                        elif 'TIMEOUT' in status[2]:
+                            job_stat = 'timeout'
+                            rerun_job_files.append(job_file_name)
+                        else:
+                            job_stat = 'failed'
+                            raise RuntimeError('Error: {} job was terminated with Error'.format(job_file_name))
 
             if len(rerun_job_files) > 0:
                for job_file_name in rerun_job_files:
@@ -391,21 +370,24 @@ class JOB_SUBMIT:
                self.submit_and_check_job_status(rerun_job_files, work_dir=self.work_dir)
 
         else:
-
             for out, job_file_name in zip(jobs_out, job_files):
-                while not os.path.exists(out):
-                    print("Waiting for job {} output file after {} minutes".format(job_file_name, total_wait_time_min))
-                    total_wait_time_min += wait_time_sec / 60
-                    time.sleep(wait_time_sec)
-                    i += 1
+                if not 'None' in out:
+                    while not os.path.exists(out):
+                        print("Waiting for job {} output file after {} minutes".format(job_file_name, total_wait_time_min))
+                        total_wait_time_min += wait_time_sec / 60
+                        time.sleep(wait_time_sec)
+                        # i += 1
 
-        for errfile, job_file_name in zip(jobs_err, job_files):
-            error_files = glob.glob(errfile + '*')
-            for err in error_files:
-                job_exit1 = check_words_in_file(errfile, 'Segmentation fault')
-                job_exit2 = check_words_in_file(errfile, 'Aborted')
-                if job_exit1 or job_exit2:
-                    raise RuntimeError('Error: Segmentation fault or Aborted job: {err}')
+        for job_file_name in job_files:
+            error_files = glob.glob(job_file_name.split('.')[0] + '*.e')
+            for errfile in error_files:
+                job_exit = [check_words_in_file(errfile, 'Segmentation fault'),
+                            check_words_in_file(errfile, 'Aborted'),
+                            check_words_in_file(errfile, 'ERROR'),
+                            check_words_in_file(errfile, 'Error')]
+                if np.array(job_exit).any():
+                    raise RuntimeError('Error terminating job: {}'.format(job_file_name))
+                    sys.exit(0)
 
         return
 
@@ -419,7 +401,6 @@ class JOB_SUBMIT:
         """
 
         number_of_jobs = number_of_nodes
-
         number_of_nodes_per_job = 1
 
         while number_of_jobs > int(self.max_jobs_per_queue):
@@ -493,7 +474,8 @@ class JOB_SUBMIT:
                 c_walltime = config['default']['c_walltime']
                 s_walltime = config['default']['s_walltime']
 
-            self.default_wall_time = putils.scale_walltime(self.num_bursts, c_walltime, s_walltime, self.scheduler)
+            self.default_wall_time = putils.scale_walltime(self.num_bursts * self.wall_time_factor,
+                                                           c_walltime, s_walltime, self.scheduler)
         else:
             self.default_wall_time = self.wall_time
 
@@ -597,12 +579,16 @@ class JOB_SUBMIT:
         :param batch_file: name of batch file containing tasks
         :return:
         """
+        do_launcher = False
+        if self.scheduler == 'SLURM':
+            hostname = subprocess.Popen("hostname", shell=True, stdout=subprocess.PIPE).stdout.read().decode("utf-8")
+            if not hostname.startswith('login') or not hostname.startswith('comet'):
+                do_launcher = True
 
         job_file_name = "{0}.job".format(batch_file)
 
         tasks_with_output = []
-
-        if 'launcher' in self.submission_scheme:
+        if 'launcher' in self.submission_scheme or do_launcher:
             for line in tasks:
                 tasks_with_output.append("{} > {} 2>{}\n".format(line.split('\n')[0],
                                                                  os.path.abspath(batch_file) + '_$LAUNCHER_JID.o',
@@ -613,15 +599,22 @@ class JOB_SUBMIT:
             with open(batch_file, 'w+') as batch_f:
                     batch_f.writelines(tasks_with_output)
 
+            if self.remora:
+                job_file_lines.append("\n\nmodule load remora")
             job_file_lines.append("\n\nmodule load launcher")
 
             job_file_lines.append("\nexport OMP_NUM_THREADS={0}".format(self.default_num_threads))
             job_file_lines.append("\nexport PATH={0}:$PATH".format(self.stack_path))
             job_file_lines.append("\nexport LAUNCHER_WORKDIR={0}".format(self.out_dir))
             job_file_lines.append("\nexport LAUNCHER_JOB_FILE={0}\n".format(batch_file))
-            if self.platform_name == 'STAMPEDE2':
+            if self.platform_name == 'stampede2':
                job_file_lines.append("export LD_PRELOAD=/home1/apps/tacc-patches/python_cacher/myopen.so\n")
-            job_file_lines.append("\n$LAUNCHER_DIR/paramrun\n")
+
+            if self.remora:
+                job_file_lines.append("\nremora $LAUNCHER_DIR/paramrun\n")
+            else:
+                job_file_lines.append("\n$LAUNCHER_DIR/paramrun\n")
+
 
             with open(os.path.join(self.out_dir, job_file_name), "w+") as job_f:
                 job_f.writelines(job_file_lines)
@@ -633,9 +626,9 @@ class JOB_SUBMIT:
                                                                  os.path.abspath(batch_file) + '_{}.o'.format(count),
                                                                  os.path.abspath(batch_file) + '_{}.e'.format(count)))
 
-            if self.platform_name == 'STAMPEDE2':
+            if self.platform_name == 'stampede2':
                job_file_lines.append("\nexport LD_PRELOAD=/home1/apps/tacc-patches/python_cacher/myopen.so")
-        
+
             job_file_lines.append("\n\nexport OMP_NUM_THREADS={0}".format(self.default_num_threads))
             job_file_lines.append("\nexport PATH={0}:$PATH".format(self.stack_path))
 
@@ -669,6 +662,73 @@ def check_words_in_file(errfile, eword):
         return True
     else:
         return False
+
+
+def set_job_queue_values(args):
+
+    inps = putils.create_or_update_template(args)
+    submission_scheme = inps.template['job_submission_scheme']
+
+    hostname = 'local'
+    host_keys = ['hostname', 'HOSTNAME', 'uname']
+    for key in host_keys:
+        if os.getenv(key):
+            hostname = os.getenv(key)
+    
+    work_system = os.path.basename(os.getenv('WORK'))
+    platform_name = hostname
+    for platform in supported_platforms:
+        if work_system and platform in work_system:
+            platform_name = platform
+
+    check_auto = {'queue_name': inps.template['queue_name'],
+                  'number_of_cores_per_node': inps.template['number_of_cores_per_node'],
+                  'number_of_threads_per_core': inps.template['number_of_threads_per_core'],
+                  'max_jobs_per_queue': inps.template['max_jobs_per_queue'],
+                  'wall_time_factor': inps.template['wall_time_factor'],
+                  'max_memory_per_node': inps.template['max_memory_per_node']}
+
+    if platform_name in supported_platforms:
+        with open(queue_config_file, 'r') as f:
+            lines = f.readlines()
+        queue_header = lines[0].split()
+        for line in lines:
+            if not line.startswith('#') and line.startswith(platform_name):
+                split_values = line.split()
+                default_queue = split_values[queue_header.index('QUEUENAME')]
+                if check_auto['queue_name'] == 'auto':
+                    check_auto['queue_name'] = default_queue
+                if default_queue == check_auto['queue_name']:
+                    check_auto['number_of_cores_per_node'] = int(split_values[queue_header.index('JOB_CPUS_PER_NODE')])
+                    check_auto['number_of_threads_per_core'] = int(split_values[queue_header.index('THREADS_PER_CORE')])
+                    check_auto['max_jobs_per_queue'] = int(split_values[queue_header.index('MAX_JOBS_PER_QUEUE')])
+                    check_auto['max_memory_per_node'] = int(split_values[queue_header.index('MEM_PER_NODE')])
+                    check_auto['wall_time_factor'] = int(split_values[queue_header.index('WALLTIME_FACTOR')])
+                    break
+                else:
+                    continue
+
+    if platform_name in ['stampede2', 'frontera', 'comet']:
+        scheduler = 'SLURM'
+    elif platform_name in ['pegasus']:
+        scheduler = 'LSF'
+    elif platform_name in ['eos_sanghoon', 'beijing_server', 'deqing_server']:
+        scheduler = 'PBS'
+    else:
+        scheduler = None
+
+    def_auto = [None, 16, 1, 1, 16000, 1]
+    i = 0
+    for key, value in check_auto.items():
+        if check_auto[key] == 'auto':
+            check_auto[key] = def_auto[i]
+            i += 1
+
+    out_puts = (submission_scheme, platform_name, scheduler, check_auto['queue_name'], check_auto['number_of_cores_per_node'],
+                check_auto['number_of_threads_per_core'], check_auto['max_jobs_per_queue'],
+                check_auto['max_memory_per_node'], check_auto['wall_time_factor'])
+
+    return out_puts
 
 ###################################################################################################
 
