@@ -65,8 +65,11 @@ def add_common_parser(parser):
     commonp.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
     commonp.add_argument('--walltime', dest='wall_time', metavar="WALLTIME (HH:MM)",
                          help='walltime for submitting the script as a job')
+    commonp.add_argument("--queue", dest="queue", metavar="QUEUE", help="Name of queue to submit job to")
     commonp.add_argument('--wait', dest='wait_time', default='00:00', metavar="Wait time (hh:mm)",
                          help="wait time to submit a job")
+    commonp.add_argument('--remora', dest='remora', action='store_true', help='use remora to get job information')
+
     return parser
 
 
@@ -438,12 +441,12 @@ def rerun_job_if_exit_code_140(run_file, inps_dict):
     os.rename(stdout_dir, stdout_dir + '_pre_rerun')
 
     remove_last_job_running_products(run_file)
-    queuename = os.getenv('QUEUENAME')
+    #queuename = os.getenv('QUEUENAME')
 
     inps.wall_time = new_wall_time
     inps.work_dir = os.path.dirname(os.path.dirname(rerun_file))
     inps.out_dir = os.path.dirname(rerun_file)
-    inps.queue = queuename
+    #inps.queue = queuename
 
     job_obj = JOB_SUBMIT(inps)
     jobs = job_obj.submit_batch_jobs(batch_file=rerun_file)
@@ -681,30 +684,31 @@ def remove_last_job_running_products(run_file):
 
 def move_out_job_files_to_stdout(run_file):
     """move the error file into stdout_files directory"""
-
     job_files = glob.glob(run_file + '*.job')
-    stdout_files = glob.glob(run_file + '*.o*')
+    stdout_files = glob.glob(run_file + '*.o')
 
     if len(job_files) + len(stdout_files) == 0:
         return
 
     dir_name = os.path.dirname(run_file)
     out_folder = dir_name + '/stdout_' + os.path.basename(run_file)
+    if not os.path.exists(out_folder):
+        os.makedirs(out_folder, exist_ok=True)
+    else:
+        shutil.rmtree(out_folder)
+        os.makedirs(out_folder, exist_ok=True)
 
     if len(stdout_files) >= 2:
-        if not os.path.exists(out_folder):
-            os.makedirs(out_folder, exist_ok=True)
-        else:
-            shutil.rmtree(out_folder)
-            os.makedirs(out_folder, exist_ok=True)
-
         for item in stdout_files:
             shutil.move(item, out_folder)
         for item in job_files:
             shutil.move(item, out_folder)
 
     extra_batch_files = glob.glob(run_file + '_*')
+
     for item in extra_batch_files:
+        if os.path.exists(out_folder + '/' + os.path.basename(item)):
+            os.remove(out_folder + '/' + os.path.basename(item))
         shutil.move(item, out_folder)
 
     return None
@@ -938,6 +942,7 @@ def multiply_walltime(wall_time, factor):
 
 ##########################################################################
 
+
 def replace_walltime_in_job_file(file, new_wall_time):
     """ replaces the walltime from a SLURM job file """
     new_lines=[]
@@ -958,41 +963,42 @@ def replace_walltime_in_job_file(file, new_wall_time):
 
 ############################################################################
 
+
 def sum_time(time_str_list):
     """ sum time in D-HH:MM or D-HH:MM:SS format """
+    if time_str_list:
+        seconds_sum = 0
+        for item in time_str_list:
+            item_parts = item.split(':')
 
-    seconds_sum = 0
+            try:
+                days, hours = item_parts[0].split('-')
+                hours = int(days) * 24 + int(hours)
+            except:
+                hours = int(item_parts[0])
 
-    for item in time_str_list:
-        item_parts = item.split(':')
+            minutes = int(item_parts[1])
 
-        try:
-            days, hours = item_parts[0].split('-')
-            hours = int(days) * 24 + int(hours)
-        except:
-            hours = int(item_parts[0])
+            try:
+                seconds = int(item_parts[2])
+            except:
+                seconds = 0
 
-        minutes = int(item_parts[1])
+            seconds_total = seconds + minutes * 60 + hours * 3600
+            seconds_sum = seconds_sum + seconds_total
 
-        try:
-            seconds = int(item_parts[2])
-        except:
-            seconds = 0
+        hours = math.floor(seconds_sum / 3600)
+        minutes = math.floor((seconds_sum - hours * 3600) / 60)
+        seconds = math.floor((seconds_sum - hours * 3600 - minutes * 60))
 
-        seconds_total = seconds + minutes * 60 + hours * 3600
-        seconds_sum = seconds_sum + seconds_total
-
-    hours = math.floor(seconds_sum / 3600)
-    minutes = math.floor((seconds_sum - hours * 3600) / 60)
-    seconds = math.floor((seconds_sum - hours * 3600 - minutes * 60))
-
-    if len(item_parts) == 2:
-        new_time_str = '{:02d}:{:02d}'.format(hours, minutes)
+        if len(item_parts) == 2:
+            new_time_str = '{:02d}:{:02d}'.format(hours, minutes)
+        else:
+            new_time_str = '{:02d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
     else:
-        new_time_str = '{:02d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
+        new_time_str = '00:00:00'
 
     return new_time_str
-
 
 ############################################################################
 
