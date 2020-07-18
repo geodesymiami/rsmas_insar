@@ -120,7 +120,7 @@ class PathFind:
         if 'stripmap' in inps.template['acquisition_mode']:
             stackprefix = 'stripmapStack'
 
-            isceKey = ['slc_directory', 'working_directory', 'dem', 'bbox', 'reference_date', 'time_threshold',
+            isceKey = ['slc_directory', 'working_directory', 'dem', 'bbox', 'referenceDate', 'time_threshold',
                        'baseline_threshold', 'azimuth_looks', 'range_looks', 'sensor', 'low_band_frequency',
                        'high_band_frequency', 'subband_bandwidth', 'unw_method', 'filter_strength',
                        'filter_sigma_x', 'filter_sigma_y', 'filter_size_x', 'filter_size_y', 'filter_kernel_rotation',
