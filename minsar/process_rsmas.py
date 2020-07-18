@@ -159,6 +159,7 @@ class RsmasInsar:
         self.work_dir = inps.work_dir
         self.project_name = inps.project_name
         self.template = inps.template
+        self.remora = inps.remora
 
         if 'demMethod' in inps.template and inps.template['demMethod'] == 'boundingBox':
             self.dem_flag = '--boundingBox'
@@ -182,7 +183,10 @@ class RsmasInsar:
                 if os.path.isdir(os.path.join(self.work_dir, directory)):
                     shutil.rmtree(os.path.join(self.work_dir, directory))
 
-        minsar.download_rsmas.main([self.custom_template_file])
+        scp_args = [self.custom_template_file, '--submit']
+        if self.remora:
+            scp_args += ['--remora']
+        minsar.download_rsmas.main(scp_args)
 
         return
 
@@ -205,53 +209,45 @@ class RsmasInsar:
         command = 'tropo_pyaps3.py --date-list SAFE_files.txt --dir $WEATHER_DIR >> /dev/null'
         message_rsmas.log(os.getcwd(), command)
         status = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-
-        minsar.execute_runfiles.main([self.custom_template_file])
+        scp_args = [self.custom_template_file]
+        if self.remora:
+            scp_args += ['--remora']
+        minsar.execute_runfiles.main(scp_args)
         return
 
     def run_timeseries(self):
         """ Process smallbaseline using MintPy or non-linear inversion using MiNoPy and email results
         """
+        scp_args = [self.custom_template_file, '--submit']
+        if self.remora:
+            scp_args += ['--remora']
+
         if self.method == 'mintpy':
-            minsar.smallbaseline_wrapper.main([self.custom_template_file, '--email', '--submit'])
+            scp_args += ['--email']
+            minsar.smallbaseline_wrapper.main(scp_args)
         else:
             import minsar.minopy_wrapper as minopy_wrapper
-            minopy_wrapper.main([self.custom_template_file, '--submit'])
+            minopy_wrapper.main(scp_args)
         return
 
     def run_insarmaps(self):
         """ prepare outputs for insarmaps website.
         """
         if self.template['insarmaps_flag'] in ['True', True]:
-            minsar.ingest_insarmaps.main([self.custom_template_file, '--email', '--submit'])
+            scp_args = [self.custom_template_file, '--submit', '--email']
+            if self.remora:
+                scp_args += ['--remora']
+            minsar.ingest_insarmaps.main(scp_args)
         return
 
     def run_image_products(self):
         """ create ortho/geo-rectified products.
         """
         if self.template['image_products_flag'] in ['True', True]:
-
-            run_file_list = minsar.export_ortho_geo.main([self.custom_template_file, '--submit'])
-
-            self.inps.out_dir = os.path.join(self.work_dir, 'run_files')
-            job_obj = JOB_SUBMIT(self.inps)
-
-            for item in run_file_list:
-
-                putils.remove_last_job_running_products(run_file=item)
-
-                job_status = job_obj.submit_batch_jobs(batch_file=item)
-
-                if job_status:
-                    putils.remove_zero_size_or_length_error_files(run_file=item)
-                    putils.rerun_job_if_exit_code_140(run_file=item, inps_dict=self.inps)
-                    putils.raise_exception_if_job_exited(run_file=item)
-                    putils.concatenate_error_files(run_file=item, work_dir=self.work_dir)
-                    putils.move_out_job_files_to_stdout(run_file=item)
-
-            # upload_to_s3(pic_dir)
-            minsar.upload_data_products.main([inps.custom_template_file, '--imageProducts'])
-
+            scp_args = [self.custom_template_file, '--submit']
+            if self.remora:
+                scp_args += ['--remora']
+            minsar.export_ortho_geo.main(scp_args)
         return
 
     def run(self, steps=step_list):

@@ -56,7 +56,6 @@ def main(iargs=None):
             input_arguments.remove('--submit')
         command = [os.path.abspath(__file__)] + input_arguments
         job_obj.submit_script(job_name, job_file_name, command)
-        sys.exit(0)
 
     if inps.prefix == 'tops':
         if not inps.template[inps.prefix + 'Stack.slcDir'] is None:
@@ -75,8 +74,8 @@ def main(iargs=None):
     if 'SenDT' not in inps.project_name and 'SenAT' not in inps.project_name or os.getenv('SSARA_ASF') == 'False':
         
         try:
-           inps.template['ssaraopt.intersectsWithPoint']
-           inps.ssaraopt = ' '.join(add_point_to_ssaraopt(inps.template, inps.ssaraopt.split(' '))) 
+           # inps.template['ssaraopt.intersectsWithPoint']
+           inps.ssaraopt = ' '.join(add_point_to_ssaraopt(inps.template, inps.ssaraopt.split(' ')))
         except:
            inps.ssaraopt = ' '.join(add_polygon_to_ssaraopt(inps.template, inps.ssaraopt.split(' '), delta_lat=inps.delta_lat)) 
         command = 'ssara_federated_query.py ' + inps.ssaraopt + ' --print' + ' --download'

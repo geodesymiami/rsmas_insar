@@ -67,6 +67,8 @@ def add_common_parser(parser):
                          help='walltime for submitting the script as a job')
     commonp.add_argument('--wait', dest='wait_time', default='00:00', metavar="Wait time (hh:mm)",
                          help="wait time to submit a job")
+    commonp.add_argument('--remora', dest='remora', action='store_true', help='use remora to get job information')
+
     return parser
 
 
@@ -681,30 +683,31 @@ def remove_last_job_running_products(run_file):
 
 def move_out_job_files_to_stdout(run_file):
     """move the error file into stdout_files directory"""
-
     job_files = glob.glob(run_file + '*.job')
-    stdout_files = glob.glob(run_file + '*.o*')
+    stdout_files = glob.glob(run_file + '*.o')
 
     if len(job_files) + len(stdout_files) == 0:
         return
 
     dir_name = os.path.dirname(run_file)
     out_folder = dir_name + '/stdout_' + os.path.basename(run_file)
+    if not os.path.exists(out_folder):
+        os.makedirs(out_folder, exist_ok=True)
+    else:
+        shutil.rmtree(out_folder)
+        os.makedirs(out_folder, exist_ok=True)
 
     if len(stdout_files) >= 2:
-        if not os.path.exists(out_folder):
-            os.makedirs(out_folder, exist_ok=True)
-        else:
-            shutil.rmtree(out_folder)
-            os.makedirs(out_folder, exist_ok=True)
-
         for item in stdout_files:
             shutil.move(item, out_folder)
         for item in job_files:
             shutil.move(item, out_folder)
 
     extra_batch_files = glob.glob(run_file + '_*')
+
     for item in extra_batch_files:
+        if os.path.exists(out_folder + '/' + os.path.basename(item)):
+            os.remove(out_folder + '/' + os.path.basename(item))
         shutil.move(item, out_folder)
 
     return None
