@@ -55,7 +55,7 @@ cp $RSMASINSAR_HOME/minsar/unused/benchmark/run_launcher.job .
 run_step=13
 nodes_list=( 3 4 5 6 7 8 9 10 )
 partition=skx-normal      # can't use skx-dev in loop 
-time=00:06:00
+time=00:03:00
 
 delay_const=1200          # submit next job with delay to not start simultaneously
 
@@ -108,8 +108,8 @@ plot(nodes,time,'o--'), xlabel('nodes'),ylabel('seconds'),xticks([0:21]),set(gca
 xlim(xl)
 set(gcf,'color','w')
 ```
-### 3. Benchmarking one step as function of tasks
-*# Copy the job file into your project directory
+### 5. Benchmarking one step as function of tasks
+*# NOT COMPLETED YET ###
 ```
 ```
 * #Select number of nodes, walltime and copy-paste. Job
@@ -144,7 +144,7 @@ grep "Total" run_*.e | sort -V
 
 ```
 
-### 4. Scaling plots for stampede proposal
+### 6. Scaling plot
 ```
 aa=[
 2 26
@@ -159,11 +159,11 @@ time=aa(:,2)
 
 
 subplot(2,1,2)
-plot(nodes,time(1)./time(:),'o-'), xlabel('tasks'),ylabel('speedup'),axis equal,set(gca,'FontSize',18)
+plot(tasks,time(1)./time(:),'o-'), xlabel('tasks'),ylabel('speedup'),axis equal,set(gca,'FontSize',18)
 xl=xlim
 
 subplot(2,1,1)
-plot(nodes,time,'o--'), xlabel('nodes'),ylabel('seconds'),xticks([0:21]),set(gca,'FontSize',18)
+plot(tasks,time,'o--'), xlabel('tasks'),ylabel('seconds'),set(gca,'FontSize',18)
 xlim(xl)
 set(gcf,'color','w')
 ```
