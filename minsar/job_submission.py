@@ -15,11 +15,11 @@ Two environmental variables have to be set: JOB_SUBMISSION_SCHEME and QUEUENAME 
 QUEUENAME has defaults based on platforms. comment/uncomment or introduce a new one
 JOB_SUBMISSION_SCHEME: it can have one of these options:
 
-singletask                     ---> submit each task of a batch file separately in a job
-multitask_singleNode           ---> distribute tasks of a batch file into jobs with one node
-multitask_multiNode            ---> submit tasks of a batch file in one job with required number of nodes
-launcher_multitask_singleNode  ---> distribute tasks of a batch file into jobs with one node, submit with launcher
-launcher_multitask_multiNode   ---> submit tasks of a batch file in one job with required number of nodes using launcher
+singleTask                     ---> submit each task of a batch file separately in a job
+multiTask_singleNode           ---> distribute tasks of a batch file into jobs with one node
+multiTask_multiNode            ---> submit tasks of a batch file in one job with required number of nodes
+launcher_multiTask_singleNode  ---> distribute tasks of a batch file into jobs with one node, submit with launcher
+launcher_multiTask_multiNode   ---> submit tasks of a batch file in one job with required number of nodes using launcher
 
 """
 
@@ -188,11 +188,11 @@ class JOB_SUBMIT:
             number_of_nodes = np.int(np.ceil(number_of_tasks * float(self.default_num_threads) / (
                     (self.number_of_cores_per_node - 1) * self.number_of_threads_per_core)))
 
-            if 'singletask' in self.submission_scheme:
+            if 'singleTask' in self.submission_scheme:
 
                 self.write_batch_singletask_jobs(batch_file)
 
-            elif 'multitask_multiNode' in self.submission_scheme or number_of_nodes == 1:
+            elif 'multiTask_multiNode' in self.submission_scheme or number_of_nodes == 1:
 
                 batch_file_name = batch_file + '_0'
                 job_name = os.path.basename(batch_file_name)
@@ -202,7 +202,7 @@ class JOB_SUBMIT:
 
                 self.job_files.append(self.add_tasks_to_job_file_lines(job_file_lines, tasks, batch_file=batch_file_name))
 
-            elif 'multitask_singleNode' in self.submission_scheme:
+            elif 'multiTask_singleNode' in self.submission_scheme:
 
                 self.split_jobs(batch_file, tasks, number_of_nodes)
 
@@ -674,7 +674,7 @@ def set_job_queue_values(args):
     for key in host_keys:
         if os.getenv(key):
             hostname = os.getenv(key)
-    
+
     work_system = os.path.basename(os.getenv('WORK'))
     platform_name = hostname
     for platform in supported_platforms:
