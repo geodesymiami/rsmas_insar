@@ -6,6 +6,10 @@ import datetime
 import glob
 
 
+queue_config_file = os.path.join(os.getenv('RSMASINSAR_HOME'), 'minsar/defaults/queues.cfg')
+supported_platforms = ['frontera', 'stampede2', 'comet', 'pegasus', 'eos_sanghoon',
+                       'beijing_server', 'deqing_server']
+
 class PathFind:
     def __init__(self):
         self.logdir = os.getenv('OPERATIONS') + '/LOGS'
@@ -116,14 +120,14 @@ class PathFind:
         if 'stripmap' in inps.template['acquisition_mode']:
             stackprefix = 'stripmapStack'
 
-            isceKey = ['slc_directory', 'working_directory', 'dem', 'bbox', 'master_date', 'time_threshold',
+            isceKey = ['slc_directory', 'working_directory', 'dem', 'bbox', 'reference_date', 'time_threshold',
                        'baseline_threshold', 'azimuth_looks', 'range_looks', 'sensor', 'low_band_frequency',
                        'high_band_frequency', 'subband_bandwidth', 'unw_method', 'filter_strength',
                        'filter_sigma_x', 'filter_sigma_y', 'filter_size_x', 'filter_size_y', 'filter_kernel_rotation',
                        'workflow', 'zero', 'nofocus', 'text_cmd', 'useGPU']
             #'applyWaterMask',
 
-            templateKey = ['slcDir', 'workingDir', 'demDir', 'boundingBox', 'master', 'timeThreshold',
+            templateKey = ['slcDir', 'workingDir', 'demDir', 'boundingBox', 'referenceDate', 'timeThreshold',
                            'baselineThreshold', 'azimuthLooks', 'rangeLooks', 'sensor',
                            'LowBandFrequency', 'HighBandFrequency', 'subbandBandwith', 'unwMethod',
                            'golsteinFilterStrength', 'filterSigmaX', 'filterSigmaY', 'filterSizeX', 'filterSizeY',
@@ -133,13 +137,13 @@ class PathFind:
         else:
             stackprefix = 'topsStack'
 
-            isceKey = ['slc_directory', 'orbit_directory', 'aux_directory', 'working_directory', 'dem', 'master_date',
+            isceKey = ['slc_directory', 'orbit_directory', 'aux_directory', 'working_directory', 'dem', 'reference_date',
                        'num_connections', 'num_overlap_connections', 'swath_num', 'bbox', 'text_cmd', 'exclude_dates',
                        'include_dates', 'azimuth_looks', 'range_looks', 'filter_strength', 'esd_coherence_threshold',
                        'snr_misreg_threshold', 'unw_method', 'polarization', 'coregistration', 'workflow', 'start_date',
                        'stop_date', 'useGPU', 'rmFilter']
 
-            templateKey = ['slcDir', 'orbitDir', 'auxDir', 'workingDir', 'demDir', 'master', 'numConnections',
+            templateKey = ['slcDir', 'orbitDir', 'auxDir', 'workingDir', 'demDir', 'referenceDate', 'numConnections',
                            'numOverlapConnections', 'subswath', 'boundingBox', 'textCmd', 'excludeDates',
                            'includeDates', 'azimuthLooks', 'rangeLooks', 'filtStrength', 'esdCoherenceThreshold',
                            'snrMisregThreshold', 'unwMethod', 'polarization', 'coregistration', 'workflow', 'startDate',
