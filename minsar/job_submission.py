@@ -127,6 +127,9 @@ class JOB_SUBMIT:
         self.default_wall_time = None
         self.default_num_threads = None
 
+        if not inps.reserve_node:
+            self.reserve_node = inps.reserve_node
+
         self.email_notif = True
         self.job_files = []
 
@@ -154,7 +157,8 @@ class JOB_SUBMIT:
 
         self.job_files = []
 
-        self.write_single_job_file(job_name, job_file_name, command_line, work_dir=self.work_dir)
+        self.write_single_job_file(job_name, job_file_name, command_line, work_dir=self.work_dir,
+                                   number_of_nodes=self.reserve_node)
 
         self.submit_and_check_job_status(self.job_files, work_dir=self.work_dir)
 
@@ -259,7 +263,7 @@ class JOB_SUBMIT:
 
         return job_number
 
-    def write_single_job_file(self, job_name, job_file_name, command_line, work_dir=None):
+    def write_single_job_file(self, job_name, job_file_name, command_line, work_dir=None, number_of_nodes=1):
         """
         Writes a job file for a single job.
         :param job_name: Name of job.
@@ -269,7 +273,8 @@ class JOB_SUBMIT:
         """
 
         # get lines to write in job file
-        job_file_lines = self.get_job_file_lines(job_name, job_file_name, work_dir=work_dir)
+        job_file_lines = self.get_job_file_lines(job_name, job_file_name, work_dir=work_dir,
+                                                 number_of_nodes=number_of_nodes)
         job_file_lines.append("\nfree")
         if self.remora:
             job_file_lines.append('\nmodule load remora')
@@ -448,11 +453,14 @@ class JOB_SUBMIT:
         else:
             step_name = job_name
 
-        if self.prefix == 'tops':
+        if self.prefix == 'tops' and job_type == 'batch':
             if self.num_bursts is None:
                 self.num_bursts = putils.get_number_of_bursts(self)
+
+        if self.num_bursts:
+            number_of_bursts = self.num_bursts
         else:
-            self.num_bursts = 1
+            number_of_bursts = 1
 
         if self.memory in [None, 'None']:
             if step_name in config:
@@ -462,7 +470,7 @@ class JOB_SUBMIT:
                 c_memory = config['default']['c_memory']
                 s_memory = config['default']['s_memory']
 
-            self.default_memory = putils.scale_memory(self.num_bursts, c_memory, s_memory)
+            self.default_memory = putils.scale_memory(number_of_bursts, c_memory, s_memory)
         else:
             self.default_memory = self.memory
 
@@ -475,7 +483,7 @@ class JOB_SUBMIT:
                 c_walltime = config['default']['c_walltime']
                 s_walltime = config['default']['s_walltime']
 
-            self.default_wall_time = putils.scale_walltime(self.num_bursts * self.wall_time_factor,
+            self.default_wall_time = putils.scale_walltime(number_of_bursts * self.wall_time_factor,
                                                            c_walltime, s_walltime, self.scheduler)
         else:
             self.default_wall_time = self.wall_time
