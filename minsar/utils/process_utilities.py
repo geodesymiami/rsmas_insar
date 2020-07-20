@@ -66,6 +66,7 @@ def add_common_parser(parser):
     commonp.add_argument('--walltime', dest='wall_time', metavar="WALLTIME (HH:MM)",
                          help='walltime for submitting the script as a job')
     commonp.add_argument("--queue", dest="queue", metavar="QUEUE", help="Name of queue to submit job to")
+    commonp.add_argument('--reserveNode', dest='reserve_node', type=int, default=1, help='number of nodes to reserve')
     commonp.add_argument('--wait', dest='wait_time', default='00:00', metavar="Wait time (hh:mm)",
                          help="wait time to submit a job")
     commonp.add_argument('--remora', dest='remora', action='store_true', help='use remora to get job information')
