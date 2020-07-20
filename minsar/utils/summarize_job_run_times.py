@@ -87,8 +87,15 @@ def main(iargs=None):
     reserved_time_list = []
     elapsed_time_list = []
 
-    if not (os.getenv('PLATFORM_NAME') == "STAMPEDE2"):
-       print('Not on stampede2 - return from summarize_job_run_times.py')
+    hostname = subprocess.Popen("hostname -f", shell=True, stdout=subprocess.PIPE).stdout.read().decode("utf-8")
+
+    scheduler = None
+    for platform in ['frontera', 'stampede2', 'comet']:
+        if platform in hostname:
+            scheduler = 'SLURM'
+            break
+    if not scheduler == 'SLURM':
+       print('Not on TACC system - return from summarize_job_run_times.py')
        return None
 
     for fname in run_stdout_files:
