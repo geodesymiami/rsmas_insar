@@ -230,6 +230,16 @@ class RsmasInsar:
             minopy_wrapper.main(scp_args)
         return
 
+    def run_upload_data_products(self):
+        """ upload data to jetstream server for data download
+        """
+        if self.template['upload_flag'] in ['True', True]:
+            # upload_data_products.main([self.custom_template_file, '--mintpyProducts'])   # this is simpler, but how to put process into background?
+            command = 'upload_data_products.py --mintpyProducts ' + self.custom_template_file + ' > out_upload_data_products.o 2> out_upload_data_products.e'
+            message_rsmas.log(os.getcwd(), command)
+            status = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+        return
+
     def run_insarmaps(self):
         """ prepare outputs for insarmaps website.
         """
@@ -248,6 +258,8 @@ class RsmasInsar:
             if self.remora:
                 scp_args += ['--remora']
             minsar.export_ortho_geo.main(scp_args)
+            # upload_to_s3(pic_dir)
+            minsar.upload_data_products.main([inps.custom_template_file, '--imageProducts'])
         return
 
     def run(self, steps=step_list):
@@ -267,6 +279,9 @@ class RsmasInsar:
 
             elif sname == 'timeseries':
                 self.run_timeseries()
+
+            elif sname == 'upload':
+                self.run_upload_data_products()
 
             elif sname == 'insarmaps':
                 self.run_insarmaps()
