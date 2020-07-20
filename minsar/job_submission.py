@@ -111,13 +111,13 @@ class JOB_SUBMIT:
         self.number_of_cores_per_node, self.number_of_threads_per_core, self.max_jobs_per_queue, \
         self.max_memory_per_node, self.wall_time_factor = set_job_queue_values(inps)
 
-        if not 'num_bursts' in inps:
+        if not 'num_bursts' in inps or not inps.num_bursts:
             self.num_bursts = None
-        if not 'wall_time' in inps:
+        if not 'wall_time' in inps or not inps.wall_time:
             self.wall_time = None
-        if not 'memory' in inps:
+        if not 'memory' in inps or not inps.memory:
             self.memory = None
-        if not 'queue' in inps:
+        if not 'queue' in inps or not inps.queue:
             self.queue = self.queue_name
         if not 'out_dir' in inps:
             self.out_dir = '.'
@@ -186,13 +186,13 @@ class JOB_SUBMIT:
                 number_of_tasks = len(tasks)
 
             number_of_nodes = np.int(np.ceil(number_of_tasks * float(self.default_num_threads) / (
-                    (self.number_of_cores_per_node - 1) * self.number_of_threads_per_core)))
+                    self.number_of_cores_per_node * self.number_of_threads_per_core)))
 
             if 'singleTask' in self.submission_scheme:
 
                 self.write_batch_singletask_jobs(batch_file)
 
-            elif 'multiTask_multiNode' in self.submission_scheme or number_of_nodes == 1:
+            elif 'multiTask_multiNode' in self.submission_scheme: # or number_of_nodes == 1:
 
                 batch_file_name = batch_file + '_0'
                 job_name = os.path.basename(batch_file_name)
@@ -601,13 +601,18 @@ class JOB_SUBMIT:
 
             if self.remora:
                 job_file_lines.append("\n\nmodule load remora")
+
             job_file_lines.append("\n\nmodule load launcher")
+            #if self.queue in ['gpu', 'rtx', 'rtx-dev']:
+            #    job_file_lines.append("\n\nmodule load launcher_gpu")
+            #else:
+            #    job_file_lines.append("\n\nmodule load launcher")
 
             job_file_lines.append("\nexport OMP_NUM_THREADS={0}".format(self.default_num_threads))
             job_file_lines.append("\nexport PATH={0}:$PATH".format(self.stack_path))
             job_file_lines.append("\nexport LAUNCHER_WORKDIR={0}".format(self.out_dir))
             job_file_lines.append("\nexport LAUNCHER_JOB_FILE={0}\n".format(batch_file))
-            if self.platform_name == 'stampede2':
+            if self.scheduler == 'SLURM':
                job_file_lines.append("export LD_PRELOAD=/home1/apps/tacc-patches/python_cacher/myopen.so\n")
 
             if self.remora:
@@ -626,7 +631,7 @@ class JOB_SUBMIT:
                                                                  os.path.abspath(batch_file) + '_{}.o'.format(count),
                                                                  os.path.abspath(batch_file) + '_{}.e'.format(count)))
 
-            if self.platform_name == 'stampede2':
+            if self.scheduler == 'SLURM':
                job_file_lines.append("\nexport LD_PRELOAD=/home1/apps/tacc-patches/python_cacher/myopen.so")
 
             job_file_lines.append("\n\nexport OMP_NUM_THREADS={0}".format(self.default_num_threads))
@@ -668,18 +673,15 @@ def set_job_queue_values(args):
 
     inps = putils.create_or_update_template(args)
     submission_scheme = inps.template['job_submission_scheme']
+    hostname = subprocess.Popen("hostname -f", shell=True, stdout=subprocess.PIPE).stdout.read().decode("utf-8")
 
-    hostname = 'local'
-    host_keys = ['hostname', 'HOSTNAME', 'uname']
-    for key in host_keys:
-        if os.getenv(key):
-            hostname = os.getenv(key)
-
-    work_system = os.path.basename(os.getenv('WORK'))
-    platform_name = hostname
     for platform in supported_platforms:
-        if work_system and platform in work_system:
+        if platform in hostname:
             platform_name = platform
+            break
+
+    if inps.queue:
+        inps.template['QUEUENAME'] = inps.queue
 
     check_auto = {'queue_name': inps.template['QUEUENAME'],
                   'number_of_cores_per_node': inps.template['JOB_CPUS_PER_NODE'],
@@ -706,7 +708,7 @@ def set_job_queue_values(args):
                     check_auto['number_of_threads_per_core'] = int(split_values[queue_header.index('THREADS_PER_CORE')])
                     check_auto['max_jobs_per_queue'] = int(split_values[queue_header.index('MAX_JOBS_PER_QUEUE')])
                     check_auto['max_memory_per_node'] = int(split_values[queue_header.index('MEM_PER_NODE')])
-                    check_auto['wall_time_factor'] = int(split_values[queue_header.index('WALLTIME_FACTOR')])
+                    check_auto['wall_time_factor'] = float(split_values[queue_header.index('WALLTIME_FACTOR')])
                     break
                 else:
                     continue
