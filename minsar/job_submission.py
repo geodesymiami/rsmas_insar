@@ -201,10 +201,11 @@ class JOB_SUBMIT:
                 batch_file_name = batch_file + '_0'
                 job_name = os.path.basename(batch_file_name)
 
-                job_file_lines = self.get_job_file_lines(batch_file, batch_file_name, number_of_tasks=len(tasks),
+                job_file_lines = self.get_job_file_lines(batch_file, job_name, number_of_tasks=len(tasks),
                                                          number_of_nodes=number_of_nodes, work_dir=self.out_dir)
 
-                self.job_files.append(self.add_tasks_to_job_file_lines(job_file_lines, tasks, batch_file=batch_file_name))
+                self.job_files.append(self.add_tasks_to_job_file_lines(job_file_lines, tasks,
+                                                                       batch_file=job_name))
 
             elif 'multiTask_singleNode' in self.submission_scheme:
 
@@ -687,6 +688,8 @@ def set_job_queue_values(args):
 
     template = auto_template_not_existing_options(args)
     submission_scheme = template['job_submission_scheme']
+    if submission_scheme == 'auto':
+        submission_scheme = 'launcher_multiTask_singleNode'
     hostname = subprocess.Popen("hostname -f", shell=True, stdout=subprocess.PIPE).stdout.read().decode("utf-8")
 
     for platform in supported_platforms:
