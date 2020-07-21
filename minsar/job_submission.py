@@ -51,7 +51,7 @@ def create_argument_parser():
 
     group = parser.add_argument_group("Input File", "File/Dataset to display")
     group.add_argument("file", type=str, help="The file to batch create")
-    commonp.add_argument('--template', dest='custom_template_file', type=str,
+    group.add_argument('--template', dest='custom_template_file', type=str,
                          metavar='template file', help='custom template with option settings.\n')
     group.add_argument("--memory", dest="memory", metavar="MEMORY (KB)",
                        help="Amount of memory to allocate, specified in kilobytes")
@@ -126,9 +126,8 @@ class JOB_SUBMIT:
         self.default_memory = None
         self.default_wall_time = None
         self.default_num_threads = None
-
-        if not inps.reserve_node:
-            self.reserve_node = inps.reserve_node
+        if not 'reserve_node' in inps or not inps.reserve_node:
+            self.reserve_node = 1
 
         self.email_notif = True
         self.job_files = []
@@ -202,10 +201,11 @@ class JOB_SUBMIT:
                 batch_file_name = batch_file + '_0'
                 job_name = os.path.basename(batch_file_name)
 
-                job_file_lines = self.get_job_file_lines(batch_file, batch_file_name, number_of_tasks=len(tasks),
+                job_file_lines = self.get_job_file_lines(batch_file, job_name, number_of_tasks=len(tasks),
                                                          number_of_nodes=number_of_nodes, work_dir=self.out_dir)
 
-                self.job_files.append(self.add_tasks_to_job_file_lines(job_file_lines, tasks, batch_file=batch_file_name))
+                self.job_files.append(self.add_tasks_to_job_file_lines(job_file_lines, tasks,
+                                                                       batch_file=job_name))
 
             elif 'multiTask_singleNode' in self.submission_scheme:
 
@@ -534,6 +534,9 @@ class JOB_SUBMIT:
             memory_option = "-l mem={0}"
             email_option = "-m bea" + prefix + "-M {0}"
         elif self.scheduler == 'SLURM':
+            if number_of_nodes > 1 and number_of_tasks == 1:
+                number_of_tasks = number_of_nodes * self.number_of_cores_per_node
+
             prefix = "\n#SBATCH "
             shell = "/bin/bash"
             name_option = "-J {0}"
@@ -683,8 +686,10 @@ def check_words_in_file(errfile, eword):
 
 def set_job_queue_values(args):
 
-    inps = putils.create_or_update_template(args)
-    submission_scheme = inps.template['job_submission_scheme']
+    template = auto_template_not_existing_options(args)
+    submission_scheme = template['job_submission_scheme']
+    if submission_scheme == 'auto':
+        submission_scheme = 'launcher_multiTask_singleNode'
     hostname = subprocess.Popen("hostname -f", shell=True, stdout=subprocess.PIPE).stdout.read().decode("utf-8")
 
     for platform in supported_platforms:
@@ -692,16 +697,15 @@ def set_job_queue_values(args):
             platform_name = platform
             break
 
-    if inps.queue:
-        inps.template['QUEUENAME'] = inps.queue
+    if args.queue:
+        template['QUEUENAME'] = args.queue
 
-
-    check_auto = {'queue_name': inps.template['QUEUENAME'],
-                  'number_of_cores_per_node': inps.template['JOB_CPUS_PER_NODE'],
-                  'number_of_threads_per_core': inps.template['THREADS_PER_CORE'],
-                  'max_jobs_per_queue': inps.template['MAX_JOBS_PER_QUEUE'],
-                  'wall_time_factor': inps.template['WALLTIME_FACTOR'],
-                  'max_memory_per_node': inps.template['MEM_PER_NODE']}
+    check_auto = {'queue_name': template['QUEUENAME'],
+                  'number_of_cores_per_node': template['JOB_CPUS_PER_NODE'],
+                  'number_of_threads_per_core': template['THREADS_PER_CORE'],
+                  'max_jobs_per_queue': template['MAX_JOBS_PER_QUEUE'],
+                  'wall_time_factor': template['WALLTIME_FACTOR'],
+                  'max_memory_per_node': template['MEM_PER_NODE']}
 
     if platform_name in supported_platforms:
         with open(queue_config_file, 'r') as f:
@@ -748,6 +752,20 @@ def set_job_queue_values(args):
                 check_auto['max_memory_per_node'], check_auto['wall_time_factor'])
 
     return out_puts
+
+
+def auto_template_not_existing_options(args):
+    from minsar.objects.dataset_template import Template
+
+    template = Template(args.custom_template_file).options
+
+    job_options = ['QUEUENAME', 'JOB_CPUS_PER_NODE', 'THREADS_PER_CORE', 'MAX_JOBS_PER_QUEUE',
+                   'WALLTIME_FACTOR', 'MEM_PER_NODE', 'job_submission_scheme']
+    for option in job_options:
+        if not option in template:
+            template[option] = 'auto'
+
+    return template
 
 ###################################################################################################
 
