@@ -837,7 +837,7 @@ def get_number_of_bursts(inps_dict):
 ############################################################################
 
 
-def scale_walltime(number_of_bursts, c_walltime, s_walltime, scheduler='SLURM'):
+def scale_walltime(number_of_bursts, walltime_factor, c_walltime, s_walltime, scheduler='SLURM'):
     """
     scales default walltime by number of bursts
     scaled_walltime = c_walltime + number_of_bursts * s_walltime
@@ -869,8 +869,6 @@ def scale_walltime(number_of_bursts, c_walltime, s_walltime, scheduler='SLURM'):
         c_time_seconds = 0
 
     time_seconds = float(c_time_seconds) + float(number_of_bursts) * float(s_time_seconds)
-
-    walltime_factor = float(os.getenv('WALLTIME_FACTOR'))
 
     time_seconds *= walltime_factor
 

@@ -483,7 +483,7 @@ class JOB_SUBMIT:
                 c_walltime = config['default']['c_walltime']
                 s_walltime = config['default']['s_walltime']
 
-            self.default_wall_time = putils.scale_walltime(number_of_bursts * self.wall_time_factor,
+            self.default_wall_time = putils.scale_walltime(number_of_bursts, self.wall_time_factor,
                                                            c_walltime, s_walltime, self.scheduler)
         else:
             self.default_wall_time = self.wall_time
@@ -696,6 +696,8 @@ def set_job_queue_values(args):
         if platform in hostname:
             platform_name = platform
             break
+        else:
+            platform_name = None
 
     if args.queue:
         template['QUEUENAME'] = args.queue
