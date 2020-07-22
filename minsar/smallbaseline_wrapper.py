@@ -50,11 +50,11 @@ def main(iargs=None):
     try:
         with open('out_mintpy.o', 'w') as f:
             with contextlib.redirect_stdout(f):
-                smallbaselineApp.main([inps.custom_template_file])
+                smallbaselineApp.main([inps.custom_template_file, '--dir', pathObj.mintpydir])
     except:
         with open('out_mintpy.e', 'w') as g:
             with contextlib.redirect_stderr(g):
-                smallbaselineApp.main([inps.custom_template_file])
+                smallbaselineApp.main([inps.custom_template_file, '--dir', pathObj.mintpydir])
 
     inps.mintpy_dir = os.path.join(inps.work_dir, pathObj.mintpydir)
     putils.set_permission_dask_files(directory=inps.mintpy_dir)
