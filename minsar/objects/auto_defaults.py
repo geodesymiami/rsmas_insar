@@ -45,17 +45,21 @@ class PathFind:
     def set_isce_defaults(self, inps):
 
         inps_dict = vars(inps)
-
-        inps_dict['template'][inps.prefix + 'Stack.slcDir'] = inps.work_dir + '/SLC'
-        inps_dict['template'][inps.prefix + 'Stack.demDir'] = inps.work_dir + '/DEM'
-        inps_dict['template'][inps.prefix + 'Stack.workingDir'] = inps.work_dir
+        if inps_dict['template'][inps.prefix + 'Stack.slcDir'] == 'auto':
+            inps_dict['template'][inps.prefix + 'Stack.slcDir'] = inps.work_dir + '/SLC'
+        if inps_dict['template'][inps.prefix + 'Stack.demDir'] == 'auto':
+            inps_dict['template'][inps.prefix + 'Stack.demDir'] = inps.work_dir + '/DEM'
+        if inps_dict['template'][inps.prefix + 'Stack.workingDir'] == 'auto':
+            inps_dict['template'][inps.prefix + 'Stack.workingDir'] = inps.work_dir
 
         if 'cleanopt' not in inps.template:
             inps_dict['template']['cleanopt'] = '0'
 
         if inps.prefix == 'tops':
-            inps_dict['template']['topsStack.orbitDir'] = self.orbitdir
-            inps_dict['template']['topsStack.auxDir'] = self.auxdir
+            if inps_dict['template']['topsStack.orbitDir'] == 'auto':
+                inps_dict['template']['topsStack.orbitDir'] = self.orbitdir
+            if inps_dict['template']['topsStack.auxDir'] == 'auto':
+                inps_dict['template']['topsStack.auxDir'] = self.auxdir
 
         return
 
@@ -63,10 +67,7 @@ class PathFind:
     def grab_cropbox(inps):
 
         cropbox = inps.template[inps.prefix + 'Stack.boundingBox']
-        #if not inps.template['minopy.subset'] == 'None':
-        #        cropbox = inps.template['minopy.subset']
-        #else:
-        #    cropbox = inps.template['topsStack.boundingBox']
+
         return cropbox
 
     @staticmethod
