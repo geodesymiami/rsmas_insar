@@ -29,5 +29,5 @@ mintpy.troposphericDelay.method    = no    # pyaps  #[pyaps / height_correlation
 mintpy.save.hdfEos5                = yes   #[yes / update / no], auto for no, save timeseries to UNAVCO InSAR Archive format
 mintpy.save.hdfEos5.update         = yes   #[yes / no], auto for no, put XXXXXXXX as endDate in output filename
 mintpy.save.kmz                    = yes  #[yes / no], auto for yes, save geocoded velocity to Google Earth KMZ file
-
+mintpy.load.autoPath               = yes
 ######################################################
