@@ -68,7 +68,8 @@ def main(iargs=None):
 
     for item in run_file_list:
         putils.remove_last_job_running_products(run_file=item)
-
+        
+        job_obj.write_batch_jobs(batch_file=item)
         job_status = job_obj.submit_batch_jobs(batch_file=item)
 
         if job_status:
