@@ -7,6 +7,7 @@ import os
 import sys
 import glob
 import time
+import shutil
 from minsar.objects import message_rsmas
 from minsar.objects.auto_defaults import PathFind
 from minsar.utils.stack_run import CreateRun
@@ -21,7 +22,7 @@ pathObj = PathFind()
 
 
 def main(iargs=None):
-    inps = putils.cmd_line_parse(iargs)
+    inps = putils.cmd_line_parse(iargs, script='create_runfiles')
 
     if not iargs is None:
         input_arguments = iargs
@@ -72,13 +73,21 @@ def main(iargs=None):
             unpack_run_file = unpackObj.start()
             unpackObj.close()
 
+            job_obj.write_batch_jobs(batch_file=unpack_run_file)
             job_status = job_obj.submit_batch_jobs(batch_file=unpack_run_file)
+
             if not job_status:
                 raise Exception('ERROR: Unpacking was failed')
         else:
             raise Exception('ERROR: No data (SLC or Raw) available')
 
     # make run file:
+    run_dir = os.path.join(inps.work_dir, 'run_files')
+    config_dir = os.path.join(inps.work_dir, 'configs')
+    for directory in [run_dir, config_dir]:
+        if os.path.exists(directory):
+            shutil.rmtree(directory)
+
     inps.Stack_template = pathObj.correct_for_isce_naming_convention(inps)
     runObj = CreateRun(inps)
     runObj.run_stack_workflow()
@@ -88,6 +97,10 @@ def main(iargs=None):
     with open(inps.work_dir + '/run_files_list', 'w') as run_file:
         for item in run_file_list:
             run_file.writelines(item + '\n')
+
+    if inps.write_jobs:
+        for item in run_file_list:
+            job_obj.write_batch_jobs(batch_file=item)
 
     if inps.prefix == 'tops':
         # check for orbits
