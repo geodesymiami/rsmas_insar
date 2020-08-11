@@ -39,6 +39,8 @@ def cmd_line_parse(iargs=None, script=None):
 
     if script == 'download_rsmas':
         parser = add_download_data(parser)
+    if script == 'create_runfiles':
+        parser = add_create_runfiles(parser)
     if script == 'dem_rsmas':
         parser = add_download_dem(parser)
     if script == 'execute_runfiles':
@@ -71,6 +73,13 @@ def add_common_parser(parser):
                          help="wait time to submit a job")
     commonp.add_argument('--remora', dest='remora', action='store_true', help='use remora to get job information')
 
+    return parser
+
+
+def add_create_runfiles(parser):
+    run_parser = parser.add_argument_group('create run files and jobs options:')
+    run_parser.add_argument('--job', dest='write_jobs', action='store_true',
+                             help='writes the jobs corresponding to run files')
     return parser
 
 
@@ -255,7 +264,6 @@ def create_or_update_template(inps_dict):
 
     if not os.path.exists(inps.work_dir):
         os.makedirs(inps.work_dir, exist_ok=True)
-
     # Creates default Template
     inps = create_default_template(inps)
 
@@ -450,6 +458,7 @@ def rerun_job_if_exit_code_140(run_file, inps_dict):
     #inps.queue = queuename
 
     job_obj = JOB_SUBMIT(inps)
+    job_obj.write_batch_jobs(batch_file=rerun_file)
     jobs = job_obj.submit_batch_jobs(batch_file=rerun_file)
 
     remove_zero_size_or_length_error_files(run_file=rerun_file)
@@ -623,10 +632,10 @@ def concatenate_error_files(run_file, work_dir):
         os.remove(out_file)
 
     out_name = os.path.dirname(run_file) + '/out_' + run_file.split('/')[-1] + '.e'
-    Path(out_name).touch()
+    
     error_files = glob.glob(run_file + '*.e*')
     if not len(error_files) == 0:
-        with open(out_name, 'w') as outfile:
+        with open(out_name, 'w+') as outfile:
             for fname in error_files:
                 outfile.write('#########################\n')
                 outfile.write('#### ' + fname + ' \n')
@@ -635,8 +644,9 @@ def concatenate_error_files(run_file, work_dir):
                     outfile.write(infile.read())
                 os.remove(fname)
 
-    shutil.copy(os.path.abspath(out_name), os.path.abspath(work_dir))
-    os.remove(os.path.abspath(out_name))
+    if os.path.exists(os.path.abspath(out_name)):
+        shutil.copy(os.path.abspath(out_name), os.path.abspath(work_dir))
+        os.remove(os.path.abspath(out_name))
 
     return None
 
@@ -685,10 +695,13 @@ def remove_last_job_running_products(run_file):
 
 def move_out_job_files_to_stdout(run_file):
     """move the error file into stdout_files directory"""
-    job_files = glob.glob(run_file + '*.job')
+    #job_files = glob.glob(run_file + '*.job')
     stdout_files = glob.glob(run_file + '*.o')
 
-    if len(job_files) + len(stdout_files) == 0:
+    #if len(job_files) + len(stdout_files) == 0:
+    #    return
+
+    if len(stdout_files) == 0:
         return
 
     dir_name = os.path.dirname(run_file)
@@ -702,8 +715,8 @@ def move_out_job_files_to_stdout(run_file):
     if len(stdout_files) >= 2:
         for item in stdout_files:
             shutil.move(item, out_folder)
-        for item in job_files:
-            shutil.move(item, out_folder)
+        #for item in job_files:
+        #    shutil.move(item, out_folder)
 
     extra_batch_files = glob.glob(run_file + '_*')
 
@@ -785,10 +798,9 @@ def get_number_of_bursts(inps_dict):
     sys.path.append(os.path.join(os.getenv('ISCE_STACK'), 'topsStack'))
 
     from stackSentinel import cmdLineParse as stack_cmd, get_dates
-
     try:
-        inpd = create_default_template(inps_dict)
-        topsStack_template = pathObj.correct_for_isce_naming_convention(inpd)
+        #inpd = create_default_template(inps_dict)
+        topsStack_template = pathObj.correct_for_isce_naming_convention(inps_dict)
         command_options = []
         for item in topsStack_template:
             if item in ['useGPU', 'rmFilter']:
