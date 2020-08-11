@@ -25,7 +25,6 @@ from minsar.utils.download_ssara_rsmas import add_polygon_to_ssaraopt
 from minsar.utils.process_utilities import cmd_line_parse
 from minsar.download_rsmas import ssh_with_commands
 
-
 EXAMPLE = '''
   example:
   dem_rsmas.py  $SAMPLES/GalapagosT128SenVVD.template
@@ -39,7 +38,6 @@ EXAMPLE = '''
 
 
 def main(iargs=None):
-
     # set defaults: ssara=True is set in dem_parser, use custom_pemp[late field if given
     inps = cmd_line_parse(iargs, script='dem_rsmas')
 
@@ -64,8 +62,8 @@ def main(iargs=None):
         inps.flag_ssara = True
 
     dem_dir = os.path.join(inps.work_dir, 'DEM')
-    if not exist_valid_dem_dir( dem_dir ):
-       os.mkdir(dem_dir)
+    if not exist_valid_dem_dir(dem_dir):
+        os.mkdir(dem_dir)
 
     os.chdir(dem_dir)
 
@@ -89,7 +87,7 @@ def main(iargs=None):
         south = math.floor(float(south) - 0.5)
         north = math.ceil(float(north) + 0.5)
         west = math.floor(float(west) - 0.5)
-        east = math.ceil(float(east) + 0.5 )
+        east = math.ceil(float(east) + 0.5)
 
         demBbox = str(int(south)) + ' ' + str(int(north)) + ' ' + str(int(west)) + ' ' + str(int(east))
         command = 'dem.py -a stitch --filling --filling_value 0 -b ' + demBbox + ' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
@@ -98,10 +96,12 @@ def main(iargs=None):
 
         if os.getenv('DOWNLOADHOST') == 'local':
             try:
-                proc = subprocess.Popen(command,  stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True, universal_newlines=True)
+                proc = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True,
+                                        universal_newlines=True)
                 output, error = proc.communicate()
                 if proc.returncode is not 0:
-                    raise Exception('ERROR starting dem.py subprocess')   # FA 8/19: I don't think this happens, errors are is output
+                    raise Exception(
+                        'ERROR starting dem.py subprocess')  # FA 8/19: I don't think this happens, errors are is output
             except subprocess.CalledProcessError as exc:
                 print("Command failed. Exit code, StdErr:", exc.returncode, exc.output)
                 sys.exit('Error produced by dem.py')
@@ -122,17 +122,17 @@ def main(iargs=None):
 
         cmd = 'fixImageXml.py -f -i {}'.format(glob.glob(dem_dir + '/demLat_*.wgs84')[0])
         os.system(cmd)
-            #print('Exit status from dem.py: {0}'.format(status))
+        # print('Exit status from dem.py: {0}'.format(status))
 
-        #xmlFile = glob.glob('demLat_*.wgs84.xml')[0]
+        # xmlFile = glob.glob('demLat_*.wgs84.xml')[0]
 
-        #fin = open(xmlFile, 'r')
-        #fout = open("tmp.txt", "wt")
-        #for line in fin:
+        # fin = open(xmlFile, 'r')
+        # fout = open("tmp.txt", "wt")
+        # for line in fin:
         #    fout.write(line.replace('demLat', dem_dir + '/demLat'))
-        #fin.close()
-        #fout.close()
-        #os.rename('tmp.txt', xmlFile)
+        # fin.close()
+        # fout.close()
+        # os.rename('tmp.txt', xmlFile)
 
     else:
         sys.exit('Error unspported demMethod option: ' + inps.template['demMethod'])
@@ -145,7 +145,8 @@ def main(iargs=None):
 
 
 def call_ssara_dem(inps, cwd):
-    print('DEM generation using SSARA'); sys.stdout.flush()
+    print('DEM generation using SSARA');
+    sys.stdout.flush()
     out_file = 'ssara_dem.log'
 
     # need to refactor so that Josh's dataset_template will be used throughout
@@ -160,12 +161,15 @@ def call_ssara_dem(inps, cwd):
     command = '('+command+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
     print('command currently executing: ' + command); sys.stdout.flush()
     if os.getenv('DOWNLOADHOST') == 'local':
-        print('Command: ' + command ); sys.stdout.flush()
+        print('Command: ' + command);
+        sys.stdout.flush()
         try:
-            proc = subprocess.Popen(command,  stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True, universal_newlines=True)
-            error, output = proc.communicate() # FA 8/19 error, output works better here than output, error. Could be that stderr and stdout are switched .
+            proc = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True,
+                                    universal_newlines=True)
+            error, output = proc.communicate()  # FA 8/19 error, output works better here than output, error. Could be that stderr and stdout are switched .
             if proc.returncode is not 0:
-                raise Exception('ERROR starting dem.py subprocess')   # FA 8/19: I don't think this happens, errors are is output
+                raise Exception(
+                    'ERROR starting dem.py subprocess')  # FA 8/19: I don't think this happens, errors are is output
         except subprocess.CalledProcessError as exc:
             print("Command failed. Exit code, StdErr:", exc.returncode, exc.output)
             sys.exit('Error produced by ssara_federated_query.py')
@@ -179,9 +183,10 @@ def call_ssara_dem(inps, cwd):
         ssh_command_list = ['s.bgood', 'cd {0}'.format(cwd), command]
         host = os.getenv('DOWNLOADHOST')
         status = ssh_with_commands(host, ssh_command_list)
-        #print('status from ssh_with_commands:' + str(status)); sys.stdout.flush()
-    
-    print('Done downloading dem.grd'); sys.stdout.flush()
+        # print('status from ssh_with_commands:' + str(status)); sys.stdout.flush()
+
+    print('Done downloading dem.grd');
+    sys.stdout.flush()
     grd_to_envi_and_vrt()
     grd_to_xml(cwd)
 
@@ -198,7 +203,8 @@ def exist_valid_dem_dir(dem_dir):
             return False
     else:
         return False
-        
+
+
 def grd_to_xml(cwd):
     print('you have started grd_to_xml')
 
@@ -232,7 +238,7 @@ def grd_to_xml(cwd):
     xmlparamters['c2sv'] = float(re.findall(r'Upper Right\s+\(\s*.\d+.\d+,\s+(.\d+.\d+)\)', tempstr)[0])
 
     xmlparamters['numbands'] = re.findall(r'Band (\d+) \w', tempstr)[0]
-    xmlparamters['ref'] = 'WGS84'                                            #  FA 3/20: hardwired in
+    xmlparamters['ref'] = 'WGS84'  # FA 3/20: hardwired in
     xmlparamters['length'] = xmlparamters['c2size']
     xmlparamters['width'] = xmlparamters['c1size']
     xmlparamters['xmax'] = xmlparamters['c1ev']
@@ -394,4 +400,3 @@ vrttext = '''
 ###########################################################################################
 if __name__ == '__main__':
     main()
-
