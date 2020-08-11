@@ -118,10 +118,11 @@ class JOB_SUBMIT:
         if not 'memory' in inps or not inps.memory:
             self.memory = None
         if not 'queue' in inps or not inps.queue:
-
             self.queue = self.queue_name
         if not 'out_dir' in inps:
             self.out_dir = '.'
+        if not 'remora' in inps:
+            self.remora = None
 
         self.default_memory = None
         self.default_wall_time = None
@@ -131,6 +132,14 @@ class JOB_SUBMIT:
 
         self.email_notif = True
         self.job_files = []
+
+        try:
+            dem_file = glob.glob(self.work_dir + '/DEM/*.wgs84')[0]
+            inps.template[inps.prefix + 'Stack.demDir'] = dem_file
+        except:
+            print('DEM does not exist in {}'.format(self.work_dir + '/DEM'))
+
+        self.inps = inps
 
     def submit_script(self, job_name, job_file_name, argv, email_notif=None):
         """
@@ -163,9 +172,9 @@ class JOB_SUBMIT:
 
         return
 
-    def submit_batch_jobs(self, batch_file=None, email_notif=None):
+    def write_batch_jobs(self, batch_file=None, email_notif=None):
         """
-        submit jobs based on scheduler
+        creates jobs based on scheduler
         :param batch_file: batch job name
         :param email_notif: If email notifications should be on or not. Defaults to true.
         :return: True if running on a cluster
@@ -211,6 +220,20 @@ class JOB_SUBMIT:
 
                 self.split_jobs(batch_file, tasks, number_of_nodes)
 
+        if len(self.job_files) > 0:
+            for job_file in self.job_files:
+                os.system('chmod +x {}'.format(job_file))
+
+        return
+
+    def submit_batch_jobs(self, batch_file=None):
+        """
+        submit jobs based on scheduler
+        :param batch_file: batch job name
+        :param email_notif: If email notifications should be on or not. Defaults to true.
+        :return: True if running on a cluster
+        """
+        if len(self.job_files) > 0:
             self.submit_and_check_job_status(self.job_files, work_dir=self.out_dir)
 
             return True
@@ -393,8 +416,7 @@ class JOB_SUBMIT:
                             check_words_in_file(errfile, 'Error')]
                 if np.array(job_exit).any():
                     raise RuntimeError('Error terminating job: {}'.format(job_file_name))
-                    sys.exit(0)
-
+                    
         return
 
     def split_jobs(self, batch_file, tasks, number_of_nodes):
@@ -413,11 +435,18 @@ class JOB_SUBMIT:
             number_of_nodes_per_job = number_of_nodes_per_job + 1
             number_of_jobs = np.ceil(number_of_nodes/number_of_nodes_per_job)
 
+        number_of_parallel_tasks = int(np.ceil(len(tasks) / number_of_jobs))
+        number_of_limited_memory_tasks = int(self.max_memory_per_node*number_of_nodes_per_job/self.default_memory)
+
+        while number_of_limited_memory_tasks < number_of_parallel_tasks:
+            number_of_nodes_per_job = number_of_nodes_per_job + 1
+            number_of_jobs = np.ceil(number_of_nodes / number_of_nodes_per_job)
+            number_of_parallel_tasks = int(np.ceil(len(tasks) / number_of_jobs))
+            number_of_limited_memory_tasks = int(self.max_memory_per_node * number_of_nodes_per_job / self.default_memory)
+
         if number_of_nodes_per_job > 1:
             print('Note: Number of jobs exceed the numbers allowed per queue for jobs with 1 node...\n'
                   'Number of Nodes per job are adjusted to {}'.format(number_of_nodes_per_job))
-
-        number_of_parallel_tasks = int(np.ceil(len(tasks) / number_of_jobs))
 
         start_lines = np.ogrid[0:len(tasks):number_of_parallel_tasks].tolist()
         end_lines = [x + number_of_parallel_tasks for x in start_lines]
@@ -444,7 +473,6 @@ class JOB_SUBMIT:
         :param job_name: the job file name
         :param job_type: 'batch' or 'script'
         """
-
         config = putils.get_config_defaults(config_file='job_defaults.cfg')
 
         if job_type == 'batch':
@@ -455,7 +483,7 @@ class JOB_SUBMIT:
 
         if self.prefix == 'tops' and job_type == 'batch':
             if self.num_bursts is None:
-                self.num_bursts = putils.get_number_of_bursts(self)
+                self.num_bursts = putils.get_number_of_bursts(self.inps)
 
         if self.num_bursts:
             number_of_bursts = self.num_bursts
@@ -757,14 +785,20 @@ def set_job_queue_values(args):
 
 
 def auto_template_not_existing_options(args):
-    from minsar.objects.dataset_template import Template
-
-    template = Template(args.custom_template_file).options
 
     job_options = ['QUEUENAME', 'JOB_CPUS_PER_NODE', 'THREADS_PER_CORE', 'MAX_JOBS_PER_QUEUE',
                    'WALLTIME_FACTOR', 'MEM_PER_NODE', 'job_submission_scheme']
-    for option in job_options:
-        if not option in template:
+
+    if 'custom_template_file' in args:
+        from minsar.objects.dataset_template import Template
+        template = Template(args.custom_template_file).options
+
+        for option in job_options:
+            if not option in template:
+                template[option] = 'auto'
+    else:
+        template = {}
+        for option in job_options:
             template[option] = 'auto'
 
     return template
@@ -776,4 +810,5 @@ if __name__ == "__main__":
     PARAMS = parse_arguments(sys.argv[1::])
 
     job_obj = JOB_SUBMIT(PARAMS)
+    job_obj.write_batch_jobs()
     status = job_obj.submit_batch_jobs()
