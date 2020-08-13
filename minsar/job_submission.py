@@ -514,7 +514,12 @@ class JOB_SUBMIT:
             self.default_wall_time = putils.scale_walltime(number_of_bursts, self.wall_time_factor,
                                                            c_walltime, s_walltime, self.scheduler)
         else:
-            self.default_wall_time = self.wall_time
+            #self.default_wall_time = self.wall_time
+            c_walltime = self.wall_time
+            s_walltime = '0'
+
+        self.default_wall_time = putils.scale_walltime(number_of_bursts, self.wall_time_factor,
+                                                       c_walltime, s_walltime, self.scheduler)
 
         if step_name in config:
             self.default_num_threads = config[step_name]['num_threads']
