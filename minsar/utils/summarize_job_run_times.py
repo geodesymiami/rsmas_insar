@@ -56,7 +56,7 @@ def main(iargs=None):
             inps.project_name = os.path.basename(inps.work_dir)
             run_files_dir = cwd + '/run_files'
 
-    run_stdout_files = glob.glob(run_files_dir + '/run_*.o') + glob.glob(run_files_dir + '/*/run_*.o')
+    run_stdout_files = glob.glob(run_files_dir + '/run_*_*_[0-9][0-9][0-9][0-9]*.o') + glob.glob(run_files_dir + '/*/run_*_*_[0-9][0-9][0-9][0-9]*.o')
     run_stdout_files = natsorted(run_stdout_files)
     
     #run_stdout_files2 = glob.glob(run_files_dir + '/stdout_run_*/run_*.o')
@@ -71,6 +71,9 @@ def main(iargs=None):
 
     bursts = glob.glob(inps.work_dir + '/geom_master/*/hgt*rdr')
     number_of_bursts = len(bursts)
+    
+    if len(bursts) == 0:
+        number_of_bursts = 1
 
     out_lines = []
     string = 'run_files_dir:  ' + run_files_dir
@@ -83,6 +86,17 @@ def main(iargs=None):
     wall_time_list = []
     reserved_time_list = []
     elapsed_time_list = []
+
+    hostname = subprocess.Popen("hostname -f", shell=True, stdout=subprocess.PIPE).stdout.read().decode("utf-8")
+
+    scheduler = None
+    for platform in ['frontera', 'stampede2', 'comet']:
+        if platform in hostname:
+            scheduler = 'SLURM'
+            break
+    if not scheduler == 'SLURM':
+       print('Not on TACC system - return from summarize_job_run_times.py')
+       return None
 
     for fname in run_stdout_files:
         job_id = os.path.basename(fname).split('.o')[0].split('_')[-1]

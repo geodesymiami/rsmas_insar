@@ -15,6 +15,10 @@ warnings.filterwarnings("ignore")
 mpl_logger = logging.getLogger('matplotlib')
 mpl_logger.setLevel(logging.WARNING)
 
+sg_logger = logging.getLogger('shapely.geos')
+sg_logger.setLevel(logging.WARNING)
+
+
 # expose the following modules
 __all__ = [
     'dem_rsmas',
@@ -25,6 +29,7 @@ __all__ = [
     'export_amplitude_tif',
     'export_ortho_geo',
     'ifgramStack_to_ifgram_and_coherence',
+    'upload_data_products',
     'ingest_insarmaps',
     'job_submission',
     'smallbaseline_wrapper',

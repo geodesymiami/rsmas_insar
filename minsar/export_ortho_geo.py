@@ -5,7 +5,6 @@ import os
 import isce
 import isceobj
 import sys
-import s1a_isce_utils as ut
 import glob
 import gdal
 import time
@@ -16,7 +15,6 @@ from isceobj.Util.ImageUtil import ImageLib as IML
 from minsar.objects.auto_defaults import PathFind
 import minsar.utils.process_utilities as putils
 from minsar.job_submission import JOB_SUBMIT
-import mergeBursts as mb
 
 # FA 9/19: commented out as `import boto3 hangs`
 #from upload_image_products import upload_to_s3
@@ -29,6 +27,21 @@ def main(iargs=None):
     """ create orth and geo rectifying run jobs and submit them. """
 
     inps = putils.cmd_line_parse(iargs)
+
+    if 'stripmap' in inps.prefix:
+        sys.path.append(os.path.join(os.getenv('ISCE_STACK'), 'stripmapStack'))
+    else:
+        sys.path.append(os.path.join(os.getenv('ISCE_STACK'), 'topsStack'))
+
+    from s1a_isce_utils import loadProduct, getSwathList
+    import mergeBursts
+    
+    if not iargs is None:
+        input_arguments = iargs
+    else:
+        input_arguments = sys.argv[1::]
+
+    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
 
     inps.geom_masterDir = os.path.join(inps.work_dir, pathObj.geomlatlondir)
     inps.master = os.path.join(inps.work_dir, pathObj.masterdir)
@@ -54,33 +67,25 @@ def main(iargs=None):
     if inps.submit_flag:
         job_name = 'export_ortho_geo'
         job_file_name = job_name
-        if job_name in sys.argv[0]:
-            job_obj.submit_script(job_name, job_file_name, sys.argv[:])
-        else:
-            Command = [os.path.join(os.path.dirname(sys.argv[0]), 'export_ortho_geo.py'),
-                       inps.custom_template_file]
-            job_obj.submit_script(job_name, job_file_name, Command)
-        sys.exit(0)
+        if '--submit' in input_arguments:
+            input_arguments.remove('--submit')
+        command = [os.path.abspath(__file__)] + input_arguments
+        job_obj.submit_script(job_name, job_file_name, command)
 
     pic_dir = os.path.join(inps.work_dir, pathObj.tiffdir)
 
     if not os.path.exists(pic_dir):
         os.mkdir(pic_dir)
 
-    if not iargs is None:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
-    else:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
-
     demZero = create_demZero(inps.dem, inps.geom_masterDir)
 
-    swathList = ut.getSwathList(inps.master)
+    swathList = getSwathList(inps.master)
 
-    create_georectified_lat_lon(swathList, inps.master, inps.geom_masterDir, demZero)
+    create_georectified_lat_lon(swathList, inps.master, inps.geom_masterDir, demZero, loadProduct)
 
-    merge_burst_lat_lon(inps)
+    merge_burst_lat_lon(inps, mergeBursts)
 
-    multilook_images(inps)
+    multilook_images(inps, mergeBursts)
 
     run_file_list = make_run_list(inps)
 
@@ -88,18 +93,15 @@ def main(iargs=None):
 
         putils.remove_last_job_running_products(run_file=item)
 
+        job_obj.write_batch_jobs(batch_file=item)
         job_status = job_obj.submit_batch_jobs(batch_file=item)
 
         if job_status:
-
             putils.remove_zero_size_or_length_error_files(run_file=item)
             putils.rerun_job_if_exit_code_140(run_file=item, inps_dict=inps)
             putils.raise_exception_if_job_exited(run_file=item)
             putils.concatenate_error_files(run_file=item, work_dir=inps.work_dir)
             putils.move_out_job_files_to_stdout(run_file=item)
-
-    #upload_to_s3(pic_dir)
-    minsar.upload_data_products.main([inps.custom_template_file, '--imageProducts'])
 
     return
 
@@ -125,11 +127,11 @@ def create_demZero(dem, outdir):
     return demZero
 
 
-def create_georectified_lat_lon(swathList, master, outdir, demZero):
+def create_georectified_lat_lon(swathList, master, outdir, demZero, load_function):
     """ export geo rectified latitude and longitude """
 
     for swath in swathList:
-        master = ut.loadProduct(os.path.join(master, 'IW{0}.xml'.format(swath)))
+        master = load_function(os.path.join(master, 'IW{0}.xml'.format(swath)))
 
         ###Check if geometry directory already exists.
         dirname = os.path.join(outdir, 'IW{0}'.format(swath))
@@ -176,7 +178,7 @@ def create_georectified_lat_lon(swathList, master, outdir, demZero):
     return
 
 
-def merge_burst_lat_lon(inps):
+def merge_burst_lat_lon(inps, mergeBursts_function):
     """ merge lat and lon bursts """
 
     range_looks = inps.template['topsStack.rangeLooks']
@@ -202,11 +204,11 @@ def merge_burst_lat_lon(inps):
 
     if not os.path.exists(os.path.join(inps.geom_masterDir, 'lat.rdr')):
         print(merglatCmd)
-        mb.main(merglatCmd[1])
+        mergeBursts_function.main(merglatCmd[1])
 
     if not os.path.exists(os.path.join(inps.geom_masterDir, 'lon.rdr')):
         print(merglonCmd)
-        mb.main(merglonCmd[1])
+        mergeBursts_function.main(merglonCmd[1])
 
     return
 
@@ -214,8 +216,8 @@ def merge_burst_lat_lon(inps):
 def make_run_list(inps):
     """ create batch job file for creating ortho and geo rectified backscatter images """
 
-    run_orthorectify = os.path.join(inps.work_dir, pathObj.rundir, 'run_orthorectify')
-    run_georectify = os.path.join(inps.work_dir, pathObj.rundir, 'run_georectify')
+    run_orthorectify = os.path.join(inps.work_dir, pathObj.rundir, 'run_imageProducts_orthorectify')
+    run_georectify = os.path.join(inps.work_dir, pathObj.rundir, 'run_imageProducts_georectify')
     slc_list = os.listdir(os.path.join(inps.work_dir, pathObj.mergedslcdir))
 
     lat_ds = gdal.Open(inps.geom_masterDir + '/lat.rdr.ml', gdal.GA_ReadOnly)
@@ -246,7 +248,7 @@ def make_run_list(inps):
     return run_file_list
 
 
-def multilook_images(inps):
+def multilook_images(inps, mergeBursts_module):
 
     full_slc_list = [os.path.join(inps.work_dir, pathObj.mergedslcdir, x, x+'.slc.full')
                 for x in os.listdir(os.path.join(inps.work_dir, pathObj.mergedslcdir))]
@@ -258,7 +260,7 @@ def multilook_images(inps):
 
     for slc_full, slc_ml in zip(full_slc_list, multilooked_slc):
         if not os.path.exists(slc_ml):
-            mb.multilook(slc_full, slc_ml, azimuth_looks, range_looks, multilook_tool="gdal")
+            mergeBursts_module.multilook(slc_full, slc_ml, azimuth_looks, range_looks, multilook_tool="gdal")
 
     full_geometry_list = [os.path.join(inps.work_dir, pathObj.geomlatlondir, x)
                           for x in ['lat.rdr.full', 'lon.rdr.full']] \
@@ -269,7 +271,7 @@ def multilook_images(inps):
 
     for geo_full, geo_ml in zip(full_geometry_list, multilooked_geometry):
         if not os.path.exists(geo_ml):
-            mb.multilook(geo_full, geo_ml, azimuth_looks, range_looks, multilook_tool="gdal")
+            mergeBursts_module.multilook(geo_full, geo_ml, azimuth_looks, range_looks, multilook_tool="gdal")
 
     return
 

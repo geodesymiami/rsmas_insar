@@ -28,9 +28,11 @@ def main(iargs=None):
     email_address = os.getenv('NOTIFICATIONEMAIL')
 
     if not iargs is None:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(iargs[:]))
+        input_arguments = iargs
     else:
-        message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
+        input_arguments = sys.argv[1::]
+
+    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
 
     if inps.email_insarmaps_flag:
         email_insarmaps_results(email_address)
@@ -55,7 +57,7 @@ def email_insarmaps_results(email_address):
 
     cwd = os.getcwd()
 
-    hdfeos_file = glob.glob('./mintpy/S1*.he5')
+    hdfeos_file = glob.glob('./mintpy/*.he5')
     hdfeos_file = hdfeos_file[0]
     hdfeos_name = os.path.splitext(os.path.basename(hdfeos_file))[0]
 
@@ -64,7 +66,7 @@ def email_insarmaps_results(email_address):
     ref_lat = str(round(float(ref_lat),1))
     ref_lon = str(round(float(ref_lon),1))
          
-    textStr = 'http://insarmaps.miami.edu/start/' + ref_lat + '/' + ref_lon + '/7"\?"startDataset=' + hdfeos_name
+    textStr = 'http://insarmaps.miami.edu/start/' + ref_lat + '/' + ref_lon + '/7?startDataset=' + hdfeos_name
 
     mailCmd = 'echo \"' + textStr + '\" | mail -s Miami_InSAR_results:_' + os.path.basename(cwd) + ' ' + email_address
 

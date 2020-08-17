@@ -22,7 +22,9 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 ############ FOR PROCESSING  #########
 export SSARAHOME=${RSMASINSAR_HOME}/3rdparty/SSARA
 export ISCE_HOME=${RSMASINSAR_HOME}/3rdparty/miniconda3/lib/python3.7/site-packages/isce
-export ISCE_STACK=${RSMASINSAR_HOME}/sources/isceStack/isce2/contrib/stack/topsStack
+#export ISCE_STACK=${RSMASINSAR_HOME}/sources/isce2/contrib/stack/stripmapStack
+#export ISCE_STACK=${RSMASINSAR_HOME}/sources/isce2/contrib/stack/topsStack
+export ISCE_STACK=${RSMASINSAR_HOME}/sources/isce2/contrib/stack
 export MINTPY_HOME=${RSMASINSAR_HOME}/sources/MintPy
 export MINOPY_HOME=${RSMASINSAR_HOME}/sources/minopy
 export MIMTPY_HOME=${RSMASINSAR_HOME}/sources/MimtPy
@@ -45,7 +47,7 @@ export TEMPLATES=${WORKDIR}/infiles/${USER_PREFERRED}/TEMPLATES
 export TE=${TEMPLATES}
 
 ############## DASK ##############
-export DASK_CONFIG=${RSMASINSAR_HOME}/minsar/defaults/
+export DASK_CONFIG=${MINTPY_HOME}/mintpy/defaults/
 #export DASK_CONFIG=${RSMASINSAR_HOME}/sources/MintPy/mintpy/defaults
 
 ############## LAUNCHER ##############
@@ -71,12 +73,13 @@ export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/sources/rsmas_tools
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/3rdparty/PyAPS
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/minsar/utils/ssara_ASF
-export PYTHONPATH=${PYTHONPATH}:${ISCE_STACK}
+#export PYTHONPATH=${PYTHONPATH}:${ISCE_STACK}
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/sources      # needed for mimt. Need to talk to Sara on how to do this smarter
 export PYTHONPATH_RSMAS=${PYTHONPATH}
 
 ######### Ignore warnings ############
-export PYTHONWARNINGS="ignore:Unverified HTTPS request"
+#export PYTHONWARNINGS="ignore:Unverified HTTPS request"   (FA 6/20: Deprecation and VisibleDepreciation dis not work) 
+export PYTHONWARNINGS="ignore"
 
 #####################################
 ############  PATH  #################
@@ -89,12 +92,14 @@ export PATH=${PATH}:${RSMASINSAR_HOME}/minsar
 export PATH=${PATH}:${RSMASINSAR_HOME}/minsar/utils/ssara_ASF
 export PATH=${PATH}:${RSMASINSAR_HOME}/setup/accounts
 export PATH=${PATH}:${RSMASINSAR_HOME}/sources/rsmas_tools/SAR:${RSMASINSAR_HOME}/sources/rsmas_tools/GPS:${RSMASINSAR_HOME}/sources/rsmas_tools/notebooks
-export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${ISCE_STACK}:${PATH}
+# export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${ISCE_STACK}:${PATH}
+export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${PATH}
 export PATH=${PATH}:${RSMASINSAR_HOME}/sources/MimtPy
 export PATH=${PATH}:${MINTPY_HOME}/mintpy:${MINTPY_HOME}/sh
 export PATH=${PYTHON3DIR}/bin:${PATH}
 export PATH=${PATH}:${PROJ_LIB}
 export PATH=${PATH}:${RSMASINSAR_HOME}/3rdparty/tippecanoe
+export PATH=${PATH}:${RSMASINSAR_HOME}/sources/insarmaps_scripts
 export PATH=${PATH}:${DASK_CONFIG}
 [ -n ${MATLAB_HOME} ] && export PATH=${PATH}:${MATLAB_HOME}/bin
 

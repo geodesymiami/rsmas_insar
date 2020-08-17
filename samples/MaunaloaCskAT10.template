@@ -1,0 +1,53 @@
+############## DOWNLOAD, GENERAL OPTIONS ##############
+cleanopt                             = 0
+acquisition_mode                     = stripmap
+
+ssaraopt.platform                    = COSMO-SKYMED-1,COSMO-SKYMED-2,COSMO-SKYMED-3,COSMO-SKYMED-4
+ssaraopt.intersectsWithPoint         = -155.6 19.45
+ssaraopt.relativeOrbit               = 10
+ssaraopt.collectionName              = "Supersites CSK Hawaii"
+ssaraopt.startDate                   = 20141001
+ssaraopt.endDate                     = 20150131
+ssaraopt.parallel                    = 24
+
+demMethod                            = ssara
+
+##################### ISCE OPTIONS ####################
+stripmapStack.boundingBox            = 19.4 19.6 -155.7 -155.475                         # '-1 0.15 -91.6 -90.9'                           
+stripmapStack.boundingBox            = 19.1 19.9 -155.8 -154.5                           # '-1 0.15 -91.6 -90.9'                           
+stripmapStack.azimuthLooks           = 16
+stripmapStack.rangeLooks             = 16
+stripmapStack.timeThreshold          = 180
+stripmapStack.baselineThreshold      = 3000
+stripmapStack.unwMethod              = snaphu
+stripmapStack.watermask              = no
+stripmapStack.sensor                 = csk
+#stripmapStack.zerodop               = False
+#stripmapStack.nofocus               = False
+#stripmapStack.golsteinFilterStrength= 0.5
+#stripmapStack.boundingBox           = 19 20 -156 -155
+#stripmapStack.demDir                = /scratch/projects/insarlab/bkv3/MaunaloaT10CskAsc/DEM/output.dem 
+
+
+##################### MINTPY OPTIONS ###################
+## load_data.py -H to check more details and example inputs.
+mintpy.load.processor        = isce
+##---------for ISCE only:
+mintpy.load.metaFile         = $SCRATCHDIR/MaunaLoaCskAT10/merged/SLC/20141009/masterShelve/data.dat
+mintpy.load.baselineDir      = $SCRATCHDIR/MaunaLoaCskAT10/baselines
+##---------interferogram datasets:
+mintpy.load.unwFile          = $SCRATCHDIR/MaunaLoaCskAT10/Igrams/*/filt_*.unw
+mintpy.load.corFile          = $SCRATCHDIR/MaunaLoaCskAT10/Igrams/*/filt_*.cor
+mintpy.load.connCompFile     = $SCRATCHDIR/MaunaLoaCskAT10/Igrams/*/filt_*.unw.conncomp
+##---------geometry datasets:
+mintpy.load.demFile          = $SCRATCHDIR/MaunaLoaCskAT10/geom_master/hgt.rdr
+mintpy.load.lookupYFile      = $SCRATCHDIR/MaunaLoaCskAT10/geom_master/lat.rdr
+mintpy.load.lookupXFile      = $SCRATCHDIR/MaunaLoaCskAT10/geom_master/lon.rdr
+mintpy.load.incAngleFile     = $SCRATCHDIR/MaunaLoaCskAT10/geom_master/los.rdr
+mintpy.load.azAngleFile      = $SCRATCHDIR/MaunaLoaCskAT10/geom_master/los.rdr
+mintpy.load.shadowMaskFile   = $SCRATCHDIR/MaunaLoaCskAT10/geom_master/shadowMask.rdr
+mintpy.load.bperpFile        = None
+
+mintpy.troposphericDelay.method      = no    # pyaps  #[pyaps / height_correlation / base_trop_cor / no], auto for pyaps
+mintpy.save.hdfEos5                  = no    #[yes / update / no], auto for no, save timeseries to UNAVCO InSAR Archive format
+

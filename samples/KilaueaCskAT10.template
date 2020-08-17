@@ -1,0 +1,50 @@
+############## DOWNLOAD, GENERAL OPTIONS ##############
+cleanopt                = 0
+acquisition_mode        = stripmap
+
+ssaraopt.platform       = COSMO-SKYMED-1,COSMO-SKYMED-2,COSMO-SKYMED-3,COSMO-SKYMED-4
+ssaraopt.relativeOrbit  = 10
+ssaraopt.intersectsWithPoint = -155.26 19.4 
+ssaraopt.collectionName = "Supersites CSK Hawaii"
+ssaraopt.startDate      = 20180301
+ssaraopt.endDate        = 20180531
+ssaraopt.parallel       = 24
+
+demMethod               = ssara
+##################### ISCE OPTIONS ####################
+stripmapStack.boundingBox    = 19.1 19.7 -155.5 -154.9                           # '-1 0.15 -91.6 -90.9'                           
+stripmapStack.azimuthLooks         = 16
+stripmapStack.rangeLooks           = 16
+stripmapStack.timeThreshold        = 180
+stripmapStack.baselineThreshold    = 3000
+stripmapStack.unwMethod            = snaphu
+stripmapStack.watermask            = no
+stripmapStack.sensor               = csk
+#stripmapStack.zerodop              = False
+#stripmapStack.nofocus              = False
+#stripmapStack.golsteinFilterStrength  = 0.5
+#stripmapStack.boundingBox                 = 19 20 -156 -155
+#stripmapStack.demDir                      = /scratch/projects/insarlab/bkv3/MaunaloaT10CskAsc/DEM/output.dem 
+
+##################### MINTPY OPTIONS ###################
+## load_data.py -H to check more details and example inputs.
+mintpy.load.processor        = isce
+##---------for ISCE only:
+mintpy.load.metaFile         = $SCRATCHDIR/KilaueaCskAT10/merged/SLC/20180106/masterShelve/data.dat
+mintpy.load.baselineDir      = $SCRATCHDIR/KilaueaCskAT10/baselines
+##---------interferogram datasets:
+mintpy.load.unwFile          = $SCRATCHDIR/KilaueaCskAT10/Igrams/*/filt_*.unw
+mintpy.load.corFile          = $SCRATCHDIR/KilaueaCskAT10/Igrams/*/filt_*.cor
+mintpy.load.connCompFile     = $SCRATCHDIR/KilaueaCskAT10/Igrams/*/filt_*.unw.conncomp
+##---------geometry datasets:
+mintpy.load.demFile          = $SCRATCHDIR/KilaueaCskAT10/geom_master/hgt.rdr
+mintpy.load.lookupYFile      = $SCRATCHDIR/KilaueaCskAT10/geom_master/lat.rdr
+mintpy.load.lookupXFile      = $SCRATCHDIR/KilaueaCskAT10/geom_master/lon.rdr
+mintpy.load.incAngleFile     = $SCRATCHDIR/KilaueaCskAT10/geom_master/los.rdr
+mintpy.load.azAngleFile      = $SCRATCHDIR/KilaueaCskAT10/geom_master/los.rdr
+mintpy.load.shadowMaskFile   = $SCRATCHDIR/KilaueaCskAT10/geom_master/shadowMask.rdr
+mintpy.load.bperpFile        = None
+
+mintpy.troposphericDelay.method    = no    # pyaps  #[pyaps / height_correlation / base_trop_cor / no], auto for pyaps
+mintpy.save.hdfEos5                = no   #[yes / update / no], auto for no, save timeseries to UNAVCO InSAR Archive format
+

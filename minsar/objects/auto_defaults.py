@@ -3,13 +3,17 @@
 
 import os
 import datetime
+import glob
 
+
+queue_config_file = os.path.join(os.getenv('RSMASINSAR_HOME'), 'minsar/defaults/queues.cfg')
+supported_platforms = ['frontera', 'stampede2', 'comet', 'pegasus', 'eos_sanghoon',
+                       'beijing_server', 'deqing_server']
 
 class PathFind:
     def __init__(self):
         self.logdir = os.getenv('OPERATIONS') + '/LOGS'
         self.scratchdir = os.getenv('SCRATCHDIR')
-        self.required_template_options = ['topsStack.subswath', 'topsStack.boundingBox']
         self.defaultdir = os.path.expandvars('${RSMASINSAR_HOME}/minsar/defaults')
         self.orbitdir = os.path.expandvars('$SENTINEL_ORBITS')
         self.auxdir = os.path.expandvars('$SENTINEL_AUX')
@@ -30,29 +34,40 @@ class PathFind:
         self.auto_template = self.defaultdir + '/minsar_template.cfg'
         return
 
+    def required_template_options(self, acquisition_mode):
+        if acquisition_mode == 'tops':
+            return ['topsStack.subswath', 'topsStack.boundingBox']
+        elif acquisition_mode == 'stripmap':
+            return ['stripmapStack.sensor', 'stripmapStack.boundingBox']
+        else:
+            return None
+
     def set_isce_defaults(self, inps):
 
         inps_dict = vars(inps)
-
-        inps_dict['template']['topsStack.slcDir'] = inps.work_dir + '/SLC'
-
-        inps_dict['template']['topsStack.demDir'] = inps.work_dir + '/DEM'
+        if inps_dict['template'][inps.prefix + 'Stack.slcDir'] == 'auto':
+            inps_dict['template'][inps.prefix + 'Stack.slcDir'] = inps.work_dir + '/SLC'
+        if inps_dict['template'][inps.prefix + 'Stack.demDir'] == 'auto':
+            inps_dict['template'][inps.prefix + 'Stack.demDir'] = inps.work_dir + '/DEM'
+        if inps_dict['template'][inps.prefix + 'Stack.workingDir'] == 'auto':
+            inps_dict['template'][inps.prefix + 'Stack.workingDir'] = inps.work_dir
 
         if 'cleanopt' not in inps.template:
             inps_dict['template']['cleanopt'] = '0'
 
-        inps_dict['template']['topsStack.workingDir'] = inps.work_dir
-        inps_dict['template']['topsStack.orbitDir'] = self.orbitdir
-        inps_dict['template']['topsStack.auxDir'] = self.auxdir
+        if inps.prefix == 'tops':
+            if inps_dict['template']['topsStack.orbitDir'] == 'auto':
+                inps_dict['template']['topsStack.orbitDir'] = self.orbitdir
+            if inps_dict['template']['topsStack.auxDir'] == 'auto':
+                inps_dict['template']['topsStack.auxDir'] = self.auxdir
 
         return
 
     @staticmethod
     def grab_cropbox(inps):
-        if not inps.template['minopy.subset'] == 'None':
-                cropbox = inps.template['minopy.subset']
-        else:
-            cropbox = inps.template['topsStack.boundingBox']
+
+        cropbox = inps.template[inps.prefix + 'Stack.boundingBox']
+
         return cropbox
 
     @staticmethod
@@ -100,20 +115,41 @@ class PathFind:
 
         inps_dict = {}
         for item in inps.template:
-            if item.startswith('topsStack'):
+            if item.startswith('topsStack') or item.startswith('stripmapStack'):
                 inps_dict[item] = inps.template[item]
 
-        isceKey = ['slc_directory', 'orbit_directory', 'aux_directory', 'working_directory', 'dem', 'master_date', 'num_connections',
-                   'num_overlap_connections', 'swath_num', 'bbox', 'text_cmd', 'exclude_dates', 'include_dates',
-                   'azimuth_looks', 'range_looks', 'filter_strength', 'esd_coherence_threshold', 'snr_misreg_threshold', 'unw_method',
-                   'polarization', 'coregistration', 'workflow', 'start_date', 'stop_date', 'useGPU']
+        if 'stripmap' in inps.template['acquisition_mode']:
+            stackprefix = 'stripmapStack'
 
-        templateKey = ['slcDir', 'orbitDir', 'auxDir', 'workingDir', 'demDir', 'master', 'numConnections',
-                       'numOverlapConnections', 'subswath', 'boundingBox', 'textCmd', 'excludeDates', 'includeDates',
-                       'azimuthLooks', 'rangeLooks', 'filtStrength', 'esdCoherenceThreshold', 'snrMisregThreshold',
-                       'unwMethod', 'polarization', 'coregistration', 'workflow', 'startDate', 'stopDate', 'useGPU']
+            isceKey = ['slc_directory', 'working_directory', 'dem', 'bbox', 'referenceDate', 'time_threshold',
+                       'baseline_threshold', 'azimuth_looks', 'range_looks', 'sensor', 'low_band_frequency',
+                       'high_band_frequency', 'subband_bandwidth', 'unw_method', 'filter_strength',
+                       'filter_sigma_x', 'filter_sigma_y', 'filter_size_x', 'filter_size_y', 'filter_kernel_rotation',
+                       'workflow', 'zero', 'nofocus', 'text_cmd', 'useGPU']
+            #'applyWaterMask',
 
-        stackprefix = os.path.basename(os.getenv('ISCE_STACK'))
+            templateKey = ['slcDir', 'workingDir', 'demDir', 'boundingBox', 'referenceDate', 'timeThreshold',
+                           'baselineThreshold', 'azimuthLooks', 'rangeLooks', 'sensor',
+                           'LowBandFrequency', 'HighBandFrequency', 'subbandBandwith', 'unwMethod',
+                           'golsteinFilterStrength', 'filterSigmaX', 'filterSigmaY', 'filterSizeX', 'filterSizeY',
+                           'filterKernelRotation', 'workflow', 'zerodop', 'nofocus', 'textCmd', 'useGPU']
+            #'watermask',
+
+        else:
+            stackprefix = 'topsStack'
+
+            isceKey = ['slc_directory', 'orbit_directory', 'aux_directory', 'working_directory', 'dem', 'reference_date',
+                       'num_connections', 'num_overlap_connections', 'swath_num', 'bbox', 'text_cmd', 'exclude_dates',
+                       'include_dates', 'azimuth_looks', 'range_looks', 'filter_strength', 'esd_coherence_threshold',
+                       'snr_misreg_threshold', 'unw_method', 'polarization', 'coregistration', 'workflow', 'start_date',
+                       'stop_date', 'useGPU', 'rmFilter']
+
+            templateKey = ['slcDir', 'orbitDir', 'auxDir', 'workingDir', 'demDir', 'referenceDate', 'numConnections',
+                           'numOverlapConnections', 'subswath', 'boundingBox', 'textCmd', 'excludeDates',
+                           'includeDates', 'azimuthLooks', 'rangeLooks', 'filtStrength', 'esdCoherenceThreshold',
+                           'snrMisregThreshold', 'unwMethod', 'polarization', 'coregistration', 'workflow', 'startDate',
+                           'stopDate', 'useGPU', 'rmFilter']
+
         templateKey = [stackprefix + '.' + x for x in templateKey]
 
         for old_key, new_key in zip(templateKey, isceKey):
@@ -121,13 +157,13 @@ class PathFind:
             if inps_dict[new_key] == 'None':
                 inps_dict[new_key] = None
 
-        if not inps_dict['start_date'] in [None, 'auto']:
-            print(inps_dict['start_date'])
-            inps_dict['start_date'] = datetime.datetime.strptime(inps_dict['start_date'],
-                                                                            '%Y%m%d').strftime('%Y-%m-%d')
-
-        if not inps_dict['stop_date'] in [None, 'auto']:
-            inps_dict['stop_date'] = datetime.datetime.strptime(inps_dict['stop_date'],
+        if stackprefix == 'topsStack':
+            if not inps_dict['start_date'] in [None, 'auto']:
+                print(inps_dict['start_date'])
+                inps_dict['start_date'] = datetime.datetime.strptime(inps_dict['start_date'],
+                                                                                '%Y%m%d').strftime('%Y-%m-%d')
+            if not inps_dict['stop_date'] in [None, 'auto']:
+                inps_dict['stop_date'] = datetime.datetime.strptime(inps_dict['stop_date'],
                                                                            '%Y%m%d').strftime('%Y-%m-%d')
 
         return inps_dict
@@ -140,6 +176,7 @@ class PathFind:
             'dem',
             'ifgrams',
             'timeseries',
+            'upload',
             'insarmaps',
             'imageProducts',
         ]
@@ -151,51 +188,10 @@ class PathFind:
             previous run was done using one of the steps options to process at least
             through the step immediately preceding the starting step of the current run.
             
-            """.format(STEP_LIST[0:6])
+            """.format(STEP_LIST[0:7])
 
         return STEP_LIST, STEP_HELP
 
-    @staticmethod
-    def minopy_help():
-
-        STEP_LIST = [
-            'crop',
-            'patch',
-            'inversion',
-            'ifgrams',
-            'unwrap',
-            'mintpy',
-            'email']
-
-        STEP_HELP = """Command line options for steps processing with names are chosen from the following list:
-                {}
-                
-                In order to use either --start or --step, it is necessary that a
-                previous run was done using one of the steps options to process at least
-                through the step immediately preceding the starting step of the current run.
-                """.format(STEP_LIST[0:7])
-
-        return STEP_LIST, STEP_HELP
-
-    @staticmethod
-    def minopy_corrections():
-
-        runSteps = ['load_data',
-                    'modify_network',
-                    'reference_point',
-                    'stack_interferograms',
-                    'correct_unwrap_error',
-                    'correct_troposphere',
-                    'deramp',
-                    'correct_topography',
-                    'residual_RMS',
-                    'reference_date',
-                    'velocity',
-                    'geocode',
-                    'google_earth',
-                    'hdfeos5']
-
-        return runSteps
 
 
 

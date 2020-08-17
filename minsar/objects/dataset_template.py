@@ -124,19 +124,25 @@ class Template:
             platform = self.options['ssaraopt.platform']
             relativeOrbit = self.options['ssaraopt.relativeOrbit']
             ssaraopt = '--platform={} --relativeOrbit={}'.format(platform, relativeOrbit)
+            if 'ssaraopt.collectionName' in self.options.keys():
+                collectionName = self.options['ssaraopt.collectionName']
+                ssaraopt += ' --collectionName={}'.format(collectionName)
+            if 'ssaraopt.beamMode' in self.options.keys():
+                beamMode = self.options['ssaraopt.beamMode']
+                ssaraopt += ' --beamMode={}'.format(beamMode)
             if 'ssaraopt.frame' in self.options.keys():
                 frame = self.options['ssaraopt.frame']
                 ssaraopt += ' --frame={}'.format(frame)
             if 'ssaraopt.startDate' in self.options:
                 startDate = self.options['ssaraopt.startDate']
-                ssaraopt += ' -s={}'.format(startDate)
+                ssaraopt += ' --start={}'.format(startDate)
             if 'ssaraopt.endDate' in self.options:
                 endDate = self.options['ssaraopt.endDate']
-                ssaraopt += ' -e={}'.format(endDate)
+                ssaraopt += ' --end={}'.format(endDate)
             if 'ssaraopt.parallel' in self.options:
                 parallel = self.options['ssaraopt.parallel']
             else:
-                 parallel = 30
+                 parallel = 24
             ssaraopt += ' --parallel={}'.format(parallel)
 
             #this was in Josh's code (above yje ssaraopt assignment) but unclear  what it does

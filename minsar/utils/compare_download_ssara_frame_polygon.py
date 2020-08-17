@@ -113,7 +113,12 @@ def rename_latest_kml( suffix ):
 
 def add_polygon_to_ssaraopt( dataset_template, ssaraopt, delta_lat ):
     """calculates intersectsWith polygon from bbox and replace frame in ssaraopt if give"""
-    bbox_list = dataset_template.get_options()['topsStack.boundingBox'][1:-1].split(' ')
+    if not 'acquisition_mode' in dataset_template.options:
+        print('WARNING: "acquisition_mode" is not given --> default: tops   (available options: tops, stripmap)')
+        prefix = 'tops'
+    else:
+        prefix = dataset_template.options['acquisition_mode']
+    bbox_list = dataset_template.get_options()[prefix + 'Stack.boundingBox'][1:-1].split(' ')
     delta_lon = delta_lat * 0.2
     min_lat = float( bbox_list[0] ) - delta_lat
     max_lat = float( bbox_list[1] ) + delta_lat

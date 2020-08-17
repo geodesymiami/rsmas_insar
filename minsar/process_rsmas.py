@@ -14,6 +14,7 @@ import sys
 import shutil
 import time
 import argparse
+import subprocess
 import minsar
 import minsar.workflow
 from minsar.objects import message_rsmas
@@ -41,8 +42,8 @@ def process_rsmas_cmd_line_parse(iargs=None):
     """ Creates command line argument parser object. """
 
     parser = argparse.ArgumentParser(description='Process Rsmas Routine InSAR Time Series Analysis',
-                                     formatter_class=argparse.RawTextHelpFormatter,
-                                     epilog=EXAMPLE)
+                                     epilog=EXAMPLE,
+                                     formatter_class=argparse.RawTextHelpFormatter)
 
     parser = putils.add_common_parser(parser)
     parser = putils.add_process_rsmas(parser)
@@ -153,10 +154,12 @@ class RsmasInsar:
     """
 
     def __init__(self, inps):
+        self.inps = inps
         self.custom_template_file = inps.custom_template_file
         self.work_dir = inps.work_dir
         self.project_name = inps.project_name
         self.template = inps.template
+        self.remora = inps.remora
 
         if 'demMethod' in inps.template and inps.template['demMethod'] == 'boundingBox':
             self.dem_flag = '--boundingBox'
@@ -180,7 +183,11 @@ class RsmasInsar:
                 if os.path.isdir(os.path.join(self.work_dir, directory)):
                     shutil.rmtree(os.path.join(self.work_dir, directory))
 
-        minsar.download_rsmas.main([self.custom_template_file])
+        scp_args = [self.custom_template_file, '--submit']
+        if self.remora:
+            scp_args += ['--remora']
+        minsar.download_rsmas.main(scp_args)
+
         return
 
     def run_download_dem(self):
@@ -198,29 +205,65 @@ class RsmasInsar:
             minsar.create_runfiles.main([self.custom_template_file])
         except:
             print('Skip creating run files ...')
-        minsar.execute_runfiles.main([self.custom_template_file])
+
+        command = 'tropo_pyaps3.py --date-list SAFE_files.txt --dir $WEATHER_DIR >> /dev/null'
+        message_rsmas.log(os.getcwd(), command)
+        status = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+        scp_args = [self.custom_template_file]
+        if self.remora:
+            scp_args += ['--remora']
+        minsar.execute_runfiles.main(scp_args)
         return
 
     def run_timeseries(self):
         """ Process smallbaseline using MintPy or non-linear inversion using MiNoPy and email results
         """
+        scp_args = [self.custom_template_file, '--submit']
+        if self.remora:
+            scp_args += ['--remora']
+
         if self.method == 'mintpy':
-            minsar.smallbaseline_wrapper.main([self.custom_template_file, '--email', '--submit'])
+            scp_args += ['--email']
+            minsar.smallbaseline_wrapper.main(scp_args)
         else:
             import minsar.minopy_wrapper as minopy_wrapper
-            minopy_wrapper.main([self.custom_template_file, '--submit'])
+            minopy_wrapper.main(scp_args)
+
+        return
+
+    def run_upload_data_products(self):
+        """ upload data to jetstream server for data download
+        """
+        if self.template['upload_flag'] in ['True', True]:
+            # upload_data_products.main([self.custom_template_file, '--mintpyProducts'])   # this is simpler, but how to put process into background?
+            command = 'upload_data_products.py --mintpyProducts ' + self.custom_template_file + ' > out_upload_data_products.o 2> out_upload_data_products.e'
+            message_rsmas.log(os.getcwd(), command)
+            status = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+
         return
 
     def run_insarmaps(self):
         """ prepare outputs for insarmaps website.
         """
-        minsar.ingest_insarmaps.main([self.custom_template_file, '--email', '--submit'])
+        if self.template['insarmaps_flag'] in ['True', True]:
+            scp_args = [self.custom_template_file, '--submit', '--email']
+            if self.remora:
+                scp_args += ['--remora']
+            minsar.ingest_insarmaps.main(scp_args)
         return
 
     def run_image_products(self):
         """ create ortho/geo-rectified products.
         """
-        minsar.export_ortho_geo.main([self.custom_template_file, '--submit'])
+        if self.template['image_products_flag'] in ['True', True]:
+            scp_args = [self.custom_template_file, '--submit']
+            if self.remora:
+                scp_args += ['--remora']
+            minsar.export_ortho_geo.main(scp_args)
+            
+            # upload_to_s3(pic_dir)
+            minsar.upload_data_products.main([inps.custom_template_file, '--imageProducts'])
+
         return
 
     def run(self, steps=step_list):
@@ -240,6 +283,9 @@ class RsmasInsar:
 
             elif sname == 'timeseries':
                 self.run_timeseries()
+
+            elif sname == 'upload':
+                self.run_upload_data_products()
 
             elif sname == 'insarmaps':
                 self.run_insarmaps()
