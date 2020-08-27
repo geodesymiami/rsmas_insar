@@ -27,7 +27,7 @@ class CreateRun:
         self.prefix = inps.prefix
         if inps.prefix == 'tops':
             self.workflow = inps.template['topsStack.workflow']
-        self.geo_master_dir = os.path.join(self.work_dir, pathObj.geomasterdir)
+        self.geo_reference_dir = os.path.join(self.work_dir, pathObj.georeferencedir)
         self.minopy_dir = os.path.join(self.work_dir, pathObj.minopydir)
 
         self.inps = inps
