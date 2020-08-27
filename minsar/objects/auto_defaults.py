@@ -17,17 +17,17 @@ class PathFind:
         self.defaultdir = os.path.expandvars('${RSMASINSAR_HOME}/minsar/defaults')
         self.orbitdir = os.path.expandvars('$SENTINEL_ORBITS')
         self.auxdir = os.path.expandvars('$SENTINEL_AUX')
-        self.geomasterdir = 'merged/geom_master'
+        self.georeferencedir = 'merged/geom_reference'
         self.minopydir = 'minopy'
         self.mintpydir = 'mintpy'
         self.rundir = 'run_files'
         self.configdir = 'configs'
         self.mergedslcdir = 'merged/SLC'
         self.mergedintdir = 'merged/interferograms'
-        self.geomlatlondir = 'geom_master_noDEM'
+        self.geomlatlondir = 'geom_reference_noDEM'
         self.wrappercommandtops = 'SentinelWrapper.py -c '
         self.wrappercommandstripmap = 'stripmapWrapper.py -c '
-        self.masterdir = 'master'
+        self.referencedir = 'reference'
         self.stackdir = 'stack'
         self.tiffdir = 'image_products'
         self.daskconfig = os.path.expandvars('${RSMASINSAR_HOME}/minsar/defaults/dask/dask.yaml')
@@ -89,8 +89,8 @@ class PathFind:
     def isce_clean_list():
         cleanlist = []
         cleanlist.append(['stack',  'misreg', 'orbits', 'coarse_interferograms', 'ESD',
-                          'interferograms', 'slaves'])
-        cleanlist.append(['merged', 'master', 'coreg_slaves', 'baselines', 'geom_master'])
+                          'interferograms', 'secondarys'])
+        cleanlist.append(['merged', 'reference', 'coreg_secondarys', 'baselines', 'geom_reference'])
         cleanlist.append(['SLC'])
         cleanlist.append(['MINTPY', 'run_files', 'configs', 'DEM'])
 
@@ -106,7 +106,7 @@ class PathFind:
         return fileList
 
     @staticmethod
-    def get_geom_master_lists():
+    def get_geom_reference_lists():
         list_geo = ['lat', 'lon', 'los', 'hgt', 'shadowMask', 'incLocal']
         return list_geo
 
@@ -121,7 +121,7 @@ class PathFind:
         if 'stripmap' in inps.template['acquisition_mode']:
             stackprefix = 'stripmapStack'
 
-            isceKey = ['slc_directory', 'working_directory', 'dem', 'bbox', 'referenceDate', 'time_threshold',
+            isceKey = ['slc_directory', 'working_directory', 'dem', 'bbox', 'reference_date', 'time_threshold',
                        'baseline_threshold', 'azimuth_looks', 'range_looks', 'sensor', 'low_band_frequency',
                        'high_band_frequency', 'subband_bandwidth', 'unw_method', 'filter_strength',
                        'filter_sigma_x', 'filter_sigma_y', 'filter_size_x', 'filter_size_y', 'filter_kernel_rotation',

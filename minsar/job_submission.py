@@ -212,9 +212,8 @@ class JOB_SUBMIT:
 
                 job_file_lines = self.get_job_file_lines(batch_file, job_name, number_of_tasks=len(tasks),
                                                          number_of_nodes=number_of_nodes, work_dir=self.out_dir)
-
                 self.job_files.append(self.add_tasks_to_job_file_lines(job_file_lines, tasks,
-                                                                       batch_file=job_name))
+                                                                       batch_file=batch_file_name))
 
             elif 'multiTask_singleNode' in self.submission_scheme:
 
@@ -233,6 +232,7 @@ class JOB_SUBMIT:
         :param email_notif: If email notifications should be on or not. Defaults to true.
         :return: True if running on a cluster
         """
+
         if len(self.job_files) > 0:
             self.submit_and_check_job_status(self.job_files, work_dir=self.out_dir)
 
@@ -538,6 +538,8 @@ class JOB_SUBMIT:
         :return: List of lines for job submission file
         """
 
+        number_of_tasks = number_of_nodes * self.number_of_cores_per_node
+
         # directives based on scheduler
         if self.scheduler == "LSF":
             number_of_tasks = number_of_nodes
@@ -567,9 +569,8 @@ class JOB_SUBMIT:
             memory_option = "-l mem={0}"
             email_option = "-m bea" + prefix + "-M {0}"
         elif self.scheduler == 'SLURM':
-            if number_of_nodes > 1 and number_of_tasks == 1:
-                number_of_tasks = number_of_nodes * self.number_of_cores_per_node
-
+            # if number_of_nodes > 1 and number_of_tasks == 1:
+            #     number_of_tasks = number_of_nodes * self.number_of_cores_per_node
             prefix = "\n#SBATCH "
             shell = "/bin/bash"
             name_option = "-J {0}"
@@ -722,7 +723,10 @@ def set_job_queue_values(args):
     template = auto_template_not_existing_options(args)
     submission_scheme = template['job_submission_scheme']
     if submission_scheme == 'auto':
-        submission_scheme = 'launcher_multiTask_singleNode'
+        if os.getenv('JOB_SUBMISSION_SCHEME'):
+            submission_scheme = os.getenv('JOB_SUBMISSION_SCHEME')
+        else:
+            submission_scheme = 'launcher_multiTask_singleNode'
     hostname = subprocess.Popen("hostname -f", shell=True, stdout=subprocess.PIPE).stdout.read().decode("utf-8")
 
     for platform in supported_platforms:

@@ -28,7 +28,7 @@ def main(iargs=None):
 
     inps = cmd_line_parse(iargs, script='export_amplitude_tif')
 
-    slave_dir = os.path.join(inps.work_dir, pathObj.mergedslcdir)
+    secondary_dir = os.path.join(inps.work_dir, pathObj.mergedslcdir)
     pic_dir = os.path.join(inps.work_dir, pathObj.tiffdir)
 
     if not os.path.exists(pic_dir):
@@ -41,7 +41,7 @@ def main(iargs=None):
 
     message_rsmas.log(pic_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
 
-    os.chdir(slave_dir)
+    os.chdir(secondary_dir)
 
     try:
         os.system('rm '+ inps.input_file + '/geo*')
@@ -51,11 +51,11 @@ def main(iargs=None):
     slc = inps.input_file
 
     if inps.im_type == 'ortho':
-        inps.geo_master_dir = os.path.join(inps.work_dir, pathObj.geomasterdir)
+        inps.geo_reference_dir = os.path.join(inps.work_dir, pathObj.georeferencedir)
     else:
-        inps.geo_master_dir = os.path.join(inps.work_dir, pathObj.geomlatlondir)
+        inps.geo_reference_dir = os.path.join(inps.work_dir, pathObj.geomlatlondir)
 
-    os.chdir(os.path.join(slave_dir, inps.input_file))
+    os.chdir(os.path.join(secondary_dir, inps.input_file))
 
     geocode_file(inps)
 
@@ -76,7 +76,7 @@ def main(iargs=None):
     transform = data.GetGeoTransform()
 
     ##
-    xmlfile = glob.glob(os.path.join(inps.work_dir, pathObj.masterdir, '*.xml'))[0]
+    xmlfile = glob.glob(os.path.join(inps.work_dir, pathObj.referencedir, '*.xml'))[0]
     attributes = xmlread(xmlfile)
     Metadata = {'SAT': attributes['missionname'], 'Mode': attributes['passdirection'],
                 'Image_Type': '{}_BackScatter'.format(inps.im_type), 'Date': slc}
@@ -135,8 +135,8 @@ def geocode_file(inps):
     if len(inps.cropbox) != 4:
         raise Exception('Bbox should contain 4 floating point values')
 
-    scp_arg = {'latFile': os.path.abspath(os.path.join(inps.geo_master_dir, inps.lat_file)),
-                'lonFile': os.path.abspath(os.path.join(inps.geo_master_dir, inps.lon_file)),
+    scp_arg = {'latFile': os.path.abspath(os.path.join(inps.geo_reference_dir, inps.lat_file)),
+                'lonFile': os.path.abspath(os.path.join(inps.geo_reference_dir, inps.lon_file)),
                 'xOff': 0,
                 'yOff': 0,
                 'prodlist': [inps.input_file + '.slc.ml'],

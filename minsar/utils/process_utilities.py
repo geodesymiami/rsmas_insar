@@ -810,8 +810,8 @@ def get_number_of_bursts(inps_dict):
                 command_options = command_options + ['--' + item] + [topsStack_template[item]]
 
         inps = stack_cmd(command_options)
-        dateList, master_date, slaveList, safe_dict = get_dates(inps)
-        dirname = safe_dict[master_date].safe_file
+        dateList, reference_date, secondaryList, safe_dict = get_dates(inps)
+        dirname = safe_dict[reference_date].safe_file
 
         if inps.swath_num is None:
             swaths = [1, 2, 3]
@@ -825,7 +825,7 @@ def get_number_of_bursts(inps_dict):
             obj.configure()
             obj.safe = dirname.split()
             obj.swathNumber = swath
-            obj.output = os.path.join(inps.work_dir, 'master', 'IW{0}'.format(swath))
+            obj.output = os.path.join(inps.work_dir, 'reference', 'IW{0}'.format(swath))
             obj.orbitFile = None
             obj.auxFile = None
             obj.orbitDir = inps.orbit_dirname
