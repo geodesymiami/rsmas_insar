@@ -1,5 +1,5 @@
 #! /bin/bash
-
+set -v
 WORKDIR="$(readlink -f $1)"
 WORKDIR=$WORKDIR"/run_files/"
 #echo $WORKDIR
@@ -9,8 +9,8 @@ numsteps=16
 for i in {1..16}; do
     stepnum="$(printf "%02d" ${i})"
     echo "Starting step #${stepnum} of ${numsteps}"
-    files="$(find $WORKDIR -name "*${stepnum}*.job")"
-    echo $files
+    files="$(find $WORKDIR -name "run_${stepnum}*.job")"
+    echo jobfiles to run: $files
 
     # Submit all of the jobs and record all of their job numbers
     jobnumbers=()
@@ -57,7 +57,8 @@ for i in {1..16}; do
 
     # Run check_job_output.py on each file
     for f in $files; do
-	entry="${f%.*}"
+	entry="${f%.*}*.job"
+        echo jobfile to check: $entry 
         check_job_outputs.py "$entry"
     done
 
