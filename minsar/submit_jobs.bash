@@ -56,8 +56,10 @@ for (( i=$startstep; i<=$stopstep; i++)) do
 
     echo "Jobs submitted: ${jobnumbers[@]}"
     # Wait for each job to complete
-    for jobnumber in "${jobnumbers[@]}"; do
-
+    jobindex=0
+    #for jobnumber in "${jobnumbers[@]}"; do
+    for (( j=0; j < "${#jobnumbers[@]}"; j++)); do
+	jobnumber=${jobnumbers[$j]}
 	# Parse out the state of the job from the sacct function.
 	# Format state to be all uppercase (PENDING, RUNNING, or COMPLETED)
 	# and remove leading whitespace characters.
@@ -67,7 +69,7 @@ for (( i=$startstep; i<=$stopstep; i++)) do
 	# Keep checking the state while it is not "COMPLETED"
       	secs=0
 	while true; do
-	    if [[ $(( $secs % 60)) -eq 0 ]]; then
+	    if [[ $(( $secs % 1)) -eq 0 ]]; then
 		echo "${jobnumber} is not finished yet. Current state is '${state}'"
 	    fi
 	    state=$(sacct --format="State" -j $jobnumber | grep "\w[[:upper:]]\w")
@@ -79,7 +81,18 @@ for (( i=$startstep; i<=$stopstep; i++)) do
                 state="COMPLETED"
 		echo "${jobnumber} is complete"
 		break;
-            fi
+            elif [[ $state == *"TIMEOUT"* ]] && [[ $state != "" ]]; then
+		echo "${jobnumber} timedout due to too low a walltime."
+		jf="${files[$jobindex]}"
+		echo "Resubmitting file (${jf})"
+		update_walltime.py "$jf"
+		jobnumline=$(sbatch $f | grep "Submitted batch job")
+		jn=$(grep -oE "[0-9]{7}" <<< $jobnumline)
+		echo "${jf} resubmitted as jobumber: ${jn}"
+		jobnumbers+=("$jn")
+		files+=("$jf")
+		break;
+	    fi
 
 	    # Wait for 10 second before chcking again
 	    sleep 10
@@ -88,7 +101,8 @@ for (( i=$startstep; i<=$stopstep; i++)) do
      	done
 
 	echo "${jobnumber} is finished."
-	
+	((jobindex=jobindex+1))
+
     done
 
     # Run check_job_output.py on each file
