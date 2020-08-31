@@ -40,9 +40,9 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 #for i in {$startstep..$stopstep}; do
 for (( i=$startstep; i<=$stopstep; i++)) do
     stepnum="$(printf "%02d" ${i})"
-    echo "Starting step #${stepnum} of ${stopstep}"
+    echo "Starting step #${i} of ${stopstep}"
     files="$(find $WORKDIR -name "*${stepnum}*.job")"
-    echo $files
+    echo "Jobfiles to run: ${files[@]}"
 
     # Submit all of the jobs and record all of their job numbers
     jobnumbers=()
@@ -54,7 +54,7 @@ for (( i=$startstep; i<=$stopstep; i++)) do
 	jobnumbers+=("$jobnumber")
     done
 
-    echo "${jobnumbers[@]}"
+    echo "Jobs submitted: ${jobnumbers[@]}"
     # Wait for each job to complete
     for jobnumber in "${jobnumbers[@]}"; do
 
@@ -65,8 +65,11 @@ for (( i=$startstep; i<=$stopstep; i++)) do
 	state="$(echo -e "${state}" | sed -e 's/^[[:space:]]*//')"
 
 	# Keep checking the state while it is not "COMPLETED"
-      	while true; do
-	    echo "${jobnumber} is not finished yet. Current state is '${state}'"
+      	secs=0
+	while true; do
+	    if [[ $(( $secs % 60)) -eq 0 ]]; then
+		echo "${jobnumber} is not finished yet. Current state is '${state}'"
+	    fi
 	    state=$(sacct --format="State" -j $jobnumber | grep "\w[[:upper:]]\w")
 	    state="$(echo -e "${state}" | sed -e 's/^[[:space:]]*//')"
 
@@ -80,6 +83,7 @@ for (( i=$startstep; i<=$stopstep; i++)) do
 
 	    # Wait for 10 second before chcking again
 	    sleep 10
+	    ((secs=secs+10))
 	    
      	done
 
@@ -89,7 +93,8 @@ for (( i=$startstep; i<=$stopstep; i++)) do
 
     # Run check_job_output.py on each file
     for f in $files; do
-	entry="${f%.*}"
+	entry="${f%.*}*.job"
+	echo "Jobfile to check: $entry"
         check_job_outputs.py "$entry"
     done
 
