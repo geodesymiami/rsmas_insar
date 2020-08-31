@@ -56,7 +56,8 @@ def main(iargs=None):
         rsync_list = [
                 '/mintpy/pic',
                 '/mintpy/*.he5',
-                '/mintpy/inputs'
+                '/mintpy/inputs',
+                '/remora_*'
                 ]
 
         command = 'ssh ' + DATA_SERVER + ' mkdir -p ' + REMOTE_DIR + project_name + '/mintpy'

@@ -1,5 +1,5 @@
 #! /bin/bash
-
+set -v
 WORKDIR="$(readlink -f $1)"
 WORKDIR=$WORKDIR"/run_files/"
 #echo $WORKDIR
@@ -40,6 +40,7 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 #for i in {$startstep..$stopstep}; do
 for (( i=$startstep; i<=$stopstep; i++)) do
     stepnum="$(printf "%02d" ${i})"
+
     echo "Starting step #${i} of ${stopstep}"
     files="$(find $WORKDIR -name "*${stepnum}*.job")"
     echo "Jobfiles to run: ${files[@]}"

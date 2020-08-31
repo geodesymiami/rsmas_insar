@@ -5,6 +5,7 @@ trap "kill 0" EXIT      # Kill all children if we receive EXIT
 
 PARALLEL=24
 
+## start option processing
 while [[ $# -gt 0 ]] 
 do
     key="$1"
@@ -25,13 +26,15 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 echo "PARALLEL=${PARALLEL}"
 
+cmd="ssara_federated_query.py $@ > ssara_listing.txt"
+echo Running ... $cmd
 ssara_federated_query.py "$@" > ssara_listing.txt
 
 regex="https:\/\/datapool\.asf\.alaska\.edu\/[a-zA-Z\/0-9\_]+\.zip"
 
 urls=$(grep -oP $regex ssara_listing.txt)
 
-echo $urls | xargs -n 1 -P $PARALLEL wget --user famelung --password Falk@1234:
+echo $urls | xargs -n 1 -P $PARALLEL wget -Nc --user famelung --password Falk@1234:
 
 #for f in $urls; do
 #    echo $f
