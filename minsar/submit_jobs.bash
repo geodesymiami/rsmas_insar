@@ -57,7 +57,7 @@ for i in {1..16}; do
 
     # Run check_job_output.py on each file
     for f in $files; do
-	entry="${f%.*}*.job"
+	entry="${f%.*}.job"
         echo jobfile to check: $entry 
         check_job_outputs.py "$entry"
     done
