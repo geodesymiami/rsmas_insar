@@ -44,10 +44,14 @@ def main(iargs=None):
         return
 
     if inps.email_mintpy_flag:
-        email_mintpy_results(email_address)
+        email_mintpy_results(email_address, 'mintpy')
         return
 
-    return None
+    if inps.email_minopy_flag:
+        email_mintpy_results(email_address, 'minopy')
+        return
+
+    return
 
 ###################################################
 
@@ -80,19 +84,19 @@ def email_insarmaps_results(email_address):
     return
 
 
-def email_mintpy_results(email_address):
+def email_mintpy_results(email_address, dir='mintpy'):
     """ email mintpy results """
 
-    textStr = 'email mintpy results'
+    textStr = 'email {} results'.format(dir)
 
     cwd = os.getcwd()
 
     file_list = pathObj.get_email_file_list()
 
-    if os.path.isdir('mintpy/pic'):
-        prefix = 'mintpy/pic'
+    if os.path.isdir('{}/pic'.format(dir)):
+        prefix = '{}/pic'.format(dir)
 
-    template_file = glob.glob('mintpy/inputs/*.template')[0]
+    template_file = glob.glob('{}/inputs/*.template'.format(dir))[0]
 
     i = 0
     for fileList in file_list:
@@ -113,7 +117,7 @@ def email_mintpy_results(email_address):
     print(command)
     status = subprocess.Popen(command, shell=True).wait()
     if status is not 0:
-        print('Error in email_mintpy_results -- skipping error')
+        print('Error in email_{}_results -- skipping error'.format(dir))
 
     return
 
