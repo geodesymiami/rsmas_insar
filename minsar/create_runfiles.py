@@ -23,7 +23,6 @@ pathObj = PathFind()
 
 def main(iargs=None):
     inps = putils.cmd_line_parse(iargs, script='create_runfiles')
-
     if not iargs is None:
         input_arguments = iargs
     else:
@@ -98,10 +97,6 @@ def main(iargs=None):
         for item in run_file_list:
             run_file.writelines(item + '\n')
 
-    if inps.write_jobs:
-        for item in run_file_list:
-            job_obj.write_batch_jobs(batch_file=item)
-
     if inps.prefix == 'tops':
         # check for orbits
         orbit_dir = os.getenv('SENTINEL_ORBITS')
@@ -110,6 +105,27 @@ def main(iargs=None):
         if len(precise_orbits_in_local) > 0:
             for orbit_file in precise_orbits_in_local:
                 os.system('cp {} {}'.format(orbit_file, orbit_dir))
+
+    # Writing job files
+    if inps.write_jobs:
+        for item in run_file_list:
+            job_obj.write_batch_jobs(batch_file=item)
+
+        if inps.template['processingMethod'] == 'smallbaseline':
+            job_name = 'smallbaseline_wrapper'
+            job_file_name = job_name
+            command = ['smallbaselineApp.py', inps.custom_template_file]
+            job_obj.submit_script(job_name, job_file_name, command, writeOnly='True')
+        else:
+            job_name = 'minopy_wrapper'
+            job_file_name = job_name
+            command = ['minopyApp.py', inps.custom_template_file]
+            job_obj.submit_script(job_name, job_file_name, command, writeOnly='True')
+
+        job_name = 'insarmaps'
+        job_file_name = job_name
+        command = ['ingest_insarmaps.py', inps.custom_template_file]
+        job_obj.submit_script(job_name, job_file_name, command, writeOnly='True')
 
     return None
 

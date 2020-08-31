@@ -1,0 +1,43 @@
+####################
+processor                           = isce
+cleanopt                            = 0
+ssaraopt.platform                   = SENTINEL-1A,SENTINEL-1B
+ssaraopt.relativeOrbit              = 18
+ssaraopt.startDate                  = 20190101
+ssaraopt.endDate                    = 20190630
+ssaraopt.parallel                   = 20
+insarmaps_flag                      = no
+image_products_flag                 = True 
+#####################
+# topsStack.slcDir                    = /famelung/saram/PichinchaSenAT18/SLC_all 
+topsStack.boundingBox               = -0.4 -0 -78.8 -78.4                               # '-1 0.15 -91.6 -90.9'                           
+topsStack.subswath                  = 3                                                 # '1 2'                                           
+topsStack.numConnections            = 4                                                 # comment                                         
+topsStack.azimuthLooks              = 5                                                 # comment                                         
+topsStack.rangeLooks                = 15                                                 # comment                                         
+topsStack.filtStrength              = 0.2                                               # comment                                         
+topsStack.unwMethod                 = snaphu                                            # comment                                         
+topsStack.coregistration            = auto                                              # [NESD geometry], auto for NESD                  
+#####################
+mintpy.reference.lalo               = -0.1806,-78.5922
+mintpy.troposphericDelay.method     = pyaps                                                #[pyaps / height_correlation / base_trop_cor / no], auto for pyaps
+mintpy.network.startDate            = auto                                              # [20090101 / no], auto for no                    
+mintpy.networkInversion.parallel    = yes                                               # [yes / no], auto for no, parallel processing    
+mintpy.networkInversion.walltime    = 2:45
+mintpy.save.hdfEos5                 = no                                               # [yes / update / no], auto for no, save timeseries to UNAVCO InSAR Archive format
+mintpy.save.hdfEos5.update          = no                                                # [yes / no], auto for no, put XXXXXXXX as endDate in output filename
+mintpy.save.kml                     = yes                                               # [yes / no], auto for yes, save geocoded velocity to Google Earth KMZ file
+insarmaps_flag                      = no
+
+######################################################
+processingMethod                           = minopy
+mintpy.inversion.patch_size                = 200         # patch size to divide the image for parallel processing, auto for 100
+mintpy.inversion.range_window              = 15         # range window size for synthetic multilook, auto for 15
+mintpy.inversion.azimuth_window            = 11         # azimuth window size for synthetic multilook, auto for 11
+mintpy.inversion.shp_test                  = ks         # [ks, ad, ttest] auto for ks: kolmogorov-smirnov test
+mintpy.inversion.plmethod                  = sequential_EMI         # [EVD, EMI, PTA, sequential_EVD, sequential_EMI, sequential_PTA]
+
+mintpy.compute.cluster     = local
+mintpy.compute.numWorker   = 8
+mintpy.subset.lalo         = -0.215:-0.139,-78.639:-78.576   #-0.224:-0.1096,-78.676:-78.513
+
