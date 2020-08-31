@@ -141,7 +141,7 @@ class JOB_SUBMIT:
 
         self.inps = inps
 
-    def submit_script(self, job_name, job_file_name, argv, email_notif=None):
+    def submit_script(self, job_name, job_file_name, argv, email_notif=None, writeOnly='False'):
         """
         Submits a single script as a job. (compare to submit_batch_jobs for several tasks given in run_file)
         :param job_name: Name of job.
@@ -167,8 +167,8 @@ class JOB_SUBMIT:
 
         self.write_single_job_file(job_name, job_file_name, command_line, work_dir=self.work_dir,
                                    number_of_nodes=self.reserve_node)
-
-        self.submit_and_check_job_status(self.job_files, work_dir=self.work_dir)
+        if writeOnly == 'False':
+            self.submit_and_check_job_status(self.job_files, work_dir=self.work_dir)
 
         return
 
@@ -311,6 +311,8 @@ class JOB_SUBMIT:
             job_file.writelines(job_file_lines)
 
         self.job_files.append(job_file_name)
+        os.system('chmod +x {}'.format(job_file_name))
+
         return
 
     def write_batch_singletask_jobs(self, batch_file):
@@ -363,7 +365,7 @@ class JOB_SUBMIT:
                 if not job_number == 'None':
                     job_stat = 'wait'
                     while job_stat == 'wait':
-                        os.system('sacct --format="State"   -j {} > {}'.format(job_number, job_status_file))
+                        os.system('sacct --format="State" -j {} > {}'.format(job_number, job_status_file))
                         time.sleep(2)
                         with open(job_status_file, 'r') as stat_file:
                             status = stat_file.readlines()
@@ -746,6 +748,13 @@ def set_job_queue_values(args):
                   'wall_time_factor': template['WALLTIME_FACTOR'],
                   'max_memory_per_node': template['MEM_PER_NODE']}
 
+    for key in check_auto.keys():
+        if not check_auto[key] == 'auto':
+            if key == 'wall_time_factor':
+                check_auto[key] = float(check_auto[key])
+            elif not key == 'queue_name':
+                check_auto[key] = int(check_auto[key])
+
     if platform_name in supported_platforms:
         with open(queue_config_file, 'r') as f:
             lines = f.readlines()
@@ -760,11 +769,16 @@ def set_job_queue_values(args):
                 if check_auto['queue_name'] == 'auto':
                     check_auto['queue_name'] = default_queue
                 if default_queue == check_auto['queue_name']:
-                    check_auto['number_of_cores_per_node'] = int(split_values[queue_header.index('JOB_CPUS_PER_NODE')])
-                    check_auto['number_of_threads_per_core'] = int(split_values[queue_header.index('THREADS_PER_CORE')])
-                    check_auto['max_jobs_per_queue'] = int(split_values[queue_header.index('MAX_JOBS_PER_QUEUE')])
-                    check_auto['max_memory_per_node'] = int(split_values[queue_header.index('MEM_PER_NODE')])
-                    check_auto['wall_time_factor'] = float(split_values[queue_header.index('WALLTIME_FACTOR')])
+                    if check_auto['number_of_cores_per_node'] == 'auto':
+                        check_auto['number_of_cores_per_node'] = int(split_values[queue_header.index('JOB_CPUS_PER_NODE')])
+                    if check_auto['number_of_threads_per_core'] == 'auto':
+                        check_auto['number_of_threads_per_core'] = int(split_values[queue_header.index('THREADS_PER_CORE')])
+                    if check_auto['max_jobs_per_queue'] == 'auto':
+                        check_auto['max_jobs_per_queue'] = int(split_values[queue_header.index('MAX_JOBS_PER_QUEUE')])
+                    if check_auto['max_memory_per_node'] == 'auto':
+                        check_auto['max_memory_per_node'] = int(split_values[queue_header.index('MEM_PER_NODE')])
+                    if check_auto['wall_time_factor'] == 'auto':
+                        check_auto['wall_time_factor'] = float(split_values[queue_header.index('WALLTIME_FACTOR')])
 
                     break
                 else:
