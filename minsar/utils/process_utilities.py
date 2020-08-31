@@ -51,7 +51,7 @@ def cmd_line_parse(iargs=None, script=None):
         parser = add_email_args(parser)
     if script == 'upload_data_products':
         parser = add_upload_data_products(parser)
-    if script == 'smallbaseline_wrapper' or script == 'ingest_insarmaps':
+    if script == 'smallbaseline_wrapper' or script == 'ingest_insarmaps' or script == 'minopy_wrapper':
         parser = add_notification(parser)
 
     inps = parser.parse_args(args=iargs)
@@ -78,7 +78,7 @@ def add_common_parser(parser):
 
 def add_create_runfiles(parser):
     run_parser = parser.add_argument_group('create run files and jobs options:')
-    run_parser.add_argument('--job', dest='write_jobs', action='store_true',
+    run_parser.add_argument('--jobfiles', dest='write_jobs', action='store_true',
                              help='writes the jobs corresponding to run files')
     return parser
 
@@ -169,6 +169,8 @@ def add_email_args(parser):
     em = parser.add_argument_group('Option for emailing insarmaps result.')
     em.add_argument('--mintpy', action='store_true', dest='email_mintpy_flag', default=False,
                     help='Email mintpy results')
+    em.add_argument('--minopy', action='store_true', dest='email_minopy_flag', default=False,
+                    help='Email minopy results')
     em.add_argument('--insarmaps', action='store_true', dest='email_insarmaps_flag', default=False,
                     help='Email insarmaps results')
     return parser
