@@ -1,5 +1,5 @@
 #! /bin/bash
-set -v
+set -v -e
 WORKDIR="$(readlink -f $1)"
 WORKDIR=$WORKDIR"/run_files/"
 #echo $WORKDIR
@@ -17,6 +17,7 @@ for i in {1..16}; do
     for f in $files; do
 	#sbatch $f
 	jobnumline=$(sbatch $f | grep "Submitted batch job")
+        sleep 5
 	jobnumber=$(grep -oE "[0-9]{7}" <<< $jobnumline)
 
 	jobnumbers+=("$jobnumber")
