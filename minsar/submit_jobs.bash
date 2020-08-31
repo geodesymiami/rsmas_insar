@@ -5,10 +5,42 @@ WORKDIR=$WORKDIR"/run_files/"
 #echo $WORKDIR
 
 numsteps=16
+startstep=1
+stopstep=$numsteps
 
-for i in {1..16}; do
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+
+    case $key in
+        --start)
+            startstep="$2"
+            shift # past argument
+            shift # past value
+            ;;
+	--stop)
+	    stopstep="$2"
+	    shift
+	    shift
+	    ;;
+	--dostep)
+	    startstep="$2"
+	    stopstep="$2"
+	    shift
+	    shift
+	    ;;
+        *)    # unknown option
+            POSITIONAL+=("$1") # save it in an array for later
+            shift # past argument
+            ;;
+esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+#for i in {$startstep..$stopstep}; do
+for (( i=$startstep; i<=$stopstep; i++)) do
     stepnum="$(printf "%02d" ${i})"
-    echo "Starting step #${stepnum} of ${numsteps}"
+    echo "Starting step #${stepnum} of ${stopstep}"
     files="$(find $WORKDIR -name "*${stepnum}*.job")"
     echo $files
 
@@ -61,6 +93,6 @@ for i in {1..16}; do
         check_job_outputs.py "$entry"
     done
 
-    echo "Step ${i}/${numsteps} complete."
+    echo "Step ${i}/${stopstep} complete."
 
 done
