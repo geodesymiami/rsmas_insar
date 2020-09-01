@@ -638,9 +638,12 @@ class JOB_SUBMIT:
         tasks_with_output = []
         if 'launcher' in self.submission_scheme or do_launcher:
             for line in tasks:
+                config_file = putils.extract_config_file_from_task_string(line)
+                date_string = putils.extract_date_string_from_config_file_name(config_file)
+                print('QQQQQQQQQQQQ:' + date_string )
                 tasks_with_output.append("{} > {} 2>{}\n".format(line.split('\n')[0],
-                                                                 os.path.abspath(batch_file) + '_$LAUNCHER_JID.o',
-                                                                 os.path.abspath(batch_file) + '_$LAUNCHER_JID.e'))
+                                                                 os.path.abspath(batch_file) + '_' + date_string + '_$LAUNCHER_JID.o',
+                                                                 os.path.abspath(batch_file) + '_' + date_string + '_$LAUNCHER_JID.e'))
             if os.path.exists(batch_file):
                 os.remove(batch_file)
 
@@ -667,6 +670,8 @@ class JOB_SUBMIT:
 
             if self.remora:
                 job_file_lines.append("\nremora $LAUNCHER_DIR/paramrun\n")
+                job_file_lines.append("\nmv remora_$SLURM_JOB_ID remora_" + os.path.basename(batch_file) + "_$SLURM_JOB_ID\n")
+
             else:
                 job_file_lines.append("\n$LAUNCHER_DIR/paramrun\n")
 

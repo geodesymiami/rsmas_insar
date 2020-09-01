@@ -557,6 +557,37 @@ def extract_step_name_from_stdout_name(job_name):
     return step_name
 
 ##########################################################################
+ 
+def extract_config_file_from_task_string(task):
+    """ Extracts the config filename from a task string """
+   
+    try:
+       config_file = task.split('configs/')[1].split('\n')[0]
+    except:
+       config_file =''
+
+    return config_file
+       
+##########################################################################
+ 
+def extract_date_string_from_config_file_name(config_file_name):
+    """ Extracts the date string from config_file_name (last string if it does not contain date) """
+   
+    date_or_string1 = config_file_name.split('_')[-1]
+    try:
+       date_or_string0 = config_file_name.split('_')[-2]
+    except:
+      date_or_string0 = ''
+
+    date_string = ''
+    if date_or_string0.isdigit():
+       date_string = date_or_string0 + '_'
+    
+    date_string = date_string + date_or_string1
+
+    return date_string
+
+##########################################################################
 
 def get_line_before_last(file):
     """get the line before last from a file"""
