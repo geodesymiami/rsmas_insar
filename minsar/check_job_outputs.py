@@ -37,7 +37,8 @@ def main(iargs=None):
                     'FileNotFoundError',
                     'IOErr',
                     'Bus',
-                    'Exiting ...'
+                    'Exiting ...',
+                    'Killed by'
                    ]
 
     error_files = glob.glob(job_name + '*.e')
@@ -51,9 +52,9 @@ def main(iargs=None):
             print('For known issues see https://github.com/geodesymiami/rsmas_insar/blob/master/minsar/docs/known_issues.md')
             raise RuntimeError('Error in job: {}'.format(inps.batch_job))
 
-    #putils.remove_zero_size_or_length_error_files(run_file=job_name)
+    putils.remove_zero_size_or_length_error_files(run_file=job_name)
     #putils.raise_exception_if_job_exited(run_file=job_name)
-    #putils.concatenate_error_files(run_file=job_name, work_dir=project_dir)
+    putils.concatenate_error_files(run_file=job_name, work_dir=project_dir)
 
     out_folder = work_dir + '/stdout_' + os.path.basename(inps.batch_job)
     if os.path.exists(out_folder):
