@@ -1,10 +1,7 @@
 #! /bin/bash
 
-set -v -e
-
 WORKDIR="$(readlink -f $1)"
 WORKDIR=$WORKDIR"/run_files/"
-#echo $WORKDIR
 
 numsteps=16
 startstep=1
@@ -31,7 +28,7 @@ do
 	    shift
 	    shift
 	    ;;
-        *)    # unknown option
+        *)
             POSITIONAL+=("$1") # save it in an array for later
             shift # past argument
             ;;
@@ -40,15 +37,16 @@ done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
 #for i in {$startstep..$stopstep}; do
-for (( i=$startstep; i<=$stopstep; i++)) do
+for (( i=$startstep; i<=$stopstep; i++ )) do
     stepnum="$(printf "%02d" ${i})"
 
     echo "Starting step #${i} of ${stopstep}"
-    files="$(find $WORKDIR -name "*${stepnum}*.job")"
+    files=($(find $WORKDIR -name "*${stepnum}*.job"))
     echo "Jobfiles to run: ${files[@]}"
+    
     # Submit all of the jobs and record all of their job numbers
     jobnumbers=()
-    for f in $files; do
+    for f in "${files[@]}"; do
 	#sbatch $f
 	jobnumline=$(sbatch $f | grep "Submitted batch job")
 	jobnumber=$(grep -oE "[0-9]{7}" <<< $jobnumline)
@@ -58,10 +56,9 @@ for (( i=$startstep; i<=$stopstep; i++)) do
 
     echo "Jobs submitted: ${jobnumbers[@]}"
     # Wait for each job to complete
-    jobindex=0
-    #for jobnumber in "${jobnumbers[@]}"; do
     for (( j=0; j < "${#jobnumbers[@]}"; j++)); do
 	jobnumber=${jobnumbers[$j]}
+	
 	# Parse out the state of the job from the sacct function.
 	# Format state to be all uppercase (PENDING, RUNNING, or COMPLETED)
 	# and remove leading whitespace characters.
@@ -71,7 +68,9 @@ for (( i=$startstep; i<=$stopstep; i++)) do
 	# Keep checking the state while it is not "COMPLETED"
       	secs=0
 	while true; do
-	    if [[ $(( $secs % 1)) -eq 0 ]]; then
+	    
+	    # Only print every so often, not every 10 seconds
+	    if [[ $(( $secs % 10)) -eq 0 ]]; then
 		echo "${jobnumber} is not finished yet. Current state is '${state}'"
 	    fi
 
@@ -87,12 +86,18 @@ for (( i=$startstep; i<=$stopstep; i++)) do
 
             elif [[ $state == *"TIMEOUT"* ]] && [[ $state != "" ]]; then
 		echo "${jobnumber} timedout due to too low a walltime."
-		jf="${files[$jobindex]}"
+		jf=${files[$j]}
 		echo "Resubmitting file (${jf})"
-		update_walltime.py "$jf"
+
+		# Compute a new walltime and update the job file
+		update_walltime.py "$jf" &> /dev/null
+
+		# Resubmite a sa new job number
 		jobnumline=$(sbatch $f | grep "Submitted batch job")
 		jn=$(grep -oE "[0-9]{7}" <<< $jobnumline)
 		echo "${jf} resubmitted as jobumber: ${jn}"
+
+		# Added newly submitted jobs and files to arrays
 		jobnumbers+=("$jn")
 		files+=("$jf")
 		break;
@@ -106,15 +111,13 @@ for (( i=$startstep; i<=$stopstep; i++)) do
 
 	echo "${jobnumber} is finished."
 
-	((jobindex=jobindex+1))
-
     done
 
     # Run check_job_output.py on each file
-    for f in $files; do
+    for f in "${files[@]}"; do
 	entry="${f%.*}*.job"
 	echo "Jobfile to check: $entry"
-        check_job_outputs.py "$entry"
+        check_job_outputs.py "$entry" > /dev/null
     done
 
     echo "Step ${i}/${stopstep} complete."
