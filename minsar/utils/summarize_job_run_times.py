@@ -69,7 +69,7 @@ def main(iargs=None):
    
     job_id_list = []
 
-    bursts = glob.glob(inps.work_dir + '/geom_master/*/hgt*rdr')
+    bursts = glob.glob(inps.work_dir + '/geom_reference/*/hgt*rdr')
     number_of_bursts = len(bursts)
     
     if len(bursts) == 0:

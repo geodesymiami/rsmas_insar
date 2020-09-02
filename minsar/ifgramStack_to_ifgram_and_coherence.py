@@ -114,7 +114,7 @@ def create_geotiff (obj, data, outfile, type, work_dir):
     ds.SetGeoTransform(gt)
 
     # metadata consistent with Backscatter products:
-    xmlfile = glob.glob(os.path.join(work_dir, pathObj.masterdir, '*.xml'))[0]
+    xmlfile = glob.glob(os.path.join(work_dir, pathObj.referencedir, '*.xml'))[0]
     attributes = putils.xmlread(xmlfile)
     Metadata = {'SAT': attributes['missionname'], 'Mode': attributes['passdirection'],
                 'Image_Type': 'ortho_{}'.format(type),

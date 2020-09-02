@@ -37,15 +37,15 @@ if __name__ == "__main__":
     message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1::]))
 
     itotal = 0
-    lat_files = glob.glob(inps.work_dir + '/geom_master/IW1/lat_*.rdr')
+    lat_files = glob.glob(inps.work_dir + '/geom_reference/IW1/lat_*.rdr')
     if len(lat_files) > 0:
         print('bursts in IW1: ', len(lat_files))
         itotal = itotal + len(lat_files)
-    lat_files = glob.glob(inps.work_dir + '/geom_master/IW2/lat_*.rdr')
+    lat_files = glob.glob(inps.work_dir + '/geom_reference/IW2/lat_*.rdr')
     if len(lat_files) > 0:
         print('bursts in IW2: ', len(lat_files))
         itotal = itotal + len(lat_files)
-    lat_files = glob.glob(inps.work_dir + '/geom_master/IW3/lat_*.rdr')
+    lat_files = glob.glob(inps.work_dir + '/geom_reference/IW3/lat_*.rdr')
     if len(lat_files) > 0:
         print('bursts in IW3: ', len(lat_files))
         itotal = itotal + len(lat_files)

@@ -1,5 +1,7 @@
 #! /bin/bash
-set -v
+
+set -v -e
+
 WORKDIR="$(readlink -f $1)"
 WORKDIR=$WORKDIR"/run_files/"
 #echo $WORKDIR
@@ -44,7 +46,6 @@ for (( i=$startstep; i<=$stopstep; i++)) do
     echo "Starting step #${i} of ${stopstep}"
     files="$(find $WORKDIR -name "*${stepnum}*.job")"
     echo "Jobfiles to run: ${files[@]}"
-
     # Submit all of the jobs and record all of their job numbers
     jobnumbers=()
     for f in $files; do
@@ -73,6 +74,7 @@ for (( i=$startstep; i<=$stopstep; i++)) do
 	    if [[ $(( $secs % 1)) -eq 0 ]]; then
 		echo "${jobnumber} is not finished yet. Current state is '${state}'"
 	    fi
+
 	    state=$(sacct --format="State" -j $jobnumber | grep "\w[[:upper:]]\w")
 	    state="$(echo -e "${state}" | sed -e 's/^[[:space:]]*//')"
 
@@ -82,6 +84,7 @@ for (( i=$startstep; i<=$stopstep; i++)) do
                 state="COMPLETED"
 		echo "${jobnumber} is complete"
 		break;
+
             elif [[ $state == *"TIMEOUT"* ]] && [[ $state != "" ]]; then
 		echo "${jobnumber} timedout due to too low a walltime."
 		jf="${files[$jobindex]}"
@@ -102,6 +105,7 @@ for (( i=$startstep; i<=$stopstep; i++)) do
      	done
 
 	echo "${jobnumber} is finished."
+
 	((jobindex=jobindex+1))
 
     done
