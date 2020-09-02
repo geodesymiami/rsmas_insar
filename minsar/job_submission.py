@@ -441,9 +441,14 @@ class JOB_SUBMIT:
         number_of_limited_memory_tasks = int(self.max_memory_per_node*number_of_nodes_per_job/self.default_memory)
 
         while number_of_limited_memory_tasks < number_of_parallel_tasks:
+            if number_of_jobs < int(self.max_jobs_per_queue):
+                number_of_jobs += 1
+                number_of_parallel_tasks = int(np.ceil(len(tasks) / number_of_jobs))
+            else:
+                break
+
+        while number_of_limited_memory_tasks < number_of_parallel_tasks:
             number_of_nodes_per_job = number_of_nodes_per_job + 1
-            number_of_jobs = np.ceil(number_of_nodes / number_of_nodes_per_job)
-            number_of_parallel_tasks = int(np.ceil(len(tasks) / number_of_jobs))
             number_of_limited_memory_tasks = int(self.max_memory_per_node * number_of_nodes_per_job / self.default_memory)
 
         if number_of_nodes_per_job > 1:
