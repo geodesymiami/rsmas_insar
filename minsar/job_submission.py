@@ -731,7 +731,7 @@ def check_words_in_file(errfile, eword):
 
 
 def set_job_queue_values(args):
-
+    
     template = auto_template_not_existing_options(args)
     submission_scheme = template['job_submission_scheme']
     if submission_scheme == 'auto':
@@ -750,6 +750,8 @@ def set_job_queue_values(args):
 
     if args.queue:
         template['QUEUENAME'] = args.queue
+    elif os.getenv('QUEUENAME'):
+        template['QUEUENAME'] = os.getenv('QUEUENAME')
 
     check_auto = {'queue_name': template['QUEUENAME'],
                   'number_of_cores_per_node': template['JOB_CPUS_PER_NODE'],
