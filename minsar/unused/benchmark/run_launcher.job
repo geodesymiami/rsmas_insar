@@ -24,7 +24,7 @@ project=$(basename $PWD)
 SECONDS=0
 module load launcher
 export LD_PRELOAD=/home1/apps/tacc-patches/python_cacher/myopen.so
-export PATH=/home1/05861/tg851601/test/operations/rsmas_insar/sources/isce2/contrib/stack/topsStack:$PATH
+export PATH=$RSMASINSAR_HOME/sources/isce2/contrib/stack/topsStack:$PATH
 export LAUNCHER_WORKDIR="$SCRATCH/$project/run_files"
 
 if [ -z ${run_step+x} ]; then 
