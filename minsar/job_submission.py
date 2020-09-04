@@ -645,7 +645,6 @@ class JOB_SUBMIT:
             for line in tasks:
                 config_file = putils.extract_config_file_from_task_string(line)
                 date_string = putils.extract_date_string_from_config_file_name(config_file)
-                print('QQQQQQQQQQQQ:' + date_string )
                 tasks_with_output.append("{} > {} 2>{}\n".format(line.split('\n')[0],
                                                                  os.path.abspath(batch_file) + '_' + date_string + '_$LAUNCHER_JID.o',
                                                                  os.path.abspath(batch_file) + '_' + date_string + '_$LAUNCHER_JID.e'))
@@ -671,7 +670,8 @@ class JOB_SUBMIT:
            
             if self.scheduler == 'SLURM':
 
-               job_file_lines.append("export LD_PRELOAD=/home1/apps/tacc-patches/python_cacher/myopen.so\n")
+               job_file_lines.append("module load python_cacher \n")
+               #job_file_lines.append("export LD_PRELOAD=/home1/apps/tacc-patches/python_cacher/myopen.so\n")
 
             if self.remora:
                 job_file_lines.append("\nremora $LAUNCHER_DIR/paramrun\n")
