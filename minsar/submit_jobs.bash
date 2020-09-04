@@ -1,4 +1,5 @@
 #! /bin/bash
+set -v -e
 
 WORKDIR="$(readlink -f $1)"
 WORKDIR=$WORKDIR"/run_files/"
@@ -49,6 +50,7 @@ for (( i=$startstep; i<=$stopstep; i++ )) do
     for f in "${files[@]}"; do
 	#sbatch $f
 	jobnumline=$(sbatch $f | grep "Submitted batch job")
+        sleep 5
 	jobnumber=$(grep -oE "[0-9]{7}" <<< $jobnumline)
 
 	jobnumbers+=("$jobnumber")
@@ -117,7 +119,8 @@ for (( i=$startstep; i<=$stopstep; i++ )) do
     for f in "${files[@]}"; do
 	entry="${f%.*}*.job"
 	echo "Jobfile to check: $entry"
-        check_job_outputs.py "$entry" > /dev/null
+        check_job_outputs.py "$entry" 
+        #check_job_outputs.py "$entry" > /dev/null
     done
 
     echo "Step ${i}/${stopstep} complete."
