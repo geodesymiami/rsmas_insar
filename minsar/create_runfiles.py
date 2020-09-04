@@ -114,12 +114,12 @@ def main(iargs=None):
         if inps.template['processingMethod'] == 'smallbaseline':
             job_name = 'smallbaseline_wrapper'
             job_file_name = job_name
-            command = ['smallbaselineApp.py', inps.custom_template_file]
+            command = ['smallbaselineApp.py', inps.custom_template_file, '--dir', 'mintpy']
             job_obj.submit_script(job_name, job_file_name, command, writeOnly='True')
         else:
             job_name = 'minopy_wrapper'
             job_file_name = job_name
-            command = ['minopyApp.py', inps.custom_template_file]
+            command = ['minopyApp.py', inps.custom_template_file, '--dir', 'minopy']
             job_obj.submit_script(job_name, job_file_name, command, writeOnly='True')
 
         job_name = 'insarmaps'

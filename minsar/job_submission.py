@@ -441,9 +441,14 @@ class JOB_SUBMIT:
         number_of_limited_memory_tasks = int(self.max_memory_per_node*number_of_nodes_per_job/self.default_memory)
 
         while number_of_limited_memory_tasks < number_of_parallel_tasks:
+            if number_of_jobs < int(self.max_jobs_per_queue):
+                number_of_jobs += 1
+                number_of_parallel_tasks = int(np.ceil(len(tasks) / number_of_jobs))
+            else:
+                break
+
+        while number_of_limited_memory_tasks < number_of_parallel_tasks:
             number_of_nodes_per_job = number_of_nodes_per_job + 1
-            number_of_jobs = np.ceil(number_of_nodes / number_of_nodes_per_job)
-            number_of_parallel_tasks = int(np.ceil(len(tasks) / number_of_jobs))
             number_of_limited_memory_tasks = int(self.max_memory_per_node * number_of_nodes_per_job / self.default_memory)
 
         if number_of_nodes_per_job > 1:
@@ -638,9 +643,11 @@ class JOB_SUBMIT:
         tasks_with_output = []
         if 'launcher' in self.submission_scheme or do_launcher:
             for line in tasks:
+                config_file = putils.extract_config_file_from_task_string(line)
+                date_string = putils.extract_date_string_from_config_file_name(config_file)
                 tasks_with_output.append("{} > {} 2>{}\n".format(line.split('\n')[0],
-                                                                 os.path.abspath(batch_file) + '_$LAUNCHER_JID.o',
-                                                                 os.path.abspath(batch_file) + '_$LAUNCHER_JID.e'))
+                                                                 os.path.abspath(batch_file) + '_' + date_string + '_$LAUNCHER_JID.o',
+                                                                 os.path.abspath(batch_file) + '_' + date_string + '_$LAUNCHER_JID.e'))
             if os.path.exists(batch_file):
                 os.remove(batch_file)
 
@@ -663,10 +670,13 @@ class JOB_SUBMIT:
            
             if self.scheduler == 'SLURM':
 
-               job_file_lines.append("export LD_PRELOAD=/home1/apps/tacc-patches/python_cacher/myopen.so\n")
+               job_file_lines.append("module load python_cacher \n")
+               #job_file_lines.append("export LD_PRELOAD=/home1/apps/tacc-patches/python_cacher/myopen.so\n")
 
             if self.remora:
                 job_file_lines.append("\nremora $LAUNCHER_DIR/paramrun\n")
+                job_file_lines.append("\nmv remora_$SLURM_JOB_ID remora_" + os.path.basename(batch_file) + "_$SLURM_JOB_ID\n")
+
             else:
                 job_file_lines.append("\n$LAUNCHER_DIR/paramrun\n")
 
@@ -721,7 +731,7 @@ def check_words_in_file(errfile, eword):
 
 
 def set_job_queue_values(args):
-
+    
     template = auto_template_not_existing_options(args)
     submission_scheme = template['job_submission_scheme']
     if submission_scheme == 'auto':
@@ -740,6 +750,8 @@ def set_job_queue_values(args):
 
     if args.queue:
         template['QUEUENAME'] = args.queue
+    elif os.getenv('QUEUENAME'):
+        template['QUEUENAME'] = os.getenv('QUEUENAME')
 
     check_auto = {'queue_name': template['QUEUENAME'],
                   'number_of_cores_per_node': template['JOB_CPUS_PER_NODE'],
