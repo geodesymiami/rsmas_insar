@@ -668,9 +668,9 @@ class JOB_SUBMIT:
             job_file_lines.append("\nexport LAUNCHER_WORKDIR={0}".format(self.out_dir))
             job_file_lines.append("\nexport LAUNCHER_JOB_FILE={0}\n".format(batch_file))
            
-            if self.scheduler == 'SLURM':
+            #if self.scheduler == 'SLURM':
 
-               job_file_lines.append("module load python_cacher \n")
+               #job_file_lines.append("module load python_cacher \n")
                #job_file_lines.append("export LD_PRELOAD=/home1/apps/tacc-patches/python_cacher/myopen.so\n")
 
             if self.remora:
@@ -752,6 +752,8 @@ def set_job_queue_values(args):
         template['QUEUENAME'] = args.queue
     elif os.getenv('QUEUENAME'):
         template['QUEUENAME'] = os.getenv('QUEUENAME')
+
+    template['WALLTIME_FACTOR'] = os.getenv('WALLTIME_FACTOR')
 
     check_auto = {'queue_name': template['QUEUENAME'],
                   'number_of_cores_per_node': template['JOB_CPUS_PER_NODE'],
