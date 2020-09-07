@@ -42,7 +42,7 @@ for (( i=$startstep; i<=$stopstep; i++ )) do
     stepnum="$(printf "%02d" ${i})"
 
     echo "Starting step #${i} of ${stopstep}"
-    files=($(find $WORKDIR -name "*${stepnum}*.job"))
+    files=($(find $WORKDIR -name "run_${stepnum}_*.job"))
     echo "Jobfiles to run: ${files[@]}"
     
     # Submit all of the jobs and record all of their job numbers
