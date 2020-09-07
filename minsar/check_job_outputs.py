@@ -46,10 +46,11 @@ def main(iargs=None):
         job_exits = []
         for error_string in error_strings:
             job_exits.append(check_words_in_file(file, error_string))
-        if np.array(job_exits).any():
-            print('ERROR: String \"' + error_string + '\" occurs in ' + file)
-            print('For known issues see https://github.com/geodesymiami/rsmas_insar/blob/master/minsar/docs/known_issues.md')
-            raise RuntimeError('Error in job: {}'.format(inps.batch_job))
+            if np.array(job_exits).any():
+                print('Error: check_job_outputs.py  ' + inps.batch_job)
+                print('For known issues see https://github.com/geodesymiami/rsmas_insar/tree/master/docs/known_issues.md')
+                #raise RuntimeError('Error in job: {}'.format(inps.batch_job))
+                raise RuntimeError('Error: \"' + error_string + '\" found in ' + file)
 
     putils.remove_zero_size_or_length_error_files(run_file=job_name)
     #putils.raise_exception_if_job_exited(run_file=job_name)
