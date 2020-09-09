@@ -26,25 +26,33 @@ def main(iargs=None):
     work_dir = os.path.dirname(os.path.abspath(inps.batch_job))
     project_dir = os.path.dirname(work_dir)
     job_name = inps.batch_job.split('.')[0]
-    knwon_issues_file = os.path.join(os.getenv('RSMASINSAR_HOME'), 'minsar/docs/known_issues.md')
+    known_issues_file = os.path.join(os.getenv('RSMASINSAR_HOME'), 'minsar/docs/known_issues.md')
 
     error_happened = False
+    error_strings  = [
+                    'Segmentation fault',
+                    'Aborted',
+                    'ERROR',
+                    'Error',
+                    'FileNotFoundError',
+                    'IOErr',
+                    'Bus',
+                    'Exiting ...',
+                   ]
 
     error_files = glob.glob(job_name + '*.e')
-    for errfile in error_files:
-        job_exit = [check_words_in_file(errfile, 'Segmentation fault'),
-                    check_words_in_file(errfile, 'Aborted'),
-                    check_words_in_file(errfile, 'ERROR'),
-                    check_words_in_file(errfile, 'Error')]
-        if np.array(job_exit).any():
-            error_happened = True
-            shutil.copy2(knwon_issues_file, project_dir)
-            with open(knwon_issues_file, 'r') as f:
-                known_issues = f.read()
-            print(known_issues)
+    out_files = glob.glob(job_name + '*.o')
+    for file in error_files + out_files:
+        job_exits = []
+        for error_string in error_strings:
+            job_exits.append(check_words_in_file(file, error_string))
+        if np.array(job_exits).any():
+            print('ERROR: String \"' + error_string + '\" occurs in ' + file)
+            print('For known issues see https://github.com/geodesymiami/rsmas_insar/blob/master/minsar/docs/known_issues.md')
+            raise RuntimeError('Error in job: {}'.format(inps.batch_job))
 
     putils.remove_zero_size_or_length_error_files(run_file=job_name)
-    putils.raise_exception_if_job_exited(run_file=job_name)
+    #putils.raise_exception_if_job_exited(run_file=job_name)
     putils.concatenate_error_files(run_file=job_name, work_dir=project_dir)
 
     out_folder = work_dir + '/stdout_' + os.path.basename(inps.batch_job)
@@ -52,9 +60,6 @@ def main(iargs=None):
         shutil.rmtree(out_folder)
 
     putils.move_out_job_files_to_stdout(run_file=job_name)
-
-    if error_happened:
-        raise RuntimeError('Error terminating job: {}'.format(inps.batch_job))
 
     return
 

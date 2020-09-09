@@ -167,4 +167,8 @@ plot(tasks,time,'o--'), xlabel('tasks'),ylabel('seconds'),set(gca,'FontSize',18)
 xlim(xl)
 set(gcf,'color','w')
 ```
+### 7. bash tricks
+```
+#trap read debug
+```
 

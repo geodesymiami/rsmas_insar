@@ -255,17 +255,19 @@ class Sensors:
     def get_TSX_TDX_date(self, TXfolder):
 
         # will search for different version of workreport to be compatible with ASf, WInSAR etc
-        TXfile = glob.iglob(os.path.join(TXfolder, 'T*X-1.SAR.L1B/T*X*/T*X*.xml'), recursive=True)[0]
-        if len(TXfile) > 0:
-            acquisitionDate = TXfile.split('.')[-2].split('_')[-1]
-            acquisitionDate = acquisitionDate[0:8]
-            successflag = True
-            return successflag, acquisitionDate
+        try:
+            TXfile = glob.glob(os.path.join(TXfolder, 'T*X-1.SAR.L1B/T*X*/T*X*.xml'), recursive=True)[0]
 
-        # if it reached here it could not find the acqusiitionDate
-        successflag = False
-        acquisitionDate = 'FAIL'
-        return successflag, acquisitionDate
+            if len(TXfile) > 0:
+                acquisitionDate = TXfile.split('.')[-2].split('_')[-1]
+                acquisitionDate = acquisitionDate[0:8]
+                successflag = True
+                return successflag, acquisitionDate
+        except:
+            # if it reached here it could not find the acqusiitionDate
+            successflag = False
+            acquisitionDate = 'FAIL'
+            return successflag, acquisitionDate
 
     def create_run_unpack(self):
 

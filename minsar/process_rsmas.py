@@ -218,16 +218,14 @@ class RsmasInsar:
     def run_timeseries(self):
         """ Process smallbaseline using MintPy or non-linear inversion using MiNoPy and email results
         """
-        scp_args = [self.custom_template_file, '--submit']
+        scp_args = [self.custom_template_file, '--submit', '--email']
         if self.remora:
             scp_args += ['--remora']
 
         if self.method == 'mintpy':
-            scp_args += ['--email']
             minsar.smallbaseline_wrapper.main(scp_args)
         else:
-            import minsar.minopy_wrapper as minopy_wrapper
-            minopy_wrapper.main(scp_args)
+            minsar.minopy_wrapper.main(scp_args)
 
         return
 

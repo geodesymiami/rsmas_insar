@@ -51,7 +51,7 @@ def cmd_line_parse(iargs=None, script=None):
         parser = add_email_args(parser)
     if script == 'upload_data_products':
         parser = add_upload_data_products(parser)
-    if script == 'smallbaseline_wrapper' or script == 'ingest_insarmaps':
+    if script == 'smallbaseline_wrapper' or script == 'ingest_insarmaps' or script == 'minopy_wrapper':
         parser = add_notification(parser)
 
     inps = parser.parse_args(args=iargs)
@@ -78,7 +78,7 @@ def add_common_parser(parser):
 
 def add_create_runfiles(parser):
     run_parser = parser.add_argument_group('create run files and jobs options:')
-    run_parser.add_argument('--job', dest='write_jobs', action='store_true',
+    run_parser.add_argument('--jobfiles', dest='write_jobs', action='store_true',
                              help='writes the jobs corresponding to run files')
     return parser
 
@@ -169,6 +169,8 @@ def add_email_args(parser):
     em = parser.add_argument_group('Option for emailing insarmaps result.')
     em.add_argument('--mintpy', action='store_true', dest='email_mintpy_flag', default=False,
                     help='Email mintpy results')
+    em.add_argument('--minopy', action='store_true', dest='email_minopy_flag', default=False,
+                    help='Email minopy results')
     em.add_argument('--insarmaps', action='store_true', dest='email_insarmaps_flag', default=False,
                     help='Email insarmaps results')
     return parser
@@ -555,6 +557,37 @@ def extract_step_name_from_stdout_name(job_name):
     return step_name
 
 ##########################################################################
+ 
+def extract_config_file_from_task_string(task):
+    """ Extracts the config filename from a task string """
+   
+    try:
+       config_file = task.split('configs/')[1].split('\n')[0]
+    except:
+       config_file =''
+
+    return config_file
+       
+##########################################################################
+ 
+def extract_date_string_from_config_file_name(config_file_name):
+    """ Extracts the date string from config_file_name (last string if it does not contain date) """
+   
+    date_or_string1 = config_file_name.split('_')[-1]
+    try:
+       date_or_string0 = config_file_name.split('_')[-2]
+    except:
+      date_or_string0 = ''
+
+    date_string = ''
+    if date_or_string0.isdigit():
+       date_string = date_or_string0 + '_'
+    
+    date_string = date_string + date_or_string1
+
+    return date_string
+
+##########################################################################
 
 def get_line_before_last(file):
     """get the line before last from a file"""
@@ -810,8 +843,8 @@ def get_number_of_bursts(inps_dict):
                 command_options = command_options + ['--' + item] + [topsStack_template[item]]
 
         inps = stack_cmd(command_options)
-        dateList, master_date, slaveList, safe_dict = get_dates(inps)
-        dirname = safe_dict[master_date].safe_file
+        dateList, reference_date, secondaryList, safe_dict = get_dates(inps)
+        dirname = safe_dict[reference_date].safe_file
 
         if inps.swath_num is None:
             swaths = [1, 2, 3]
@@ -825,7 +858,7 @@ def get_number_of_bursts(inps_dict):
             obj.configure()
             obj.safe = dirname.split()
             obj.swathNumber = swath
-            obj.output = os.path.join(inps.work_dir, 'master', 'IW{0}'.format(swath))
+            obj.output = os.path.join(inps.work_dir, 'reference', 'IW{0}'.format(swath))
             obj.orbitFile = None
             obj.auxFile = None
             obj.orbitDir = inps.orbit_dirname
