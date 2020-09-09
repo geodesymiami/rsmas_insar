@@ -120,9 +120,14 @@ for (( i=$startstep; i<=$stopstep; i++ )) do
 
     # Run check_job_output.py on each file
     for f in "${files[@]}"; do
-	entry="${f%.*}*.job"
+	entry="${f%.*}.job"
 	echo "Jobfile to check: $entry"
-        check_job_outputs.py "$entry" 
+        check_job_outputs.py "$entry"
+	exit_status="$?"
+	if [[ $exit_status -ne 0 ]]; then
+	    echo "check_job_outputs.py $entry exited with a non-zero exit code ($exit_status). Exiting."
+	    exit 1;
+	fi
         #check_job_outputs.py "$entry" > /dev/null
     done
 
