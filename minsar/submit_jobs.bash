@@ -1,5 +1,5 @@
 #! /bin/bash
-set -v -e
+#set -v -e
 
 WORKDIR="$(readlink -f $1)"
 WORKDIR=$WORKDIR"/run_files/"
@@ -50,7 +50,6 @@ for (( i=$startstep; i<=$stopstep; i++ )) do
     for f in "${files[@]}"; do
 	#sbatch $f
 	jobnumline=$(sbatch $f | grep "Submitted batch job")
-        sleep 5
 	jobnumber=$(grep -oE "[0-9]{7}" <<< $jobnumline)
 
 	jobnumbers+=("$jobnumber")
@@ -103,6 +102,10 @@ for (( i=$startstep; i<=$stopstep; i++ )) do
 		jobnumbers+=("$jn")
 		files+=("$jf")
 		break;
+	 
+	    elif [[ ( $state == *"FAILED"* || $state == *"CANCELLED"* ) &&  $state != "" ]]; then
+		echo "${jobnumber} was CANCLLED or FAILED. Exiting with status code 1."
+		exit 1; 
 	    fi
 
 	    # Wait for 10 second before chcking again
