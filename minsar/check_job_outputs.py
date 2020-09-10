@@ -38,6 +38,7 @@ def main(iargs=None):
                     'IOErr',
                     'Bus',
                     'Exiting ...',
+                    'Traceback'
                    ]
 
     error_files = glob.glob(job_name + '*.e')
