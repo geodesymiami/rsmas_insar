@@ -27,6 +27,7 @@ cd rsmas_insar
 
 git clone https://github.com/insarlab/MintPy.git sources/MintPy ;
 git clone https://github.com/isce-framework/isce2.git sources/isce2
+git clone https://github.com/geodesymiami/minopy.git sources/geodmod 
 git clone https://github.com/geodesymiami/geodmod.git sources/geodmod ;
 git clone https://github.com/geodesymiami/insarmaps_scripts.git sources/insarmaps_scripts ;
 git clone https://github.com/bakerunavco/SSARA.git 3rdparty/SSARA ;
@@ -54,13 +55,12 @@ chmod 755 $miniconda_version
 mkdir -p ../3rdparty
 ./$miniconda_version -b -p ../3rdparty/miniconda3
 ../3rdparty/miniconda3/bin/conda config --add channels conda-forge
-../3rdparty/miniconda3/bin/conda install isce2 -c conda-forge --yes
-
 ../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MintPy/docs/conda.txt
+../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
+../3rdparty/miniconda3/bin/conda install isce2 -c conda-forge --yes
 ../3rdparty/miniconda3/bin/conda install --yes --file ../docs/conda.txt
 ../3rdparty/miniconda3/bin/pip install --upgrade pip
 ../3rdparty/miniconda3/bin/pip install geocoder
-../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
 ```
 * #Source the environment and create aux directories. Install credential files for data download:
 ```
