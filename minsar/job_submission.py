@@ -30,6 +30,7 @@ import argparse
 import time
 import glob
 import numpy as np
+import math
 from minsar.objects import message_rsmas
 from minsar.objects.auto_defaults import queue_config_file, supported_platforms
 import warnings
@@ -451,6 +452,8 @@ class JOB_SUBMIT:
             number_of_nodes_per_job = number_of_nodes_per_job + 1
             number_of_limited_memory_tasks = int(self.max_memory_per_node * number_of_nodes_per_job / self.default_memory)
 
+        self.number_of_parallel_tasks_per_node = math.ceil(number_of_parallel_tasks / number_of_nodes_per_job)
+
         if number_of_nodes_per_job > 1:
             print('Note: Number of jobs exceed the numbers allowed per queue for jobs with 1 node...\n'
                   'Number of Nodes per job are adjusted to {}'.format(number_of_nodes_per_job))
@@ -666,6 +669,7 @@ class JOB_SUBMIT:
             job_file_lines.append("\nexport OMP_NUM_THREADS={0}".format(self.default_num_threads))
             job_file_lines.append("\nexport PATH={0}:$PATH".format(self.stack_path))
             job_file_lines.append("\nexport LAUNCHER_WORKDIR={0}".format(self.out_dir))
+            job_file_lines.append("\nexport LAUNCHER_PPN={0}\n".format(self.number_of_parallel_tasks_per_node))
             job_file_lines.append("\nexport LAUNCHER_JOB_FILE={0}\n".format(batch_file))
            
             #if self.scheduler == 'SLURM':

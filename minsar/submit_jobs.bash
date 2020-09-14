@@ -1,5 +1,5 @@
 #! /bin/bash
-set -v -e
+#set -v -e
 WORKDIR="$(readlink -f $1)"
 WORKDIR=$WORKDIR"/run_files/"
 #echo $WORKDIR
