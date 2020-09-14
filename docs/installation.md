@@ -27,7 +27,7 @@ cd rsmas_insar
 
 git clone https://github.com/insarlab/MintPy.git sources/MintPy ;
 git clone https://github.com/isce-framework/isce2.git sources/isce2
-git clone https://github.com/geodesymiami/minopy.git sources/geodmod 
+git clone https://github.com/geodesymiami/minopy.git sources/minopy 
 git clone https://github.com/geodesymiami/geodmod.git sources/geodmod ;
 git clone https://github.com/geodesymiami/insarmaps_scripts.git sources/insarmaps_scripts ;
 git clone https://github.com/bakerunavco/SSARA.git 3rdparty/SSARA ;
