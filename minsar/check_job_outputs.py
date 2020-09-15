@@ -26,18 +26,21 @@ def main(iargs=None):
     work_dir = os.path.dirname(os.path.abspath(inps.batch_job))
     project_dir = os.path.dirname(work_dir)
     job_name = inps.batch_job.split('.')[0]
-    known_issues_file = os.path.join(os.getenv('RSMASINSAR_HOME'), 'minsar/docs/known_issues.md')
+    known_issues_file = os.path.join(os.getenv('RSMASINSAR_HOME'), 'docs/known_issues.md')
 
     error_happened = False
     error_strings  = [
+                    'No annotation xml file found in zip file',
+                    'There appears to be a gap between slices. Cannot stitch them successfully',
+                    'no element found: line'
+                    'Exiting ...',
                     'Segmentation fault',
+                    'Bus',
                     'Aborted',
                     'ERROR',
                     'Error',
                     'FileNotFoundError',
                     'IOErr',
-                    'Bus',
-                    'Exiting ...',
                     'Traceback'
                    ]
 
