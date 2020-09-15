@@ -67,7 +67,9 @@ mkdir -p ../3rdparty
 source ~/accounts/platforms_defaults.bash;
 source environment.bash;
 mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
-$RSMASINSAR_HOME/setup/install_credential_files.csh;
+install_credential_files.csh;
+
+cp -p ../minsar/additions/isce/logging.conf ../3rdparty/miniconda3/lib/python3.*/site-packages/isce/defaults/logging/logging.conf
 ```
 * #Adding HPC support for MintPy (parallel plotting and defaults to use dask Local Cluster) and uncommited isce fixes
 ```
