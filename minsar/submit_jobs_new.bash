@@ -8,6 +8,9 @@ RUNFILES_DIR=$WORKDIR"/run_files"
 startstep=1
 stopstep="ingest_insarmaps"
 
+start_datetime=$(date +"%Y%m%d:%H-%m")
+echo "${start_datetime} * submit_jobs.bash ${WORKDIR} ${@:2}" >> "${WORKDIR}"/log
+
 while [[ $# -gt 0 ]]
 do
     key="$1"
