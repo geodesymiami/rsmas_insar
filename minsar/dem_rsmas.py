@@ -21,7 +21,7 @@ import re
 import subprocess
 import math
 from minsar.objects import message_rsmas
-from minsar.utils.download_ssara_rsmas import add_polygon_to_ssaraopt
+from minsar.utils.download_ssara import add_polygon_to_ssaraopt
 from minsar.utils.process_utilities import cmd_line_parse
 from minsar.download_rsmas import ssh_with_commands
 

@@ -113,11 +113,17 @@ def run_ssara(slc_dir, template, delta_lat, logger, run_number=1):
 
     # Runs ssara_federated_query.bash with proper options
     ssara_call = ['ssara_federated_query.bash'] + ssaraopt + ['--print', '--download']
-    print('Download data using:\n' + ' '.join(ssara_call))
-    message_rsmas.log(slc_dir, ' '.join(ssara_call))
-    ssara_process = subprocess.Popen(' '.join(ssara_call), shell=True)
+    #print('Download data using:\n' + ' '.join(ssara_call))
+    #message_rsmas.log(slc_dir, ' '.join(ssara_call))
+    #ssara_process = subprocess.Popen(' '.join(ssara_call), shell=True)
 
-    return 0
+    #FA 9/20: I could not figure out how to get the string into a bash shell variabl, that is why writing a file
+    #print( ' '.join(ssara_call) )
+
+    with open('../ssara_command.txt', 'w') as f:
+        f.write(' '.join(ssara_call) + '\n')
+
+    return 
 
 
 def get_ssara_kml(slc_dir, ssaraopt):
@@ -150,7 +156,7 @@ def add_polygon_to_ssaraopt(dataset_template, ssaraopt, delta_lat):
     bbox_list[3] = bbox_list[3].replace("\'", '')
 
     delta_lon = delta_lat * 0.2
-    min_lat = float(bbox_list[0]) - bashelta_lat
+    min_lat = float(bbox_list[0]) - delta_lat
     max_lat = float(bbox_list[1]) + delta_lat
     min_lon = float(bbox_list[2]) - delta_lon
     max_lon = float(bbox_list[3]) + delta_lon

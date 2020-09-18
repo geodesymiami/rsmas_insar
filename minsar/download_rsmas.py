@@ -15,8 +15,8 @@ from minsar.job_submission import JOB_SUBMIT
 from minsar.utils import check_download
 from contextlib import redirect_stdout
 import io
-from minsar.utils.download_ssara_rsmas import add_polygon_to_ssaraopt
-from minsar.utils.download_ssara_rsmas import add_point_to_ssaraopt
+from minsar.utils.download_ssara import add_polygon_to_ssaraopt
+from minsar.utils.download_ssara import add_point_to_ssaraopt
 
 class Capturing(list):
     def __enter__(self):

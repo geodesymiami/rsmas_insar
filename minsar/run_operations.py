@@ -13,7 +13,7 @@ from minsar.objects import dataset_template
 from minsar.objects.dataset_template import Template
 import minsar.utils.process_utilities as putils
 from minsar.objects.auto_defaults import PathFind
-from minsar.utils.download_ssara_rsmas import add_polygon_to_ssaraopt
+from minsar.utils.download_ssara import add_polygon_to_ssaraopt
 
 pathObj = PathFind()
 
