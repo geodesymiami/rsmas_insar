@@ -32,7 +32,7 @@ def main(iargs=None):
     error_strings  = [
                     'No annotation xml file found in zip file',
                     'There appears to be a gap between slices. Cannot stitch them successfully',
-                    'no element found: line'
+                    'no element found: line',
                     'Exiting ...',
                     'Segmentation fault',
                     'Bus',

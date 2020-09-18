@@ -1,5 +1,9 @@
 #!/bin/bash
+#set -x
 
+echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` "$@" " >> log
+
+argv=( "$@" )
 trap "exit" INT TERM    # Convert INT and TERM to EXIT
 trap "kill 0" EXIT      # Kill all children if we receive EXIT
 
@@ -26,8 +30,8 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 echo "PARALLEL=${PARALLEL}"
 
-cmd="ssara_federated_query.py $@ > ssara_listing.txt"
-echo Running ... $cmd
+cmd="ssara_federated_query.py "${argv[@]:0:$#-1}" > ssara_listing.txt"
+#echo Running ... $cmd
 ssara_federated_query.py "$@" > ssara_listing.txt
 
 regex="https:\/\/datapool\.asf\.alaska\.edu\/[a-zA-Z\/0-9\_]+\.zip"
@@ -40,3 +44,4 @@ echo $urls | xargs -n 1 -P $PARALLEL wget -Nc --user famelung --password Falk@12
 #    echo $f
 #    wget --user famelung --password Falk@1234: $f > test.txt &
 #done
+#exit 0
