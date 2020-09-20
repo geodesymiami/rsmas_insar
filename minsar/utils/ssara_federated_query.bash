@@ -29,6 +29,8 @@ done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
 echo "PARALLEL=${PARALLEL}"
+user=`grep asfuser /scratch/05861/tg851601/code/rsmas_insar/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
+passwd=`grep asfpass /scratch/05861/tg851601/code/rsmas_insar/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
 
 cmd="ssara_federated_query.py "${argv[@]:0:$#-1}" > ssara_listing.txt"
 #echo Running ... $cmd
@@ -38,7 +40,7 @@ regex="https:\/\/datapool\.asf\.alaska\.edu\/[a-zA-Z\/0-9\_]+\.zip"
 
 urls=$(grep -oP $regex ssara_listing.txt)
 
-echo $urls | xargs -n 1 -P $PARALLEL wget -Nc --user famelung --password Falk@1234:
+echo $urls | xargs -n 1 -P $PARALLEL wget -Nc --user $user --password $passwd
 
 #for f in $urls; do
 #    echo $f
