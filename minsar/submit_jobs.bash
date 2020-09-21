@@ -1,7 +1,14 @@
 #! /bin/bash
 #set -v -e
 
-WORKDIR="$(readlink -f $1)"
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    echo "This is a help message."
+    exit 0;
+else
+    PROJECT_NAME=$(basename "$1" | cut -d. -f1)
+    #WORKDIR="$(readlink -f $1)"
+fi
+WORKDIR=$SCRATCH/$PROJECT_NAME
 RUNFILES_DIR=$WORKDIR"/run_files"
 #WORKDIR=$WORKDIR"/run_files/"
 
