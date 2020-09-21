@@ -1,11 +1,39 @@
 #! /bin/bash
 
-PROJECT_DIR="$(readlink -f $1)"
-template_file=$TEMPLATES/`basename $PROJECT_DIR`.template
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+helptext="                                                                       \n\
+  Examples:                                                                      \n\
+      minsarApp.bash  $TE/GalapagosSenDT128.template                             \n\
+      minsarApp.bash  $TE/GalapagosSenDT128.template --dostep dem                \n\
+      minsarApp.bash  $TE/GalapagosSenDT128.template --start  ifgrams            \n\
+      minsarApp.bash  $TE/GalapagosSenDT128.template --dostep upload             \n\
+      minsarApp.bash  $TE/GalapagosSenDT128.template                             \n\
+                                                                                 \n\
+  Processing steps (start/end/dostep): \n\
+   Command line options for steps processing with names are chosen from the following list: \n\
+                                                                                 \n\
+   ['download', 'dem', 'jobfiles', 'ifgrams', 'timeseries', 'insarmaps', 'upload']             \n\
+                                                                                 \n\
+   In order to use either --start or --dostep, it is necessary that a            \n\
+   previous run was done using one of the steps options to process at least      \n\
+   through the step immediately preceding the starting step of the current run.  \n\
+                                                                                 \n\
+   --start STEP          start processing at the named step [default: load_data].\n\
+   --end STEP, --stop STEP                                                       \n\
+                         end processing at the named step [default: upload]      \n\
+   --dostep STEP         run processing at the named step only                   \n 
+     "
+    printf "$helptext"
+    exit 0;
+else
+    PROJECT_NAME=$(basename "$1" | cut -d. -f1)
+fi
+template_file=$1
+WORKDIR=$SCRATCHDIR/$PROJECT_NAME
 
-#start_datetime=$(date +"%Y%m%d:%H-%m")
-#echo "${start_datetime} * `basename "$0"` ${PROJECT_DIR} ${@:2}" >> "${PROJECT_DIR}"/log
-echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` $@ " >> "${PROJECT_DIR}"/log
+cd $WORKDIR
+
+echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` $@ " >> "${WORK_DIR}"/log
 
 while [[ $# -gt 0 ]]
 do
@@ -44,9 +72,7 @@ timeseries_flag=1
 upload_flag=1
 insarmaps_flag=1
 
-if [[ $startstep == "download" ]]; then
-    download_flag=1
-elif [[ $startstep == "dem" ]]; then
+if [[ $startstep == "dem" ]]; then
     download_flag=0
     dem_flag=1
 elif [[ $startstep == "jobfiles" ]]; then
@@ -60,7 +86,20 @@ elif [[ $startstep == "timeseries" ]]; then
     download_flag=0
     dem_flag=0
     jobfiles_flag=0
-    ifgram_flags=1
+    ifgram_flag=0
+elif [[ $startstep == "upload" ]]; then
+    download_flag=0
+    dem_flag=0
+    jobfiles_flag=0
+    ifgram_flags=0
+    timeseries_flag=0
+elif [[ $startstep == "insarmaps" ]]; then
+    download_flag=0
+    dem_flag=0
+    jobfiles_flag=0
+    ifgram_flag=0
+    timeseries_flag=0
+    upload_flag=0
 fi
 
 if [[ $stopstep == "download" ]]; then
@@ -89,28 +128,25 @@ elif [[ $stopstep == "timeseries" ]]; then
     upload_flag=0
     insarmaps_flag=0
 elif [[ $stopstep == "upload" ]]; then
-    insarmaps_flag=0
+    upload_flag=0
 fi
 
 if [[ $download_flag == "1" ]]; then
-    echo "download_ssara.py ${template_file}"
-    download_ssara.py $template_file
+    echo "Running.... download_ssara.py $template_file"
+    string="`download_ssara.py $template_file`"
     exit_status="$?"
-    
     if [[ $exit_status -ne 0 ]]; then
        echo "download_ssara.py exited with a non-zero exit code ($exit_status). Exiting."
-       exit $exit_status;
+       exit 1;
     fi
-    
-    ssara_cmd=$(cat ssara_command.txt)
     cd SLC
-    eval "$ssara_cmd"    
-    
+    echo "Running.... `cat ../ssara_command.txt`"
+    bash ../ssara_command.txt
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
        echo "ssara_federated_query.bash exited with a non-zero exit code ($exit_status). Exiting."
        cd ..
-       exit $exit_status;
+       exit 1;
     fi
     cd ..
 fi
@@ -127,21 +163,58 @@ if [[ $dem_flag == "1" ]]; then
 fi
 
 if [[ $jobfiles_flag == "1" ]]; then
-   echo do job_files
+    cmd="create_runfiles.py $template_file --jobfiles"
+    echo "Running.... $cmd"
+    $cmd
+    exit_status="$?"
+    if [[ $exit_status -ne 0 ]]; then
+       echo "create_jobfile.py exited with a non-zero exit code ($exit_status). Exiting."
+       exit 1;
+    fi
 fi
 
 if [[ $ifgrams_flag == "1" ]]; then
-   echo do ifgrams
+    cmd="submit_jobs.bash $template_file --stop timeseires"
+    echo "Running.... $cmd"
+    $cmd
+    exit_status="$?"
+    if [[ $exit_status -ne 0 ]]; then
+       echo "submit_jobs.bash --stop timeseires exited with a non-zero exit code ($exit_status). Exiting."
+       exit 1;
+    fi
+    timeseries_flag=0
 fi
 
 if [[ $timeseries_flag == "1" ]]; then
-   echo do timeseries
+    cmd="submit_jobs.bash $PWD --dostep timeseries"
+    echo "Running.... $cmd"
+    $cmd
+    exit_status="$?"
+    if [[ $exit_status -ne 0 ]]; then
+       echo "submit_jobs.bash --start timeseries exited with a non-zero exit code ($exit_status). Exiting."
+       exit 1;
+    fi
 fi
 
 if [[ $upload_flag == "1" ]]; then
-   echo do upload
+    cmd="upload_data_products.py $template_file --mintpyProducts"
+    echo "Running.... $cmd"
+    $cmd
+    exit_status="$?"
+    if [[ $exit_status -ne 0 ]]; then
+       echo "upload_data_products.py exited with a non-zero exit code ($exit_status). Exiting."
+       exit 1;
+    fi
 fi
 
 if [[ $insarmaps_flag == "1" ]]; then
-   echo do insarmaps
+    cmd="submit_jobs.bash $PWD --dostep insarmaps"
+    echo "Running.... $cmd"
+    $cmd
+    exit_status="$?"
+    if [[ $exit_status -ne 0 ]]; then
+       echo "submit_jobs.bash --dostep insarmaps exited with a non-zero exit code ($exit_status). Exiting."
+       exit 1;
+    fi
 fi
+

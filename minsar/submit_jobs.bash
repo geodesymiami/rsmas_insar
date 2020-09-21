@@ -1,16 +1,41 @@
 #! /bin/bash
-#set -v -e
+#set -v  
 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-    echo "This is a help message."
+helptext="                                                                         \n\
+Job submission script
+usage: submit_jobs.bash custom_template_file [--start] [--stop] [--dostep] [--help]\n\
+                                                                                   \n\
+  Examples:                                                                        \n\
+      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template              \n\
+      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --start 2    \n\
+      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep 4   \n\
+      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --stop 8     \n\
+      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --start timeseries \n\
+      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep insarmaps \n\
+                                                                                   \n\
+ Processing steps (start/end/dostep): \n\
+                                                                                 \n\
+   ['1-16', 'timeseries', 'insarmaps' ]                                          \n\
+                                                                                 \n\
+   In order to use either --start or --dostep, it is necessary that a            \n\
+   previous run was done using one of the steps options to process at least      \n\
+   through the step immediately preceding the starting step of the current run.  \n\
+                                                                                 \n\
+   --start STEP          start processing at the named step [default: load_data].\n\
+   --end STEP, --stop STEP                                                       \n\
+                         end processing at the named step [default: upload]      \n\
+   --dostep STEP         run processing at the named step only                   \n 
+     "
+    printf "$helptext"
     exit 0;
 else
     PROJECT_NAME=$(basename "$1" | cut -d. -f1)
-    #WORKDIR="$(readlink -f $1)"
 fi
-WORKDIR=$SCRATCH/$PROJECT_NAME
+WORKDIR=$SCRATCHDIR/$PROJECT_NAME
 RUNFILES_DIR=$WORKDIR"/run_files"
-#WORKDIR=$WORKDIR"/run_files/"
+
+cd $WORKDIR
 
 startstep=1
 stopstep="ingest_insarmaps"
@@ -86,6 +111,7 @@ for g in "${globlist[@]}"; do
     done
 
     echo "Jobs submitted: ${jobnumbers[@]}"
+    sleep 5
     # Wait for each job to complete
     for (( j=0; j < "${#jobnumbers[@]}"; j++)); do
         jobnumber=${jobnumbers[$j]}
@@ -102,7 +128,7 @@ for g in "${globlist[@]}"; do
             
             # Only print every so often, not every 10 seconds
             if [[ $(( $secs % 10)) -eq 0 ]]; then
-                echo "${jobnumber} is not finished yet. Current state is '${state}'"
+                echo "Job ${jobnumber} is not finished yet. Current state is '${state}'"
             fi
 
             state=$(sacct --format="State" -j $jobnumber | grep "\w[[:upper:]]\w")
@@ -146,13 +172,13 @@ for g in "${globlist[@]}"; do
                 exit 1; 
             fi
 
-            # Wait for 10 second before chcking again
-            sleep 10
-            ((secs=secs+10))
+            # Wait for 30 second before chcking again
+            sleep 30
+            ((secs=secs+30))
             
             done
 
-        echo "${jobnumber} is finished."
+        echo Job"${jobnumber} is finished."
 
     done
 
