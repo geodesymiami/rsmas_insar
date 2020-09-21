@@ -64,20 +64,19 @@ mkdir -p ../3rdparty
 ```
 * #Source the environment and create aux directories. Install credential files for data download:
 ```
+install_credential_files.csh;
+cp -p ../minsar/additions/isce/logging.conf ../3rdparty/miniconda3/lib/python3.*/site-packages/isce/defaults/logging/logging.conf
+
 source ~/accounts/platforms_defaults.bash;
 source environment.bash;
 mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
-install_credential_files.csh;
 
-cp -p ../minsar/additions/isce/logging.conf ../3rdparty/miniconda3/lib/python3.*/site-packages/isce/defaults/logging/logging.conf
 ```
 * #Adding HPC support for MintPy (parallel plotting and defaults to use dask Local Cluster) and uncommited isce fixes
 ```
 cp -p ../minsar/additions/mintpy/smallbaselineApp_auto.cfg ../sources/MintPy/mintpy/defaults/
 cp -p ../minsar/additions/mintpy/plot_smallbaselineApp.sh ../sources/MintPy/sh/
 
-cp -p ../minsar/additions/isce/logging.conf ../3rdparty/miniconda3/lib/python3.*/site-packages/isce/defaults/logging/logging.conf
-#cp -p ../minsar/additions/isce/logging.conf ../3rdparty/miniconda3/pkgs/isce2*/lib/python3.*/site-packages/isce/defaults/logging/logging.conf
 cp -p ../minsar/additions/isce/prepRawCSK.py ../sources/isce2/contrib/stack/stripmapStack
 cp -p ../minsar/additions/isce/invertMisreg.py ../sources/isce2/contrib/stack/stripmapStack
 ```
