@@ -1,6 +1,4 @@
 #! /bin/bash
-set -v -e 
-#trap read debug
 
 PROJECT_DIR="$(readlink -f $1)"
 template_file=$TEMPLATES/`basename $PROJECT_DIR`.template
@@ -95,23 +93,24 @@ elif [[ $stopstep == "upload" ]]; then
 fi
 
 if [[ $download_flag == "1" ]]; then
-    echo "download_ssara.py $template_file"
-    #string="download_ssara.py $template_file"
-    #ssara_opt="awk 'BEGIN{FS="ssara_federated_query.bash"} {print \$2}' `download_ssara.py $template_file`"
-    string="`download_ssara.py $template_file`"
+    echo "download_ssara.py ${template_file}"
+    download_ssara.py $template_file
     exit_status="$?"
+    
     if [[ $exit_status -ne 0 ]]; then
        echo "download_ssara.py exited with a non-zero exit code ($exit_status). Exiting."
-       exit 1;
+       exit $exit_status;
     fi
-    ssara_cmd=`cat ssara_command.txt`
+    
+    ssara_cmd=$(cat ssara_command.txt)
     cd SLC
-    echo $ssara_cmd  | bash
+    eval "$ssara_cmd"    
+    
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
        echo "ssara_federated_query.bash exited with a non-zero exit code ($exit_status). Exiting."
        cd ..
-       exit 1;
+       exit $exit_status;
     fi
     cd ..
 fi
