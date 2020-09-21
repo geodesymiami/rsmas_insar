@@ -9,4 +9,7 @@ run_12_merge_master_slave_slc_0   00:02:00 --> 00:02:45    May 27 2020   timeout
 
 After installing on $SCRATCH:
 
-run_14_merge_burst_igram          00:00:10  --> 00:00:02   4000 0 --> 4000 300   Sep 7 2020  Seg faults  for KokoxiliSenAT70
+run_14_merge_burst_igram          00:00:10  --> 00:00:02   4000 0 --> 4000 300     Sep 7 2020  Seg faults  for KokoxiliSenAT70
+run_14_merge_burst_igram                                              4000 125  2  Sep 18      Seg Faults
+run_11_extract_stack_valid_region  01:00:00 0                                      Sep 18      timeout for SpainSenDT154 (depends on SLCs but independent of bursts?)
+ 
