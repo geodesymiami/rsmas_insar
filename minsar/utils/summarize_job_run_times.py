@@ -130,6 +130,11 @@ def main(iargs=None):
 
     service_units =  calculate_service_units(num_nodes_list, elapsed_time_list)
 
+    if os.path.exists('run_files/rerun.log'):
+        file = open('run_files/rerun.log',mode='r')
+        rerun_log = file.read()
+        print('\n' + rerun_log); out_lines.append('\n' + rerun_log)
+
     string = '\nTotal reserved (pending), elapsed time: ' + reserved_time_sum +  ' ' + elapsed_time_sum
     print (string); out_lines.append(string)
     string ='Total time:                             ' + total_time
