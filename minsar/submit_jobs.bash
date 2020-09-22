@@ -1,5 +1,6 @@
 #! /bin/bash
-#set -v  
+#set -x
+#trap read debug
 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 helptext="                                                                         \n\
@@ -38,7 +39,7 @@ RUNFILES_DIR=$WORKDIR"/run_files"
 cd $WORKDIR
 
 startstep=1
-stopstep="ingest_insarmaps"
+stopstep="insarmaps"
 
 start_datetime=$(date +"%Y%m%d:%H-%m")
 echo "${start_datetime} * submit_jobs.bash ${WORKDIR} ${@:2}" >> "${WORKDIR}"/log
@@ -74,13 +75,13 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 if [[ $startstep == "timeseries" ]]; then
     startstep=17
-elif [[ $startstep == "ingest_insarmaps" ]]; then
+elif [[ $startstep == "insarmaps" ]]; then
     startstep=18
 fi
 
 if [[ $stopstep == "timeseries" ]]; then
     stopstep=17
-elif [[ $stopstep == "ingest_insarmaps" ]]; then
+elif [[ $stopstep == "insarmaps" ]]; then
     stopstep=18
 fi
 

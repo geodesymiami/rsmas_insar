@@ -1,4 +1,5 @@
 #! /bin/bash
+#set -x
 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 helptext="                                                                       \n\
@@ -29,9 +30,9 @@ else
     PROJECT_NAME=$(basename "$1" | cut -d. -f1)
 fi
 template_file=$1
-WORKDIR=$SCRATCHDIR/$PROJECT_NAME
+WORK_DIR=$SCRATCHDIR/$PROJECT_NAME
 
-cd $WORKDIR
+cd $WORK_DIR
 
 echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` $@ " >> "${WORK_DIR}"/log
 
@@ -86,18 +87,18 @@ elif [[ $startstep == "timeseries" ]]; then
     download_flag=0
     dem_flag=0
     jobfiles_flag=0
-    ifgram_flag=0
+    ifgrams_flag=0
 elif [[ $startstep == "upload" ]]; then
     download_flag=0
     dem_flag=0
     jobfiles_flag=0
-    ifgram_flags=0
+    ifgrams_flags=0
     timeseries_flag=0
 elif [[ $startstep == "insarmaps" ]]; then
     download_flag=0
     dem_flag=0
     jobfiles_flag=0
-    ifgram_flag=0
+    ifgrams_flag=0
     timeseries_flag=0
     upload_flag=0
 fi
@@ -174,7 +175,7 @@ if [[ $jobfiles_flag == "1" ]]; then
 fi
 
 if [[ $ifgrams_flag == "1" ]]; then
-    cmd="submit_jobs.bash $template_file --stop timeseires"
+    cmd="submit_jobs.bash $template_file --stop timeseries"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"
@@ -185,6 +186,7 @@ if [[ $ifgrams_flag == "1" ]]; then
     timeseries_flag=0
 fi
 
+echo QQ $download_flag $dem_flag $jobsfile_flag $ifgrams_flag $timeseries_flag
 if [[ $timeseries_flag == "1" ]]; then
     cmd="submit_jobs.bash $PWD --dostep timeseries"
     echo "Running.... $cmd"
