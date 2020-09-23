@@ -32,6 +32,7 @@ fi
 template_file=$1
 WORK_DIR=$SCRATCHDIR/$PROJECT_NAME
 
+mkdir -p $WORK_DIR
 cd $WORK_DIR
 
 echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` $@ " >> "${WORK_DIR}"/log
@@ -186,7 +187,6 @@ if [[ $ifgrams_flag == "1" ]]; then
     timeseries_flag=0
 fi
 
-echo QQ $download_flag $dem_flag $jobsfile_flag $ifgrams_flag $timeseries_flag
 if [[ $timeseries_flag == "1" ]]; then
     cmd="submit_jobs.bash $PWD --dostep timeseries"
     echo "Running.... $cmd"
@@ -219,4 +219,13 @@ if [[ $insarmaps_flag == "1" ]]; then
        exit 1;
     fi
 fi
+
+    cmd="summarize_job_run_times.py $template_file"
+    echo "Running.... $cmd"
+    $cmd
+    exit_status="$?"
+    if [[ $exit_status -ne 0 ]]; then
+       echo "summarize_job_run_times.py exited with a non-zero exit code ($exit_status). Exiting."
+       exit 1;
+    fi
 
