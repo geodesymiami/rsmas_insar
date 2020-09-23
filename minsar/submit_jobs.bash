@@ -183,21 +183,12 @@ for g in "${globlist[@]}"; do
 
     done
 
-    # Run check_job_output.py on each file
-    for f in "${files[@]}"; do
-        entry="${f%.*}.job"
-        echo "Jobfile to check: $entry"
-        check_job_outputs.py "$entry"
-        exit_status="$?"
-        if [[ $exit_status -ne 0 ]]; then
-            echo "check_job_outputs.py $entry exited with a non-zero exit code ($exit_status). Exiting."
-            let "exit_status_sum++"
-        fi
-     done
-     if [[ $exit_status_sum -ne 0 ]]; then
-         echo "check_job_outputs.py $exit_status_sum jobfiles exited. Last file: $entry. Exiting."
-         exit 1;
-     fi
-
-    echo "Step ${i}/${stopstep} complete."
+    # Run check_job_output.py on all files
+    cmd="check_job_outputs.py  ${files[@]}"
+    echo "$cmd"
+    $cmd
+       exit_status="$?"
+       if [[ $exit_status -ne 0 ]]; then
+            echo "check_job_outputs.py ${files[@]} exited with a non-zero exit code ($exit_status). Exiting."
+       fi
 done
