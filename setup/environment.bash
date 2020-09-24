@@ -87,6 +87,7 @@ export PYTHONWARNINGS="ignore"
 export PATH=${PATH}:${SSARAHOME}
 export PATH=${PATH}:${SSARA_ASF}
 export PATH=${PATH}:${MINOPY_HOME}
+export PATH=${PATH}:${MIMTPY_HOME}/mimtpy
 export PATH=${PATH}:${RSMASINSAR_HOME}/minsar:${RSMASINSAR_HOME}/minsar/utils
 export PATH=${PATH}:${RSMASINSAR_HOME}/minsar
 export PATH=${PATH}:${RSMASINSAR_HOME}/minsar/utils/ssara_ASF
