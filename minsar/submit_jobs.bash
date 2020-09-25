@@ -1,4 +1,4 @@
-#! /bin/bash
+##! /bin/bash
 #set -x
 #trap read debug
 
@@ -73,13 +73,17 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-if [[ $startstep == "timeseries" ]]; then
+if [[ $startstep == "ifgrams" ]]; then
+    startstep=1
+elif [[ $startstep == "timeseries" ]]; then
     startstep=17
 elif [[ $startstep == "insarmaps" ]]; then
     startstep=18
 fi
 
-if [[ $stopstep == "timeseries" ]]; then
+if [[ $stopstep == "ifgrams" ]]; then
+    stopstep=16
+elif [[ $stopstep == "timeseries" ]]; then
     stopstep=17
 elif [[ $stopstep == "insarmaps" ]]; then
     stopstep=18

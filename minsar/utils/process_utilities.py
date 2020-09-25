@@ -16,6 +16,7 @@ import argparse
 import numpy as np
 import h5py
 import math
+import re
 from pathlib import Path
 from natsort import natsorted
 import xml.etree.ElementTree as ET
@@ -712,6 +713,27 @@ def remove_zero_size_or_length_error_files(run_file):
 ##########################################################################
 
 
+def remove_line_counter_lines_from_error_files(run_file):
+    """Removes lines with e.g. 'line:   398' from *.e files (filter_coherence step)"""
+
+    error_files = glob.glob(run_file + '*.e*')
+    error_files = natsorted(error_files)
+    for item in error_files:
+        f = open(item, 'r')
+        lines = f.read()
+        if "\nline:" in lines:
+           tmp_line = lines.replace(" ","")
+           new_lines = re.sub(r"\nline:\d+","", tmp_line)
+           f.close()
+           f = open(item, 'w')
+           f.write(new_lines)
+
+    return None
+
+
+##########################################################################
+
+
 def remove_last_job_running_products(run_file):
     error_files = glob.glob(run_file + '*.e*')
     job_files = glob.glob(run_file + '*.job')
@@ -745,7 +767,7 @@ def move_out_job_files_to_stdout(run_file):
         shutil.rmtree(out_folder)
         os.makedirs(out_folder, exist_ok=True)
 
-    if len(stdout_files) >= 2:
+    if len(stdout_files) >= 1:           #changed 9/2020. was 2 but unclear why
         for item in stdout_files:
             shutil.move(item, out_folder)
         #for item in job_files:

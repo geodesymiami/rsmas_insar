@@ -64,31 +64,24 @@ def main(iargs=None):
     command2 = 'json_mbtiles2insarmaps.py -u ' + password.insaruser + ' -p ' + password.insarpass + ' --host ' + \
                'insarmaps.miami.edu -P rsmastest -U rsmas\@gmail.com --json_folder ' + \
                json_folder + ' --mbtiles_file ' + mbtiles_file 
-    command3 = 'summarize_job_run_times.py ' + ' ' + inps.custom_template_file 
 
-    with open(inps.work_dir + '/run_ingest_insarmaps', 'w') as f:
+    with open(inps.work_dir + '/run_insarmaps', 'w') as f:
         f.write(command1 + '\n')
         f.write(command2 + '\n')
-        f.write(command3 + '\n')
 
     out_file = 'out_ingest_insarmaps'
     message_rsmas.log(inps.work_dir, command1)
-    command1 = '('+command1+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
+    #command1 = '('+command1+' | tee '+out_file+'.o) 3>&1 1>&2 2>&3 | tee '+out_file+'.e'
     status = subprocess.Popen(command1, shell=True).wait()
     if status is not 0:
         raise Exception('ERROR in hdfeos5_2json_mbtiles.py')
 
     # TODO: Change subprocess call to get back error code and send error code to logger
     message_rsmas.log(inps.work_dir, command2)
-    command2 = '('+command2+' | tee -a '+out_file+'.o) 3>&1 1>&2 2>&3 | tee -a '+out_file+'.e'
+    #command2 = '('+command2+' | tee -a '+out_file+'.o) 3>&1 1>&2 2>&3 | tee -a '+out_file+'.e'
     status = subprocess.Popen(command2, shell=True).wait()
     if status is not 0:
         raise Exception('ERROR in json_mbtiles2insarmaps.py')
-
-    message_rsmas.log(inps.work_dir, command3)
-    status = subprocess.Popen(command3, shell=True).wait()
-    if status is not 0:
-        raise Exception('ERROR in summarize_job_run_times.py')
 
     # Email insarmaps results:
     if inps.email:

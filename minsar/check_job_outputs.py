@@ -43,32 +43,54 @@ def main(iargs=None):
                     'Traceback'
                    ]
 
+    job_file = inps.job_files[0]
+    job_name = job_file.split('.')[0]
+    job_files = inps.job_files
 
-    for job_file in inps.job_files:
+    if 'run_' in job_name:
+        run_file = '_'.join(job_name.split('_')[:-1])
+    else:
+        run_file = job_name
+
+    job_exits = []
+    while len(job_exits) == 0 and len(job_files) != 0: 
+       job_file = job_files.pop(0)
        print('checking:  ' + job_file)
        job_name = job_file.split('.')[0]
+
+       if 'run_' in job_name:
+           putils.remove_zero_size_or_length_error_files(run_file=job_name)
+       
+       if 'filter_coherence' in job_name:
+           putils.remove_line_counter_lines_from_error_files(run_file=job_name)
+
        error_files = glob.glob(job_name + '*.e')
        out_files = glob.glob(job_name + '*.o')
-
        for file in error_files + out_files:
-           job_exits = []
            for error_string in error_strings:
-               job_exits.append(check_words_in_file(file, error_string))
-               if np.array(job_exits).any():
-                   print('For known issues see https://github.com/geodesymiami/rsmas_insar/tree/master/docs/known_issues.md')
-                   raise RuntimeError('Error: \"' + error_string + '\" found in ' + file)
+               if check_words_in_file(file, error_string):
+                   job_exits.append( 'True')
+                   match_error_string = error_string
+                   print( file, error_string, 'MATCH')
 
-       putils.remove_zero_size_or_length_error_files(run_file=job_name)
-
-    print("no error found")
-    run_file = '_'.join(job_name.split('_')[:-1])
-    putils.concatenate_error_files(run_file=run_file, work_dir=project_dir)
+    if 'run_' in job_name:
+         putils.concatenate_error_files(run_file=run_file, work_dir=project_dir)
+    else:
+         out_error_file = os.path.dirname(error_files[-1]) + '/out_' + os.path.basename(error_files[-1])
+         shutil.copy(error_files[-1], out_error_file)
 
     out_folder = work_dir + '/stdout_' + os.path.basename(run_file)
-    if os.path.exists(out_folder):
-        shutil.rmtree(out_folder)
+     
+    if len(os.path.dirname(run_file))==0:
+       run_file = os.getcwd() + '/' + run_file
+    putils.move_out_job_files_to_stdout(run_file=run_file)
 
-    putils.move_out_job_files_to_stdout(run_file=job_name)
+    if 'True' in job_exits:
+        print('For known issues see https://github.com/geodesymiami/rsmas_insar/tree/master/docs/known_issues.md')
+        raise RuntimeError('Error: \"' + match_error_string + '\" found in ' + file)
+    else:
+        print("no error found")
+
 
     return
 

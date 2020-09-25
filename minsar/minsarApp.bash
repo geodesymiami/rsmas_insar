@@ -73,6 +73,7 @@ ifgrams_flag=1
 timeseries_flag=1
 upload_flag=1
 insarmaps_flag=1
+finishup_flag=1
 
 if [[ $startstep == "dem" ]]; then
     download_flag=0
@@ -93,7 +94,7 @@ elif [[ $startstep == "upload" ]]; then
     download_flag=0
     dem_flag=0
     jobfiles_flag=0
-    ifgrams_flags=0
+    ifgrams_flag=0
     timeseries_flag=0
 elif [[ $startstep == "insarmaps" ]]; then
     download_flag=0
@@ -102,6 +103,14 @@ elif [[ $startstep == "insarmaps" ]]; then
     ifgrams_flag=0
     timeseries_flag=0
     upload_flag=0
+elif [[ $startstep == "finishup" ]]; then
+    download_flag=0
+    dem_flag=0
+    jobfiles_flag=0
+    ifgrams_flag=0
+    timeseries_flag=0
+    upload_flag=0
+    insarmaps_flag=0
 fi
 
 if [[ $stopstep == "download" ]]; then
@@ -111,28 +120,37 @@ if [[ $stopstep == "download" ]]; then
     timeseries_flag=0
     upload_flag=0
     insarmaps_flag=0
+    finishup_flag=0
 elif [[ $stopstep == "dem" ]]; then
     jobfiles_flag=0
     ifgrams_flag=0
     timeseries_flag=0
     upload_flag=0
     insarmaps_flag=0
+    finishup_flag=0
 elif [[ $stopstep == "jobfiles" ]]; then
     ifgrams_flag=0
     timeseries_flag=0
     upload_flag=0
     insarmaps_flag=0
+    finishup_flag=0
 elif [[ $stopstep == "ifgrams" ]]; then
     timeseries_flag=0
     upload_flag=0
     insarmaps_flag=0
+    finishup_flag=0
 elif [[ $stopstep == "timeseries" ]]; then
     upload_flag=0
     insarmaps_flag=0
+    finishup_flag=0
 elif [[ $stopstep == "upload" ]]; then
     upload_flag=0
+    finishup_flag=0
+elif [[ $stopstep == "insarmaps" ]]; then
+    finishup_flag=0
 fi
 
+####################################
 if [[ $download_flag == "1" ]]; then
     echo "Running.... download_ssara.py $template_file"
     string="`download_ssara.py $template_file`"
@@ -176,12 +194,22 @@ if [[ $jobfiles_flag == "1" ]]; then
 fi
 
 if [[ $ifgrams_flag == "1" ]]; then
-    cmd="submit_jobs.bash $template_file --stop timeseries"
+    # possibly set local WEATHER_DIR if WORK is slow
+    #timeout 2 ls  $WEATHER_DIR/ERA5/* >> /dev/null ; echo $?
+    #timeout 0.1 ls  $WEATHER_DIR/ERA5/* >> /dev/null ; echo $?
+    #cmd_try="download_ERA5_data.py --date_list SAFE_files.txt $template_file"
+
+    download_ERA5_cmd=`which download_ERA5_data.py`
+    cmd="$download_ERA5_cmd --date_list SAFE_files.txt $template_file"
+    echo " Running.... python $cmd >& out_download_ERA5_data.e &"
+    python $cmd >& out_download_ERA5_data.e &
+ 
+    cmd="submit_jobs.bash $template_file --stop ifgrams"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
-       echo "submit_jobs.bash --stop timeseires exited with a non-zero exit code ($exit_status). Exiting."
+       echo "submit_jobs.bash --stop ifgrams  exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
     timeseries_flag=0
@@ -201,7 +229,7 @@ fi
 if [[ $upload_flag == "1" ]]; then
     cmd="upload_data_products.py $template_file --mintpyProducts"
     echo "Running.... $cmd"
-    $cmd
+    $cmd 2>out_upload_data_products.e 1>out_upload_data_products.o & 
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
        echo "upload_data_products.py exited with a non-zero exit code ($exit_status). Exiting."
@@ -220,6 +248,7 @@ if [[ $insarmaps_flag == "1" ]]; then
     fi
 fi
 
+if [[ $finishup_flag == "1" ]]; then
     cmd="summarize_job_run_times.py $template_file"
     echo "Running.... $cmd"
     $cmd
@@ -228,4 +257,10 @@ fi
        echo "summarize_job_run_times.py exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
+    cat > done.log<<EOF
+That's all, folks!
+Bye bye from minsarApp.bash
+EOF
+cat done.log
+fi
 
