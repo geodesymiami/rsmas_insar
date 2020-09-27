@@ -1,7 +1,18 @@
 #!/bin/bash
 #set -x
 
-echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` "$@" " >> log
+# insert ' into intersectsWith string that is chopped off by bash
+copy=( "$@" )
+for i in "${!copy[@]}"; do
+    if [[ ${copy[$i]} == *intersectsWith=* ]]; then
+        tmp1=${copy[$i]:0:17}
+        tmp2=${copy[$i]:17:${#copy[$i]}}
+        copy[$i]="$tmp1'$tmp2'"
+    fi
+    echo element: $i ${copy[$i]}
+done
+
+echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` "${copy[@]}" " >> log
 
 argv=( "$@" )
 #trap "exit" INT TERM    # Convert INT and TERM to EXIT
@@ -32,9 +43,8 @@ echo "PARALLEL=${PARALLEL}"
 user=`grep asfuser $RSMASINSAR_HOME/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
 passwd=`grep asfpass $RSMASINSAR_HOME/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
 
-cmd="ssara_federated_query.py "${argv[@]:0:$#-1}" > ssara_listing.txt"
-#echo Running ... $cmd
-ssara_federated_query.py "$@" > ssara_listing.txt
+echo "Running ... ssara_federated_query.py ${argv[@]:0:$#-1} > ssara_listing.txt"
+ssara_federated_query.py "${argv[@]:0:$#-1}" > ssara_listing.txt
 
 regex="https:\/\/datapool\.asf\.alaska\.edu\/[a-zA-Z\/0-9\_]+\.zip"
 
