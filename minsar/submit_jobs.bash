@@ -172,8 +172,11 @@ for g in "${globlist[@]}"; do
                 files+=("$jf")
                 break;
         
-            elif [[ ( $state == *"FAILED"* || $state == *"CANCELLED"* ) &&  $state != "" ]]; then
-                echo "${jobnumber} was CANCLLED or FAILED. Exiting with status code 1."
+            elif [[ ( $state == *"FAILED"* ) &&  $state != "" ]]; then
+                echo "${jobnumber} FAILED. Exiting with status code 1."
+                exit 1; 
+            elif [[ ( $state ==  *"CANCELLED"* ) &&  $state != "" ]]; then
+                echo "${jobnumber} was CANCELLED. Exiting with status code 1."
                 exit 1; 
             fi
 
@@ -194,5 +197,6 @@ for g in "${globlist[@]}"; do
        exit_status="$?"
        if [[ $exit_status -ne 0 ]]; then
             echo "check_job_outputs.py ${files[@]} exited with a non-zero exit code ($exit_status). Exiting."
+            exit
        fi
 done
