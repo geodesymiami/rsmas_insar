@@ -28,6 +28,11 @@ helptext="                                                                      
     exit 0;
 else
     PROJECT_NAME=$(basename "$1" | cut -d. -f1)
+    exit_status="$?"
+    if [[ $PROJECT_NAME == "" ]]; then
+       echo "Could not compute basename for that file. Exiting. Make sure you have specified an input file as the first argument."
+       exit 1;
+    fi
 fi
 template_file=$1
 WORK_DIR=$SCRATCHDIR/$PROJECT_NAME
