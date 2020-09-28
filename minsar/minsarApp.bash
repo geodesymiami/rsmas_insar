@@ -66,6 +66,11 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
+if [[ ${#POSITIONAL[@]} -gt 1 ]]; then
+    echo "Unknown parameters provided."
+    exit 1;
+fi
+
 download_flag=1
 dem_flag=1
 jobfiles_flag=1
@@ -173,8 +178,8 @@ if [[ $download_flag == "1" ]]; then
 fi
 
 if [[ $dem_flag == "1" ]]; then
-    cmd="dem_rsmas.py $template_file"
-    echo "$cmd"
+    cmd=" dem_rsmas.py $template_file"
+    echo "Running... $cmd\n"
     echo "$cmd" | bash
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
