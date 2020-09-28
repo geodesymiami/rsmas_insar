@@ -116,6 +116,9 @@ elif [[ $startstep == "finishup" ]]; then
     timeseries_flag=0
     upload_flag=0
     insarmaps_flag=0
+elif [[ $startstep != "" ]]; then
+    echo "startstep received value of "${startstep}". Exiting."
+    exit 1
 fi
 
 if [[ $stopstep == "download" ]]; then
@@ -153,6 +156,9 @@ elif [[ $stopstep == "upload" ]]; then
     finishup_flag=0
 elif [[ $stopstep == "insarmaps" ]]; then
     finishup_flag=0
+elif [[ $stopstep != "" ]]; then
+    echo "stopstep received value of "${stopstep}". Exiting."
+    exit 1
 fi
 
 ####################################
