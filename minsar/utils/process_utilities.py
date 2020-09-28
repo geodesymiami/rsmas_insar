@@ -749,7 +749,7 @@ def remove_last_job_running_products(run_file):
 
 
 def move_out_job_files_to_stdout(run_file):
-    """move the error file into stdout_files directory"""
+    """move the stdout file into stdout_files directory"""
     #job_files = glob.glob(run_file + '*.job')
     stdout_files = glob.glob(run_file + '*.o')
 
@@ -770,15 +770,12 @@ def move_out_job_files_to_stdout(run_file):
     if len(stdout_files) >= 1:           #changed 9/2020. was 2 but unclear why
         for item in stdout_files:
             shutil.move(item, out_folder)
-        #for item in job_files:
-        #    shutil.move(item, out_folder)
 
-    extra_batch_files = glob.glob(run_file + '_*')
-
-    for item in extra_batch_files:
-        if os.path.exists(out_folder + '/' + os.path.basename(item)):
-            os.remove(out_folder + '/' + os.path.basename(item))
-        shutil.move(item, out_folder)
+    #extra_batch_files = glob.glob(run_file + '_*')
+    #for item in extra_batch_files:
+    #    if os.path.exists(out_folder + '/' + os.path.basename(item)):
+    #        os.remove(out_folder + '/' + os.path.basename(item))
+    #    shutil.move(item, out_folder)
 
     return None
 

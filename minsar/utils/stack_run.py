@@ -5,6 +5,7 @@
 #####################################
 import os
 import sys
+import subprocess
 from argparse import Namespace
 import shutil
 from minsar.utils.process_utilities import make_run_list
@@ -56,24 +57,18 @@ class CreateRun:
                
         if self.prefix == 'tops':
             message_rsmas.log(self.work_dir, 'stackSentinel.py' + ' ' + ' '.join(self.command_options))
-            out_file_name = 'out_stackSentinel'
             cmd = 'export PATH=$ISCE_STACK/topsStack:$PATH; stackSentinel.py' + ' ' + ' '.join(self.command_options)
 
         else:
             message_rsmas.log(self.work_dir, 'stackStripMap.py' + ' ' + ' '.join(self.command_options))
-            out_file_name = 'out_stackStripMap'
             cmd = 'export PATH=$ISCE_STACK/stripmapStack:$PATH; stackStripMap.py' + ' ' + ' '.join(self.command_options)
         
         system_path = os.getenv('PATH')
 
-        try:
-            with open(out_file_name + '.o', 'w') as f:
-                with contextlib.redirect_stdout(f):
-                    os.system(cmd)
-        except:
-            with open(out_file_name + '.e', 'w') as g:
-                with contextlib.redirect_stderr(g):
-                    os.system(cmd)
+        print (cmd)
+        status = subprocess.Popen(cmd, shell=True).wait()
+        if status is not 0:
+             raise Exception('ERROR in create_runfiles.py')
 
         os.environ['PATH'] = system_path
         

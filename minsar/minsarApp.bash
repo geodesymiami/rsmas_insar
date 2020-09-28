@@ -184,8 +184,8 @@ fi
 
 if [[ $jobfiles_flag == "1" ]]; then
     cmd="create_runfiles.py $template_file --jobfiles"
-    echo "Running.... $cmd"
-    $cmd
+    echo "Running.... $cmd >create_jobfiles.e 1>out_ceate_jobfiles.o"
+    $cmd 2>create_jobfiles.e 1>out_ceate_jobfiles.o
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
        echo "create_jobfile.py exited with a non-zero exit code ($exit_status). Exiting."
@@ -212,7 +212,6 @@ if [[ $ifgrams_flag == "1" ]]; then
        echo "submit_jobs.bash --stop ifgrams  exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
-    timeseries_flag=0
 fi
 
 if [[ $timeseries_flag == "1" ]]; then
