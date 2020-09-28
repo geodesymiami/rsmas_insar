@@ -153,14 +153,15 @@ fi
 ####################################
 if [[ $download_flag == "1" ]]; then
     echo "Running.... download_ssara.py $template_file"
-    string="`download_ssara.py $template_file`"
+    download_ssara.py $template_file
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
        echo "download_ssara.py exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
     cd SLC
-    echo "Running.... `cat ../ssara_command.txt`"
+    cat ../ssara_command.txt
+    echo "Running.... 'cat ../ssara_command.txt'"
     bash ../ssara_command.txt
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
