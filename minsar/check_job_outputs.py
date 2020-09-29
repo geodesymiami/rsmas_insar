@@ -52,27 +52,31 @@ def main(iargs=None):
     else:
         run_file = job_name
 
-    job_exits = []
-    while len(job_exits) == 0 and len(job_files) != 0: 
-       job_file = job_files.pop(0)
+    matched_error_strings = []
+    for job_file in job_files:
        print('checking:  ' + job_file)
        job_name = job_file.split('.')[0]
+
+       if 'filter_coherence' in job_name:
+           putils.remove_line_counter_lines_from_error_files(run_file=job_name)
 
        if 'run_' in job_name:
            putils.remove_zero_size_or_length_error_files(run_file=job_name)
        
-       if 'filter_coherence' in job_name:
-           putils.remove_line_counter_lines_from_error_files(run_file=job_name)
-
        error_files = glob.glob(job_name + '*.e')
        out_files = glob.glob(job_name + '*.o')
        for file in error_files + out_files:
            for error_string in error_strings:
                if check_words_in_file(file, error_string):
-                   job_exits.append( 'True')
-                   match_error_string = error_string
-                   print( file, error_string, 'MATCH')
+                   matched_error_strings.append('Error: \"' + error_string + '\" found in ' + file + '\n')
+                   print( 'Error: \"' + error_string + '\" found in ' + file )
 
+    if len(matched_error_strings) != 0:
+        with open(run_file + '_error_matches.e', 'w') as f:
+            f.write(''.join(matched_error_strings))
+    else:
+        print("no error found")
+        
     if 'run_' in job_name:
          putils.concatenate_error_files(run_file=run_file, work_dir=project_dir)
     else:
@@ -83,14 +87,12 @@ def main(iargs=None):
      
     if len(os.path.dirname(run_file))==0:
        run_file = os.getcwd() + '/' + run_file
+
     putils.move_out_job_files_to_stdout(run_file=run_file)
 
-    if 'True' in job_exits:
+    if len(matched_error_strings) != 0:
         print('For known issues see https://github.com/geodesymiami/rsmas_insar/tree/master/docs/known_issues.md')
-        raise RuntimeError('Error: \"' + match_error_string + '\" found in ' + file)
-    else:
-        print("no error found")
-
+        raise RuntimeError('Error: ' + matched_error_strings[0])
 
     return
 

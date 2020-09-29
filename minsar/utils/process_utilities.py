@@ -668,6 +668,8 @@ def concatenate_error_files(run_file, work_dir):
     out_name = os.path.dirname(run_file) + '/out_' + run_file.split('/')[-1] + '.e'
     
     error_files = glob.glob(run_file + '*.e*')
+    error_files = natsorted(error_files)
+
     if not len(error_files) == 0:
         with open(out_name, 'w+') as outfile:
             for fname in error_files:
