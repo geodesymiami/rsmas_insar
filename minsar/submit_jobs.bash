@@ -116,17 +116,21 @@ for g in "${globlist[@]}"; do
 	num_active_jobs=${#active_jobs[@]}
 	if [[ $num_active_jobs -lt 25 ]]; then
             jobnumline=$(sbatch $file | grep "Submitted batch job")
+                exit_status="$?"
+                if [[ $exit_status -ne 0 ]]; then
+                    echo "sbatch exited with a non-zero exit code ($exit_status). Exiting."
+                exit 1
+                fi
             jobnumber=$(grep -oE "[0-9]{7}" <<< $jobnumline)
-
             jobnumbers+=("$jobnumber")
+            echo "Job submitted: ${jobnumber}"
 	else
-	    echo "Couldnt submit job (${file}), because there are 25 active jobs right now. Waiting 5 minutes to submit next job."
+	    echo "Couldnt submit job (${file}), because there are 25 active jobs right now. Waiting 5 minutes to try again."
 	    f=$((f-1))
 	    sleep 300 # sleep for 5 minutes
 	fi
     done
 
-    echo "Jobs submitted: ${jobnumbers[@]}"
     sleep 5
     # Wait for each job to complete
     for (( j=0; j < "${#jobnumbers[@]}"; j++)); do
@@ -173,8 +177,13 @@ for g in "${globlist[@]}"; do
 
 		echo "Resubmitting file (${jf}) with new walltime of ${updated_walltime}"
 
-                # Resubmite a sa new job number
+                # Resubmit as a new job number
                 jobnumline=$(sbatch $f | grep "Submitted batch job")
+                    exit_status="$?"
+                    if [[ $exit_status -ne 0 ]]; then
+                        echo "sbatch exited with a non-zero exit code ($exit_status). Exiting."
+                        exit 1
+                    fi
                 jn=$(grep -oE "[0-9]{7}" <<< $jobnumline)
                 echo "${jf} resubmitted as jobumber: ${jn}"
 
@@ -208,6 +217,6 @@ for g in "${globlist[@]}"; do
        exit_status="$?"
        if [[ $exit_status -ne 0 ]]; then
             echo "check_job_outputs.py ${files[@]} exited with a non-zero exit code ($exit_status). Exiting."
-            exit
+            exit 1
        fi
 done
