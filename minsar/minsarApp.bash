@@ -220,6 +220,8 @@ if [[ $ifgrams_flag == "1" ]]; then
     cmd="$download_ERA5_cmd --date_list SAFE_files.txt $template_file"
     echo " Running.... python $cmd >& out_download_ERA5_data.e &"
     python $cmd >& out_download_ERA5_data.e &
+    echo "$(date +"%Y%m%d:%H-%m") * $cmd" >> "${WORKDIR}"/log
+
  
     cmd="submit_jobs.bash $template_file --stop ifgrams"
     echo "Running.... $cmd"
@@ -275,7 +277,6 @@ if [[ $finishup_flag == "1" ]]; then
     fi
     cat > done.log<<EOF
 That's all, folks!
-Bye bye from minsarApp.bash
 EOF
 cat done.log
 fi
