@@ -142,7 +142,7 @@ class Template:
             if 'ssaraopt.parallel' in self.options:
                 parallel = self.options['ssaraopt.parallel']
             else:
-                 parallel = 24
+                 parallel = 5
             ssaraopt += ' --parallel={}'.format(parallel)
 
             #this was in Josh's code (above yje ssaraopt assignment) but unclear  what it does

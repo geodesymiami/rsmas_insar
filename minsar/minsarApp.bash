@@ -190,7 +190,7 @@ fi
 
 if [[ $dem_flag == "1" ]]; then
     cmd=" dem_rsmas.py $template_file"
-    echo "Running... $cmd\n"
+    echo "Running... $cmd"
     echo "$cmd" | bash
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
@@ -275,9 +275,11 @@ if [[ $finishup_flag == "1" ]]; then
        echo "summarize_job_run_times.py exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
-    cat > done.log<<EOF
-That's all, folks!
-EOF
-cat done.log
+    IFS=","
+    last_file=($(tail -1 $WORK_DIR/SLC/ssara_listing.txt))
+    last_date=${last_file[3]}
+    echo "Last file: $last_file"
+    echo "Last processed image date: $last_date"
+    unset IFS
 fi
 

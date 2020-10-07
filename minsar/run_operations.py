@@ -1,5 +1,6 @@
 #!/usr/bin/env python3 
 import os
+import glob
 import sys
 import subprocess
 import argparse
@@ -149,6 +150,7 @@ def get_newest_data_date(template_file):
     ssaraopt_cmd = ['ssara_federated_query.py'] + ssaraopt + ['--print']
     ssaraopt_cmd = ' '.join(ssaraopt_cmd[:])
 
+    print(ssaraopt_cmd)
     # Yield list of images in following format:
     # ASF,Sentinel-1A,15775,2017-03-20T11:49:56.000000,2017-03-20T11:50:25.000000,128,3592,3592,IW,NA,DESCENDING,R,VV+VH,https://datapool.asf.alaska.edu/SLC/SA/S1A_IW_SLC__1SDV_20170320T114956_20170320T115025_015775_019FA4_097A.zip
     ssara_output = subprocess.check_output(ssaraopt_cmd, shell=True)
@@ -164,18 +166,40 @@ def get_last_downloaded_date(dset):
     :param dset: the dataset to get the most recent download date from
     :return: the most recent download date in "YYYY-MM-DD T H:M:S.00000" format
     """
-    dataset_line = None
-    with open(STORED_DATE_FILE, 'r') as date_file:
-        for line in date_file.readlines():
-            if dset in line:
-                dataset_line = line
-                break
+    # dataset_line = None
+    # with open(STORED_DATE_FILE, 'r') as date_file:
+    #     for line in date_file.readlines():
+    #         if dset in line:
+    #             dataset_line = line
+    #             break
 
-    if dataset_line is not None:
-        last_date = dataset_line.split(": ")[1].strip("\n")
+    # if dataset_line is not None:
+    #     last_date = dataset_line.split(": ")[1].strip("\n")
+    # else:
+    #     last_date = datetime.strftime(datetime(1970, 1, 1, 0, 0, 0), DATE_FORMAT)
+
+    MINSAR_LOG_DIR = "~/minsar_log"
+
+    logfiles = glob.glob("{}/*{}*.o".format(os.path.expanduser(MINSAR_LOG_DIR), dset))
+    logfiles.sort(key=os.path.getctime)
+
+    print(logfiles)
+
+    l = None
+    if len(logfiles) > 0:
+        f = logfiles[-1]
+
+        with open(f) as logfile:
+            for line in logfile.readlines():
+                if 'Last processed image date:' in line:
+                    l = line
+                    break
+
+    if l:                
+        last_date = l.split(": ")[-1]
     else:
         last_date = datetime.strftime(datetime(1970, 1, 1, 0, 0, 0), DATE_FORMAT)
-    
+
     return datetime.strptime(last_date, DATE_FORMAT)
 
 def run_process_rsmas(inps, template_file, dataset):
@@ -303,58 +327,18 @@ def run_operations(args):
         newest_date = get_newest_data_date(template_file)
         last_date = get_last_downloaded_date(dset)
 
-        logger_run_operations.log(loglevel.INFO, "Newest Date: {}".format(newest_date))
-        logger_run_operations.log(loglevel.INFO, "Last Date: {}".format(last_date))
+        print(newest_date)
+        print(last_date)
 
         if newest_date > last_date:
-
-            logger_run_operations.log(loglevel.INFO, "Starting process_rsmas for {}".format(dset))
-
-            #  Exit and don't overwrite date file if process_rsmas.py throws and error
-            try:
-                # Submit processing job and running processing routine via process_rsmas.py
-                outputs, job = run_process_rsmas(inps, template_file, dset)
-
-                # Overwrite the most recent date of data download in the date file
-                overwrite_stored_date(dset, newest_date)
-
-                job_to_dset[job] = dset
-                output_files += outputs
-
-            except Exception as e:
-                logger_run_operations.log(loglevel.ERROR, "process_rsmas threw an error ({}) and exited.".format(e))
-
-        logger_run_operations.log(loglevel.INFO, "{} process_rsmas calls completed.".format(dset))
-
-    logger_run_operations.log(loglevel.INFO, "All process_rsmas calls complete. Waiting for output files to appear")
-
-    logger_run_operations.log(loglevel.INFO, "{} total output files".format(len(output_files)))
-
-    # check if output files exist
-    i = 0
-    wait_time_sec = 60
-    total_wait_time_min = 0
-    while i < len(output_files):
-        if os.path.isfile(output_files[i]):
-            logger_run_operations.log(loglevel.INFO, "Job #{} of {} complete (output file {})".format(i + 1, len(output_files), output_files[i]))
-
-            # Parses the job number from the file name ('process_rsmas_jobnumber.o')
-            # Looks up dataset associated with that job number in the dictionary
-            # Copies outputs file to appropriate location in $OPERATIONS
-            job_number = output_files[i].split("process_rsmas_")[1].split(".")[0]
-            dset = job_to_dset[job_number]
-            copy_output_file(output_file=output_files[i], dataset=dset)
-
-            i += 1
+            print("Submitting minsar_wrapper.bash for {}".format(putils.get_project_name(template_file)))
+            subprocess.Popen(["minsar_wrapper.bash", template_file], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
         else:
-            logger_run_operations.log(loglevel.INFO, "Waiting for job #{} of {} (output file {}) after {} minutes".format(i + 1, len(output_files),
-                                                                                       output_files[i],
-                                                                                       total_wait_time_min))
-            total_wait_time_min += wait_time_sec / 60
-            time.sleep(wait_time_sec)
+            print("SKIPPING")
+    print("-------------- run_operations.py has completed. Exiting now. -------------- \n\n\n\n\n\n\n")
 
-    logger_run_operations.log(loglevel.INFO, "run_operations.py completed.")
-    logger_run_operations.log(loglevel.INFO, "------------------------------")
+    sys.exit(0)
+    return
 
 
 

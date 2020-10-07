@@ -6,12 +6,12 @@ get_num_projects (){
 
     projects=()
     for j in ${jobs[@]}; do
-	workdir=$(scontrol show jobid -dd $j | grep WorkDir)
-	IFS="/"
-	project=($workdir)
-	project=${project[-1]}
-	projects+=($project)
-	unset IFS
+	    workdir=$(scontrol show jobid -dd $j | grep WorkDir)
+	    IFS="/"
+	    project=($workdir)
+	    project=${project[-1]}
+	    projects+=($project)
+	    unset IFS
     done
 
     unique_projects=($(echo "${projects[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
@@ -31,7 +31,7 @@ PROJECT_NAME=$(basename "$1" | cut -d. -f1)
 
 num_projects=$(get_num_projects)
 
-while [ $num_projects -ge 4 ]; do
+while [ $num_projects -gt 4 ]; do
     echo "Max number of running projects reached. Waiting 5 minutes to try again."
     sleep 300
     num_projects=$(get_num_projects)

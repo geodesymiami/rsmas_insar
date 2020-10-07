@@ -18,7 +18,7 @@ argv=( "$@" )
 #trap "exit" INT TERM    # Convert INT and TERM to EXIT
 #trap "kill 0" EXIT      # Kill all children if we receive EXIT
 
-PARALLEL=24
+PARALLEL=4
 
 ## start option processing
 while [[ $# -gt 0 ]] 
@@ -39,12 +39,14 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
+echo "${POSITIONAL[@]}"
+
 echo "PARALLEL=${PARALLEL}"
 user=`grep asfuser $RSMASINSAR_HOME/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
 passwd=`grep asfpass $RSMASINSAR_HOME/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
 
-echo "Running ... ssara_federated_query.py ${argv[@]:0:$#-1} > ssara_listing.txt"
-ssara_federated_query.py "${argv[@]:0:$#-1}" > ssara_listing.txt
+echo "Running ... ssara_federated_query.py ${POSITIONAL[@]} > ssara_listing.txt"
+ssara_federated_query.py "${POSITIONAL[@]}" > ssara_listing.txt
 
 regex="https:\/\/datapool\.asf\.alaska\.edu\/[a-zA-Z\/0-9\_]+\.zip"
 
