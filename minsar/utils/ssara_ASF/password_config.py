@@ -3,7 +3,7 @@ unavuser="amelung"
 unavpass="MonMar16"
 
 asfuser="famelung"
-asfpass="Falk@1234:"
+asfpass="FalkAmelung1"
 
 gepuser="falkamelung"
 geppass="Falk@1234"
