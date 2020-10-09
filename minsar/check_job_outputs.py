@@ -83,16 +83,13 @@ def main(iargs=None):
          out_error_file = os.path.dirname(error_files[-1]) + '/out_' + os.path.basename(error_files[-1])
          shutil.copy(error_files[-1], out_error_file)
 
-    out_folder = work_dir + '/stdout_' + os.path.basename(run_file)
-     
-    if len(os.path.dirname(run_file))==0:
-       run_file = os.getcwd() + '/' + run_file
-
-    putils.move_out_job_files_to_stdout(run_file=run_file)
-
     if len(matched_error_strings) != 0:
         print('For known issues see https://github.com/geodesymiami/rsmas_insar/tree/master/docs/known_issues.md')
         raise RuntimeError('Error: ' + matched_error_strings[0])
+
+    if len(os.path.dirname(run_file))==0:
+       run_file = os.getcwd() + '/' + run_file
+    putils.move_out_job_files_to_stdout(run_file=run_file)
 
     return
 
