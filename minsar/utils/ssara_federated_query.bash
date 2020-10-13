@@ -34,8 +34,10 @@ regex="https:\/\/datapool\.asf\.alaska\.edu\/[a-zA-Z\/0-9\_]+\.zip"
 
 urls=$(grep -oP $regex ssara_listing.txt)
 
-#echo $urls | xargs -n 1 -P $parallel wget -nc --user $user --password $passwd 
-echo $urls | xargs -n 1 -P $parallel wget -nc --user $user --password $passwd 2>/dev/null
-
-exit "$?"
+# putting into background creates error code 123 
+#echo $urls | xargs -n 1 -P $parallel wget -nc --user $user --password $passwd 2>/dev/null
+echo $urls | xargs -n 1 -P $parallel wget --continue --user $user --password $passwd 
+exit_code=$?
+echo "Exit code from wget commands: $exit_code"
+exit $exit_code
 
