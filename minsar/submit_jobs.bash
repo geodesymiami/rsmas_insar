@@ -105,25 +105,19 @@ done
 for g in "${globlist[@]}"; do
     files=($g)
     echo "Jobfiles to run: ${files[@]}"
- 
-
+    
     # Submit all of the jobs and record all of their job numbers
     jobnumbers=()
-    #for f in "${files[@]}"; do
-    for (( f=0; f < "${#files[@]}"; f++ )); do
-	file=${files[$f]}
-	active_jobs=($(squeue -u $USER | grep -oP "[0-9]{7,}"))
-	num_active_jobs=${#active_jobs[@]}
-	if [[ $num_active_jobs -lt 25 ]]; then
-            jobnumline=$(sbatch $file | grep "Submitted batch job")
-            jobnumber=$(grep -oE "[0-9]{7}" <<< $jobnumline)
+    for f in "${files[@]}"; do
+        jobnumline=$(sbatch $f | grep "Submitted batch job")
+        exit_status="$?"
+                if [[ $exit_status -ne 0 ]]; then
+                    echo "sbatch exited with a non-zero exit code ($exit_status). Exiting."
+                exit 1
+                fi
 
-            jobnumbers+=("$jobnumber")
-	else
-	    echo "Couldnt submit job (${file}), because there are 25 active jobs right now. Waiting 5 minutes to submit next job."
-	    f=$((f-1))
-	    sleep 300 # sleep for 5 minutes
-	fi
+        jobnumber=$(grep -oE "[0-9]{7}" <<< $jobnumline)
+        jobnumbers+=("$jobnumber")
     done
 
     echo "Jobs submitted: ${jobnumbers[@]}"
@@ -175,6 +169,8 @@ for g in "${globlist[@]}"; do
 
                 # Resubmite a sa new job number
                 jobnumline=$(sbatch $f | grep "Submitted batch job")
+                exit_status="$?"
+                echo "exit status from resubmitting job: $exit_status"
                 jn=$(grep -oE "[0-9]{7}" <<< $jobnumline)
                 echo "${jf} resubmitted as jobumber: ${jn}"
 
@@ -207,7 +203,7 @@ for g in "${globlist[@]}"; do
     $cmd
        exit_status="$?"
        if [[ $exit_status -ne 0 ]]; then
-            echo "check_job_outputs.py ${files[@]} exited with a non-zero exit code ($exit_status). Exiting."
-            exit
+            echo "Error in submit_jobs.bash: check_job_outputs.py exited with code ($exit_status)."
+            exit 1
        fi
 done

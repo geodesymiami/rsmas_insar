@@ -9,6 +9,7 @@ import minsar.utils.process_utilities as putils
 import numpy as np
 import shutil
 import glob
+from natsort import natsorted
 
 
 def cmd_line_parser(iargs=None):
@@ -65,6 +66,9 @@ def main(iargs=None):
        
        error_files = glob.glob(job_name + '*.e')
        out_files = glob.glob(job_name + '*.o')
+       error_files = natsorted(error_files)
+       out_files = natsorted(out_files)
+
        for file in error_files + out_files:
            for error_string in error_strings:
                if check_words_in_file(file, error_string):
@@ -85,8 +89,9 @@ def main(iargs=None):
 
     if len(matched_error_strings) != 0:
         print('For known issues see https://github.com/geodesymiami/rsmas_insar/tree/master/docs/known_issues.md')
-        raise RuntimeError('Error: ' + matched_error_strings[0])
+        raise RuntimeError('Error in run_file: ' + run_file)
 
+    # move only if there was no error
     if len(os.path.dirname(run_file))==0:
        run_file = os.getcwd() + '/' + run_file
     putils.move_out_job_files_to_stdout(run_file=run_file)

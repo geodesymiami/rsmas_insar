@@ -678,11 +678,11 @@ def concatenate_error_files(run_file, work_dir):
                 outfile.write('#########################\n')
                 with open(fname) as infile:
                     outfile.write(infile.read())
-                os.remove(fname)
+                #os.remove(fname)
 
     if os.path.exists(os.path.abspath(out_name)):
         shutil.copy(os.path.abspath(out_name), os.path.abspath(work_dir))
-        os.remove(os.path.abspath(out_name))
+        #os.remove(os.path.abspath(out_name))
 
     return None
 

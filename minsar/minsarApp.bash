@@ -201,8 +201,8 @@ fi
 
 if [[ $jobfiles_flag == "1" ]]; then
     cmd="create_runfiles.py $template_file --jobfiles"
-    echo "Running.... $cmd >create_jobfiles.e 1>out_ceate_jobfiles.o"
-    $cmd 2>create_jobfiles.e 1>out_ceate_jobfiles.o
+    echo "Running.... $cmd >create_jobfiles.e 1>out_create_jobfiles.o"
+    $cmd 2>create_jobfiles.e 1>out_create_jobfiles.o
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
        echo "create_jobfile.py exited with a non-zero exit code ($exit_status). Exiting."

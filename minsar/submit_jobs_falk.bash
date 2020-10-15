@@ -203,7 +203,7 @@ for g in "${globlist[@]}"; do
     $cmd
        exit_status="$?"
        if [[ $exit_status -ne 0 ]]; then
-            echo "check_job_outputs.py ${files[@]} exited with a non-zero exit code ($exit_status). Exiting."
+            echo "Error in submit_jobs.bash: check_job_outputs.py exited with code ($exit_status)."
             exit 1
        fi
 done
