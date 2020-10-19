@@ -58,8 +58,8 @@ def main(iargs=None):
         job_obj.submit_script(job_name, job_file_name, command)
 
     if inps.prefix == 'tops':
-        if not inps.template[inps.prefix + 'Stack.slcDir'] is None:
-            download_dir = inps.template[inps.prefix + 'Stack.slcDir']
+        if not inps.template[inps.prefix + 'Stack.slcDir'] in [None, 'None']:
+            download_dir = os.path.abspath(inps.template[inps.prefix + 'Stack.slcDir'])
         else:
             download_dir = os.path.join(inps.work_dir, 'SLC')
     else:
