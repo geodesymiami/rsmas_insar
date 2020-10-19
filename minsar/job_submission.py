@@ -63,6 +63,7 @@ def create_argument_parser():
                        help="output directory for run files")
     group.add_argument('--numBursts', dest='num_bursts', type=int, metavar='number of bursts',
                             help='number of bursts to calculate walltime')
+    group.add_argument('--writeonly', dest='writeonly', action='store_true', help='Write job files without submitting')
     group.add_argument('--remora', dest='remora', action='store_true', help='use remora to get job information')
 
     return parser
@@ -186,7 +187,7 @@ class JOB_SUBMIT:
         if not email_notif is None:
             self.email_notif = email_notif
 
-        message_rsmas.log(self.work_dir, 'job_submission.py {a} --outdir {b}'.format(a=batch_file, b=self.out_dir))
+        message_rsmas.log(self.work_dir, 'job_submission.py {a} --outdir {b} --writeonly'.format(a=batch_file, b=self.out_dir))
 
         self.job_files = []
 
@@ -759,10 +760,10 @@ def set_job_queue_values(args):
     elif os.getenv('QUEUENAME'):
         template['QUEUENAME'] = os.getenv('QUEUENAME')
 
-    template['WALLTIME_FACTOR'] = os.getenv('WALLTIME_FACTOR')
+    #template['WALLTIME_FACTOR'] = os.getenv('WALLTIME_FACTOR')
 
     check_auto = {'queue_name': template['QUEUENAME'],
-                  'number_of_cores_per_node': template['JOB_CPUS_PER_NODE'],
+                  'number_of_cores_per_node': template['CPUS_PER_NODE'],
                   'number_of_threads_per_core': template['THREADS_PER_CORE'],
                   'max_jobs_per_queue': template['MAX_JOBS_PER_QUEUE'],
                   'wall_time_factor': template['WALLTIME_FACTOR'],
@@ -786,11 +787,11 @@ def set_job_queue_values(args):
             if not line.startswith('#') and line.startswith(platform_name):
                 split_values = line.split()
                 default_queue = split_values[queue_header.index('QUEUENAME')]
-                if check_auto['queue_name'] == 'auto':
+                if check_auto['queue_name'] in ['auto', 'NONE', 'None']:
                     check_auto['queue_name'] = default_queue
                 if default_queue == check_auto['queue_name']:
                     if check_auto['number_of_cores_per_node'] == 'auto':
-                        check_auto['number_of_cores_per_node'] = int(split_values[queue_header.index('JOB_CPUS_PER_NODE')])
+                        check_auto['number_of_cores_per_node'] = int(split_values[queue_header.index('CPUS_PER_NODE')])
                     if check_auto['number_of_threads_per_core'] == 'auto':
                         check_auto['number_of_threads_per_core'] = int(split_values[queue_header.index('THREADS_PER_CORE')])
                     if check_auto['max_jobs_per_queue'] == 'auto':
@@ -802,7 +803,10 @@ def set_job_queue_values(args):
 
                     break
                 else:
-                    continue
+                    if default_queue == 'None':
+                        continue
+                    else:
+                        break
 
     if platform_name in ['stampede2', 'frontera', 'comet']:
         scheduler = 'SLURM'
@@ -829,10 +833,10 @@ def set_job_queue_values(args):
 
 def auto_template_not_existing_options(args):
 
-    job_options = ['QUEUENAME', 'JOB_CPUS_PER_NODE', 'THREADS_PER_CORE', 'MAX_JOBS_PER_QUEUE',
+    job_options = ['QUEUENAME', 'CPUS_PER_NODE', 'THREADS_PER_CORE', 'MAX_JOBS_PER_QUEUE',
                    'WALLTIME_FACTOR', 'MEM_PER_NODE', 'job_submission_scheme']
 
-    if 'custom_template_file' in args:
+    if args.custom_template_file:
         from minsar.objects.dataset_template import Template
         template = Template(args.custom_template_file).options
 
@@ -854,4 +858,5 @@ if __name__ == "__main__":
 
     job_obj = JOB_SUBMIT(PARAMS)
     job_obj.write_batch_jobs()
-    status = job_obj.submit_batch_jobs()
+    if PARAMS.writeonly is False:
+        status = job_obj.submit_batch_jobs()
