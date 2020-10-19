@@ -150,12 +150,7 @@ for g in "${globlist[@]}"; do
 
                 # Check if "COMPLETED" is anywhere in the state string variables.
                 # This gets rid of some strange special character issues.
-            if [[ $state == *"COMPLETED"* ]] && [[ $state != "" ]]; then
-                state="COMPLETED"
-                echo "${jobnumber} is complete"
-                break;
-
-            elif [[ $state == *"TIMEOUT"* ]] && [[ $state != "" ]]; then
+            if [[ $state == *"TIMEOUT"* ]] && [[ $state != "" ]]; then
                 jf=${files[$j]}
 		init_walltime=$(grep -oP '(?<=#SBATCH -t )[0-9]+:[0-9]+:[0-9]+' $jf)
 		
@@ -182,7 +177,12 @@ for g in "${globlist[@]}"; do
                 jobnumbers+=("$jn")
                 files+=("$jf")
                 break;
-        
+
+	    elif [[ $state == *"COMPLETED"* ]] && [[ $state != "" ]]; then
+                state="COMPLETED"
+                echo "${jobnumber} is complete"
+                break;
+
             elif [[ ( $state == *"FAILED"* ) &&  $state != "" ]]; then
                 echo "${jobnumber} FAILED. Exiting with status code 1."
                 exit 1; 
