@@ -168,7 +168,7 @@ for g in "${globlist[@]}"; do
 		echo "Resubmitting file (${jf}) with new walltime of ${updated_walltime}"
 
                 # Resubmite a sa new job number
-                jobnumline=$(sbatch $f | grep "Submitted batch job")
+                jobnumline=$(sbatch $jf | grep "Submitted batch job")
                 exit_status="$?"
                 echo "exit status from resubmitting job: $exit_status"
                 jn=$(grep -oE "[0-9]{7}" <<< $jobnumline)
