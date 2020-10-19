@@ -108,16 +108,20 @@ for g in "${globlist[@]}"; do
     
     # Submit all of the jobs and record all of their job numbers
     jobnumbers=()
-    for f in "${files[@]}"; do
-        jobnumline=$(sbatch $f | grep "Submitted batch job")
-        exit_status="$?"
-                if [[ $exit_status -ne 0 ]]; then
-                    echo "sbatch exited with a non-zero exit code ($exit_status). Exiting."
-                exit 1
-                fi
+    for (( f=0; f < "${#files[@]}"; f++ )); do
+	file=${files[$f]}
+	active_jobs=($(squeue -u $USER | grep -oP "[0-9]{7,}"))
+	num_active_jobs=${#active_jobs[@]}
+	if [[ $num_active_jobs -lt 25 ]]; then
+             jobnumline=$(sbatch $file | grep "Submitted batch job")
+             jobnumber=$(grep -oE "[0-9]{7}" <<< $jobnumline)
 
-        jobnumber=$(grep -oE "[0-9]{7}" <<< $jobnumline)
-        jobnumbers+=("$jobnumber")
+             jobnumbers+=("$jobnumber")
+        else
+             echo "Couldnt submit job (${file}), because there are 25 active jobs right now. Waiting 5 minutes to submit next job."
+             f=$((f-1))
+             sleep 300 # sleep for 5 minutes
+        fi
     done
 
     echo "Jobs submitted: ${jobnumbers[@]}"
