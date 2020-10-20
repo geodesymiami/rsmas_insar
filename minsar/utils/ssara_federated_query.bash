@@ -23,6 +23,8 @@ if  [[ -z "$parallel" ]] ; then
    parallel=5 
 fi
 
+timeout=400
+
 echo "parallel=${parallel}"
 user=`grep asfuser $RSMASINSAR_HOME/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
 passwd=`grep asfpass $RSMASINSAR_HOME/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
@@ -36,14 +38,17 @@ urls=$(grep -oP $regex ssara_listing.txt)
 
 # putting into background creates error code 123 
 #echo $urls | xargs -n 1 -P $parallel wget -nc --user $user --password $passwd 2>/dev/null
-echo $urls | xargs -n 1 -P $parallel timeout 60 wget --continue --user $user --password $passwd 
+echo $urls | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd 
 exit_code=$?
 echo "Exit code from wget commands: $exit_code"
 
-if [[ $exit_code -eq 123 || $exit_code -eq 127 ]]; then
-    echo "Something went wrong. Exit code was ${exit_code}"
-    echo $urls | xargs -n 1 -P $parallel wget --continue --user $user --password $passwd
-fi
+runs=1
+while [ $exit_code -eq 123 -o $exit_code -eq 127 ] && [ $runs -lt 5 ]; do
+    echo "Something went wrong. Exit code was ${exit_code}. Trying again with ${t} second timeout."
+    echo $urls | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd
+    exit_code=$?
+    runs=$((runs+1))
+done
 
 exit $exit_code
 
