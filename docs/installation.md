@@ -35,6 +35,8 @@ git clone https://github.com/yunjunz/pyaps3.git 3rdparty/PyAPS/pyaps3 ;
 git clone https://github.com/geodesymiami/MimtPy.git sources/MimtPy ;
 git clone https://github.com/TACC/launcher.git 3rdparty/launcher ;
 
+cd  sources/isce2; git checkout 6aa2d06 ; cd ../..
+
 ########  Done with critical code.  ########
 
 # Install tippecanoe for insarmaps (need gcc 4.9.1 or younger):
