@@ -83,6 +83,13 @@ cp -p ../minsar/additions/isce/prepRawCSK.py ../sources/isce2/contrib/stack/stri
 cp -p ../minsar/additions/isce/invertMisreg.py ../sources/isce2/contrib/stack/stripmapStack
 ```
 
+* Following is a modified version of isce modules in case it is incompatible:
+```
+cp -p ../minsar/additions/Sentinel1.py $ISCE_HOME/components/isceobj/Sensor/TOPS/Sentinel1.py
+cp -p ../minsar/additions/stackStripMap.py $ISCE_STACK/stripmapStack
+cp -p ../minsar/additions/topo.py $ISCE_STACK/stripmapStack
+```
+
 ### Orbits and aux files
 This has created directories for the orbits for Sentinel-1 (`$SENTINEL_ORBITS`), which The can be downloaded using `dloadOrbits.py`. The IPF calibration files (`SENTINEL_AUX`) are downloaded from: https://qc.sentinel1.eo.esa.int/aux_cal/ .
 ### Next steps and possible problems
