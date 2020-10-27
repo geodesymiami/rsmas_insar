@@ -16,12 +16,10 @@ git clone https://github.com/geodesymiami/accounts.git ~/accounts ;
 cd ~/test/test1
 ```
 
-* Install the code using the commands below (you need a reasonable recent git version (the default on pegasus is too old, get a [local version](./install_git.md), or use an old rsmas_insar version). 
+* Install the code using the commands below (you need a reasonable recent git version). 
 
 ```
 bash
-[ -f ~/local_git/miniconda3/bin/git ] && alias git=~/local_git/miniconda3/bin/git	
-
 git clone https://github.com/geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
 
