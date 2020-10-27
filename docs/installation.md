@@ -22,6 +22,7 @@ cd ~/test/test1
 bash
 git clone https://github.com/geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
+export RSMASINSAR_HOME=`pwd`
 
 git clone https://github.com/insarlab/MintPy.git sources/MintPy ;
 git clone https://github.com/isce-framework/isce2.git sources/isce2
