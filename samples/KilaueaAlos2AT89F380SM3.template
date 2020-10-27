@@ -8,8 +8,6 @@ ssaraopt.relativeOrbit  = 89
 ssaraopt.collectionName = "WInSAR JAXA mpoland_1223"
 ssaraopt.startDate      = 20141201
 ssaraopt.endDate        = 20150401
-
-demMethod               = ssara
 ##################### ISCE OPTIONS ####################
 
 ####### ISCE OPTIONS ##############################

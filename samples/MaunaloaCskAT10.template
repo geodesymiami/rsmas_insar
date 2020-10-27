@@ -10,8 +10,6 @@ ssaraopt.startDate                   = 20141001
 ssaraopt.endDate                     = 20150131
 ssaraopt.parallel                    = 24
 
-demMethod                            = ssara
-
 ##################### ISCE OPTIONS ####################
 stripmapStack.boundingBox            = 19.4 19.6 -155.7 -155.475                         # '-1 0.15 -91.6 -90.9'                           
 stripmapStack.boundingBox            = 19.1 19.9 -155.8 -154.5                           # '-1 0.15 -91.6 -90.9'                           

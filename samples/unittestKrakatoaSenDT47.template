@@ -10,7 +10,6 @@ ssaraopt.relativeOrbit              = 47
 ssaraopt.startDate                  = 20180101 
 ssaraopt.endDate                    = 20180331 
 ssaraopt.parallel                   = 20                                                                                                  
-demMethod                           = ssara                                            # [boundingBox, ssara]
 insarmaps_flag                      = False
 image_products_flag                 = True
 cleanopt                            = 0
