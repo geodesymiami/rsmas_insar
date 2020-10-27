@@ -35,14 +35,7 @@ git clone https://github.com/yunjunz/pyaps3.git 3rdparty/PyAPS/pyaps3 ;
 git clone https://github.com/geodesymiami/MimtPy.git sources/MimtPy ;
 git clone https://github.com/TACC/launcher.git 3rdparty/launcher ;
 
-cd  sources/isce2; git checkout 6aa2d06 ; cd ../..
-
 ########  Done with critical code.  ########
-
-# Install tippecanoe for insarmaps (need gcc 4.9.1 or younger):
-#module load gcc/4.9.4
-git clone https://github.com/mapbox/tippecanoe.git 3rdparty/tippecanoe
-make -C 3rdparty/tippecanoe install PREFIX=3rdparty/tippecanoe
 ```
 * #Install your python environment:
 ```
@@ -61,8 +54,6 @@ mkdir -p ../3rdparty
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
 ../3rdparty/miniconda3/bin/conda install isce2 -c conda-forge --yes
 ../3rdparty/miniconda3/bin/conda install --yes --file ../docs/conda.txt
-../3rdparty/miniconda3/bin/pip install --upgrade pip
-../3rdparty/miniconda3/bin/pip install geocoder
 ```
 * #Source the environment and create aux directories. Install credential files for data download:
 ```
@@ -81,13 +72,7 @@ cp -p ../minsar/additions/mintpy/plot_smallbaselineApp.sh ../sources/MintPy/sh/
 
 cp -p ../minsar/additions/isce/prepRawCSK.py ../sources/isce2/contrib/stack/stripmapStack
 cp -p ../minsar/additions/isce/invertMisreg.py ../sources/isce2/contrib/stack/stripmapStack
-```
-
-* Following is a modified version of isce modules in case it is incompatible:
-```
-cp -p ../minsar/additions/Sentinel1.py $ISCE_HOME/components/isceobj/Sensor/TOPS/Sentinel1.py
 cp -p ../minsar/additions/stackStripMap.py $ISCE_STACK/stripmapStack
-cp -p ../minsar/additions/topo.py $ISCE_STACK/stripmapStack
 ```
 
 ### Orbits and aux files

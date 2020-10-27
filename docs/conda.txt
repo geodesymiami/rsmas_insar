@@ -7,4 +7,5 @@ qt
 boto3
 botocore
 pdbpp
-tmux
+tippecanoe
+geocoder
