@@ -180,8 +180,18 @@ if [[ $download_flag == "1" ]]; then
     echo "Running.... 'cat ../ssara_command.txt'"
     bash ../ssara_command.txt
     exit_status="$?"
-    if [[ $exit_status -ne 0 ]]; then
-       echo "ssara_federated_query.bash exited with a non-zero exit code ($exit_status). Exiting."
+
+    runs=1
+    while [ $exit_status -ne 0 ] && [ $runs -le 4 ]; do
+        echo "ssara_federated_query.bash exited with a non-zero exit code ($exit_status). Trying again in 5 hours."
+        sleep 18000 # sleep for 5 hours
+        bash ../ssara_command.txt
+        exit_status="$?"
+        runs=$((runs+1))
+    done
+
+    if [[ $runs -gt 4 ]]; then
+       echo "ssara_federated_query.bash failed after 20 hours. Exiting."
        cd ..
        exit 1;
     fi
