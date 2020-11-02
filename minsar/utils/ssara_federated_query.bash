@@ -45,6 +45,7 @@ echo "Exit code from wget commands: $exit_code"
 runs=1
 while [ $exit_code -eq 123 -o $exit_code -eq 127 ] && [ $runs -lt 3 ]; do
     echo "Something went wrong. Exit code was ${exit_code}. Trying again with ${t} second timeout."
+    echo "$(date +"%Y%m%d:%H-%m") * Something went wrong. Exit code was ${exit_code}. Trying again with ${t} second timeout" >> log
     echo $urls | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd
     exit_code=$?
     runs=$((runs+1))
