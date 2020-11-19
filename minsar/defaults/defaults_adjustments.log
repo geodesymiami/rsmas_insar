@@ -19,4 +19,4 @@ run_15_filter_coherence          4000 180   -->  5000  190                      
 run_14_merge_burst_igram         4000 125   -->  5000  120                         Oct 10  WenchuanSenAT128 out of memory (now uses 3 nodes per job, before only 2)
 run_07_pairs_misreg              0 00:00:55 --> 0 00:01:05                         Oct 10  There were repeated timeouts for run_07_*_0.job (Wenchuan, Haiyuan; probably because run_07 does not scale well)
 run_15_filter_coherence          5000  190  -->  5000  215                         Oct 27   KilaueaSenAT124 14 bursts, 7 19 lks
- 
+run_15_filter_coherence          5000  215  --> 11300 215                          Nov 19   IsaraelBig (24 bursts)  
