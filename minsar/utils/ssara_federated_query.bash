@@ -29,8 +29,8 @@ echo "parallel=${parallel}"
 user=`grep asfuser $RSMASINSAR_HOME/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
 passwd=`grep asfpass $RSMASINSAR_HOME/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
 
-echo "Running ... ssara_federated_query.py ${argv[@]:0:$#-1} > ssara_listing.txt"
-ssara_federated_query.py "${argv[@]:0:$#-1}" > ssara_listing.txt
+echo "Running ... ssara_federated_query.py ${argv[@]:0:$#-1} --maxResults=20000 > ssara_listing.txt"
+ssara_federated_query.py "${argv[@]:0:$#-1}" --maxResults=20000 > ssara_listing.txt
 
 regex="https:\/\/datapool\.asf\.alaska\.edu\/[a-zA-Z\/0-9\_]+\.zip"
 

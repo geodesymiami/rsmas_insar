@@ -129,7 +129,7 @@ def run_ssara(slc_dir, template, delta_lat, logger, run_number=1):
 def get_ssara_kml(slc_dir, ssaraopt):
     """download the ssara kml file and generate a file listing of granules to be downloaded"""
 
-    ssaraopt_kml = ['--kml' if x.startswith('--parallel') else x for x in ssaraopt]
+    ssaraopt_kml = ['--kml --maxResults=20000' if x.startswith('--parallel') else x for x in ssaraopt]
 
     ssara_call = ['ssara_federated_query.py'] + ssaraopt_kml
     print('Get KML using:\n' + ' '.join(ssara_call))
