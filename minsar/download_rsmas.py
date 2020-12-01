@@ -71,6 +71,11 @@ def main(iargs=None):
     os.makedirs(inps.work_dir, exist_ok=True)
     os.makedirs(download_dir, exist_ok=True)
 
+    if 'CSK' in inps.project_name:
+        command = 'download_gep_csk.py {}'.format(inps.custom_template_file)
+        os.system(command)
+        return
+
     if 'SenDT' not in inps.project_name and 'SenAT' not in inps.project_name or os.getenv('SSARA_ASF') == 'False':
         
         try:
