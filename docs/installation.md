@@ -67,7 +67,7 @@ mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 * #Adding HPC support for MintPy (parallel plotting and defaults to use dask Local Cluster) and uncommited isce fixes
 ```
 cp -p ../minsar/additions/mintpy/smallbaselineApp_auto.cfg ../sources/MintPy/mintpy/defaults/
-cp -p ../minsar/additions/mintpy/plot_smallbaselineApp.sh ../sources/MintPy/sh/
+cp -p ../minsar/additions/mintpy/plot_smallbaselineApp.sh ../sources/MintPy/mintpy/sh/
 
 cp -p ../minsar/additions/isce/prepRawCSK.py ../sources/isce2/contrib/stack/stripmapStack
 cp -p ../minsar/additions/isce/invertMisreg.py ../sources/isce2/contrib/stack/stripmapStack
