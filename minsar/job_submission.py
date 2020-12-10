@@ -25,6 +25,7 @@ launcher_multiTask_multiNode   ---> submit tasks of a batch file in one job with
 
 import os
 import sys
+import stat
 import subprocess
 import argparse
 import time
@@ -221,10 +222,6 @@ class JOB_SUBMIT:
 
                 self.split_jobs(batch_file, tasks, number_of_nodes)
 
-        if len(self.job_files) > 0:
-            for job_file in self.job_files:
-                os.system('chmod +x {}'.format(job_file))
-
         return
 
     def submit_batch_jobs(self, batch_file=None):
@@ -312,9 +309,6 @@ class JOB_SUBMIT:
         with open(os.path.join(work_dir, job_file_name), "w+") as job_file:
             job_file.writelines(job_file_lines)
 
-        self.job_files.append(job_file_name)
-        os.system('chmod +x {}'.format(job_file_name))
-
         return
 
     def write_batch_singletask_jobs(self, batch_file):
@@ -329,7 +323,9 @@ class JOB_SUBMIT:
 
         for i, command_line in enumerate(job_list):
             job_file_name = os.path.abspath(batch_file).split(os.sep)[-1] + "_" + str(i)
-            self.write_single_job_file(job_file_name, job_file_name, command_line, work_dir=self.out_dir)
+            self.write_single_job_file(job_file_name, job_file_name, command_line, work_dir=os.path.dirname(batch_file))
+            job_file = os.path.dirname(batch_file) + '/' + job_file_name + '.job'
+            #self.write_single_job_file(job_file_name, job_file_name, command_line, work_dir=self.out_dir)
 
         return
 
@@ -551,8 +547,6 @@ class JOB_SUBMIT:
         :return: List of lines for job submission file
         """
 
-        number_of_tasks = number_of_nodes * self.number_of_cores_per_node
-
         # directives based on scheduler
         if self.scheduler == "LSF":
             number_of_tasks = number_of_nodes
@@ -580,8 +574,11 @@ class JOB_SUBMIT:
             queue_option = "-q {0}"
             walltime_limit_option = "-l walltime={0}"
             memory_option = "-l mem={0}"
-            email_option = "-m bea" + prefix + "-M {0}"
+            email_option = "-m a" + prefix + "-M {0}"
         elif self.scheduler == 'SLURM':
+
+            number_of_tasks = number_of_nodes * self.number_of_cores_per_node
+
             # if number_of_nodes > 1 and number_of_tasks == 1:
             #     number_of_tasks = number_of_nodes * self.number_of_cores_per_node
             prefix = "\n#SBATCH "
@@ -606,6 +603,7 @@ class JOB_SUBMIT:
             prefix + name_option.format(os.path.basename(job_name)),
             prefix + project_option.format(os.getenv('JOBSHEDULER_PROJECTNAME'))
         ]
+ 
         if self.email_notif:
             job_file_lines.append(prefix + email_option.format(os.getenv("NOTIFICATIONEMAIL")))
 
@@ -616,10 +614,11 @@ class JOB_SUBMIT:
             prefix + queue_option.format(self.queue),
             prefix + walltime_limit_option.format(self.default_wall_time),
         ])
-        if memory_option:
-            if not 'launcher' in self.submission_scheme:
-                job_file_lines.extend([prefix + memory_option.format(self.default_memory)], )
-            # job_file_lines.extend([prefix + memory_option.format(self.max_memory_per_node)], )
+        # FA 12/20: memory is not used in launcher under SLURM and jobs submit well under PBS
+        #if memory_option:
+        #    if not 'launcher' in self.submission_scheme:
+        #        job_file_lines.extend([prefix + memory_option.format(self.default_memory)], )
+        #    # job_file_lines.extend([prefix + memory_option.format(self.max_memory_per_node)], )
 
         if self.scheduler == "PBS":
             # export all local environment variables to job
@@ -802,17 +801,17 @@ def set_job_queue_values(args):
                         check_auto['wall_time_factor'] = float(split_values[queue_header.index('WALLTIME_FACTOR')])
 
                     break
-                else:
-                    if default_queue == 'None':
-                        continue
-                    else:
-                        break
+                #else:
+                #    if default_queue == 'None':
+                #        continue
+                #    else:
+                #        break
 
     if platform_name in ['stampede2', 'frontera', 'comet']:
         scheduler = 'SLURM'
     elif platform_name in ['pegasus']:
         scheduler = 'LSF'
-    elif platform_name in ['eos_sanghoon', 'beijing_server', 'deqing_server']:
+    elif platform_name in ['eos_sanghoon', 'beijing_server', 'deqing_server', 'eos']:
         scheduler = 'PBS'
     else:
         scheduler = None
