@@ -8,7 +8,7 @@ import glob
 
 queue_config_file = os.path.join(os.getenv('RSMASINSAR_HOME'), 'minsar/defaults/queues.cfg')
 supported_platforms = ['frontera', 'stampede2', 'comet', 'pegasus', 'eos_sanghoon', 'eos', 'eos\n',
-                       'beijing_server', 'deqing_server']
+                       'beijing_server', 'deqing_server', 'dqcentos7insar']
 
 class PathFind:
     def __init__(self):

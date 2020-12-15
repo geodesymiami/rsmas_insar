@@ -811,7 +811,7 @@ def set_job_queue_values(args):
         scheduler = 'SLURM'
     elif platform_name in ['pegasus']:
         scheduler = 'LSF'
-    elif platform_name in ['eos_sanghoon', 'beijing_server', 'deqing_server', 'eos']:
+    elif platform_name in ['eos_sanghoon', 'beijing_server', 'deqing_server', 'eos', 'dqcentos7insar']:
         scheduler = 'PBS'
     else:
         scheduler = None
