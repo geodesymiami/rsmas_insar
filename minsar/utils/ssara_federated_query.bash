@@ -8,10 +8,14 @@ for i in "${!copy[@]}"; do
         tmp1=${copy[$i]:0:17}
         tmp2=${copy[$i]:17:${#copy[$i]}}
         copy[$i]="$tmp1'$tmp2'"
+    elif [[ ${copy[$i]} == *collectionName=* ]]; then
+        tmp1=${copy[$i]:0:17}
+        tmp2=${copy[$i]:17:${#copy[$i]}}
+        copy[$i]="$tmp1'$tmp2'"
     elif [[ ${copy[$i]} == --parallel* ]]; then
         parallel=$(echo ${copy[$i]} | cut -d= -f2)
     fi
-    echo element: $i ${copy[$i]}
+    echo element $i: ${copy[$i]}
 done
 
 echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` "${copy[@]}" " >> log
@@ -26,18 +30,30 @@ fi
 timeout=400
 
 echo "parallel=${parallel}"
-user=`grep asfuser $RSMASINSAR_HOME/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
-passwd=`grep asfpass $RSMASINSAR_HOME/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
 
-echo "Running ... ssara_federated_query.py ${argv[@]:0:$#-1} --maxResults=20000 > ssara_listing.txt"
+# select password according to satellite
+echo ${copy[0]}
+if [[ ${copy[0]} == *SENTINEL* ]]; then
+   user=`grep asfuser $RSMASINSAR_HOME/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
+   passwd=`grep asfpass $RSMASINSAR_HOME/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
+elif [[ ${copy[0]} == *COSMO-SKYMED* ]] || [[ ${copy[0]} == *ALOS-2* ]]; then
+   user=`grep unavuser $RSMASINSAR_HOME/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
+   passwd=`grep unavpass $RSMASINSAR_HOME/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
+   regex="https:\/\/imaging\.unavco\.\.org\/[a-zA-Z\/0-9\_]+\.tar\.gz"
+   regex="https:\/\/imaging\.unavco\.\.org\/*\.gz"
+fi
+
+echo "Running (with\`s inserted) ... ssara_federated_query.py ${argv[@]:0:$#-1} --maxResults=20000 > ssara_listing.txt"
 ssara_federated_query.py "${argv[@]:0:$#-1}" --maxResults=20000 > ssara_listing.txt
 
-regex="https:\/\/datapool\.asf\.alaska\.edu\/[a-zA-Z\/0-9\_]+\.zip"
 
-urls=$(grep -oP $regex ssara_listing.txt)
+#regex="https:\/\/datapool\.asf\.alaska\.edu\/[a-zA-Z\/0-9\_]+\.zip"
+#urls=$(grep -oP $regex ssara_listing.txt)
+urls=$(cut -s -d ',' -f 14 ssara_listing.txt)
+echo $urls
 
 # putting into background creates error code 123 
-#echo $urls | xargs -n 1 -P $parallel wget -nc --user $user --password $passwd 2>/dev/null
+echo "echo $urls | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd "
 echo $urls | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd 
 exit_code=$?
 echo "Exit code from wget commands: $exit_code"
