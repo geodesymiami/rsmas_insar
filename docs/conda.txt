@@ -9,3 +9,4 @@ botocore
 pdbpp
 tippecanoe
 geocoder
+geopandas
