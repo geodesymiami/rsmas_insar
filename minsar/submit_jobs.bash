@@ -141,9 +141,9 @@ for g in "${globlist[@]}"; do
             secs=0
         while true; do
             
-            # Only print every so often, not every 10 seconds
-            if [[ $(( $secs % 10)) -eq 0 ]]; then
-                echo "Job ${jobnumber} is not finished yet. Current state is '${state}'"
+            # Only print every so often, not every 30 seconds
+            if [[ $(( $secs % 30)) -eq 0 ]]; then
+                echo "$(basename $WORKDIR) $(basename "$file"), ${jobnumber} is not finished yet. Current state is '${state}'"
             fi
 
             state=$(sacct --format="State" -j $jobnumber | grep "\w[[:upper:]]\w")
