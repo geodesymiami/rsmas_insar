@@ -110,9 +110,10 @@ for g in "${globlist[@]}"; do
     jobnumbers=()
     for (( f=0; f < "${#files[@]}"; f++ )); do
 	file=${files[$f]}
-	active_jobs=($(squeue -u $USER | grep -oP "[0-9]{7,}"))
-	num_active_jobs=${#active_jobs[@]}
-	if [[ $num_active_jobs -lt 25 ]]; then
+        #active_jobs=($(squeue -u $USER | grep -oP "[0-9]{7,}"))
+        #num_active_jobs=${#active_jobs[@]}
+	num_active_jobs=$(squeue -u $USER -h -t pending,running -r | wc -l )
+	if [[ $num_active_jobs -le 25 ]]; then
              jobnumline=$(sbatch $file | grep "Submitted batch job")
              jobnumber=$(grep -oE "[0-9]{7}" <<< $jobnumline)
 
