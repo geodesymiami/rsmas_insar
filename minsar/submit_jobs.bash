@@ -113,9 +113,31 @@ for g in "${globlist[@]}"; do
         #active_jobs=($(squeue -u $USER | grep -oP "[0-9]{7,}"))
         #num_active_jobs=${#active_jobs[@]}
 	num_active_jobs=$(squeue -u $USER -h -t pending,running -r | wc -l )
-	if [[ $num_active_jobs -le 25 ]]; then
-             jobnumline=$(sbatch $file | grep "Submitted batch job")
-             jobnumber=$(grep -oE "[0-9]{7}" <<< $jobnumline)
+	if [[ $num_active_jobs -ge 25 ]]; then
+             job_submit_message=$(sbatch $file)
+             exit_status="$?"
+             if [[ $exit_status -ne 0 ]]; then
+                 echo "sbatch message: $job_submit_message"
+                 echo "sbatch submit error: exit code $exit_status. Sleep 30 seconds and try again"
+                 sleep 30
+                 job_submit_message=$(sbatch $file | grep "Submitted batch job")
+                 exit_status="$?"
+                 if [[ $exit_status -ne 0 ]]; then
+                    echo "sbatch error message: $job_submit_message"
+                    echo "sbatch submit error: exit code $exit_status. Sleep 60 seconds and try again"
+                    sleep 60
+                    job_submit_message=$(sbatch $file | grep "Submitted batch job")
+                    exit_status="$?"
+                    if [[ $exit_status -ne 0 ]]; then
+                       echo "sbatch error message: $job_submit_message"
+                       echo "sbatch submit error again: exit code $exit_status. Exiting."
+                       exit 1
+                    fi
+                 fi
+             fi
+             #jobnumline=$(echo $job_submit_message | grep "Submitted batch job")
+
+             jobnumber=$(grep -oE "[0-9]{7}" <<< $job_submit_message)
 
              jobnumbers+=("$jobnumber")
         else
@@ -167,11 +189,16 @@ for g in "${globlist[@]}"; do
 
 		echo "Resubmitting file (${jf}) with new walltime of ${updated_walltime}"
 
-                # Resubmite a sa new job number
-                jobnumline=$(sbatch $jf | grep "Submitted batch job")
+                # Resubmit as a new job number
+                job_submit_message=$(sbatch $jf )
                 exit_status="$?"
-                echo "exit status from resubmitting job: $exit_status"
-                jn=$(grep -oE "[0-9]{7}" <<< $jobnumline)
+                if [[ $exit_status -ne 0 ]]; then
+                     echo "sbatch re-submit error message: $job_submit_message"
+                     echo "sbatch re-submit error: exit code $exit_status. Exiting."
+                     exit 1
+                fi
+
+                jn=$(grep -oE "[0-9]{7}" <<< $job_submit_message)
                 echo "${jf} resubmitted as jobumber: ${jn}"
 
                 # Added newly submitted jobs and files to arrays
