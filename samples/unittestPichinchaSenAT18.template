@@ -5,7 +5,6 @@ ssaraopt.platform                   = SENTINEL-1A,SENTINEL-1B
 ssaraopt.relativeOrbit              = 18
 ssaraopt.startDate                  = 20190101
 ssaraopt.endDate                    = 20190630
-ssaraopt.parallel                   = 20
 insarmaps_flag                      = no
 image_products_flag                 = True 
 #####################
