@@ -31,12 +31,15 @@ def main(iargs=None):
     logfile_name = inps.work_dir + '/ssara_rsmas.log'
     logger = RsmasLogger(file_name=logfile_name)
 
+    #import pdb; pdb.set_trace()
     if not inps.template[inps.prefix + 'Stack.slcDir'] is None:
-        inps.slc_dir = inps.template[inps.prefix + 'Stack.slcDir']
-    else:
-        inps.slc_dir = os.path.join(inps.work_dir, 'SLC')
+        inps.download_dir = inps.template[inps.prefix + 'Stack.slcDir']
 
-    project_slc_dir = os.path.join(inps.work_dir, 'SLC')
+    if 'COSMO' in inps.template['ssaraopt.platform']:
+        inps.download_dir = os.path.join(inps.work_dir, 'RAW_data')
+    else:
+        inps.download_dir = os.path.join(inps.work_dir, 'SLC')
+
     #########################################
     # Submit job
     #########################################
@@ -50,11 +53,11 @@ def main(iargs=None):
         job_obj.submit_script(job_name, job_file_name, command)
         sys.exit(0)
 
-    if not os.path.isdir(project_slc_dir):
-        os.makedirs(project_slc_dir)
-    os.chdir(inps.slc_dir)
+    if not os.path.isdir(inps.download_dir):
+        os.makedirs(inps.download_dir)
+    os.chdir(inps.download_dir)
 
-    succesful = run_ssara(project_slc_dir, inps.custom_template_file, inps.delta_lat, logger)
+    succesful = run_ssara(inps.download_dir, inps.custom_template_file, inps.delta_lat, logger)
 
     return None
 
@@ -82,13 +85,13 @@ def check_downloads(inps, run_number, args, logger):
     for f in files_to_check:
         if not os.path.isfile(str(os.getcwd()) + "/" + str(f)):
             logger.log(loglevel.WARNING, "The file, %s, didn't download correctly. Running ssara again.")
-            run_ssara(inps.slc_dir, inps.custom_template_file, delta_lat, logger, run_number + 1)
+            run_ssara(inps.download_dir, inps.custom_template_file, delta_lat, logger, run_number + 1)
             return
 
     logger.log(loglevel.INFO, "Everything is there!")
 
 
-def run_ssara(slc_dir, template, delta_lat, logger, run_number=1):
+def run_ssara(download_dir, template, delta_lat, logger, run_number=1):
     """ Runs ssara_federated_query-cj.py and checks for download issues.
         Runs ssara_federated_query-cj.py and checks continuously for whether the data download has hung without
         comleting or exited with an error code. If either of the above occur, the function is run again, for a
@@ -109,15 +112,12 @@ def run_ssara(slc_dir, template, delta_lat, logger, run_number=1):
     ssaraopt = add_polygon_to_ssaraopt(dataset_template.get_options(), ssaraopt.copy(), delta_lat)
 
     # get kml file and create listing
-    get_ssara_kml(slc_dir, ssaraopt=ssaraopt)
+    get_ssara_kml(download_dir, ssaraopt=ssaraopt)
 
     # Runs ssara_federated_query.bash with proper options
     ssara_call = ['ssara_federated_query.bash'] + ssaraopt + ['--print', '--download']
-    #print('Download data using:\n' + ' '.join(ssara_call))
-    #message_rsmas.log(slc_dir, ' '.join(ssara_call))
-    #ssara_process = subprocess.Popen(' '.join(ssara_call), shell=True)
 
-    #FA 9/20: I could not figure out how to get the string into a bash shell variabl, that is why writing a file
+    #FA 9/20: I could not figure out how to get the string into a bash shell variable, that is why writing a file
     #print( ' '.join(ssara_call) )
 
     with open('../ssara_command.txt', 'w') as f:
@@ -126,14 +126,14 @@ def run_ssara(slc_dir, template, delta_lat, logger, run_number=1):
     return 
 
 
-def get_ssara_kml(slc_dir, ssaraopt):
+def get_ssara_kml(download_dir, ssaraopt):
     """download the ssara kml file and generate a file listing of granules to be downloaded"""
 
     ssaraopt_kml = ['--kml --maxResults=20000' if x.startswith('--parallel') else x for x in ssaraopt]
 
     ssara_call = ['ssara_federated_query.py'] + ssaraopt_kml
     print('Get KML using:\n' + ' '.join(ssara_call))
-    message_rsmas.log(slc_dir, ' '.join(ssara_call))
+    message_rsmas.log(download_dir, ' '.join(ssara_call))
     ssara_process = subprocess.run(' '.join(ssara_call), shell=True)
 
     return None

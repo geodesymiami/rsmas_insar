@@ -167,6 +167,14 @@ elif [[ $stopstep != "" ]]; then
 fi
 
 ####################################
+download_dir=$WORK_DIR/SLC
+
+platform_str=$(grep platform $template_file | cut -d'=' -f2)
+if [[ $platform_str == *"COSMO-SKYMED"* ]]; then
+   download_dir=$WORK_DIR/RAW_data
+fi
+echo download_dir: $download_dir
+####################################
 if [[ $download_flag == "1" ]]; then
     echo "Running.... download_ssara.py $template_file"
     download_ssara.py $template_file
@@ -175,7 +183,7 @@ if [[ $download_flag == "1" ]]; then
        echo "download_ssara.py exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
-    cd SLC
+    cd $download_dir
     cat ../ssara_command.txt
     echo "Running.... 'cat ../ssara_command.txt'"
     bash ../ssara_command.txt
@@ -289,7 +297,7 @@ if [[ $finishup_flag == "1" ]]; then
        exit 1;
     fi
     IFS=","
-    last_file=($(tail -1 $WORK_DIR/SLC/ssara_listing.txt))
+    last_file=($(tail -1 $download_dir/ssara_listing.txt))
     last_date=${last_file[3]}
     echo "Last file: $last_file"
     echo "Last processed image date: $last_date"
