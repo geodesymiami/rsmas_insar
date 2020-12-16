@@ -113,7 +113,8 @@ for g in "${globlist[@]}"; do
         #active_jobs=($(squeue -u $USER | grep -oP "[0-9]{7,}"))
         #num_active_jobs=${#active_jobs[@]}
 	num_active_jobs=$(squeue -u $USER -h -t pending,running -r | wc -l )
-	if [[ $num_active_jobs -ge 25 ]]; then
+        echo "Number of active jobs: $num_active_jobs" ; 
+	if [[ $num_active_jobs -lt 25 ]]; then
              job_submit_message=$(sbatch $file)
              exit_status="$?"
              if [[ $exit_status -ne 0 ]]; then
