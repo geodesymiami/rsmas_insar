@@ -176,11 +176,11 @@ fi
 echo download_dir: $download_dir
 ####################################
 if [[ $download_flag == "1" ]]; then
-    echo "Running.... download_ssara.py $template_file"
-    download_ssara.py $template_file
+    echo "Running.... download_data.py $template_file"
+    download_data.py $template_file
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
-       echo "download_ssara.py exited with a non-zero exit code ($exit_status). Exiting."
+       echo "download_data.py exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
     cd $download_dir
