@@ -72,7 +72,6 @@ cp -p ../minsar/additions/mintpy/plot_smallbaselineApp.sh ../sources/MintPy/mint
 cp -p ../minsar/additions/isce/prepRawCSK.py ../sources/isce2/contrib/stack/stripmapStack
 cp -p ../minsar/additions/isce/invertMisreg.py ../sources/isce2/contrib/stack/stripmapStack
 cp -p ../minsar/additions/stackStripMap.py $ISCE_STACK/stripmapStack
-cp -p ../minsar/additions/Stack.py $ISCE_STACK/topsStack
 cp -p ../minsar/additions/isce/stackSentinel.py $ISCE_STACK/topsStack
 
 ```
