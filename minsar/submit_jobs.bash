@@ -73,27 +73,32 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
+#find the last job (11 for 'geometry' and 16 for 'NESD')
+job_file_arr=(run_files/run_*_0.job)
+last_job_file=${job_file_arr[-1]}
+last_job_file_number=${last_job_file:14:2}
+
 if [[ $startstep == "ifgrams" ]]; then
     startstep=1
 elif [[ $startstep == "timeseries" ]]; then
-    startstep=17
+    startstep=$((last_job_file_number+1))
 elif [[ $startstep == "insarmaps" ]]; then
-    startstep=18
+    startstep=$((last_job_file_number+2))
 fi
 
 if [[ $stopstep == "ifgrams" ]]; then
-    stopstep=16
+    stopstep=$last_job_file_number
 elif [[ $stopstep == "timeseries" ]]; then
-    stopstep=17
+    stopstep=$((last_job_file_number+1))
 elif [[ $stopstep == "insarmaps" ]]; then
-    stopstep=18
+    stopstep=$((last_job_file_number+2))
 fi
 
 for (( i=$startstep; i<=$stopstep; i++ )) do
     stepnum="$(printf "%02d" ${i})"
-    if [[ $i -le 16 ]]; then
+    if [[ $i -le $last_job_file_number ]]; then
 	fname="$RUNFILES_DIR/run_${stepnum}_*.job"
-    elif [[ $i -eq 17 ]]; then
+    elif [[ $i -eq $((last_job_file_number+1)) ]]; then
 	fname="$WORKDIR/smallbaseline_wrapper*.job"
     else
 	fname="$WORKDIR/insarmaps*.job"
@@ -112,8 +117,8 @@ for g in "${globlist[@]}"; do
 	file=${files[$f]}
         #active_jobs=($(squeue -u $USER | grep -oP "[0-9]{7,}"))
         #num_active_jobs=${#active_jobs[@]}
-	num_active_jobs=$(squeue -u $USER -h -t pending,running -r | wc -l )
-        echo "Number of active jobs: $num_active_jobs" ; 
+	num_active_jobs=$(squeue -u $USER -h -t running,pending -r | wc -l )
+        echo "Number of running/pending jobs: $num_active_jobs" ; 
 	if [[ $num_active_jobs -lt 25 ]]; then
              job_submit_message=$(sbatch $file)
              exit_status="$?"
