@@ -674,10 +674,10 @@ class JOB_SUBMIT:
             job_file_lines.append("\nexport LAUNCHER_PPN={0}\n".format(self.number_of_parallel_tasks_per_node))
             job_file_lines.append("\nexport LAUNCHER_JOB_FILE={0}\n".format(batch_file))
            
-            #if self.scheduler == 'SLURM':
+            if self.scheduler == 'SLURM':
 
-            #   job_file_lines.append("module load python_cacher \n")
-            #   job_file_lines.append("export LD_PRELOAD=/home1/apps/tacc-patches/python_cacher/myopen.so\n")
+               job_file_lines.append("module load python_cacher \n")
+               job_file_lines.append("export PYTHON_IO_CACHE_CWD=0\n")
 
             if self.remora:
                 job_file_lines.append("\nremora $LAUNCHER_DIR/paramrun\n")
