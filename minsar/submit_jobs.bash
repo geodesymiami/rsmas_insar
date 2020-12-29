@@ -119,7 +119,7 @@ for g in "${globlist[@]}"; do
         #num_active_jobs=${#active_jobs[@]}
 	num_active_jobs=$(squeue -u $USER -h -t running,pending -r | wc -l )
         echo "Number of running/pending jobs: $num_active_jobs" ; 
-	if [[ $num_active_jobs -lt 25 ]]; then
+	if [[ $num_active_jobs -lt $MAX_JOBS_PER_QUEUE ]]; then
              job_submit_message=$(sbatch $file)
              exit_status="$?"
              if [[ $exit_status -ne 0 ]]; then
@@ -147,7 +147,7 @@ for g in "${globlist[@]}"; do
 
              jobnumbers+=("$jobnumber")
         else
-             echo "Couldnt submit job (${file}), because there are 25 active jobs right now. Waiting 5 minutes to submit next job."
+             echo "Couldnt submit job (${file}), because there are $MAX_JOBS_PER_QUEUE active jobs right now. Waiting 5 minutes to submit next job."
              f=$((f-1))
              sleep 300 # sleep for 5 minutes
         fi
