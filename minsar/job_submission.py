@@ -111,7 +111,7 @@ class JOB_SUBMIT:
             self.prefix = 'tops'
 
         self.submission_scheme, self.platform_name, self.scheduler, self.queue_name, \
-        self.number_of_cores_per_node, self.number_of_threads_per_core, self.max_jobs_per_queue, \
+        self.number_of_cores_per_node, self.number_of_threads_per_core, self.max_jobs_per_workflow, \
         self.max_memory_per_node, self.wall_time_factor = set_job_queue_values(inps)
 
         if not 'num_bursts' in inps or not inps.num_bursts:
@@ -431,7 +431,7 @@ class JOB_SUBMIT:
         number_of_jobs = number_of_nodes
         number_of_nodes_per_job = 1
 
-        while number_of_jobs > int(self.max_jobs_per_queue):
+        while number_of_jobs > int(self.max_jobs_per_workflow):
             number_of_nodes_per_job = number_of_nodes_per_job + 1
             number_of_jobs = np.ceil(number_of_nodes/number_of_nodes_per_job)
 
@@ -441,7 +441,7 @@ class JOB_SUBMIT:
         #    import pdb; pdb.set_trace()
 
         while number_of_limited_memory_tasks < number_of_parallel_tasks:
-            if number_of_jobs < int(self.max_jobs_per_queue):
+            if number_of_jobs < int(self.max_jobs_per_workflow):
                 number_of_jobs += 1
                 number_of_parallel_tasks = int(np.ceil(len(tasks) / number_of_jobs))
             else:
@@ -764,6 +764,7 @@ def set_job_queue_values(args):
     check_auto = {'queue_name': template['QUEUENAME'],
                   'number_of_cores_per_node': template['CPUS_PER_NODE'],
                   'number_of_threads_per_core': template['THREADS_PER_CORE'],
+                  'max_jobs_per_workflow': template['MAX_JOBS_PER_WORKFLOW'],
                   'max_jobs_per_queue': template['MAX_JOBS_PER_QUEUE'],
                   'wall_time_factor': template['WALLTIME_FACTOR'],
                   'max_memory_per_node': template['MEM_PER_NODE']}
@@ -795,6 +796,8 @@ def set_job_queue_values(args):
                         check_auto['number_of_threads_per_core'] = int(split_values[queue_header.index('THREADS_PER_CORE')])
                     if check_auto['max_jobs_per_queue'] == 'auto':
                         check_auto['max_jobs_per_queue'] = int(split_values[queue_header.index('MAX_JOBS_PER_QUEUE')])
+                    if check_auto['max_jobs_per_workflow'] == 'auto':
+                        check_auto['max_jobs_per_workflow'] = int(split_values[queue_header.index('MAX_JOBS_PER_WORKFLOW')])
                     if check_auto['max_memory_per_node'] == 'auto':
                         check_auto['max_memory_per_node'] = int(split_values[queue_header.index('MEM_PER_NODE')])
                     if check_auto['wall_time_factor'] == 'auto':
@@ -824,7 +827,7 @@ def set_job_queue_values(args):
             i += 1
 
     out_puts = (submission_scheme, platform_name, scheduler, check_auto['queue_name'], check_auto['number_of_cores_per_node'],
-                check_auto['number_of_threads_per_core'], check_auto['max_jobs_per_queue'],
+                check_auto['number_of_threads_per_core'], check_auto['max_jobs_per_workflow'],
                 check_auto['max_memory_per_node'], check_auto['wall_time_factor'])
 
     return out_puts
@@ -832,7 +835,7 @@ def set_job_queue_values(args):
 
 def auto_template_not_existing_options(args):
 
-    job_options = ['QUEUENAME', 'CPUS_PER_NODE', 'THREADS_PER_CORE', 'MAX_JOBS_PER_QUEUE',
+    job_options = ['QUEUENAME', 'CPUS_PER_NODE', 'THREADS_PER_CORE', 'MAX_JOBS_PER_WORKFLOW', 'MAX_JOBS_PER_QUEUE',
                    'WALLTIME_FACTOR', 'MEM_PER_NODE', 'job_submission_scheme']
 
     if args.custom_template_file:
