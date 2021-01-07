@@ -85,7 +85,9 @@ upload_flag=1
 insarmaps_flag=1
 finishup_flag=1
 
-if [[ $startstep == "dem" ]]; then
+if [[ $startstep == "download" ]]; then
+    download_flag=1
+elif [[ $startstep == "dem" ]]; then
     download_flag=0
     dem_flag=1
 elif [[ $startstep == "jobfiles" ]]; then
