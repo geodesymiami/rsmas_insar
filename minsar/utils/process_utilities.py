@@ -52,6 +52,8 @@ def cmd_line_parse(iargs=None, script=None):
         parser = add_email_args(parser)
     if script == 'upload_data_products':
         parser = add_upload_data_products(parser)
+    if script == 'generate_chunk_template_files':
+        parser = add_generate_chunk_template_files_args(parser)
     if script == 'smallbaseline_wrapper' or script == 'ingest_insarmaps' or script == 'minopy_wrapper':
         parser = add_notification(parser)
 
@@ -176,6 +178,16 @@ def add_email_args(parser):
                     help='Email insarmaps results')
     return parser
 
+def add_generate_chunk_template_files_args(parser):
+    arg = parser.add_argument_group('Options for generating  template file chunks.')
+    arg.add_argument('--download', action='store_true', dest='download_flag', default=False,
+                    help='download data for each chunk')
+    arg.add_argument('--latStep', dest='lat_step', type=float,  default=1.0,
+                          help='chunk size in latitude [degrees] (default = 1.0).\n.')
+    arg.add_argument('--latMargin', dest='lat_margin', type=float,  default=0.1,
+                          help='margin to latStep [degrees] (default = 0.1).\n')
+    return parser
+
 
 def add_notification(parser):
     NO = parser.add_argument_group('Flags for emailing results.')
@@ -227,6 +239,23 @@ def get_project_name(custom_template_file):
             os.path.basename(custom_template_file))[0]
     return project_name
 
+
+##########################################################################
+
+
+def split_project_name(project_name):
+    """ splits project name into location name, satellite and direction, and track number. """
+
+    location_name, sat_track = re.split('SenAT|SenDT',project_name)
+    
+    if 'SenAT' in project_name:
+       sat_direction = 'SenAT'
+    elif 'SenDT' in project_name:
+       sat_direction = 'SenDT'
+    else:
+       raise Exception('ERROR project name must contain SenDT or SenAT')
+
+    return location_name, sat_direction, sat_track 
 
 ##########################################################################
 
@@ -371,8 +400,58 @@ def update_template_file(TEMP_FILE, custom_templateObj):
 
     return
 
+#########################################################################
 
-##########################################################################
+def write_template_file(TEMP_FILE, tempObj):
+    """
+    writes template file in project directory based on custom template file
+    :param TEMP_FILE: file to be writtem
+    :param tempObj:  template to be written
+    :return: written file text
+    """
+
+    print('Updating template file')
+    fileText = '#######################################\n'
+    for key, value in tempObj.options.items():
+         fileText = fileText + "{:<38}".format(key) + "{:<15}".format("= {}".format(value.strip("'"))) + '\n'
+
+    with open(TEMP_FILE, 'w') as file:
+        file.writelines(fileText)
+
+    return
+
+#########################################################################
+
+def beautify_template_file(TEMP_FILE):
+    """
+    adds lines with ##### to template file
+    """
+
+    f = open(TEMP_FILE, 'r')
+    lines = f.readlines()
+
+    delimiter_list = ['ssaraopt' , 'topsStack', 'mintpy']
+    delimiter_list = ['ssaraopt' , 'topsStack', 'stripmapStack', 'mintpy']
+
+    i = 0
+    i_last_insert = 0
+    for item in delimiter_list:
+   
+        i = i_last_insert
+
+        while (i  < len(lines)):
+            if item in lines[i]:
+                lines.insert(i,'#######################################\n')
+                i_last_insert = i
+                break
+            i = i + 1
+
+    f = open(TEMP_FILE, 'w')
+    f.writelines(lines)
+
+    return
+
+##########################################s################################
 
 
 def get_config_defaults(config_file='job_defaults.cfg'):
