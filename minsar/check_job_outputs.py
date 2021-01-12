@@ -72,6 +72,8 @@ def main(iargs=None):
        for file in error_files + out_files:
            for error_string in error_strings:
                if check_words_in_file(file, error_string):
+                   if skip_error(file, error_string):
+                       break
                    matched_error_strings.append('Error: \"' + error_string + '\" found in ' + file + '\n')
                    print( 'Error: \"' + error_string + '\" found in ' + file )
 
@@ -97,6 +99,20 @@ def main(iargs=None):
     putils.move_out_job_files_to_stdout(run_file=run_file)
 
     return
+
+def skip_error(file, error_string):
+    """ skip error for merge_reference step if contains has different number of bursts (7) than the reference (9)  """
+    """ https://github.com/geodesymiami/rsmas_insar/issues/436  """
+    """ prior to https://github.com/isce-framework/isce2/pull/195 it did not raise exception  """
+
+    skip = False
+    if 'merge_reference_secondary_slc' in file:
+       with open(file) as f:
+        lines=f.read()
+        if 'has different number of bursts' in lines and 'than the reference' in lines:
+           skip = True
+
+    return skip
 
 if __name__ == "__main__":
     main()
