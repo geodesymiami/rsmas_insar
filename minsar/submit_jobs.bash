@@ -2,6 +2,44 @@
 #set -x
 #trap read debug
 
+function submit_job_conditional {
+    num_active_jobs=$(squeue -u $USER -h -t running,pending -r | wc -l )
+    echo "Number of running/pending jobs: $num_active_jobs" >&2 
+
+    if [[ $num_active_jobs -lt $MAX_JOBS_PER_QUEUE ]]; then
+        job_submit_message=$(sbatch $1)
+        exit_status="$?"
+        if [[ $exit_status -ne 0 ]]; then
+            echo "sbatch message: $job_submit_message" >&2
+            echo "sbatch submit error: exit code $exit_status. Sleep 30 seconds and try again" >&2
+            sleep 30
+            job_submit_message=$(sbatch $file | grep "Submitted batch job")
+            exit_status="$?"
+            if [[ $exit_status -ne 0 ]]; then
+                echo "sbatch error message: $job_submit_message" >&2
+                echo "sbatch submit error: exit code $exit_status. Sleep 60 seconds and try again" >&2
+                sleep 60
+                job_submit_message=$(sbatch $file | grep "Submitted batch job")
+                exit_status="$?"
+                if [[ $exit_status -ne 0 ]]; then
+                    echo "sbatch error message: $job_submit_message" >&2
+                    echo "sbatch submit error again: exit code $exit_status. Exiting." >&2
+                    exit 1
+                fi
+            fi
+        fi
+
+        jobnumber=$(grep -oE "[0-9]{7}" <<< $job_submit_message)
+
+        echo $jobnumber
+        return 0
+
+    fi
+
+    return 1
+
+}
+
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 helptext="                                                                         \n\
 Job submission script
@@ -115,42 +153,17 @@ for g in "${globlist[@]}"; do
     jobnumbers=()
     for (( f=0; f < "${#files[@]}"; f++ )); do
 	file=${files[$f]}
-        #active_jobs=($(squeue -u $USER | grep -oP "[0-9]{7,}"))
-        #num_active_jobs=${#active_jobs[@]}
-	num_active_jobs=$(squeue -u $USER -h -t running,pending -r | wc -l )
-        echo "Number of running/pending jobs: $num_active_jobs" ; 
-	if [[ $num_active_jobs -lt $MAX_JOBS_PER_QUEUE ]]; then
-             job_submit_message=$(sbatch $file)
-             exit_status="$?"
-             if [[ $exit_status -ne 0 ]]; then
-                 echo "sbatch message: $job_submit_message"
-                 echo "sbatch submit error: exit code $exit_status. Sleep 30 seconds and try again"
-                 sleep 30
-                 job_submit_message=$(sbatch $file | grep "Submitted batch job")
-                 exit_status="$?"
-                 if [[ $exit_status -ne 0 ]]; then
-                    echo "sbatch error message: $job_submit_message"
-                    echo "sbatch submit error: exit code $exit_status. Sleep 60 seconds and try again"
-                    sleep 60
-                    job_submit_message=$(sbatch $file | grep "Submitted batch job")
-                    exit_status="$?"
-                    if [[ $exit_status -ne 0 ]]; then
-                       echo "sbatch error message: $job_submit_message"
-                       echo "sbatch submit error again: exit code $exit_status. Exiting."
-                       exit 1
-                    fi
-                 fi
-             fi
-             #jobnumline=$(echo $job_submit_message | grep "Submitted batch job")
 
-             jobnumber=$(grep -oE "[0-9]{7}" <<< $job_submit_message)
-
-             jobnumbers+=("$jobnumber")
+        jobnumber=$(submit_job_conditional $file)
+        exit_status="$?"
+        if [[ $exit_status -eq 0 ]]; then
+            jobnumbers+=("$jobnumber")
         else
-             echo "Couldnt submit job (${file}), because there are $MAX_JOBS_PER_QUEUE active jobs right now. Waiting 5 minutes to submit next job."
+            echo "Couldnt submit job (${file}), because there are $MAX_JOBS_PER_QUEUE active jobs right now. Waiting 5 minutes to submit next job."
              f=$((f-1))
              sleep 300 # sleep for 5 minutes
         fi
+
     done
 
     echo "Jobs submitted: ${jobnumbers[@]}"
@@ -158,7 +171,7 @@ for g in "${globlist[@]}"; do
     # Wait for each job to complete
     for (( j=0; j < "${#jobnumbers[@]}"; j++)); do
         jobnumber=${jobnumbers[$j]}
-        
+
         # Parse out the state of the job from the sacct function.
         # Format state to be all uppercase (PENDING, RUNNING, or COMPLETED)
         # and remove leading whitespace characters.
@@ -166,7 +179,7 @@ for g in "${globlist[@]}"; do
         state="$(echo -e "${state}" | sed -e 's/^[[:space:]]*//')"
 
         # Keep checking the state while it is not "COMPLETED"
-            secs=0
+        secs=0
         while true; do
             
             # Only print every so often, not every 30 seconds
@@ -181,35 +194,33 @@ for g in "${globlist[@]}"; do
                 # This gets rid of some strange special character issues.
             if [[ $state == *"TIMEOUT"* ]] && [[ $state != "" ]]; then
                 jf=${files[$j]}
-		init_walltime=$(grep -oP '(?<=#SBATCH -t )[0-9]+:[0-9]+:[0-9]+' $jf)
-		
-		echo "${jobnumber} timedout due to too low a walltime (${init_walltime})."
-                		
+                init_walltime=$(grep -oP '(?<=#SBATCH -t )[0-9]+:[0-9]+:[0-9]+' $jf)
+                
+                echo "${jobnumber} timedout due to too low a walltime (${init_walltime})."
+                                
                 # Compute a new walltime and update the job file
                 update_walltime.py "$jf" &> /dev/null
 
-		updated_walltime=$(grep -oP '(?<=#SBATCH -t )[0-9]+:[0-9]+:[0-9]+' $jf)
+                updated_walltime=$(grep -oP '(?<=#SBATCH -t )[0-9]+:[0-9]+:[0-9]+' $jf)
 
-		datetime=$(date +"%Y-%m-%d:%H-%M")
-		echo "${datetime}: re-running: ${jf}: ${init_walltime} --> ${updated_walltime}" >> "${RUNFILES_DIR}"/rerun.log
+                datetime=$(date +"%Y-%m-%d:%H-%M")
+                echo "${datetime}: re-running: ${jf}: ${init_walltime} --> ${updated_walltime}" >> "${RUNFILES_DIR}"/rerun.log
 
-		echo "Resubmitting file (${jf}) with new walltime of ${updated_walltime}"
+                echo "Resubmitting file (${jf}) with new walltime of ${updated_walltime}"
 
                 # Resubmit as a new job number
-                job_submit_message=$(sbatch $jf )
+                jobnumber=$(submit_job_conditional $jf)
                 exit_status="$?"
-                if [[ $exit_status -ne 0 ]]; then
-                     echo "sbatch re-submit error message: $job_submit_message"
-                     echo "sbatch re-submit error: exit code $exit_status. Exiting."
-                     exit 1
-                fi
+		if [[ $exit_status -eq 0 ]]; then
+		    jobnumbers+=("$jobnumber")
+		    files+=("$jf")
+		    echo "${jf} resubmitted as jobumber: ${jobnumber}"
+		else
+		    echo "sbatch re-submit error message: $jobnumber"
+                    echo "sbatch re-submit error: exit code $exit_status. Exiting."
+                    exit 1
+		fi
 
-                jn=$(grep -oE "[0-9]{7}" <<< $job_submit_message)
-                echo "${jf} resubmitted as jobumber: ${jn}"
-
-                # Added newly submitted jobs and files to arrays
-                jobnumbers+=("$jn")
-                files+=("$jf")
                 break;
 
 	    elif [[ $state == *"COMPLETED"* ]] && [[ $state != "" ]]; then
