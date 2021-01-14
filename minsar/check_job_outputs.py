@@ -106,11 +106,17 @@ def skip_error(file, error_string):
     """ prior to https://github.com/isce-framework/isce2/pull/195 it did not raise exception  """
 
     skip = False
-    if 'merge_reference_secondary_slc' in file:
+    if 'merge_reference_secondary_slc' in file or 'merge_burst_igram' in file:
        with open(file) as f:
         lines=f.read()
         if 'has different number of bursts' in lines and 'than the reference' in lines:
            skip = True
+
+    with open(file) as f:
+       lines=f.read()
+       if '--- Logging error ---' in lines:
+            skip = True
+
 
     return skip
 
