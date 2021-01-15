@@ -47,30 +47,37 @@ echo "Running (with\`s inserted) ... ssara_federated_query.py ${argv[@]:0:$#-1} 
 ssara_federated_query.py "${argv[@]:0:$#-1}" --maxResults=20000 > ssara_listing.txt
 
 
-#regex="https:\/\/datapool\.asf\.alaska\.edu\/[a-zA-Z\/0-9\_]+\.zip"
-#urls=$(grep -oP $regex ssara_listing.txt)
-urls=$(cut -s -d ',' -f 14 ssara_listing.txt)
-echo $urls
+urls_list=$(cut -s -d ',' -f 14 ssara_listing.txt)
+#echo $urls_list
+unset IFS
+urls=($urls_list)
 
-# putting into background creates error code 123 
-echo "echo $urls | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd "
-echo $urls | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd 
-exit_code=$?
-echo "Exit code from wget commands: $exit_code"
+num_urls=${#urls[@]}
+num_urls=$(echo $(($num_urls+$parallel)))
 
-runs=1
-while [ $exit_code -eq 123 -o $exit_code -eq 127 ] && [ $runs -lt 3 ]; do
-    echo "Something went wrong. Exit code was ${exit_code}. Trying again with ${t} second timeout."
-    echo "$(date +"%Y%m%d:%H-%m") * Something went wrong. Exit code was ${exit_code}. Trying again with ${t} second timeout" >> log
-    echo $urls | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd
+echo $num_urls
+
+start=0
+stop=$(($start+$parallel))
+while [ $start -le $num_urls ]; do
+    us="${urls[@]:$start:$parallel}"
+    echo "${us[@]}"
+    echo $us | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd -nv
     exit_code=$?
-    runs=$((runs+1))
-    sleep 60
+    #exit_code=0
+    runs=1
+    while [ $exit_code -eq 123 -o $exit_code -eq 127 ] && [ $runs -lt 3 ]; do
+        echo "Something went wrong. Exit code was ${exit_code}. Trying again with ${t} second timeout."
+        echo "$(date +"%Y%m%d:%H-%m") * Something went wrong. Exit code was ${exit_code}. Trying again with ${t} second timeout" >> log
+        echo $us | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd -nv
+        exit_code=$?
+        runs=$((runs+1))
+        sleep 60
+    done
+    echo "Finished succesfully."
+    start=$(($stop+1))
+    stop=$(($start+$parallel))
 done
-
-if [[ $exit_code -ge 3 ]]; then
-    exit 3
-fi
 
 exit 0
 
