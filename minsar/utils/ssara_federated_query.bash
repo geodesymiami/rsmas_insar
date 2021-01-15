@@ -48,7 +48,6 @@ ssara_federated_query.py "${argv[@]:0:$#-1}" --maxResults=20000 > ssara_listing.
 
 
 urls_list=$(cut -s -d ',' -f 14 ssara_listing.txt)
-#echo $urls_list
 unset IFS
 urls=($urls_list)
 
@@ -61,10 +60,9 @@ start=0
 stop=$(($start+$parallel))
 while [ $start -le $num_urls ]; do
     us="${urls[@]:$start:$parallel}"
-    echo "${us[@]}"
+    echo "URLs to download: ${us[@]}"
     echo $us | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd -nv
     exit_code=$?
-    #exit_code=0
     runs=1
     while [ $exit_code -eq 123 -o $exit_code -eq 127 ] && [ $runs -lt 3 ]; do
         echo "Something went wrong. Exit code was ${exit_code}. Trying again with ${t} second timeout."
@@ -74,7 +72,7 @@ while [ $start -le $num_urls ]; do
         runs=$((runs+1))
         sleep 60
     done
-    echo "Finished succesfully."
+    echo "Finished downloading files $stop/$num_urls succesfully."
     start=$(($stop+1))
     stop=$(($start+$parallel))
 done

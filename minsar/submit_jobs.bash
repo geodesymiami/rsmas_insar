@@ -7,15 +7,15 @@ function compute_tasks_for_step {
     stepname=$2
 
     IFS=$'\n'
-    runningtasks=($(squeue -u $USER --format=%j -rh))
+    running_tasks=($(squeue -u $USER --format=%j -rh))
     unset IFS
 
-    runfilesdir=$(dirname "${file}")
+    run_files_dir=$(dirname "${file}")
         
     tasks=0
-    for t in "${runningtasks[@]}"; do
+    for t in "${running_tasks[@]}"; do
 	if [[ "$t" == *"$stepname"* ]]; then
-	    f="${runfilesdir}/${t}"
+	    f="${run_files_dir}/${t}"
 	    numtasks=$(cat $f | wc -l)
             ((tasks=tasks+$numtasks))
 	fi
@@ -27,27 +27,43 @@ function compute_tasks_for_step {
 
 function submit_job_conditional {
 
-    declare -A step_tasks
-    step_tasks=([unpack_topo_reference]=500 [unpack_secondary_slc]=500 [average_baseline]=500 [extract_burst_overlaps]=500 [overlap_geo2rdr]=70 [overlap_resample]=70 [pairs_misreg]=50 [timeseries_misreg]=100 [fullBurst_geo2rdr]=500 [fullBurst_resample]=500 [extract_stack_valid_region]=500 [merge_reference_secondary_slc]=500 [generate_burst_igram]=500 [merge_burst_igram]=500 [filter_coherence]=500 [unwrap]=500)
+    declare -A step_max_task_list
+    step_max_task_list=(
+	[unpack_topo_reference]=500
+	[unpack_secondary_slc]=500 
+	[average_baseline]=500 
+	[extract_burst_overlaps]=500 
+	[overlap_geo2rdr]=70 
+	[overlap_resample]=70 
+	[pairs_misreg]=50 
+	[timeseries_misreg]=100 
+	[fullBurst_geo2rdr]=500 
+	[fullBurst_resample]=500 
+	[extract_stack_valid_region]=500 
+	[merge_reference_secondary_slc]=500 
+	[generate_burst_igram]=500 
+	[merge_burst_igram]=500 
+	[filter_coherence]=500 
+	[unwrap]=500
+    )
 
     file=$1
+    
+    step_name=$(echo $file | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1}.job)")
+    step_max_tasks="${step_max_task_list[$step_name]}"
 
-    runningtasks=$(compute_tasks_for_step $file $stepname)
+    num_active_tasks=$(compute_tasks_for_step $file $step_name)
+    num_tasks_job=$(cat ${file%.*} | wc -l)
+    total_tasks=$(($num_active_tasks+$num_tasks_job))
 
-    stepname_regex="(?<=run_\d{2}_)(.*)(?=_\d{1}.job)"
-    stepname=$(echo $file | grep -oP $stepname_regex)
-    step_maxtasks="${step_tasks[$stepname]}"
-
-    jobtasks=$(cat ${file%.*} | wc -l)
-
-    echo "$runningtasks - $step_maxtasks - $jobtasks" >&2
-
-    echo "Maximum number of nodes for step ($stepname) is $step_maxtasks" >&2
+    echo "$step_name: number of running/pending tasks is $num_active_tasks (maximum $step_max_tasks)" >&2
+    echo "$file: $num_tasks_job additional tasks" >&2
+    echo "$step_name: $total_tasks total tasks (maximum $step_max_tasks)" >&2
 
     num_active_jobs=$(squeue -u $USER -h -t running,pending -r | wc -l )
     echo "Number of running/pending jobs: $num_active_jobs" >&2 
 
-    if [[ $num_active_jobs -lt $MAX_JOBS_PER_QUEUE ]] && [[ $runningtasks+$jobtasks -lt $step_maxtasks ]]; then
+    if [[ $num_active_jobs -lt $MAX_JOBS_PER_QUEUE ]] && [[ $total_tasks -lt $step_max_tasks ]]; then
         job_submit_message=$(sbatch $file)
         exit_status="$?"
         if [[ $exit_status -ne 0 ]]; then
