@@ -7,17 +7,17 @@ function compute_tasks_for_step {
     stepname=$2
 
     IFS=$'\n'
-    running_tasks=($(squeue -u $USER --format=%j -rh))
+    running_tasks=$(squeue -u $USER --format="%j %A" -rh)
+    job_ids=($(echo $running_tasks | grep -oP "\d{4,}"))
+
     unset IFS
 
-    run_files_dir=$(dirname "${file}")
-        
     tasks=0
-    for t in "${running_tasks[@]}"; do
-	if [[ "$t" == *"$stepname"* ]]; then
-	    f="${run_files_dir}/${t}"
-	    numtasks=$(cat $f | wc -l)
-            ((tasks=tasks+$numtasks))
+    for j in "${job_ids[@]}"; do
+	task_file=$(scontrol show jobid -dd $j | grep -oP "(?<=Command=)(.*)(?=.job)")
+	if [[ "$task_file" == *"$stepname"* ]]; then
+	    num_tasks=$(cat $task_file | wc -l)
+	    ((tasks=tasks+$num_tasks))
 	fi
     done
 
@@ -33,8 +33,8 @@ function submit_job_conditional {
 	[unpack_secondary_slc]=500 
 	[average_baseline]=500 
 	[extract_burst_overlaps]=500 
-	[overlap_geo2rdr]=70 
-	[overlap_resample]=70 
+	[overlap_geo2rdr]=140 
+	[overlap_resample]=140 
 	[pairs_misreg]=50 
 	[timeseries_misreg]=100 
 	[fullBurst_geo2rdr]=500 
@@ -217,8 +217,8 @@ for g in "${globlist[@]}"; do
             jobnumbers+=("$jobnumber")
         else
             echo "Couldnt submit job (${file}), because there are $MAX_JOBS_PER_QUEUE active jobs right now. Waiting 5 minutes to submit next job."
-             f=$((f-1))
-             sleep 300 # sleep for 5 minutes
+            f=$((f-1))
+            sleep 300 # sleep for 5 minutes
         fi
 
     done
