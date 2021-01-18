@@ -49,7 +49,7 @@ function submit_job_conditional {
 
     file=$1
     
-    step_name=$(echo $file | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1}.job)")
+    step_name=$(echo $file | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,}.job)")
     step_max_tasks="${step_max_task_list[$step_name]}"
 
     num_active_tasks=$(compute_tasks_for_step $file $step_name)
