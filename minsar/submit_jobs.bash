@@ -2,12 +2,33 @@
 #set -x
 #trap read debug
 
+function compute_total_tasks {
+    file=$1
+    
+    IFS=$'\n'
+    running_tasks=$(squeue -u $USER --format="%A" -rh)
+    job_ids=($(echo $running_tasks | grep -oP "\d{4,}"))
+
+    unset IFS
+
+    tasks=0
+    for j in "${job_ids[@]}"; do
+        task_file=$(scontrol show jobid -dd $j | grep -oP "(?<=Command=)(.*)(?=.job)")
+        num_tasks=$(cat $task_file | wc -l)
+        ((tasks=tasks+$num_tasks))
+    done
+
+    echo $tasks
+    return 0
+}
+
 function compute_tasks_for_step {
     file=$1
     stepname=$2
 
     IFS=$'\n'
-    running_tasks=$(squeue -u $USER --format="%j %A" -rh)
+    #running_tasks=$(squeue -u $USER --format="%j %A" -rh)
+    running_tasks=$(squeue -u $USER --format="%A" -rh)
     job_ids=($(echo $running_tasks | grep -oP "\d{4,}"))
 
     unset IFS
@@ -51,19 +72,25 @@ function submit_job_conditional {
     
     step_name=$(echo $file | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,}.job)")
     step_max_tasks="${step_max_task_list[$step_name]}"
+    max_tasks=1500
 
-    num_active_tasks=$(compute_tasks_for_step $file $step_name)
+    num_active_tasks=$(compute_total_tasks $file)
+    num_active_tasks_step=$(compute_tasks_for_step $file $step_name)
     num_tasks_job=$(cat ${file%.*} | wc -l)
+
+    total_tasks_step=$(($num_active_tasks_step+$num_tasks_job))
     total_tasks=$(($num_active_tasks+$num_tasks_job))
 
-    echo "$step_name: number of running/pending tasks is $num_active_tasks (maximum $step_max_tasks)" >&2
+    echo "$num_active_tasks tasks running across all jobs (maximum $max_tasks)" >&2
+    echo "$step_name: $num_active_tasks_step running/pending tasks (maximum $step_max_tasks)" >&2
     echo "$file: $num_tasks_job additional tasks" >&2
-    echo "$step_name: $total_tasks total tasks (maximum $step_max_tasks)" >&2
+    echo "$step_name: $total_tasks_step total tasks (maximum $step_max_tasks)" >&2
+    echo "$total_tasks tasks running across all jobs (maximum $max_tasks)" >&2
 
     num_active_jobs=$(squeue -u $USER -h -t running,pending -r | wc -l )
     echo "Number of running/pending jobs: $num_active_jobs" >&2 
 
-    if [[ $num_active_jobs -lt $MAX_JOBS_PER_QUEUE ]] && [[ $total_tasks -lt $step_max_tasks ]]; then
+    if [[ $num_active_jobs -lt $MAX_JOBS_PER_QUEUE ]] && [[ $total_tasks_step -lt $step_max_tasks ]] && [[ $total_tasks -lt $max_tasks ]]; then
         job_submit_message=$(sbatch $file)
         exit_status="$?"
         if [[ $exit_status -ne 0 ]]; then
