@@ -90,7 +90,10 @@ function submit_job_conditional {
 
         echo $jobnumber
         return 0
-
+    elif [[ $num_active_jobs -ge $MAX_JOBS_PER_QUEUE ]]; then
+	return 1
+    elif [[ $total_tasks -ge $step_max_tasks ]]; then
+	return 2
     fi
 
     return 1
@@ -216,7 +219,12 @@ for g in "${globlist[@]}"; do
         if [[ $exit_status -eq 0 ]]; then
             jobnumbers+=("$jobnumber")
         else
-            echo "Couldnt submit job (${file}), because there are $MAX_JOBS_PER_QUEUE active jobs right now. Waiting 5 minutes to submit next job."
+	    if [[ $exit_status -eq 1 ]]; then
+		echo "Couldnt submit job (${file}), because there are $MAX_JOBS_PER_QUEUE active jobs right now. Waiting 5 minutes to submit next job."
+	    elif [[ $exit_status -eq 2 ]]; then
+		echo "Couldnt submit job (${file}), because there are too many active tasks for this step right now. Waiting 5 minutes to submit next job."
+	    fi
+
             f=$((f-1))
             sleep 300 # sleep for 5 minutes
         fi
