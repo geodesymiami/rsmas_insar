@@ -48,49 +48,51 @@ function compute_tasks_for_step {
 
 function submit_job_conditional {
 
-    declare -A step_max_task_list
-    step_max_task_list=(
-	[unpack_topo_reference]=500
-	[unpack_secondary_slc]=500 
-	[average_baseline]=500 
-	[extract_burst_overlaps]=500 
-	[overlap_geo2rdr]=140 
-	[overlap_resample]=140 
-	[pairs_misreg]=50 
-	[timeseries_misreg]=100 
-	[fullBurst_geo2rdr]=500 
-	[fullBurst_resample]=500 
-	[extract_stack_valid_region]=500 
-	[merge_reference_secondary_slc]=500 
-	[generate_burst_igram]=500 
-	[merge_burst_igram]=500 
-	[filter_coherence]=500 
-	[unwrap]=500
+    declare -A  step_io_load_list
+
+    step_max_tasks_unit=1000
+    total_max_tasks=1500
+
+    # IO load for each step. For step_io_load=1 the maximum tasks allowed is step_max_tasks_unit
+    # for step_io_load=2 the maximum tasks allowed is step_max_tasks_unit/2
+    step_io_load_list=(
+        [unpack_topo_reference]=1
+        [unpack_secondary_slc]=1
+        [average_baseline]=1
+        [extract_burst_overlaps]=1
+        [overlap_geo2rdr]=1
+        [overlap_resample]=1
+        [pairs_misreg]=1
+        [timeseries_misreg]=1
+        [fullBurst_geo2rdr]=1
+        [fullBurst_resample]=1
+        [extract_stack_valid_region]=1
+        [merge_reference_secondary_slc]=1
+        [generate_burst_igram]=1
+        [merge_burst_igram]=3
+        [filter_coherence]=1
+        [unwrap]=2
     )
 
     file=$1
-    
-    step_name=$(echo $file | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,}.job)")
-    step_max_tasks="${step_max_task_list[$step_name]}"
-    max_tasks=1500
 
-    num_active_tasks=$(compute_total_tasks $file)
+    step_name=$(echo $file | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,}.job)")
+    step_max_tasks=$(echo "$step_max_tasks_unit/${step_io_load_list[$step_name]}" | bc | awk '{print int($1)}')
+
+    num_active_tasks_total=$(compute_total_tasks $file)
     num_active_tasks_step=$(compute_tasks_for_step $file $step_name)
     num_tasks_job=$(cat ${file%.*} | wc -l)
 
-    total_tasks_step=$(($num_active_tasks_step+$num_tasks_job))
-    total_tasks=$(($num_active_tasks+$num_tasks_job))
-
-    echo "$num_active_tasks tasks running across all jobs (maximum $max_tasks)" >&2
-    echo "$step_name: $num_active_tasks_step running/pending tasks (maximum $step_max_tasks)" >&2
-    echo "$file: $num_tasks_job additional tasks" >&2
-    echo "$step_name: $total_tasks_step total tasks (maximum $step_max_tasks)" >&2
-    echo "$total_tasks tasks running across all jobs (maximum $max_tasks)" >&2
+    new_tasks_step=$(($num_active_tasks_step+$num_tasks_job))
+    new_tasks_total=$(($num_active_tasks+$num_tasks_job))
 
     num_active_jobs=$(squeue -u $USER -h -t running,pending -r | wc -l )
     echo "Number of running/pending jobs: $num_active_jobs" >&2 
+    echo "$num_active_tasks_total running/pending tasks across all jobs (maximum $total_max_tasks)" >&2
+    echo "step   $step_name: $num_active_tasks_step running/pending tasks (maximum $step_max_tasks)" >&2
+    echo "$(basename $file): $num_tasks_job additional tasks" >&2
 
-    if [[ $num_active_jobs -lt $MAX_JOBS_PER_QUEUE ]] && [[ $total_tasks_step -lt $step_max_tasks ]] && [[ $total_tasks -lt $max_tasks ]]; then
+    if [[ $num_active_jobs -lt $MAX_JOBS_PER_QUEUE ]] && [[ $new_tasks_step -lt $step_max_tasks ]] && [[ $new_tasks_total -lt $total_max_tasks ]]; then
         job_submit_message=$(sbatch $file)
         exit_status="$?"
         if [[ $exit_status -ne 0 ]]; then
@@ -119,7 +121,7 @@ function submit_job_conditional {
         return 0
     elif [[ $num_active_jobs -ge $MAX_JOBS_PER_QUEUE ]]; then
 	return 1
-    elif [[ $total_tasks -ge $step_max_tasks ]]; then
+    elif [[ $new_tasks_step -ge $step_max_tasks ]]; then
 	return 2
     fi
 
@@ -347,4 +349,5 @@ for g in "${globlist[@]}"; do
             echo "Error in submit_jobs.bash: check_job_outputs.py exited with code ($exit_status)."
             exit 1
        fi
+    echo
 done
