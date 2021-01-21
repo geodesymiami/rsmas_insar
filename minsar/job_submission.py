@@ -679,6 +679,25 @@ class JOB_SUBMIT:
                job_file_lines.append("module load python_cacher \n")
                job_file_lines.append("export PYTHON_IO_CACHE_CWD=0\n")
 
+               copy_to_tmp_steps = ['fullBurst_geo2rdr', 'fullBurst_resample', 'generate_burst_igram', 'unwrap']
+               if any(x in job_file_name for x in copy_to_tmp_steps):
+                  job_file_lines.append( '\n### copy infiles to local /tmp and adjust xml files ###\n' )
+                  if 'stampede2' in hostname:
+                      job_file_lines.append( 'export CDTOOL=/scratch/01255/siliu/collect_distribute\n' )
+                  elif 'frontera' in hostname:
+                      job_file_lines.append( 'export CDTOOL=/scratch1/01255/siliu/collect_distribute\n' )
+
+                  job_file_lines.append( 'module load intel/19.1.1\n' )
+                  job_file_lines.append( 'export PATH=${PATH}:${CDTOOL}/bin\n' )
+                  job_file_lines.append( 'distribute.bash ' + self.out_dir + '/reference\n\n' )
+
+                  if 'fullBurst_geo2rdr' in job_file_name:
+                      job_file_lines.append( 'distribute.bash ' + self.out_dir + '/geom_reference\n' )
+
+                  job_file_lines.append( 'files="/tmp/*reference/*.xml /tmp/*reference/*/*.xml"\n' )
+                  job_file_lines.append( 'old=' + self.out_dir + '\n' )
+                  job_file_lines.append( 'srun sed -i "s|$old|/tmp|g" $files\n' )
+
             if self.remora:
                 job_file_lines.append("\nremora $LAUNCHER_DIR/paramrun\n")
                 job_file_lines.append("\nmv remora_$SLURM_JOB_ID remora_" + os.path.basename(batch_file) + "_$SLURM_JOB_ID\n")

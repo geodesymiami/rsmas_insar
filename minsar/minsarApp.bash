@@ -223,7 +223,7 @@ if [[ $dem_flag == "1" ]]; then
 fi
 
 if [[ $jobfiles_flag == "1" ]]; then
-    cmd="create_runfiles.py $template_file --jobfiles"
+    cmd="create_runfiles.py $template_file --jobfiles --queue $QUEUENAME"
     echo "Running.... $cmd >create_jobfiles.e 1>out_create_jobfiles.o"
     $cmd 2>create_jobfiles.e 1>out_create_jobfiles.o
     exit_status="$?"
@@ -231,6 +231,16 @@ if [[ $jobfiles_flag == "1" ]]; then
        echo "create_jobfile.py exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
+    
+    # modify config files to use node-local /tmp 
+    files="configs/*_fullBurst_geo2rdr_* configs/*_fullBurst_resample_*"
+    old="reference : $PWD"
+    new="reference : /tmp"
+    sed -i "s|$old|$new|g" $files
+
+    old="geom_referenceDir : $PWD"
+    new="geom_referenceDir : /tmp"
+    sed -i "s|$old|$new|g" $files
 fi
 
 if [[ $ifgrams_flag == "1" ]]; then

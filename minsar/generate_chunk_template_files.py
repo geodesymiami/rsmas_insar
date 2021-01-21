@@ -55,7 +55,7 @@ def  run_generate_chunk_template_files(inps):
     chunk_templates_dir = inps.work_dir + '/chunk_templates'
     os.makedirs(chunk_templates_dir, exist_ok=True)
  
-    commands_file = inps.work_dir + '/commands_minsar.txt'
+    commands_file = inps.work_dir + '/minsar_commands.txt'
     f = open(commands_file, "w")
 
     if inps.download_flag == True:

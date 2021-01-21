@@ -50,8 +50,8 @@ function submit_job_conditional {
 
     declare -A  step_io_load_list
 
-    step_max_tasks_unit=1000
-    total_max_tasks=1500
+    step_max_tasks_unit=1500
+    total_max_tasks=3000
 
     # IO load for each step. For step_io_load=1 the maximum tasks allowed is step_max_tasks_unit
     # for step_io_load=2 the maximum tasks allowed is step_max_tasks_unit/2
@@ -71,7 +71,7 @@ function submit_job_conditional {
         [generate_burst_igram]=1
         [merge_burst_igram]=3
         [filter_coherence]=1
-        [unwrap]=2
+        [unwrap]=1
     )
 
     file=$1
@@ -266,11 +266,10 @@ for g in "${globlist[@]}"; do
     for (( j=0; j < "${#jobnumbers[@]}"; j++)); do
         jobnumber=${jobnumbers[$j]}
 
-        # Parse out the state of the job from the sacct function.
+        # Parse out the state of the job from the sacct function (3rd line following ----- if there are multiple steps)
         # Format state to be all uppercase (PENDING, RUNNING, or COMPLETED)
         # and remove leading whitespace characters.
-        state=$(sacct --format="State" -j $jobnumber | grep "\w[[:upper:]]\w")
-        state="$(echo -e "${state}" | sed -e 's/^[[:space:]]*//')"
+        state=$(sacct --format="State" -j $jobnumber | sed -e 's/^[[:space:]]*//' | head -3 | tail -1 )
 
         # Keep checking the state while it is not "COMPLETED"
         secs=0
@@ -281,8 +280,7 @@ for g in "${globlist[@]}"; do
                 echo "$(basename $WORKDIR) $(basename "$file"), ${jobnumber} is not finished yet. Current state is '${state}'"
             fi
 
-            state=$(sacct --format="State" -j $jobnumber | grep "\w[[:upper:]]\w")
-            state="$(echo -e "${state}" | sed -e 's/^[[:space:]]*//')"
+            state=$(sacct --format="State" -j $jobnumber | sed -e 's/^[[:space:]]*//' | head -3 | tail -1 )
 
                 # Check if "COMPLETED" is anywhere in the state string variables.
                 # This gets rid of some strange special character issues.
