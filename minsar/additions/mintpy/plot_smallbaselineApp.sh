@@ -92,8 +92,11 @@ if [ $plot_timeseries -eq 1 ]; then
     for tropo in ERA5 ECMWF MERRA NARR tropHgt; do
         file=timeseries_${tropo}.h5;                test -f $file && $view $file $opt >> $log_file &
         file=timeseries_${tropo}_demErr.h5;         test -f $file && $view $file $opt >> $log_file &
+        file=timeseries_${tropo}_SET.h5;            test -f $file && $view $file $opt >> $log_file &
+        file=timeseries_${tropo}_SET_demErr.h5;     test -f $file && $view $file $opt >> $log_file &
         file=timeseries_${tropo}_ramp.h5;           test -f $file && $view $file $opt >> $log_file &
         file=timeseries_${tropo}_ramp_demErr.h5;    test -f $file && $view $file $opt >> $log_file &
+
     done
 
     #w/o trop delay correction
