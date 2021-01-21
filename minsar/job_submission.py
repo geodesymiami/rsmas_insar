@@ -678,6 +678,7 @@ class JOB_SUBMIT:
 
                job_file_lines.append("module load python_cacher \n")
                job_file_lines.append("export PYTHON_IO_CACHE_CWD=0\n")
+               job_file_lines.append("module load ooops\n")
 
                copy_to_tmp_steps = ['fullBurst_geo2rdr', 'fullBurst_resample', 'generate_burst_igram', 'unwrap']
                if any(x in job_file_name for x in copy_to_tmp_steps):
@@ -689,7 +690,7 @@ class JOB_SUBMIT:
 
                   job_file_lines.append( 'module load intel/19.1.1\n' )
                   job_file_lines.append( 'export PATH=${PATH}:${CDTOOL}/bin\n' )
-                  job_file_lines.append( 'distribute.bash ' + self.out_dir + '/reference\n\n' )
+                  job_file_lines.append( 'distribute.bash ' + self.out_dir + '/reference\n' )
 
                   if 'fullBurst_geo2rdr' in job_file_name:
                       job_file_lines.append( 'distribute.bash ' + self.out_dir + '/geom_reference\n' )
