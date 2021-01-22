@@ -72,11 +72,19 @@ function submit_job_conditional {
         [merge_burst_igram]=3
         [filter_coherence]=1
         [unwrap]=1
+
+        [smallbaseline_wrapper]=1
+        [insarmaps]=1
     )
 
     file=$1
 
-    step_name=$(echo $file | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,}.job)")
+    file_basename=$( basename $file )
+    if [[ $file_basename =~ [0-9] ]]; then
+       step_name=$(echo $file_basename | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,}.job)")
+    else
+       step_name=${file_basename%.*}
+    fi
     step_max_tasks=$(echo "$step_max_tasks_unit/${step_io_load_list[$step_name]}" | bc | awk '{print int($1)}')
 
     num_active_tasks_total=$(compute_total_tasks $file)
@@ -89,7 +97,7 @@ function submit_job_conditional {
     num_active_jobs=$(squeue -u $USER -h -t running,pending -r | wc -l )
     echo "Number of running/pending jobs: $num_active_jobs" >&2 
     echo "$num_active_tasks_total running/pending tasks across all jobs (maximum $total_max_tasks)" >&2
-    echo "step   $step_name: $num_active_tasks_step running/pending tasks (maximum $step_max_tasks)" >&2
+    echo "step $step_name: $num_active_tasks_step running/pending tasks (maximum $step_max_tasks)" >&2
     echo "$(basename $file): $num_tasks_job additional tasks" >&2
 
     if [[ $num_active_jobs -lt $MAX_JOBS_PER_QUEUE ]] && [[ $new_tasks_step -lt $step_max_tasks ]] && [[ $new_tasks_total -lt $total_max_tasks ]]; then
