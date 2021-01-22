@@ -53,12 +53,15 @@ def main(iargs=None):
         REMOTE_DIR = '/data/HDF5EOS/'
         destination = DATA_SERVER + ':' + REMOTE_DIR
 
-        rsync_list = [
+        scp_list = [
                 '/mintpy/pic',
                 '/mintpy/*.he5',
                 '/mintpy/inputs',
                 '/remora_*'
                 ]
+        
+        if inps.mintpy_products_all_flag:
+            scp_list = [ '/mintpy' ]
 
         command = 'ssh ' + DATA_SERVER + ' mkdir -p ' + REMOTE_DIR + project_name + '/mintpy'
         print (command)
@@ -66,7 +69,7 @@ def main(iargs=None):
         if status is not 0:
              raise Exception('ERROR in upload_data_products.py')
 
-        for pattern in rsync_list:
+        for pattern in scp_list:
             if ( len(glob.glob(inps.work_dir + '/' + pattern)) >= 1 ):
                 command = 'scp -r ' + inps.work_dir + pattern + ' ' + destination + project_name + '/'.join(pattern.split('/')[0:-1])
                 print (command)
