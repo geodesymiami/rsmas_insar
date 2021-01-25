@@ -232,8 +232,8 @@ if [[ $jobfiles_flag == "1" ]]; then
        exit 1;
     fi
     
-    # modify config files to use node-local /tmp 
-    files="configs/*_fullBurst_geo2rdr_* configs/*_fullBurst_resample_*"
+    # modify config files to use /tmp on compute node 
+    files="configs/config_baseline_* configs/*_fullBurst_geo2rdr_* configs/*_fullBurst_resample_* configs/config_igram_unw_*"
     old="reference : $PWD"
     new="reference : /tmp"
     sed -i "s|$old|$new|g" $files
@@ -241,6 +241,12 @@ if [[ $jobfiles_flag == "1" ]]; then
     old="geom_referenceDir : $PWD"
     new="geom_referenceDir : /tmp"
     sed -i "s|$old|$new|g" $files
+
+    files="configs/config_merge_* configs/*merge_igram*"
+    old="stack : $PWD"
+    new="stack : /tmp"
+    sed -i "s|$old|$new|g" $files
+
 fi
 
 if [[ $ifgrams_flag == "1" ]]; then
