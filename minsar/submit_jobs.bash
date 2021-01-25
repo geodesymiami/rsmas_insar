@@ -14,8 +14,13 @@ function compute_total_tasks {
     tasks=0
     for j in "${job_ids[@]}"; do
         task_file=$(scontrol show jobid -dd $j | grep -oP "(?<=Command=)(.*)(?=.job)")
-        num_tasks=$(cat $task_file | wc -l)
-        ((tasks=tasks+$num_tasks))
+	if [[ "$task_file" == *"insarmaps"* || "$task_file" == *"smallbaseline_wrapper"* ]]; then
+	    num_tasks=1
+	else
+            num_tasks=$(cat $task_file | wc -l)
+	fi
+       
+	((tasks=tasks+$num_tasks))
     done
 
     echo $tasks
@@ -27,7 +32,6 @@ function compute_tasks_for_step {
     stepname=$2
 
     IFS=$'\n'
-    #running_tasks=$(squeue -u $USER --format="%j %A" -rh)
     running_tasks=$(squeue -u $USER --format="%A" -rh)
     job_ids=($(echo $running_tasks | grep -oP "\d{4,}"))
 
@@ -37,7 +41,13 @@ function compute_tasks_for_step {
     for j in "${job_ids[@]}"; do
 	task_file=$(scontrol show jobid -dd $j | grep -oP "(?<=Command=)(.*)(?=.job)")
 	if [[ "$task_file" == *"$stepname"* ]]; then
-	    num_tasks=$(cat $task_file | wc -l)
+	    task_file=$(scontrol show jobid -dd $j | grep -oP "(?<=Command=)(.*)(?=.job)")
+	    if [[ "$task_file" == *"insarmaps"* || "$task_file" == *"smallbaseline_wrapper"* ]]; then
+		num_tasks=1
+	    else
+		num_tasks=$(cat $task_file | wc -l)
+	    fi
+
 	    ((tasks=tasks+$num_tasks))
 	fi
     done
@@ -79,18 +89,18 @@ function submit_job_conditional {
 
     file=$1
 
-    file_basename=$( basename $file )
-    if [[ $file_basename =~ [0-9] ]]; then
-       step_name=$(echo $file_basename | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,}.job)")
-    else
-       step_name=${file_basename%.*}
-    fi
+    step_name=$(echo $file | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,}.job)|insarmaps|smallbaseline_wrapper")
     step_max_tasks=$(echo "$step_max_tasks_unit/${step_io_load_list[$step_name]}" | bc | awk '{print int($1)}')
 
     num_active_tasks_total=$(compute_total_tasks $file)
     num_active_tasks_step=$(compute_tasks_for_step $file $step_name)
-    num_tasks_job=$(cat ${file%.*} | wc -l)
 
+    if [[ "$file" == *"insarmaps"* || "$file" == *"smallbaseline_wrapper"* ]]; then
+	num_tasks_job=1
+    else
+	num_tasks_job=$(cat ${file%.*} | wc -l)
+    fi
+    
     new_tasks_step=$(($num_active_tasks_step+$num_tasks_job))
     new_tasks_total=$(($num_active_tasks+$num_tasks_job))
 
