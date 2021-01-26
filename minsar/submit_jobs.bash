@@ -1,60 +1,69 @@
 ##! /bin/bash
-#set -x
-#trap read debug
 
-function compute_total_tasks {
-    file=$1
-    
-    IFS=$'\n'
+function get_active_jobids {
     running_tasks=$(squeue -u $USER --format="%A" -rh)
     job_ids=($(echo $running_tasks | grep -oP "\d{4,}"))
+    echo "${job_ids[@]}"
+    return 0
+}
 
-    unset IFS
+function num_tasks_for_file {
+    file=$1
+    if [[ "$file" == *"insarmaps"* || "$file" == *"smallbaseline_wrapper"* ]]; then
+        num_tasks=1
+    else
+        num_tasks=$(cat $file | wc -l)
+    fi
+    echo $num_tasks
+    return 0
+}
+
+function compute_num_tasks {
+    stepname=$1
+
+    job_ids=$(get_active_jobids)
 
     tasks=0
     for j in "${job_ids[@]}"; do
         task_file=$(scontrol show jobid -dd $j | grep -oP "(?<=Command=)(.*)(?=.job)")
-	if [[ "$task_file" == *"insarmaps"* || "$task_file" == *"smallbaseline_wrapper"* ]]; then
-	    num_tasks=1
-	else
-            num_tasks=$(cat $task_file | wc -l)
-	fi
-       
-	((tasks=tasks+$num_tasks))
+        if [[ "$task_file" == *"$stepname"* ]]; then
+            tasks=$(num_tasks_for_file $task_file)
+            ((tasks=tasks+$num_tasks))
+        fi
     done
 
     echo $tasks
     return 0
 }
 
-function compute_tasks_for_step {
-    file=$1
-    stepname=$2
+# function compute_tasks_for_step {
+#     file=$1
+#     stepname=$2
 
-    IFS=$'\n'
-    running_tasks=$(squeue -u $USER --format="%A" -rh)
-    job_ids=($(echo $running_tasks | grep -oP "\d{4,}"))
+#     IFS=$'\n'
+#     running_tasks=$(squeue -u $USER --format="%A" -rh)
+#     job_ids=($(echo $running_tasks | grep -oP "\d{4,}"))
 
-    unset IFS
+#     unset IFS
 
-    tasks=0
-    for j in "${job_ids[@]}"; do
-	task_file=$(scontrol show jobid -dd $j | grep -oP "(?<=Command=)(.*)(?=.job)")
-	if [[ "$task_file" == *"$stepname"* ]]; then
-	    task_file=$(scontrol show jobid -dd $j | grep -oP "(?<=Command=)(.*)(?=.job)")
-	    if [[ "$task_file" == *"insarmaps"* || "$task_file" == *"smallbaseline_wrapper"* ]]; then
-		num_tasks=1
-	    else
-		num_tasks=$(cat $task_file | wc -l)
-	    fi
+#     tasks=0
+#     for j in "${job_ids[@]}"; do
+# 	task_file=$(scontrol show jobid -dd $j | grep -oP "(?<=Command=)(.*)(?=.job)")
+# 	if [[ "$task_file" == *"$stepname"* ]]; then
+# 	    task_file=$(scontrol show jobid -dd $j | grep -oP "(?<=Command=)(.*)(?=.job)")
+# 	    if [[ "$task_file" == *"insarmaps"* || "$task_file" == *"smallbaseline_wrapper"* ]]; then
+# 		num_tasks=1
+# 	    else
+# 		num_tasks=$(cat $task_file | wc -l)
+# 	    fi
 
-	    ((tasks=tasks+$num_tasks))
-	fi
-    done
+# 	    ((tasks=tasks+$num_tasks))
+# 	fi
+#     done
 
-    echo $tasks
-    return 0
-}
+#     echo $tasks
+#     return 0
+# }
 
 function submit_job_conditional {
 
@@ -89,47 +98,47 @@ function submit_job_conditional {
 
     file=$1
 
+    # Isolate stepname from file name. Could be an ISCE runfile (run_00_*.job), insarmaps.job, or smallbaseline_wrapper.job
     step_name=$(echo $file | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,}.job)|insarmaps|smallbaseline_wrapper")
+    
+    # Compute maximum allowable tasks for this step
     step_max_tasks=$(echo "$step_max_tasks_unit/${step_io_load_list[$step_name]}" | bc | awk '{print int($1)}')
 
-    num_active_tasks_total=$(compute_total_tasks $file)
-    num_active_tasks_step=$(compute_tasks_for_step $file $step_name)
+    # Compute number of total active tasks and number of active tasks for curent step
+    num_active_tasks_total=$(compute_num_tasks)
+    num_active_tasks_step=$(compute_num_tasks $step_name)
 
-    if [[ "$file" == *"insarmaps"* || "$file" == *"smallbaseline_wrapper"* ]]; then
-	num_tasks_job=1
-    else
-	num_tasks_job=$(cat ${file%.*} | wc -l)
-    fi
+    # Get number of tasks associated with current jobfile
+    # insarmaps.job and smallbaseline_wrapper.job always have 1 task.
+    # ISCE runfiles have number of tasks equal to number of lines in associated launcher script
+    # Launcher script: "run_01_unpack_topo_reference_0.job" -> "run_01_unpack_topo_reference_0"
+    num_tasks_job=$(num_tasks_for_file $file)
     
+    # Compute new total number of tasks and tasks for current step
     new_tasks_step=$(($num_active_tasks_step+$num_tasks_job))
     new_tasks_total=$(($num_active_tasks+$num_tasks_job))
 
+    # Get active number of running jobs
     num_active_jobs=$(squeue -u $USER -h -t running,pending -r | wc -l )
+    
     echo "Number of running/pending jobs: $num_active_jobs" >&2 
     echo "$num_active_tasks_total running/pending tasks across all jobs (maximum $total_max_tasks)" >&2
     echo "step $step_name: $num_active_tasks_step running/pending tasks (maximum $step_max_tasks)" >&2
     echo "$(basename $file): $num_tasks_job additional tasks" >&2
 
     if [[ $num_active_jobs -lt $MAX_JOBS_PER_QUEUE ]] && [[ $new_tasks_step -lt $step_max_tasks ]] && [[ $new_tasks_total -lt $total_max_tasks ]]; then
-        job_submit_message=$(sbatch $file)
+        job_submit_message=$(sbatch $file | grep "Submitted batch job")
         exit_status="$?"
         if [[ $exit_status -ne 0 ]]; then
             echo "sbatch message: $job_submit_message" >&2
-            echo "sbatch submit error: exit code $exit_status. Sleep 30 seconds and try again" >&2
-            sleep 30
+            echo "sbatch submit error: exit code $exit_status. Sleep 60 seconds and try again" >&2
+            sleep 60
             job_submit_message=$(sbatch $file | grep "Submitted batch job")
             exit_status="$?"
             if [[ $exit_status -ne 0 ]]; then
-                echo "sbatch error message: $job_submit_message" >&2
-                echo "sbatch submit error: exit code $exit_status. Sleep 60 seconds and try again" >&2
-                sleep 60
-                job_submit_message=$(sbatch $file | grep "Submitted batch job")
-                exit_status="$?"
-                if [[ $exit_status -ne 0 ]]; then
-                    echo "sbatch error message: $job_submit_message" >&2
-                    echo "sbatch submit error again: exit code $exit_status. Exiting." >&2
-                    exit 1
-                fi
+                echo "sbatch message: $job_submit_message" >&2
+                echo "sbatch submit error: exit code $exit_status. Exiting with status code 1." >&2
+                exit 1
             fi
         fi
 
@@ -137,13 +146,18 @@ function submit_job_conditional {
 
         echo $jobnumber
         return 0
-    elif [[ $num_active_jobs -ge $MAX_JOBS_PER_QUEUE ]]; then
-	return 1
-    elif [[ $new_tasks_step -ge $step_max_tasks ]]; then
-	return 2
-    fi
+    else
+        if [[ $num_active_jobs -ge $MAX_JOBS_PER_QUEUE ]]; then
+            echo "Couldnt submit job (${file}), because there are $num_active_jobs active jobs right now (max: $MAX_JOBS_PER_QUEUE). Waiting 5 minutes to try again." >&2
+        elif [[ $new_tasks_step -ge $step_max_tasks ]]; then
+            echo "Couldnt submit job (${file}), because there would be $new_tasks_step active tasks for this step right now (max: $step_max_tasks). Waiting 5 minutes to try again." >&2
+        elif [[ $new_tasks_total -ge $total_max_tasks ]]; then
+            echo "Couldnt submit job (${file}), because there would be $new_tasks_total total active tasks right now (max: $total_max_tasks). Waiting 5 minutes to try again." >&2
+        fi
 
-    return 1
+        return 1
+
+    fi
 
 }
 
@@ -199,12 +213,12 @@ do
             shift # past argument
             shift # past value
             ;;
-	--stop)
-            stopstep="$2"
-            shift
-            shift
-            ;;
-	--dostep)
+        --stop)
+                stopstep="$2"
+                shift
+                shift
+                ;;
+        --dostep)
             startstep="$2"
             stopstep="$2"
             shift
@@ -266,12 +280,6 @@ for g in "${globlist[@]}"; do
         if [[ $exit_status -eq 0 ]]; then
             jobnumbers+=("$jobnumber")
         else
-	    if [[ $exit_status -eq 1 ]]; then
-		echo "Couldnt submit job (${file}), because there are $MAX_JOBS_PER_QUEUE active jobs right now. Waiting 5 minutes to submit next job."
-	    elif [[ $exit_status -eq 2 ]]; then
-		echo "Couldnt submit job (${file}), because there are too many active tasks for this step right now. Waiting 5 minutes to submit next job."
-	    fi
-
             f=$((f-1))
             sleep 300 # sleep for 5 minutes
         fi
@@ -321,19 +329,19 @@ for g in "${globlist[@]}"; do
                 # Resubmit as a new job number
                 jobnumber=$(submit_job_conditional $jf)
                 exit_status="$?"
-		if [[ $exit_status -eq 0 ]]; then
-		    jobnumbers+=("$jobnumber")
-		    files+=("$jf")
-		    echo "${jf} resubmitted as jobumber: ${jobnumber}"
-		else
-		    echo "sbatch re-submit error message: $jobnumber"
+                if [[ $exit_status -eq 0 ]]; then
+                    jobnumbers+=("$jobnumber")
+                    files+=("$jf")
+                    echo "${jf} resubmitted as jobumber: ${jobnumber}"
+                else
+                    echo "sbatch re-submit error message: $jobnumber"
                     echo "sbatch re-submit error: exit code $exit_status. Exiting."
                     exit 1
-		fi
+                fi
 
                 break;
 
-	    elif [[ $state == *"COMPLETED"* ]] && [[ $state != "" ]]; then
+	        elif [[ $state == *"COMPLETED"* ]] && [[ $state != "" ]]; then
                 state="COMPLETED"
                 echo "${jobnumber} is complete"
                 break;
