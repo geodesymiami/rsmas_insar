@@ -9,6 +9,7 @@ function get_active_jobids {
 
 function num_tasks_for_file {
     file=$1
+    file="${file%.*}"
     if [[ "$file" == *"insarmaps"* || "$file" == *"smallbaseline_wrapper"* ]]; then
         num_tasks=1
     else
@@ -21,13 +22,13 @@ function num_tasks_for_file {
 function compute_num_tasks {
     stepname=$1
 
-    job_ids=$(get_active_jobids)
+    job_ids=($(get_active_jobids))
 
     tasks=0
     for j in "${job_ids[@]}"; do
         task_file=$(scontrol show jobid -dd $j | grep -oP "(?<=Command=)(.*)(?=.job)")
         if [[ "$task_file" == *"$stepname"* ]]; then
-            tasks=$(num_tasks_for_file $task_file)
+            num_tasks=$(num_tasks_for_file $task_file)
             ((tasks=tasks+$num_tasks))
         fi
     done
@@ -100,7 +101,7 @@ function submit_job_conditional {
 
     # Isolate stepname from file name. Could be an ISCE runfile (run_00_*.job), insarmaps.job, or smallbaseline_wrapper.job
     step_name=$(echo $file | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,}.job)|insarmaps|smallbaseline_wrapper")
-    
+
     # Compute maximum allowable tasks for this step
     step_max_tasks=$(echo "$step_max_tasks_unit/${step_io_load_list[$step_name]}" | bc | awk '{print int($1)}')
 
@@ -111,7 +112,7 @@ function submit_job_conditional {
     # Get number of tasks associated with current jobfile
     # insarmaps.job and smallbaseline_wrapper.job always have 1 task.
     # ISCE runfiles have number of tasks equal to number of lines in associated launcher script
-    # Launcher script: "run_01_unpack_topo_reference_0.job" -> "run_01_unpack_topo_reference_0"
+    # Launcher script: "run_01_unpack_topo_reference_0.job" -> "run_01_unpack_topo_reference_0"    
     num_tasks_job=$(num_tasks_for_file $file)
     
     # Compute new total number of tasks and tasks for current step
@@ -285,7 +286,7 @@ for g in "${globlist[@]}"; do
         fi
 
     done
-
+    unset IFS
     echo "Jobs submitted: ${jobnumbers[@]}"
     sleep 5
     # Wait for each job to complete
