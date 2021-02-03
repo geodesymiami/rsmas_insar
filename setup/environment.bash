@@ -26,7 +26,7 @@ export ISCE_HOME=${RSMASINSAR_HOME}/3rdparty/miniconda3/lib/python3.7/site-packa
 #export ISCE_STACK=${RSMASINSAR_HOME}/sources/isce2/contrib/stack/topsStack
 export ISCE_STACK=${RSMASINSAR_HOME}/sources/isce2/contrib/stack
 export MINTPY_HOME=${RSMASINSAR_HOME}/sources/MintPy
-export MINOPY_HOME=${RSMASINSAR_HOME}/sources/minopy
+export MINOPY_HOME=${RSMASINSAR_HOME}/sources/MiNoPy
 export MIMTPY_HOME=${RSMASINSAR_HOME}/sources/MimtPy
 export JOBDIR=${WORKDIR}/JOBS
 export OPERATIONS=${WORKDIR}/OPERATIONS
@@ -86,7 +86,7 @@ export PYTHONWARNINGS="ignore"
 #####################################
 export PATH=${PATH}:${SSARAHOME}
 export PATH=${PATH}:${SSARA_ASF}
-export PATH=${PATH}:${MINOPY_HOME}
+export PATH=${PATH}:${MINOPY_HOME}/minopy
 export PATH=${PATH}:${MIMTPY_HOME}/mimtpy
 export PATH=${PATH}:${RSMASINSAR_HOME}/minsar:${RSMASINSAR_HOME}/minsar/utils
 export PATH=${PATH}:${RSMASINSAR_HOME}/minsar
