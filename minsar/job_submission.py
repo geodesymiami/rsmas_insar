@@ -865,7 +865,7 @@ def auto_template_not_existing_options(args):
     job_options = ['QUEUENAME', 'CPUS_PER_NODE', 'THREADS_PER_CORE', 'MAX_JOBS_PER_WORKFLOW', 'MAX_JOBS_PER_QUEUE',
                    'WALLTIME_FACTOR', 'MEM_PER_NODE', 'job_submission_scheme']
 
-    if args.custom_template_file:
+    if hasattr(args, 'custom_template_file'):
         from minsar.objects.dataset_template import Template
         template = Template(args.custom_template_file).options
 
