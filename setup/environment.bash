@@ -21,7 +21,7 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 
 ############ FOR PROCESSING  #########
 export SSARAHOME=${RSMASINSAR_HOME}/3rdparty/SSARA
-export ISCE_HOME=${RSMASINSAR_HOME}/3rdparty/miniconda3/lib/python3.7/site-packages/isce
+export ISCE_HOME=${RSMASINSAR_HOME}/3rdparty/miniconda3/lib/python3.8/site-packages/isce
 #export ISCE_STACK=${RSMASINSAR_HOME}/sources/isce2/contrib/stack/stripmapStack
 #export ISCE_STACK=${RSMASINSAR_HOME}/sources/isce2/contrib/stack/topsStack
 export ISCE_STACK=${RSMASINSAR_HOME}/sources/isce2/contrib/stack
@@ -63,7 +63,8 @@ export CONDA_PREFIX=${PYTHON3DIR}
 export PROJ_LIB=${PYTHON3DIR}/share/proj
 export GDAL_DATA=${PYTHON3DIR}/share/gdal
 
-export PYTHONPATH=${PYTHONPATH-""}
+export PYTHONPATH=${PYTHON3DIR-""}
+#export PYTHONPATH=${PYTHONPATH-""}
 export PYTHONPATH=${PYTHONPATH}:${MINTPY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${INT_SCR}
 export PYTHONPATH=${PYTHONPATH}:${PYTHON3DIR}/lib/python3.7/site-packages:${ISCE_HOME}:${ISCE_HOME}/components
@@ -84,7 +85,8 @@ export PYTHONWARNINGS="ignore"
 #####################################
 ############  PATH  #################
 #####################################
-export PATH=${PATH}:${SSARAHOME}
+#export PATH=${PATH}:${SSARAHOME}
+export PATH=${SSARAHOME}
 export PATH=${PATH}:${SSARA_ASF}
 export PATH=${PATH}:${MINOPY_HOME}/minopy
 export PATH=${PATH}:${MIMTPY_HOME}/mimtpy
