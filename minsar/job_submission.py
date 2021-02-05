@@ -298,11 +298,18 @@ class JOB_SUBMIT:
         job_file_lines = self.get_job_file_lines(job_name, job_file_name, work_dir=work_dir,
                                                  number_of_nodes=number_of_nodes)
         job_file_lines.append("\nfree")
+
+        if self.scheduler == 'SLURM':
+            job_file_lines.append("\nsmodule load python_cacher \n")
+            job_file_lines.append("export PYTHON_IO_CACHE_CWD=0\n")
+            job_file_lines.append("module load ooops\n")
+
         if self.remora:
             job_file_lines.append('\nmodule load remora')
             job_file_lines.append("\nremora " + command_line + "\n")
         else:
             job_file_lines.append("\n" + command_line + "\n")
+
 
         # write lines to .job file
         job_file_name = "{0}.job".format(job_file_name)
