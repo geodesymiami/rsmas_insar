@@ -69,6 +69,7 @@ mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 cp -p ../minsar/additions/mintpy/smallbaselineApp_auto.cfg ../sources/MintPy/mintpy/defaults/
 cp -p ../minsar/additions/mintpy/plot_smallbaselineApp.sh ../sources/MintPy/mintpy/sh/
 
+cd ../sources/isce2; git checkout 0c54c9d422ad90adfddfd6bcb68a9a3d33f4997d ; cd ../minsar/setup
 cp -p ../minsar/additions/isce/prepRawCSK.py ../sources/isce2/contrib/stack/stripmapStack
 cp -p ../minsar/additions/isce/invertMisreg.py ../sources/isce2/contrib/stack/stripmapStack
 cp -p ../minsar/additions/stackStripMap.py $ISCE_STACK/stripmapStack
