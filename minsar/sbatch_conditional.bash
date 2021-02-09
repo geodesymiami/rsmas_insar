@@ -38,7 +38,7 @@ function compute_num_tasks {
 }
 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-helptext="                                                                         \n\
+    helptext="                                                                         \n\
 Job submission script that handles conditional job submission based on io load.
 usage: sbatch_conditional.bash job_file_pattern [--step_name] [--step_max_tasks] [--total_max_tasks] [--max_time] [--help]\n\
                                                                                                          \n\
@@ -99,10 +99,20 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
+abb_stepname=$(echo "$(echo $step_name | cut -c -10)...$(echo "${step_name%.*}" | rev | cut -c -5 | rev)")
+
+printf "%0.s-" {1..146} >&2
+printf "\n" >&2
+printf "| %-20s | %-15s | %-20s | %-32s | %-20s | %-20s | %s \n" "File Name" "Active Jobs" "Total Active Tasks" "$abb_stepname Active Tasks" "Additional Tasks" "Message" >&2
+printf "%0.s-" {1..146} >&2
+printf "\n" >&2
+
+
+jns=()
 files=($file_pattern*.job)
 for f in "${files[@]}"; do
     time_elapsed=0
-    echo "Submitting file: $f" >&2
+    #echo "Submitting file: $f" >&2
     while [[ $time_elapsed -lt $max_time ]]; do
         # Compute number of total active tasks and number of active tasks for curent step
         num_active_tasks_total=$(compute_num_tasks)
@@ -121,11 +131,14 @@ for f in "${files[@]}"; do
         # Get active number of running jobs
         num_active_jobs=$(squeue -u $USER -h -t running,pending -r | wc -l )
         
-        echo "Number of running/pending jobs: $num_active_jobs" >&2  
-        echo "$num_active_tasks_total running/pending tasks across all jobs (maximum $total_max_tasks)" >&2 
-        echo "step $step_name: $num_active_tasks_step running/pending tasks (maximum $step_max_tasks)" >&2
-        echo "$(basename $f): $num_tasks_job additional tasks" >&2
-        
+        #echo "Number of running/pending jobs: $num_active_jobs" >&2  
+        #echo "$num_active_tasks_total running/pending tasks across all jobs (maximum $total_max_tasks)" >&2 
+        #echo "step $step_name: $num_active_tasks_step running/pending tasks (maximum $step_max_tasks)" >&2
+        #echo "$(basename $f): $num_tasks_job additional tasks" >&2
+        abb_fname=$(echo "$(echo $(basename $f) | cut -c -10)...$(echo "${f%.*}" | rev | cut -c -7 | rev)")
+
+	printf "| %-20s | %-15s | %-20s | %-32s | %-20s | %s" "$abb_fname" "$num_active_jobs/$MAX_JOBS_PER_QUEUE" "$num_active_tasks_total/$total_max_tasks" "$num_active_tasks_step/$step_max_tasks" "$num_tasks_job" >&2
+
         if [[ $num_active_jobs -lt $MAX_JOBS_PER_QUEUE ]] && [[ $new_tasks_step -lt $step_max_tasks ]] && [[ $new_tasks_total -lt $total_max_tasks ]]; then
             job_submit_message=$(sbatch $f | grep "Submitted batch job")
             exit_status="$?"
@@ -143,22 +156,30 @@ for f in "${files[@]}"; do
             fi
 
             jobnumber=$(grep -oE "[0-9]{7}" <<< $job_submit_message)
-
-            echo $jobnumber
+	    printf "%-20s |\n" "Submitted: $jobnumber" >&2
+	    printf "%0.s-" {1..146} >&2
+	    printf "\n" >&2
+	    jns+=($jobnumber)
+            #echo $jobnumber
             break
         else
-            if [[ $num_active_jobs -ge $MAX_JOBS_PER_QUEUE ]]; then
-                echo "Couldnt submit job (${f}), because there are $num_active_jobs active jobs right now (max: $MAX_JOBS_PER_QUEUE). Waiting 5 minutes to try again." >&2 
-            elif [[ $new_tasks_step -ge $step_max_tasks ]]; then
-                echo "Couldnt submit job (${f}), because there would be $new_tasks_step active tasks for this step right now (max: $step_max_tasks). Waiting 5 minutes to try again." >&2 
-            elif [[ $new_tasks_total -ge $total_max_tasks ]]; then
-                echo "Couldnt submit job (${f}), because there would be $new_tasks_total total active tasks right now (max: $total_max_tasks). Waiting 5 minutes to try again." >&2 
-            fi
+            #if [[ $num_active_jobs -ge $MAX_JOBS_PER_QUEUE ]]; then
+            #    echo "Couldnt submit job (${f}), because there are $num_active_jobs active jobs right now (max: $MAX_JOBS_PER_QUEUE). Waiting 5 minutes to try again." >&2 
+            #elif [[ $new_tasks_step -ge $step_max_tasks ]]; then
+            #    echo "Couldnt submit job (${f}), because there would be $new_tasks_step active tasks for this step right now (max: $step_max_tasks). Waiting 5 minutes to try again." >&2 
+            #elif [[ $new_tasks_total -ge $total_max_tasks ]]; then
+            #    echo "Couldnt submit job (${f}), because there would be $new_tasks_total total active tasks right now (max: $total_max_tasks). Waiting 5 minutes to try again." >&2 
+            #fi
+
+	    printf "%-20s |\n" "Wait 5 min" >&2
+            printf "%0.s-" {1..146} >&2
+            printf "\n" >&2
+
         fi
 
         sleep 300
         time_elapsed=$((time_elapsed+300))
-        echo "Time Elapsed: $time_elapsed of $max_time (7 days)" >&2 
+        #echo "Time Elapsed: $time_elapsed of $max_time (7 days)" >&2 
     done
 done
 
@@ -171,5 +192,6 @@ done
 if [[ $time_elapsed -ge $max_time ]]; then
     exit 1
 else
+    echo "${jns[@]}"
     exit 0
 fi
