@@ -300,7 +300,7 @@ class JOB_SUBMIT:
         job_file_lines.append("\nfree")
 
         if self.scheduler == 'SLURM':
-            job_file_lines.append("\nsmodule load python_cacher \n")
+            job_file_lines.append("\nmodule load python_cacher \n")
             job_file_lines.append("export PYTHON_IO_CACHE_CWD=0\n")
             job_file_lines.append("module load ooops\n")
 
