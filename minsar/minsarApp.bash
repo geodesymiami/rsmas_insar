@@ -247,6 +247,17 @@ if [[ $jobfiles_flag == "1" ]]; then
     new="stack : /tmp"
     sed -i "s|$old|$new|g" $files
 
+    files="configs/config_generate_igram_*"
+    old="reference : $PWD/coreg_secondarys"
+    new="reference : /tmp"
+    sed -i "s|$old|$new|g" $files
+    old="secondary : $PWD/coreg_secondarys"
+    new="secondary : /tmp"
+    sed -i "s|$old|$new|g" $files
+    old="reference : $PWD"
+    new="reference : /tmp"
+    sed -i "s|$old|$new|g" $files
+
 fi
 
 if [[ $ifgrams_flag == "1" ]]; then

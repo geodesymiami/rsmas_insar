@@ -40,10 +40,9 @@ git clone https://github.com/TACC/launcher.git 3rdparty/launcher ;
 ```
 cd setup
 rm -rf ../3rdparty/miniconda3
-miniconda_version=Miniconda3-py37_4.8.2-MacOSX-x86_64.sh
-miniconda_version=Miniconda3-py37_4.8.2-Linux-x86_64.sh
 #miniconda_version=Miniconda3-latest-MacOSX-x86_64.sh    # python 3.8  - does not seem to work
-#miniconda_version=Miniconda3-latest-Linux-x86_64.sh
+miniconda_version=Miniconda3-latest-Linux-x86_64.sh
+miniconda_version=Miniconda3-py38_4.9.2-Linux-x86_64.sh
 wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate -O $miniconda_version #; if ($? != 0) exit; 
 chmod 755 $miniconda_version
 mkdir -p ../3rdparty
@@ -70,6 +69,7 @@ mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 cp -p ../minsar/additions/mintpy/smallbaselineApp_auto.cfg ../sources/MintPy/mintpy/defaults/
 cp -p ../minsar/additions/mintpy/plot_smallbaselineApp.sh ../sources/MintPy/mintpy/sh/
 
+cd ../sources/isce2; git checkout 0c54c9d422ad90adfddfd6bcb68a9a3d33f4997d ; cd ../minsar/setup
 cp -p ../minsar/additions/isce/prepRawCSK.py ../sources/isce2/contrib/stack/stripmapStack
 cp -p ../minsar/additions/isce/invertMisreg.py ../sources/isce2/contrib/stack/stripmapStack
 cp -p ../minsar/additions/stackStripMap.py $ISCE_STACK/stripmapStack
