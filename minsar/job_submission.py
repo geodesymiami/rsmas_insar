@@ -687,11 +687,12 @@ class JOB_SUBMIT:
                job_file_lines.append("export PYTHON_IO_CACHE_CWD=0\n")
                job_file_lines.append("module load ooops\n")
 
-               copy_reference_steps = ['average_baseline', 'fullBurst_geo2rdr', 'fullBurst_resample', 'generate_burst_igram', 'unwrap']
+               copy_reference_steps = ['average_baseline', 'fullBurst_geo2rdr', 'fullBurst_resample', 'unwrap']
                copy_geom_reference_steps = ['fullBurst_geo2rdr']
                copy_stack_steps = ['merge_reference_secondary_slc', 'merge_burst_igram']
+               copy_coreg_secondarys = ['generate_burst_igram']
 
-               copy_to_tmp_steps = copy_reference_steps + copy_geom_reference_steps + copy_stack_steps
+               copy_to_tmp_steps = copy_reference_steps + copy_geom_reference_steps + copy_stack_steps + copy_coreg_secondarys
                if any(x in job_file_name for x in copy_to_tmp_steps):
                   job_file_lines.append( '\n### copy infiles to local /tmp and adjust xml files ###\n' )
                   if 'stampede2' in hostname:
@@ -704,14 +705,47 @@ class JOB_SUBMIT:
 
                   if any(x in job_file_name for x in copy_reference_steps):
                       job_file_lines.append( 'distribute.bash ' + self.out_dir + '/reference\n' )
+                      job_file_lines.append( 'files="/tmp/*reference/*.xml /tmp/*reference/*/*.xml /tmp/stack/*xml"\n' )
+                      job_file_lines.append( 'old=' + self.out_dir + '\n' )
+                      job_file_lines.append( 'srun sed -i "s|$old|/tmp|g" $files 2> /dev/null\n' )
                   if any(x in job_file_name for x in copy_geom_reference_steps):
                       job_file_lines.append( 'distribute.bash ' + self.out_dir + '/geom_reference\n' )
+                      job_file_lines.append( 'files="/tmp/*reference/*.xml /tmp/*reference/*/*.xml /tmp/stack/*xml"\n' )
+                      job_file_lines.append( 'old=' + self.out_dir + '\n' )
+                      job_file_lines.append( 'srun sed -i "s|$old|/tmp|g" $files 2> /dev/null\n' )
                   if any(x in job_file_name for x in copy_stack_steps):
                       job_file_lines.append( 'distribute.bash ' + self.out_dir + '/stack\n' )
+                      job_file_lines.append( 'files="/tmp/*reference/*.xml /tmp/*reference/*/*.xml /tmp/stack/*xml"\n' )
+                      job_file_lines.append( 'old=' + self.out_dir + '\n' )
+                      job_file_lines.append( 'srun sed -i "s|$old|/tmp|g" $files 2> /dev/null\n' )
 
-                  job_file_lines.append( 'files="/tmp/*reference/*.xml /tmp/*reference/*/*.xml /tmp/stack/*xml"\n' )
-                  job_file_lines.append( 'old=' + self.out_dir + '\n' )
-                  job_file_lines.append( 'srun sed -i "s|$old|/tmp|g" $files 2> /dev/null\n' )
+
+               if 'generate_burst_igram' in job_file_name:
+                  #job_file_lines.append( 'mkdir /tmp/coreg_secondarys \n' )
+                  str= """date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file + """ | awk -F _ '{printf "%s\\n%s\\n",$4,$5}' | sort -n | uniq) )"""
+                  job_file_lines.append( str + '\n' )
+
+                  job_file_lines.append( """for date in "${date_list[@]}"; do\n""" )
+                  #job_file_lines.append( '    distribute.bash ' + self.out_dir + '/coreg_secondarys/' + '$date coreg_secondarys\n' )
+                  job_file_lines.append( '    distribute.bash ' + self.out_dir + '/coreg_secondarys/' + '$date\n' )
+                  job_file_lines.append( 'done\n\n' )
+
+                  job_file_lines.append( 'files1="/tmp/*/*.xml"\n' )
+                  job_file_lines.append( 'files2="/tmp/*/*/*.xml"\n' )
+                  job_file_lines.append( 'old=' + self.out_dir + '/coreg_secondarys\n' )
+                  job_file_lines.append( 'srun sed -i "s|$old|/tmp|g" $files1 2> /dev/null\n' )
+                  job_file_lines.append( 'srun sed -i "s|$old|/tmp|g" $files2 2> /dev/null\n' )
+
+                  str="""ref_date=( $(xmllint --xpath 'string(/productmanager_name/component[@name="instance"]/property[@name="ascendingnodetime"]/value)' """ + self.out_dir + """ reference/IW*.xml | cut -d ' ' -f 1 | sed "s|-||g") )"""
+                  job_file_lines.append('\n' + str + '\n' )
+                  job_file_lines.append( 'if [[ $date_list == *$ref_date* ]]; then\n' )
+                  job_file_lines.append( '   distribute.bash ' + self.out_dir + '/reference\n' )
+                  job_file_lines.append( '   files="/tmp/*reference/*.xml /tmp/*reference/*/*.xml"\n' )
+                  job_file_lines.append( '   old=' + self.out_dir + '\n' )
+                  job_file_lines.append( '   srun sed -i "s|$old|/tmp|g" $files 2> /dev/null\n' )
+                  job_file_lines.append( 'fi\n' )
+
+                      #import pdb; pdb.set_trace()
 
             if self.remora:
                 job_file_lines.append("\nremora $LAUNCHER_DIR/paramrun\n")
