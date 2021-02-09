@@ -139,11 +139,11 @@ for g in "${globlist[@]}"; do
     files=($g)
     echo "Jobfiles to run: ${files[@]}"
     jobnumbers=()
-    echo "F0: ${files[0]}"
+    #echo "File 0: ${files[0]}"
     file_pattern=$(echo "${files[0]}" | grep -oP "(.*)(?=_\d{1,}.job)|insarmaps|smallbaseline_wrapper")
     step_name=$(echo $file_pattern | grep -oP "(?<=run_\d{2}_)(.*)|insarmaps|smallbaseline_wrapper")
-    echo $file_pattern
-    echo $step_name
+    #echo "file_pattern: $file_pattern"
+    #echo "step_name :$step_name"
 
     step_max_tasks=$(echo "$step_max_tasks_unit/${step_io_load_list[$step_name]}" | bc | awk '{print int($1)}')
     jns=$(sbatch_conditional.bash $file_pattern --step_name $step_name --step_max_tasks $step_max_tasks --total_max_tasks $total_max_tasks)
