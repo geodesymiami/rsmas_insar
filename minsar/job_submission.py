@@ -741,7 +741,7 @@ class JOB_SUBMIT:
                   job_file_lines.append( 'srun sed -i "s|$old|/tmp|g" $files1 2> /dev/null\n' )
                   job_file_lines.append( 'srun sed -i "s|$old|/tmp|g" $files2 2> /dev/null\n' )
 
-                  str="""ref_date=( $(xmllint --xpath 'string(/productmanager_name/component[@name="instance"]/property[@name="ascendingnodetime"]/value)' """ + self.out_dir + """ reference/IW*.xml | cut -d ' ' -f 1 | sed "s|-||g") )"""
+                  str="""ref_date=( $(xmllint --xpath 'string(/productmanager_name/component[@name="instance"]/property[@name="ascendingnodetime"]/value)' """ + self.out_dir + """/reference/IW*.xml | cut -d ' ' -f 1 | sed "s|-||g") )"""
                   job_file_lines.append('\n' + str + '\n' )
                   job_file_lines.append( 'if [[ $date_list == *$ref_date* ]]; then\n' )
                   job_file_lines.append( '   distribute.bash ' + self.out_dir + '/reference\n' )
