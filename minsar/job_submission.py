@@ -188,7 +188,9 @@ class JOB_SUBMIT:
         if not email_notif is None:
             self.email_notif = email_notif
 
-        message_rsmas.log(self.work_dir, 'job_submission.py {a} --outdir {b} --writeonly'.format(a=batch_file, b=self.out_dir))
+        message_rsmas.log(self.work_dir, 'job_submission.py --template {t} {a} --outdir {b} '
+                                         '--writeonly'.format(t=self.custom_template_file,
+                                                              a=batch_file, b=self.out_dir))
 
         self.job_files = []
 
