@@ -188,16 +188,23 @@ class JOB_SUBMIT:
         if not email_notif is None:
             self.email_notif = email_notif
 
-        message_rsmas.log(self.work_dir, 'job_submission.py --template {t} {a} --outdir {b} '
-                                         '--writeonly'.format(t=self.custom_template_file,
-                                                              a=batch_file, b=self.out_dir))
 
         self.job_files = []
 
         if self.platform_name in supported_platforms:
-            print('\nWorking on a {} machine ...\n'.format(self.scheduler))
+            #print('\nWorking on a {} machine ...\n'.format(self.scheduler))
 
             self.get_memory_walltime(batch_file, job_type='batch')
+
+            if self.prefix == 'tops':
+                message_rsmas.log(self.work_dir, 'job_submission.py --template {t} {a} --outdir {b} '
+                                                 '--numBursts {c} --writeonly'.format(t=self.custom_template_file,
+                                                                                      a=batch_file, b=self.out_dir,
+                                                                                      c=self.num_bursts))
+            else:
+                message_rsmas.log(self.work_dir, 'job_submission.py --template {t} {a} --outdir {b} '
+                                                 '--writeonly'.format(t=self.custom_template_file,
+                                                                      a=batch_file, b=self.out_dir))
 
             with open(batch_file, 'r') as f:
                 tasks = f.readlines()
