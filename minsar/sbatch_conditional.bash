@@ -99,12 +99,10 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-abb_stepname=$(echo "$(echo $step_name | cut -c -10)...$(echo "${step_name%.*}" | rev | cut -c -5 | rev)")
-
-printf "%0.s-" {1..146} >&2
+printf "%0.s-" {1..121} >&2
 printf "\n" >&2
-printf "| %-20s | %-15s | %-20s | %-32s | %-20s | %-20s | %s \n" "File Name" "Active Jobs" "Total Active Tasks" "$abb_stepname Active Tasks" "Additional Tasks" "Message" >&2
-printf "%0.s-" {1..146} >&2
+printf "| %-20s | %-16s | %-17s | %-18s | %-11s | %-20s | %s \n" "File Name" "Additional Tasks" "Step Active Tasks" "Total Active Tasks" "Active Jobs"  "Message" >&2
+printf "%0.s-" {1..121} >&2
 printf "\n" >&2
 
 
@@ -135,9 +133,14 @@ for f in "${files[@]}"; do
         #echo "$num_active_tasks_total running/pending tasks across all jobs (maximum $total_max_tasks)" >&2 
         #echo "step $step_name: $num_active_tasks_step running/pending tasks (maximum $step_max_tasks)" >&2
         #echo "$(basename $f): $num_tasks_job additional tasks" >&2
-        abb_fname=$(echo "$(echo $(basename $f) | cut -c -10)...$(echo "${f%.*}" | rev | cut -c -7 | rev)")
+	fname=$(basename $f)
+	if [[ "${#fname}" -ge 20 ]]; then
+            abb_fname=$(echo "$(echo $(basename $f) | cut -c -10)...$(echo "${f%.*}" | rev | cut -c -7 | rev)")
+	else
+	    abb_fname=$fname
+	fi
 
-	printf "| %-20s | %-15s | %-20s | %-32s | %-20s | %s" "$abb_fname" "$num_active_jobs/$MAX_JOBS_PER_QUEUE" "$num_active_tasks_total/$total_max_tasks" "$num_active_tasks_step/$step_max_tasks" "$num_tasks_job" >&2
+	printf "| %-20s | %-16s | %-17s | %-18s | %-11s | %s" "$abb_fname" "$num_tasks_job" "$num_active_tasks_step/$step_max_tasks" "$num_active_tasks_total/$total_max_tasks" "$num_active_jobs/$MAX_JOBS_PER_QUEUE" >&2
 
         if [[ $num_active_jobs -lt $MAX_JOBS_PER_QUEUE ]] && [[ $new_tasks_step -lt $step_max_tasks ]] && [[ $new_tasks_total -lt $total_max_tasks ]]; then
             job_submit_message=$(sbatch $f | grep "Submitted batch job")
@@ -157,8 +160,8 @@ for f in "${files[@]}"; do
 
             jobnumber=$(grep -oE "[0-9]{7}" <<< $job_submit_message)
 	    printf "%-20s |\n" "Submitted: $jobnumber" >&2
-	    printf "%0.s-" {1..146} >&2
-	    printf "\n" >&2
+	    #printf "%0.s-" {1..136} >&2
+	    #printf "\n" >&2
 	    jns+=($jobnumber)
             #echo $jobnumber
             break
@@ -172,8 +175,8 @@ for f in "${files[@]}"; do
             #fi
 
 	    printf "%-20s |\n" "Wait 5 min" >&2
-            printf "%0.s-" {1..146} >&2
-            printf "\n" >&2
+            #printf "%0.s-" {1..136} >&2
+            #printf "\n" >&2
 
         fi
 
@@ -182,6 +185,9 @@ for f in "${files[@]}"; do
         #echo "Time Elapsed: $time_elapsed of $max_time (7 days)" >&2 
     done
 done
+
+printf "%0.s-" {1..121} >&2
+printf "\n" >&2
 
 # Isolate stepname from file name. Could be an ISCE runfile (run_00_*.job), insarmaps.job, or smallbaseline_wrapper.job
 #step_name=$(echo $file | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,}.job)|insarmaps|smallbaseline_wrapper")
