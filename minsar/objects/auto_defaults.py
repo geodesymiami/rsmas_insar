@@ -142,13 +142,13 @@ class PathFind:
                        'num_connections', 'num_overlap_connections', 'swath_num', 'bbox', 'text_cmd', 'exclude_dates',
                        'include_dates', 'azimuth_looks', 'range_looks', 'filter_strength', 'esd_coherence_threshold',
                        'snr_misreg_threshold', 'unw_method', 'polarization', 'coregistration', 'workflow', 'start_date',
-                       'stop_date', 'useGPU', 'rmFilter', 'num-process']
+                       'stop_date', 'useGPU', 'rmFilter', 'num_process', 'num_process4topo']
 
             templateKey = ['slcDir', 'orbitDir', 'auxDir', 'workingDir', 'demDir', 'referenceDate', 'numConnections',
                            'numOverlapConnections', 'subswath', 'boundingBox', 'textCmd', 'excludeDates',
                            'includeDates', 'azimuthLooks', 'rangeLooks', 'filtStrength', 'esdCoherenceThreshold',
                            'snrMisregThreshold', 'unwMethod', 'polarization', 'coregistration', 'workflow', 'startDate',
-                           'stopDate', 'useGPU', 'rmFilter', 'numProcess']
+                           'stopDate', 'useGPU', 'rmFilter', 'numProcess', 'numProcess4topo']
 
         templateKey = [stackprefix + '.' + x for x in templateKey]
 
