@@ -258,6 +258,33 @@ if [[ $jobfiles_flag == "1" ]]; then
     new="reference : /tmp"
     sed -i "s|$old|$new|g" $files
 
+    files="configs/config_merge_igram_*"
+    old="inp_reference : $PWD/interferograms"
+    new="inp_reference : /tmp"
+    sed -i "s|$old|$new|g" $files
+    old="dirname : $PWD/interferograms"
+    new="dirname : /tmp"
+    sed -i "s|$old|$new|g" $files
+
+    files="configs/config_igram_filt_coh_*"
+    old="input : $PWD/merged/interferograms"
+    new="input : /tmp"
+    sed -i "s|$old|$new|g" $files
+    old="slc1 : $PWD/merged/SLC"
+    new="slc1 : /tmp"
+    sed -i "s|$old|$new|g" $files
+    old="slc2 : $PWD/merged/SLC"
+    new="slc2 : /tmp"
+    sed -i "s|$old|$new|g" $files
+
+    files="configs/config_igram_unw_*"
+    old="ifg : $PWD/merged/interferograms"
+    new="ifg : /tmp"
+    sed -i "s|$old|$new|g" $files
+    old="coh : $PWD/merged/interferograms"
+    new="coh : /tmp"
+    sed -i "s|$old|$new|g" $files
+
 fi
 
 if [[ $ifgrams_flag == "1" ]]; then
