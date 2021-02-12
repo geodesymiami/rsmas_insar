@@ -71,8 +71,8 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-step_max_tasks_unit=1500
-total_max_tasks=3000
+step_max_tasks_unit=500
+total_max_tasks=1000
 # IO load for each step. For step_io_load=1 the maximum tasks allowed is step_max_tasks_unit
 # for step_io_load=2 the maximum tasks allowed is step_max_tasks_unit/2
 declare -A  step_io_load_list
@@ -90,7 +90,7 @@ step_io_load_list=(
     [extract_stack_valid_region]=1
     [merge_reference_secondary_slc]=1
     [generate_burst_igram]=1
-    [merge_burst_igram]=3
+    [merge_burst_igram]=1
     [filter_coherence]=1
     [unwrap]=1
 
