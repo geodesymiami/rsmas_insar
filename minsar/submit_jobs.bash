@@ -36,6 +36,7 @@ RUNFILES_DIR=$WORKDIR"/run_files"
 
 cd $WORKDIR
 
+randomorder=false
 startstep=1
 stopstep="insarmaps"
 
@@ -61,6 +62,10 @@ do
             startstep="$2"
             stopstep="$2"
             shift
+            shift
+            ;;
+        --random)
+            randomorder=true
             shift
             ;;
         *)
@@ -136,17 +141,27 @@ done
 
 
 for g in "${globlist[@]}"; do
-    files=($g)
-    echo "Jobfiles to run: ${files[@]}"
+    files=($(ls -1v $g ))
+    if $randomorder; then
+        files=( $(echo "${files[@]}" | sed -r 's/(.[^;]*;)/ \1 /g' | tr " " "\n" | shuf | tr -d " " ) )
+    fi
+
+    echo "Jobfiles to run:"
+    printf "%s\n" "${files[@]}"
+
     jobnumbers=()
-    #echo "File 0: ${files[0]}"
     file_pattern=$(echo "${files[0]}" | grep -oP "(.*)(?=_\d{1,}.job)|insarmaps|smallbaseline_wrapper")
     step_name=$(echo $file_pattern | grep -oP "(?<=run_\d{2}_)(.*)|insarmaps|smallbaseline_wrapper")
-    #echo "file_pattern: $file_pattern"
-    #echo "step_name :$step_name"
 
     step_max_tasks=$(echo "$step_max_tasks_unit/${step_io_load_list[$step_name]}" | bc | awk '{print int($1)}')
-    jns=$(sbatch_conditional.bash $file_pattern --step_name $step_name --step_max_tasks $step_max_tasks --total_max_tasks $total_max_tasks)
+
+    sbc_command="sbatch_conditional.bash $file_pattern --step_name $step_name --step_max_tasks $step_max_tasks --total_max_tasks $total_max_tasks"
+    if $randomorder; then
+        sbc_command="$sbc_command --random"
+        echo "Jobs are being submitted in random order. Submission order is likely different from the order above."
+    fi
+    jns=$($sbc_command)
+
     exit_status="$?"
     if [[ $exit_status -eq 0 ]]; then
 	jobnumbers=($jns)

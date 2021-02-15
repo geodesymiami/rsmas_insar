@@ -65,6 +65,7 @@ step_name=$file_pattern
 step_max_tasks=1500
 total_max_tasks=3000
 max_time=604800
+randomorder=false
 
 while [[ $# -gt 0 ]]
 do
@@ -91,6 +92,10 @@ do
             shift
             shift
             ;;
+        --random)
+            randomorder=true
+            shift
+            ;;
         *)
             POSITIONAL+=("$1") # save it in an array for later
             shift # past argument
@@ -107,7 +112,10 @@ printf "\n" >&2
 
 
 jns=()
-files=($file_pattern*.job)
+files=( $(ls -1v $file_pattern*.job) )
+if $randomorder; then
+    files=( $(echo "${files[@]}" | sed -r 's/(.[^;]*;)/ \1 /g' | tr " " "\n" | shuf | tr -d " " ) )
+fi
 for f in "${files[@]}"; do
     time_elapsed=0
     #echo "Submitting file: $f" >&2
