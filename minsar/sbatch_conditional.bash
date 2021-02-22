@@ -143,7 +143,7 @@ for f in "${files[@]}"; do
         #echo "$(basename $f): $num_tasks_job additional tasks" >&2
 	fname=$(basename $f)
 	if [[ "${#fname}" -ge 20 ]]; then
-            abb_fname=$(echo "$(echo $(basename $f) | cut -c -10)...$(echo "${f%.*}" | rev | cut -c -7 | rev)")
+        abb_fname=$(echo "$(echo $(basename $f) | cut -c -10)...$(echo "${f%.*}" | rev | cut -c -7 | rev)")
 	else
 	    abb_fname=$fname
 	fi
@@ -167,25 +167,11 @@ for f in "${files[@]}"; do
             fi
 
             jobnumber=$(grep -oE "[0-9]{7}" <<< $job_submit_message)
-	    printf "%-20s |\n" "Submitted: $jobnumber" >&2
-	    #printf "%0.s-" {1..136} >&2
-	    #printf "\n" >&2
-	    jns+=($jobnumber)
-            #echo $jobnumber
+	        printf "%-20s |\n" "Submitted: $jobnumber" >&2
+            jns+=($jobnumber)
             break
         else
-            #if [[ $num_active_jobs -ge $MAX_JOBS_PER_QUEUE ]]; then
-            #    echo "Couldnt submit job (${f}), because there are $num_active_jobs active jobs right now (max: $MAX_JOBS_PER_QUEUE). Waiting 5 minutes to try again." >&2 
-            #elif [[ $new_tasks_step -ge $step_max_tasks ]]; then
-            #    echo "Couldnt submit job (${f}), because there would be $new_tasks_step active tasks for this step right now (max: $step_max_tasks). Waiting 5 minutes to try again." >&2 
-            #elif [[ $new_tasks_total -ge $total_max_tasks ]]; then
-            #    echo "Couldnt submit job (${f}), because there would be $new_tasks_total total active tasks right now (max: $total_max_tasks). Waiting 5 minutes to try again." >&2 
-            #fi
-
-	    printf "%-20s |\n" "Wait 5 min" >&2
-            #printf "%0.s-" {1..136} >&2
-            #printf "\n" >&2
-
+	        printf "%-20s |\n" "Wait 5 min" >&2
         fi
 
         sleep 300
@@ -196,12 +182,6 @@ done
 
 printf "%0.s-" {1..121} >&2
 printf "\n" >&2
-
-# Isolate stepname from file name. Could be an ISCE runfile (run_00_*.job), insarmaps.job, or smallbaseline_wrapper.job
-#step_name=$(echo $file | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,}.job)|insarmaps|smallbaseline_wrapper")
-
-# Compute maximum allowable tasks for this step
-#step_max_tasks=$(echo "$step_max_tasks_unit/${step_io_load_list[$step_name]}" | bc | awk '{print int($1)}')
 
 if [[ $time_elapsed -ge $max_time ]]; then
     exit 1

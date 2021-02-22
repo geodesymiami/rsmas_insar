@@ -1,5 +1,33 @@
 ##! /bin/bash
 
+function abbreviate {
+    abb=$1
+    if [[ "${#abb}" -gt $2 ]]; then
+        abb=$(echo "$(echo $(basename $abb) | cut -c -$3)...$(echo $(basename $abb) | rev | cut -c -$4 | rev)")
+    fi
+    echo $abb
+}
+
+function remove_from_list {
+    var=$1
+    shift
+    list=("$@")
+    new_list=() # Not strictly necessary, but added for clarity
+    
+    #echo "VAR: $var"
+    for item in ${list[@]}
+    do
+        #echo "$item"
+        if [ "$item" != "$var" ]
+        then
+            new_list+=("$item")
+        fi
+    done
+    list=("${new_list[@]}")
+    unset new_list
+    echo "${list[@]}"
+}
+
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 helptext="                                                                         \n\
 Job submission script
@@ -164,93 +192,83 @@ for g in "${globlist[@]}"; do
 
     exit_status="$?"
     if [[ $exit_status -eq 0 ]]; then
-	jobnumbers=($jns)
+	    jobnumbers=($jns)
     fi
 
     unset IFS
     echo "Jobs submitted: ${jobnumbers[@]}"
     sleep 5
+
     # Wait for each job to complete
-    
-    for (( j=0; j < "${#jobnumbers[@]}"; j++)); do
-        jobnumber=${jobnumbers[$j]}
+    num_jobs=${#jobnumbers[@]}
+    num_complete=0
 
-        # Parse out the state of the job from the sacct function (3rd line following ----- if there are multiple steps)
-        # Format state to be all uppercase (PENDING, RUNNING, or COMPLETED)
-        # and remove leading whitespace characters.
-        state=$(sacct --format="State" -j $jobnumber | sed -e 's/^[[:space:]]*//' | head -3 | tail -1 )
+    printf "%0.s-" {1..126} >&2
+    printf "\n" >&2 
+    printf "| %-25s | %-25s | %-10s | %-10s | %-40s | %s\n" "Project Name" "Jobfile" "Job Number" "Job State" "Messages"
+    printf "%0.s-" {1..126} >&2
+    printf "\n" >&2 
 
-        # Keep checking the state while it is not "COMPLETED"
-        secs=0
-        while true; do
-            
-            # Only print every so often, not every 30 seconds
-            if [[ $(( $secs % 30)) -eq 0 ]]; then
-                echo "$(basename $WORKDIR) $(basename "${files[$j]}"), ${jobnumber} is not finished yet. Current state is '${state}'"
+    while [[ $num_complete -lt $num_jobs ]]; do
+        num_complete=0
+        sleep 30
+        for (( j=0; j < "${#jobnumbers[@]}"; j++)); do
+            project_name=$(abbreviate $PROJECT_NAME 25 11 11)
+            file_name=$(abbreviate "${files[$j]}" 25 11 11)
+            jobnumber=${jobnumbers[$j]}
+            state=$(sacct --format="State" -j $jobnumber | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | head -3 | tail -1 )
+
+            printf "| %-25s | %-25s | %-10s | %-10s | %s" "$project_name" "$file_name" "$jobnumber" "$state"
+
+            if [[ ( $state == *"COMPLETED"* || $state ==  *"PENDING"* || $state == *"RUNNING"*) && $state != "" ]]; then
+                printf "%-40s |\n" "None"
             fi
 
-            state=$(sacct --format="State" -j $jobnumber | sed -e 's/^[[:space:]]*//' | head -3 | tail -1 )
-
-            # Check if "COMPLETED" is anywhere in the state string variables.
-            # This gets rid of some strange special character issues.
-            if [[ $state == *"TIMEOUT"* ]] && [[ $state != "" ]]; then
+            if [[ $state == *"COMPLETED"* ]] && [[ $state != "" ]]; then
+                num_complete=$(($num_complete+1))
+            elif [[ ( $state == *"FAILED"* || $state ==  *"CANCELLED"* ) &&  $state != "" ]]; then
+                printf "| %-80s | %-40s | %s\n" "" "Exiting with status code 1."
+                exit 1; 
+            elif [[ $state == *"TIMEOUT"* ]] && [[ $state != "" ]]; then
                 jf=${files[$j]}
-		file_pattern="${jf%.*}"
-
-		step_name=$(echo $file_pattern | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,})|insarmaps|smallbaseline_wrapper")
-		step_max_tasks=$(echo "$step_max_tasks_unit/${step_io_load_list[$step_name]}" | bc | awk '{print int($1)}')
-
+                file_pattern="${jf%.*}"
+                step_name=$(echo $file_pattern | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,})|insarmaps|smallbaseline_wrapper")
+                step_max_tasks=$(echo "$step_max_tasks_unit/${step_io_load_list[$step_name]}" | bc | awk '{print int($1)}')
         
                 init_walltime=$(grep -oP '(?<=#SBATCH -t )[0-9]+:[0-9]+:[0-9]+' $jf)
-                
-                echo "${jobnumber} timedout due to too low a walltime (${init_walltime})."
+                printf "| %-79s | %-40s | %s\n" "" "Timedout with walltime of ${init_walltime}."
                                 
                 # Compute a new walltime and update the job file
                 update_walltime.py "$jf" &> /dev/null
-
                 updated_walltime=$(grep -oP '(?<=#SBATCH -t )[0-9]+:[0-9]+:[0-9]+' $jf)
 
-                datetime=$(date +"%Y-%m-%d:%H-%M")
-                echo "${datetime}: re-running: ${jf}: ${init_walltime} --> ${updated_walltime}" >> "${RUNFILES_DIR}"/rerun.log
+                #datetime=$(date +"%Y-%m-%d:%H-%M")
+                #echo "${datetime}: re-running: ${jf}: ${init_walltime} --> ${updated_walltime}" >> "${RUNFILES_DIR}"/rerun.log
+                #echo "Resubmitting file (${jf}) with new walltime of ${updated_walltime}"
+                printf "| %-79s | %-40s | %s\n" "" "Resubmitting with walltime of ${updated_walltime}."
 
-                echo "Resubmitting file (${jf}) with new walltime of ${updated_walltime}"
+                jobnumbers=($(remove_from_list $jobnumber "${jobnumbers[@]}"))
+                files=($(remove_from_list $jf "${files[@]}"))
+
                 # Resubmit as a new job number
-                jobnumber=$(sbatch_conditional.bash $file_pattern --step_name $step_name --step_max_tasks $step_max_tasks --total_max_tasks $total_max_tasks)
+                jobnumber=$(sbatch_conditional.bash $file_pattern --step_name $step_name --step_max_tasks $step_max_tasks --total_max_tasks $total_max_tasks 2> /dev/null) 
+
                 exit_status="$?"
                 if [[ $exit_status -eq 0 ]]; then
                     jobnumbers+=("$jobnumber")
                     files+=("$jf")
-                    echo "${jf} resubmitted as jobumber: ${jobnumber}"
+                    j=$(($j-1))
+                    printf "| %-79s | %-40s | %s\n" "" "Resubmitted as jobumber: ${jobnumber}."
                 else
-                    echo "sbatch re-submit error message: $jobnumber"
-                    echo "sbatch re-submit error: exit code $exit_status. Exiting."
+                    printf "| %-79s | %-40s | %s\n" "" "Error on resubmit for $jobnumber. Exiting."
                     exit 1
                 fi
-
-                break;
-
-        elif [[ $state == *"COMPLETED"* ]] && [[ $state != "" ]]; then
-                state="COMPLETED"
-                echo "${jobnumber} is complete"
-                break;
-
-            elif [[ ( $state == *"FAILED"* ) &&  $state != "" ]]; then
-                echo "${jobnumber} FAILED. Exiting with status code 1."
-                exit 1; 
-            elif [[ ( $state ==  *"CANCELLED"* ) &&  $state != "" ]]; then
-                echo "${jobnumber} was CANCELLED. Exiting with status code 1."
-                exit 1; 
             fi
-
-            # Wait for 30 second before chcking again
-            sleep 30
-            ((secs=secs+30))
-            
-            done
-
-        echo "Job ${jobnumber} is finished."
-
+        done
+        printf "%0.s-" {1..126} >&2
+        printf "\n" >&2 
     done
+
 
     # Run check_job_output.py on all files
     cmd="check_job_outputs.py  ${files[@]}"
