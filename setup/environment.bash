@@ -22,9 +22,7 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 ############ FOR PROCESSING  #########
 export SSARAHOME=${RSMASINSAR_HOME}/3rdparty/SSARA
 export ISCE_HOME=${RSMASINSAR_HOME}/3rdparty/miniconda3/lib/python3.8/site-packages/isce
-#export ISCE_STACK=${RSMASINSAR_HOME}/sources/isce2/contrib/stack/stripmapStack
-#export ISCE_STACK=${RSMASINSAR_HOME}/sources/isce2/contrib/stack/topsStack
-export ISCE_STACK=${RSMASINSAR_HOME}/sources/isce2/contrib/stack
+export ISCE_STACK=${RSMASINSAR_HOME}/3rdparty/miniconda3/share/isce2
 export MINTPY_HOME=${RSMASINSAR_HOME}/sources/MintPy
 export MINOPY_HOME=${RSMASINSAR_HOME}/sources/MiNoPy
 export MIMTPY_HOME=${RSMASINSAR_HOME}/sources/MimtPy
@@ -94,7 +92,7 @@ export PATH=${PATH}:${RSMASINSAR_HOME}/minsar:${RSMASINSAR_HOME}/minsar/utils
 export PATH=${PATH}:${RSMASINSAR_HOME}/minsar
 export PATH=${PATH}:${RSMASINSAR_HOME}/minsar/utils/ssara_ASF
 export PATH=${PATH}:${RSMASINSAR_HOME}/setup/accounts
-export PATH=${PATH}:${RSMASINSAR_HOME}/sources/rsmas_tools/SAR:${RSMASINSAR_HOME}/sources/rsmas_tools/GPS:${RSMASINSAR_HOME}/sources/rsmas_tools/notebooks
+export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${ISCE_STACK}:${PATH}
 # export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${ISCE_STACK}:${PATH}
 export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${PATH}
 export PATH=${PATH}:${RSMASINSAR_HOME}/sources/MimtPy
