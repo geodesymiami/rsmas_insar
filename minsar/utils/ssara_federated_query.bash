@@ -52,9 +52,9 @@ unset IFS
 urls=($urls_list)
 
 num_urls=${#urls[@]}
-num_urls=$(echo $(($num_urls+$parallel)))
+#num_urls=$(echo $(($num_urls+$parallel)))
 
-echo $num_urls
+echo "Datafiles to download: $num_urls"
 
 start=0
 stop=$(($start+$parallel))
