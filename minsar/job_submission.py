@@ -758,7 +758,7 @@ class JOB_SUBMIT:
                 + """ | awk -F _igram_unw_ '{printf "%s\\n",$2}' | sort -n | uniq) )"""
             job_file_lines.append('\n' + str + '\n')
             job_file_lines.append("""for pair in "${pair_list[@]}"; do\n""")
-            job_file_lines.append('   distribut.bash ' + self.out_dir + '/merged/interferograms/' + '$pair\n')
+            job_file_lines.append('   distribute.bash ' + self.out_dir + '/merged/interferograms/' + '$pair\n')
             job_file_lines.append('done\n\n')
         return job_file_lines
 
