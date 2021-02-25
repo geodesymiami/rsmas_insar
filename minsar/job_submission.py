@@ -735,7 +735,14 @@ class JOB_SUBMIT:
                 + """ | awk -F _merge_igram_ '{printf "%s\\n",$2}' | sort -n | uniq) )"""
             job_file_lines.append('\n' + str + '\n')
             job_file_lines.append("""for pair in "${pair_list[@]}"; do\n""")
+
             job_file_lines.append('   distribute.bash ' + self.out_dir + '/interferograms/' + '$pair\n')
+            job_file_lines.append('   files1="/tmp/*/*.xml"\n')
+            job_file_lines.append('   files2="/tmp/*/*/*.xml"\n')
+            job_file_lines.append('   old=' + self.out_dir + '/interferograms\n')
+            job_file_lines.append('   srun sed -i "s|$old|/tmp|g" $files1 2> /dev/null\n')
+            job_file_lines.append('   srun sed -i "s|$old|/tmp|g" $files2 2> /dev/null\n')
+
             job_file_lines.append('done\n\n')
 
         if 'filter_coherence' in job_file_name and not batch_file is None:
@@ -747,10 +754,20 @@ class JOB_SUBMIT:
             job_file_lines.append(str + '\n\n')
             job_file_lines.append("""for pair in "${pair_list[@]}"; do\n""")
             job_file_lines.append('   distribute.bash ' + self.out_dir + '/merged/interferograms/' + '$pair\n')
+  
+            job_file_lines.append('   files1="/tmp/*/*.xml"\n')
+            job_file_lines.append('   old=' + self.out_dir + '/merged/interferograms\n')
+            job_file_lines.append('   srun sed -i "s|$old|/tmp|g" $files1 2> /dev/null\n')
+
             job_file_lines.append('done\n\n')
 
             job_file_lines.append("""for date in "${date_list[@]}"; do\n""")
-            job_file_lines.append('    distribute.bash ' + self.out_dir + '/merged/SLC/' + '$date\n')
+            job_file_lines.append('   distribute.bash ' + self.out_dir + '/merged/SLC/' + '$date\n')
+
+            job_file_lines.append('   files1="/tmp/*/*.xml"\n')
+            job_file_lines.append('   old=' + self.out_dir + '/merged/SLC\n')
+            job_file_lines.append('   srun sed -i "s|$old|/tmp|g" $files1 2> /dev/null\n')
+
             job_file_lines.append('done\n\n')
 
         if 'unwrap' in job_file_name and not batch_file is None:
@@ -759,6 +776,11 @@ class JOB_SUBMIT:
             job_file_lines.append('\n' + str + '\n')
             job_file_lines.append("""for pair in "${pair_list[@]}"; do\n""")
             job_file_lines.append('   distribute.bash ' + self.out_dir + '/merged/interferograms/' + '$pair\n')
+  
+            job_file_lines.append('   files1="/tmp/*/*.xml"\n')
+            job_file_lines.append('   old=' + self.out_dir + '/merged/interferograms\n')
+            job_file_lines.append('   srun sed -i "s|$old|/tmp|g" $files1 2> /dev/null\n')
+
             job_file_lines.append('done\n\n')
         return job_file_lines
 
