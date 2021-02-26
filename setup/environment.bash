@@ -61,8 +61,7 @@ export CONDA_PREFIX=${PYTHON3DIR}
 export PROJ_LIB=${PYTHON3DIR}/share/proj
 export GDAL_DATA=${PYTHON3DIR}/share/gdal
 
-export PYTHONPATH=${PYTHON3DIR-""}
-#export PYTHONPATH=${PYTHONPATH-""}
+export PYTHONPATH=${PYTHONPATH-""}
 export PYTHONPATH=${PYTHONPATH}:${MINTPY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${INT_SCR}
 export PYTHONPATH=${PYTHONPATH}:${PYTHON3DIR}/lib/python3.8/site-packages:${ISCE_HOME}:${ISCE_HOME}/components
@@ -83,8 +82,7 @@ export PYTHONWARNINGS="ignore"
 #####################################
 ############  PATH  #################
 #####################################
-#export PATH=${PATH}:${SSARAHOME}
-export PATH=${SSARAHOME}
+export PATH=${PATH}:${SSARAHOME}
 export PATH=${PATH}:${SSARA_ASF}
 export PATH=${PATH}:${MINOPY_HOME}/minopy
 export PATH=${PATH}:${MIMTPY_HOME}/mimtpy
