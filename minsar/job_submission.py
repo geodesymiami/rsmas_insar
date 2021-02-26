@@ -656,14 +656,17 @@ class JOB_SUBMIT:
         job_file_lines.append("export PYTHON_IO_CACHE_CWD=0\n")
         job_file_lines.append("module load ooops\n")
 
+        if 'stampede2' in hostname:
+            job_file_lines.append('export CDTOOL=/scratch/01255/siliu/collect_distribute\n')
+            job_file_lines.append('export PATH=${PATH}:${CDTOOL}/bin\n')
+        elif 'frontera' in hostname:
+            job_file_lines.append('export CDTOOL=/scratch1/01255/siliu/collect_distribute\n')
+            job_file_lines.append('export PATH=${PATH}:${CDTOOL}/bin\n')
+
+
         # for MiNoPy jobs
         if not distribute is None:
-            if 'stampede2' in hostname:
-                job_file_lines.append('export CDTOOL=/scratch/01255/siliu/collect_distribute\n')
-            elif 'frontera' in hostname:
-                job_file_lines.append('export CDTOOL=/scratch1/01255/siliu/collect_distribute\n')
             # DO NOT LOAD 'intel/19.1.1' HERE
-            job_file_lines.append('export PATH=${PATH}:${CDTOOL}/bin\n')
             job_file_lines.append('distribute.bash ' + distribute)
 
         # for ISCE run files
@@ -675,13 +678,7 @@ class JOB_SUBMIT:
         copy_to_tmp_steps = copy_reference_steps + copy_geom_reference_steps + copy_stack_steps + copy_coreg_secondarys
         if any(x in job_file_name for x in copy_to_tmp_steps):
             job_file_lines.append('\n### copy infiles to local /tmp and adjust xml files ###\n')
-            if 'stampede2' in hostname:
-                job_file_lines.append('export CDTOOL=/scratch/01255/siliu/collect_distribute\n')
-            elif 'frontera' in hostname:
-                job_file_lines.append('export CDTOOL=/scratch1/01255/siliu/collect_distribute\n')
-
             job_file_lines.append('module load intel/19.1.1 2> /dev/null\n')
-            job_file_lines.append('export PATH=${PATH}:${CDTOOL}/bin\n')
 
             if any(x in job_file_name for x in copy_reference_steps):
                 job_file_lines.append('distribute.bash ' + self.out_dir + '/reference\n')
@@ -746,6 +743,8 @@ class JOB_SUBMIT:
             job_file_lines.append('done\n\n')
 
         if 'filter_coherence' in job_file_name and not batch_file is None:
+            job_file_lines.append('module load intel/19.1.1 2> /dev/null\n')
+
             str = """pair_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file \
                 + """ | awk -F _igram_filt_coh_ '{printf "%s\\n",$2}' | sort -n | uniq) )"""
             job_file_lines.append('\n' + str + '\n')
