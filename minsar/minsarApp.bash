@@ -270,12 +270,13 @@ if [[ $jobfiles_flag == "1" ]]; then
     old="input : $PWD/merged/interferograms"
     new="input : /tmp"
     sed -i "s|$old|$new|g" $files
-    old="slc1 : $PWD/merged/SLC"
-    new="slc1 : /tmp"
-    sed -i "s|$old|$new|g" $files
-    old="slc2 : $PWD/merged/SLC"
-    new="slc2 : /tmp"
-    sed -i "s|$old|$new|g" $files
+
+    #old="slc1 : $PWD/merged/SLC"
+    #new="slc1 : /tmp"
+    #sed -i "s|$old|$new|g" $files
+    #old="slc2 : $PWD/merged/SLC"
+    #new="slc2 : /tmp"
+    #sed -i "s|$old|$new|g" $files
 
     files="configs/config_igram_unw_*"
     old="ifg : $PWD/merged/interferograms"

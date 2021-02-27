@@ -760,14 +760,14 @@ class JOB_SUBMIT:
 
             job_file_lines.append('done\n\n')
 
-            job_file_lines.append("""for date in "${date_list[@]}"; do\n""")
-            job_file_lines.append('   distribute.bash ' + self.out_dir + '/merged/SLC/' + '$date\n')
+            #job_file_lines.append("""for date in "${date_list[@]}"; do\n""")
+            #job_file_lines.append('   distribute.bash ' + self.out_dir + '/merged/SLC/' + '$date\n')
 
-            job_file_lines.append('   files1="/tmp/*/*.xml"\n')
-            job_file_lines.append('   old=' + self.out_dir + '/merged/SLC\n')
-            job_file_lines.append('   srun sed -i "s|$old|/tmp|g" $files1 2> /dev/null\n')
+            #job_file_lines.append('   files1="/tmp/*/*.xml"\n')
+            #job_file_lines.append('   old=' + self.out_dir + '/merged/SLC\n')
+            #job_file_lines.append('   srun sed -i "s|$old|/tmp|g" $files1 2> /dev/null\n')
 
-            job_file_lines.append('done\n\n')
+            #job_file_lines.append('done\n\n')
 
         if 'unwrap' in job_file_name and not batch_file is None:
             str = """pair_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file \
