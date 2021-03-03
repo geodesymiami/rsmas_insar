@@ -214,7 +214,7 @@ for g in "${globlist[@]}"; do
             file=${files[$j]}
             file_pattern="${file%.*}"
             step_name=$(echo $file_pattern | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,})|insarmaps|smallbaseline_wrapper")
-            
+            step_name_long=$(echo $file_pattern | grep -oP "(?<=run_files\/)(.*)(?=_\d{1,})|insarmaps|smallbaseline_wrapper")
             jobnumber=${jobnumbers[$j]}
             state=$(sacct --format="State" -j $jobnumber | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | head -3 | tail -1 )
 
@@ -263,7 +263,7 @@ for g in "${globlist[@]}"; do
             fi
 
         done
-        printf "%-15s; %-7s; %-12s, %-10s, %-10s.\n" "$step_name" "$num_jobs jobs" "$num_complete COMPLETED" "$num_running RUNNING" "$num_pending PENDING"
+        printf "%-15s: %-7s; %-12s, %-10s, %-10s.\n" "$step_name_long" "$num_jobs jobs" "$num_complete COMPLETED" "$num_running RUNNING" "$num_pending PENDING"
     done
 
 
