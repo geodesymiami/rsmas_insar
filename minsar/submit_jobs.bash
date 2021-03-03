@@ -158,11 +158,11 @@ fi
 for (( i=$startstep; i<=$stopstep; i++ )) do
     stepnum="$(printf "%02d" ${i})"
     if [[ $i -le $last_job_file_number ]]; then
-	fname="$RUNFILES_DIR/run_${stepnum}_*.job"
+	    fname="$RUNFILES_DIR/run_${stepnum}_*.job"
     elif [[ $i -eq $((last_job_file_number+1)) ]]; then
-	fname="$WORKDIR/smallbaseline_wrapper_*.job"
+	    fname="$WORKDIR/smallbaseline_wrapper.job"
     else
-	fname="$WORKDIR/insarmaps_*.job"
+	    fname="$WORKDIR/insarmaps.job"
     fi
     globlist+=("$fname")
 done
@@ -202,50 +202,42 @@ for g in "${globlist[@]}"; do
     # Wait for each job to complete
     num_jobs=${#jobnumbers[@]}
     num_complete=0
-
-    printf "%0.s-" {1..126} >&2
-    printf "\n" >&2 
-    printf "| %-25s | %-25s | %-10s | %-10s | %-40s | %s\n" "Project Name" "Jobfile" "Job Number" "Job State" "Messages"
-    printf "%0.s-" {1..126} >&2
-    printf "\n" >&2 
+    num_running=0
+    num_pending=0
 
     while [[ $num_complete -lt $num_jobs ]]; do
         num_complete=0
+        num_running=0
+        num_pending=0
         sleep 30
         for (( j=0; j < "${#jobnumbers[@]}"; j++)); do
-            project_name=$(abbreviate $PROJECT_NAME 25 11 11)
-            file_name=$(abbreviate "${files[$j]}" 25 11 11)
+            file=${files[$j]}
+            file_pattern="${file%.*}"
+            step_name=$(echo $file_pattern | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,})|insarmaps|smallbaseline_wrapper")
+            
             jobnumber=${jobnumbers[$j]}
             state=$(sacct --format="State" -j $jobnumber | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | head -3 | tail -1 )
 
-            printf "| %-25s | %-25s | %-10s | %-10s | %s" "$project_name" "$file_name" "$jobnumber" "$state"
-
-            if [[ ( $state == *"COMPLETED"* || $state ==  *"PENDING"* || $state == *"RUNNING"*) && $state != "" ]]; then
-                printf "%-40s |\n" "None"
-            fi
-
-            if [[ $state == *"COMPLETED"* ]] && [[ $state != "" ]]; then
+            if [[ $state == *"COMPLETED"* ]]; then
                 num_complete=$(($num_complete+1))
-            elif [[ ( $state == *"FAILED"* || $state ==  *"CANCELLED"* ) &&  $state != "" ]]; then
-                printf "| %-80s | %-40s | %s\n" "" "Exiting with status code 1."
-                exit 1; 
-            elif [[ $state == *"TIMEOUT"* ]] && [[ $state != "" ]]; then
-                jf=${files[$j]}
-                file_pattern="${jf%.*}"
-                step_name=$(echo $file_pattern | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,})|insarmaps|smallbaseline_wrapper")
+            elif [[ $state == *"RUNNING"* ]]; then
+                num_running=$(($num_running+1))
+            elif [[ $state == *"PENDING"* ]]; then
+                num_pending=$(($num_pending+1))
+            elif [[ $state == *"TIMEOUT"* ]]; then
+                num_timeout=$(($num_timeout+1))
                 step_max_tasks=$(echo "$step_max_tasks_unit/${step_io_load_list[$step_name]}" | bc | awk '{print int($1)}')
         
                 init_walltime=$(grep -oP '(?<=#SBATCH -t )[0-9]+:[0-9]+:[0-9]+' $jf)
-                printf "| %-79s | %-40s | %s\n" "" "Timedout with walltime of ${init_walltime}."
+                echo "Timedout with walltime of ${init_walltime}."
                                 
                 # Compute a new walltime and update the job file
-                update_walltime.py "$jf" &> /dev/null
+                update_walltime.py "$file" &> /dev/null
                 updated_walltime=$(grep -oP '(?<=#SBATCH -t )[0-9]+:[0-9]+:[0-9]+' $jf)
 
-                #datetime=$(date +"%Y-%m-%d:%H-%M")
-                #echo "${datetime}: re-running: ${jf}: ${init_walltime} --> ${updated_walltime}" >> "${RUNFILES_DIR}"/rerun.log
-                #echo "Resubmitting file (${jf}) with new walltime of ${updated_walltime}"
-                printf "| %-79s | %-40s | %s\n" "" "Resubmitting with walltime of ${updated_walltime}."
+                datetime=$(date +"%Y-%m-%d:%H-%M")
+                echo "${datetime}: re-running: ${jf}: ${init_walltime} --> ${updated_walltime}" >> "${RUNFILES_DIR}"/rerun.log
+                echo "Resubmitting file (${jf}) with new walltime of ${updated_walltime}"
 
                 jobnumbers=($(remove_from_list $jobnumber "${jobnumbers[@]}"))
                 files=($(remove_from_list $jf "${files[@]}"))
@@ -256,17 +248,22 @@ for g in "${globlist[@]}"; do
                 exit_status="$?"
                 if [[ $exit_status -eq 0 ]]; then
                     jobnumbers+=("$jobnumber")
-                    files+=("$jf")
+                    files+=("$file")
                     j=$(($j-1))
-                    printf "| %-79s | %-40s | %s\n" "" "Resubmitted as jobumber: ${jobnumber}."
+                    echo "Resubmitted as jobumber: ${jobnumber}."
                 else
-                    printf "| %-79s | %-40s | %s\n" "" "Error on resubmit for $jobnumber. Exiting."
+                    echo "Error on resubmit for $jobnumber. Exiting."
                     exit 1
                 fi
+            elif [[ ( $state == *"FAILED"* || $state ==  *"CANCELLED"* ) ]]; then
+                echo "Job failed. Exiting."
+                exit 1; 
+            else
+                continue;
             fi
+
         done
-        printf "%0.s-" {1..126} >&2
-        printf "\n" >&2 
+        printf "%-15s; %-7s; %-12s, %-10s, %-10s.\n" "$step_name" "$num_jobs jobs" "$num_complete COMPLETED" "$num_running RUNNING" "$num_pending PENDING"
     done
 
 
