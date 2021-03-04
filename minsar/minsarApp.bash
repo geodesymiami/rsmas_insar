@@ -248,10 +248,10 @@ if [[ $jobfiles_flag == "1" ]]; then
     sed -i "s|$old|$new|g" $files
 
     files="configs/config_generate_igram_*"
-    old="reference : $PWD/coreg_secondarys"
+    old="reference : $PWD"
     new="reference : /tmp"
     sed -i "s|$old|$new|g" $files
-    old="secondary : $PWD/coreg_secondarys"
+    old="secondary : $PWD"
     new="secondary : /tmp"
     sed -i "s|$old|$new|g" $files
     old="reference : $PWD"
@@ -259,15 +259,15 @@ if [[ $jobfiles_flag == "1" ]]; then
     sed -i "s|$old|$new|g" $files
 
     files="configs/config_merge_igram_*"
-    old="inp_reference : $PWD/interferograms"
+    old="inp_reference : $PWD"
     new="inp_reference : /tmp"
     sed -i "s|$old|$new|g" $files
-    old="dirname : $PWD/interferograms"
+    old="dirname : $PWD"
     new="dirname : /tmp"
     sed -i "s|$old|$new|g" $files
 
     files="configs/config_igram_filt_coh_*"
-    old="input : $PWD/merged/interferograms"
+    old="input : $PWD"
     new="input : /tmp"
     sed -i "s|$old|$new|g" $files
 
@@ -279,10 +279,10 @@ if [[ $jobfiles_flag == "1" ]]; then
     #sed -i "s|$old|$new|g" $files
 
     files="configs/config_igram_unw_*"
-    old="ifg : $PWD/merged/interferograms"
+    old="ifg : $PWD"
     new="ifg : /tmp"
     sed -i "s|$old|$new|g" $files
-    old="coh : $PWD/merged/interferograms"
+    old="coh : $PWD"
     new="coh : /tmp"
     sed -i "s|$old|$new|g" $files
 
