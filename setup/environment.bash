@@ -91,7 +91,6 @@ export PATH=${PATH}:${RSMASINSAR_HOME}/minsar
 export PATH=${PATH}:${RSMASINSAR_HOME}/minsar/utils/ssara_ASF
 export PATH=${PATH}:${RSMASINSAR_HOME}/setup/accounts
 export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${ISCE_STACK}:${PATH}
-# export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${ISCE_STACK}:${PATH}
 export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${PATH}
 export PATH=${PATH}:${RSMASINSAR_HOME}/sources/MimtPy
 export PATH=${PATH}:${MINTPY_HOME}/mintpy:${MINTPY_HOME}/sh
@@ -100,7 +99,7 @@ export PATH=${PATH}:${PROJ_LIB}
 export PATH=${PATH}:${RSMASINSAR_HOME}/3rdparty/tippecanoe
 export PATH=${PATH}:${RSMASINSAR_HOME}/sources/insarmaps_scripts
 export PATH=${PATH}:${DASK_CONFIG}
-export PATH=${RSMASINSAR_HOME}/3rdparty/snaphu-v2.0.3/bin:${PATH}
+export PATH=${RSMASINSAR_HOME}/3rdparty/snaphu/bin:${PATH}
 
 [ -n ${MATLAB_HOME} ] && export PATH=${PATH}:${MATLAB_HOME}/bin
 
