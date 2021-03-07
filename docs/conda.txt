@@ -10,3 +10,4 @@ pdbpp
 tippecanoe
 geocoder
 geopandas
+h5py<3
