@@ -175,7 +175,7 @@ class JOB_SUBMIT:
 
         return
 
-    def write_batch_jobs(self, batch_file=None, email_notif=None):
+    def write_batch_jobs(self, batch_file=None, email_notif=None, distribute=None, num_cores_per_task=None):
         """
         creates jobs based on scheduler
         :param batch_file: batch job name
@@ -213,9 +213,12 @@ class JOB_SUBMIT:
             number_of_nodes = np.int(np.ceil(number_of_tasks * float(self.default_num_threads) / (
                     self.number_of_cores_per_node * self.number_of_threads_per_core)))
 
+            if not num_cores_per_task is None:
+                self.number_of_parallel_tasks_per_node = self.number_of_cores_per_node // num_cores_per_task
+
             if 'singleTask' in self.submission_scheme:
 
-                self.write_batch_singletask_jobs(batch_file)
+                self.write_batch_singletask_jobs(batch_file, distribute=distribute)
 
             elif 'multiTask_multiNode' in self.submission_scheme: # or number_of_nodes == 1:
 
@@ -225,11 +228,14 @@ class JOB_SUBMIT:
                 job_file_lines = self.get_job_file_lines(batch_file, job_name, number_of_tasks=len(tasks),
                                                          number_of_nodes=number_of_nodes, work_dir=self.out_dir)
                 self.job_files.append(self.add_tasks_to_job_file_lines(job_file_lines, tasks,
-                                                                       batch_file=batch_file_name))
+                                                                       batch_file=batch_file_name,
+                                                                       number_of_nodes=number_of_nodes,
+                                                                       distribute=distribute))
 
             elif 'multiTask_singleNode' in self.submission_scheme:
 
-                self.split_jobs(batch_file, tasks, number_of_nodes)
+                self.split_jobs(batch_file, tasks, number_of_nodes, distribute=distribute,
+                                num_cores_per_task=num_cores_per_task)
 
         return
 
@@ -327,7 +333,7 @@ class JOB_SUBMIT:
 
         return
 
-    def write_batch_singletask_jobs(self, batch_file):
+    def write_batch_singletask_jobs(self, batch_file, distribute=None):
         """
         Iterates through jobs in input file and writes a job file for each job using the specified scheduler. This function
         is used for batch jobs in pegasus (LSF) to split the tasks into multiple jobs
@@ -339,7 +345,7 @@ class JOB_SUBMIT:
 
         for i, command_line in enumerate(job_list):
             job_file_name = os.path.abspath(batch_file).split(os.sep)[-1] + "_" + str(i)
-            self.write_single_job_file(job_file_name, job_file_name, command_line, work_dir=os.path.dirname(batch_file))
+            self.write_single_job_file(job_file_name, job_file_name, command_line, work_dir=os.path.dirname(batch_file), distribute=distribute)
             job_file = os.path.dirname(batch_file) + '/' + job_file_name + '.job'
             #self.write_single_job_file(job_file_name, job_file_name, command_line, work_dir=self.out_dir)
 
@@ -435,7 +441,7 @@ class JOB_SUBMIT:
                     
         return
 
-    def split_jobs(self, batch_file, tasks, number_of_nodes):
+    def split_jobs(self, batch_file, tasks, number_of_nodes, distribute=None, num_cores_per_task=None):
         """
         splits the batch file tasks into multiple jobs with one node
         :param batch_file:
@@ -472,8 +478,6 @@ class JOB_SUBMIT:
             number_of_nodes_per_job = number_of_nodes_per_job + 1
             number_of_limited_memory_tasks = int(self.max_memory_per_node * number_of_nodes_per_job / self.default_memory)
 
-        self.number_of_parallel_tasks_per_node = math.ceil(number_of_parallel_tasks / number_of_nodes_per_job)
-
         if number_of_nodes_per_job > 1:
             print('Note: Number of jobs exceed the numbers allowed per queue for jobs with 1 node...\n'
                   'Number of Nodes per job are adjusted to {}'.format(number_of_nodes_per_job))
@@ -481,6 +485,12 @@ class JOB_SUBMIT:
         start_lines = np.ogrid[0:len(tasks):number_of_parallel_tasks].tolist()
         end_lines = [x + number_of_parallel_tasks for x in start_lines]
         end_lines[-1] = len(tasks)
+
+        if not num_cores_per_task is None:
+            self.number_of_parallel_tasks_per_node = self.number_of_cores_per_node // num_cores_per_task
+        else:
+            self.number_of_parallel_tasks_per_node = math.ceil(number_of_parallel_tasks / number_of_nodes_per_job)
+
 
         for start_line, end_line in zip(start_lines, end_lines):
             job_count = start_lines.index(start_line)
@@ -491,7 +501,9 @@ class JOB_SUBMIT:
                                                      number_of_nodes=number_of_nodes_per_job, work_dir=self.out_dir)
 
             job_file_name = self.add_tasks_to_job_file_lines(job_file_lines, tasks[start_line:end_line],
-                                                             batch_file=batch_file_name)
+                                                             batch_file=batch_file_name,
+                                                             number_of_nodes=number_of_nodes_per_job,
+                                                             distribute=distribute)
 
             self.job_files.append(job_file_name)
 
@@ -777,7 +789,7 @@ class JOB_SUBMIT:
 
         return job_file_lines
 
-    def add_tasks_to_job_file_lines(self, job_file_lines, tasks, batch_file=None):
+    def add_tasks_to_job_file_lines(self, job_file_lines, tasks, batch_file=None, number_of_nodes=1, distribute=None):
         """
         complete job file lines based on job submission scheme. if it uses launcher, add launcher specific lines
         :param job_file_lines: raw job file lines from function 'get_job_file_lines'
@@ -820,10 +832,12 @@ class JOB_SUBMIT:
             job_file_lines.append("\nexport PATH={0}:$PATH".format(self.stack_path))
             job_file_lines.append("\nexport LAUNCHER_WORKDIR={0}".format(self.out_dir))
             job_file_lines.append("\nexport LAUNCHER_PPN={0}\n".format(self.number_of_parallel_tasks_per_node))
+            job_file_lines.append("\nexport LAUNCHER_NHOSTS={0}\n".format(number_of_nodes))
             job_file_lines.append("\nexport LAUNCHER_JOB_FILE={0}\n".format(batch_file))
            
             if self.scheduler == 'SLURM':
-               job_file_lines = self.add_slurm_commands(job_file_lines, job_file_name, hostname, batch_file=batch_file)
+               job_file_lines = self.add_slurm_commands(job_file_lines, job_file_name, hostname,
+                                                        batch_file=batch_file, distribute=distribute)
 
             if self.remora:
                 job_file_lines.append("\nremora $LAUNCHER_DIR/paramrun\n")
