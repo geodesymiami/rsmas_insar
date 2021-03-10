@@ -228,16 +228,16 @@ for g in "${globlist[@]}"; do
                 num_timeout=$(($num_timeout+1))
                 step_max_tasks=$(echo "$step_max_tasks_unit/${step_io_load_list[$step_name]}" | bc | awk '{print int($1)}')
         
-                init_walltime=$(grep -oP '(?<=#SBATCH -t )[0-9]+:[0-9]+:[0-9]+' $jf)
+                init_walltime=$(grep -oP '(?<=#SBATCH -t )[0-9]+:[0-9]+:[0-9]+' $file)
                 echo "Timedout with walltime of ${init_walltime}."
                                 
                 # Compute a new walltime and update the job file
                 update_walltime.py "$file" &> /dev/null
-                updated_walltime=$(grep -oP '(?<=#SBATCH -t )[0-9]+:[0-9]+:[0-9]+' $jf)
+                updated_walltime=$(grep -oP '(?<=#SBATCH -t )[0-9]+:[0-9]+:[0-9]+' $file)
 
                 datetime=$(date +"%Y-%m-%d:%H-%M")
-                echo "${datetime}: re-running: ${jf}: ${init_walltime} --> ${updated_walltime}" >> "${RUNFILES_DIR}"/rerun.log
-                echo "Resubmitting file (${jf}) with new walltime of ${updated_walltime}"
+                echo "${datetime}: re-running: ${file}: ${init_walltime} --> ${updated_walltime}" >> "${RUNFILES_DIR}"/rerun.log
+                echo "Resubmitting file (${file}) with new walltime of ${updated_walltime}"
 
                 jobnumbers=($(remove_from_list $jobnumber "${jobnumbers[@]}"))
                 files=($(remove_from_list $jf "${files[@]}"))
