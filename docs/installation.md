@@ -70,7 +70,7 @@ cp -p ../minsar/additions/mintpy/smallbaselineApp_auto.cfg ../sources/MintPy/min
 cp -p ../minsar/additions/mintpy/plot_smallbaselineApp.sh ../sources/MintPy/mintpy/sh/
 
 cp -r ../sources/isce2/contrib/stack/* $ISCE_STACK 
-cp -p ../minsar/additions/isce2/FilterAndCoherence.py $ISCE_STACK/topsStack
+cp -p ../minsar/additions/isce2/topsStack/FilterAndCoherence.py $ISCE_STACK/topsStack
 
 #cp -p ../minsar/additions/isce/prepRawCSK.py ../sources/isce2/contrib/stack/stripmapStack
 #cp -p ../minsar/additions/isce/invertMisreg.py ../sources/isce2/contrib/stack/stripmapStack
