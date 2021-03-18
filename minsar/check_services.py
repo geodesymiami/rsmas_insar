@@ -42,6 +42,7 @@ def is_service_online(command, extra_options=[]):
             online = check_server_status(command, timeout=timeout_vals[tries], extra_options=extra_options)
         else:
             command = command.format(timeout_vals[tries])
+            print(command)
             process = subprocess.run(command.split(), capture_output=True)
             online = True if process.returncode == 0 else False
         tries += 1
@@ -63,28 +64,33 @@ def main(iargs=None):
         inps.insarmaps = True
 
     if inps.dem_server:
+        print("Checking DEM server ...")
         online, speed = is_service_online("https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11") 
         print("demServer is {} {}".format("ONLINE" if online else "OFFLINE", speed))
 
     if inps.download_asf:
+        print("Checking ASF download server ...")
         online, speed = is_service_online("https://web-services.unavco.org")
         print("downloadASF list service is {} {}".format("ONLINE" if online else "OFFLINE", speed))
         online, speed = is_service_online("https://datapool.asf.alaska.edu") 
-        print("downloadASF download service is {} {}".format("ONLINE" if online else "OFFLINE", speed))
+        print("downloadASF download service is {} {}n".format("ONLINE" if online else "OFFLINE", speed))
 
     if inps.jetstream_server:
+        print("Checking jetstream server ...")
         online, speed = is_service_online("http://centos@129.114.104.223", extra_options=["--no-check-certificate"])
-        print("jetstream server is {} {}".format("ONLINE" if online else "OFFLINE", speed))
+        print("jetstream server is {} {}n".format("ONLINE" if online else "OFFLINE", speed))
 
     if inps.insarmaps:
+        print("Checking insarmaps server ...")
         online, speed = is_service_online("http://insarmaps.miami.edu", extra_options=["--no-check-certificate"])
         print("insarmaps server is {} {}".format("ONLINE" if online else "OFFLINE", speed))
 
     if inps.work_dir:
+        print("Checking $WORK ...")
         workdir = os.environ['WORK']
         command = "timeout {} ls {}".format("{}", workdir)
         online, speed = is_service_online(command)
-        print("$WORK is {} {}".format("ONLINE" if online else "OFFLINE", speed))
+        print("$WORK is {} {}\n".format("ONLINE" if online else "OFFLINE", speed))
 
     
 
