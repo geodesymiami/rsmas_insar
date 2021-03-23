@@ -17,7 +17,6 @@ def add_common_parser(parser):
 def check_server_status(server_url, timeout=0.1, extra_options=[]):
     option_str = ' '.join(extra_options)
     command = "wget --spider {} --connect-timeout={} --tries=3 {} ".format(server_url, timeout, option_str)
-    print(command)
     process = subprocess.run(command.split(), capture_output=True)
     output = str(process.stderr)
 
@@ -42,7 +41,6 @@ def is_service_online(command, extra_options=[]):
             online = check_server_status(command, timeout=timeout_vals[tries], extra_options=extra_options)
         else:
             command = command.format(timeout_vals[tries])
-            print(command)
             process = subprocess.run(command.split(), capture_output=True)
             online = True if process.returncode == 0 else False
         tries += 1
@@ -64,33 +62,29 @@ def main(iargs=None):
         inps.insarmaps = True
 
     if inps.dem_server:
-        print("Checking DEM server ...")
         online, speed = is_service_online("https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11") 
-        print("demServer is {} {}".format("ONLINE" if online else "OFFLINE", speed))
+        #print("demServer is {} {}".format("ONLINE" if online else "OFFLINE", speed))
+        print("{:31s} {:6s} {:4s}".format("demServer is", "ONLINE" if online else "OFFLINE", speed))
 
     if inps.download_asf:
-        print("Checking ASF download server ...")
         online, speed = is_service_online("https://web-services.unavco.org")
-        print("downloadASF list service is {} {}".format("ONLINE" if online else "OFFLINE", speed))
-        online, speed = is_service_online("https://datapool.asf.alaska.edu") 
-        print("downloadASF download service is {} {}n".format("ONLINE" if online else "OFFLINE", speed))
+        print("{:31s} {:6s} {:4s}".format("downloadASF list service is", "ONLINE" if online else "OFFLINE", speed))
+        online, speed = is_service_online("https://datapool.asf.alaska.edu/SLC/SA/S1A_IW_SLC__1SSV_20160605T114943_20160605T115018_011575_011AEF_98EA.zip") 
+        print("{:31s} {:6s} {:4s}".format("downloadASF download service is", "ONLINE" if online else "OFFLINE", speed))
 
     if inps.jetstream_server:
-        print("Checking jetstream server ...")
         online, speed = is_service_online("http://centos@129.114.104.223", extra_options=["--no-check-certificate"])
-        print("jetstream server is {} {}n".format("ONLINE" if online else "OFFLINE", speed))
+        print("{:31s} {:6s} {:4s}".format("jetstream server is", "ONLINE" if online else "OFFLINE", speed))
 
     if inps.insarmaps:
-        print("Checking insarmaps server ...")
         online, speed = is_service_online("http://insarmaps.miami.edu", extra_options=["--no-check-certificate"])
-        print("insarmaps server is {} {}".format("ONLINE" if online else "OFFLINE", speed))
+        print("{:31s} {:6s} {:4s}".format("insarmaps server is", "ONLINE" if online else "OFFLINE", speed))
 
     if inps.work_dir:
-        print("Checking $WORK ...")
         workdir = os.environ['WORK']
         command = "timeout {} ls {}".format("{}", workdir)
         online, speed = is_service_online(command)
-        print("$WORK is {} {}\n".format("ONLINE" if online else "OFFLINE", speed))
+        print("{:31s} {:6s} {:4s}".format("$WORK is", "ONLINE" if online else "OFFLINE", speed))
 
     
 
