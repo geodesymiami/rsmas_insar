@@ -31,4 +31,9 @@ cds; module load tacc-singularity; singularity pull docker://registry.gitlab.com
 topsStack.textCmd                 = "singularity exec /tmp/mgeolab_0.1.sif "
 ```
 
+if singularity is on scratch use:
+```
+topsStack.textCmd                 = "singularity exec $SCRATCH/mgeolab_0.1.sif "
+```
+
 4 - Run `minsarApp.bash $templatefile`
