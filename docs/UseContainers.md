@@ -18,12 +18,11 @@ alias s.bi='source ~/accounts/platforms_defaults.bash; source ~/accounts/environ
 ```
 git clone https://github.com/geodesymiami/accounts.git ~/accounts ;
 git clone https://github.com/geodesymiami/mjobs.git $SCRATCH/mjobs ;
-git clone https://github.com/geodesymiami/SSARA.git $SCRATCH/mjobs ;
 ```
 
 3 - Login to a compute node and run 
 ```
-cds; module load tacc-singularity; singularity pull docker://registry.gitlab.com/mirzaees/mgeolab:0.1
+cds; singularity pull docker://registry.gitlab.com/mirzaees/mgeolab:0.1
 ```
 
 4 - Add this option to your template file:
