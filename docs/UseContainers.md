@@ -35,4 +35,4 @@ if singularity is on scratch use:
 topsStack.textCmd                 = "singularity exec $SCRATCH/mgeolab_0.1.sif "
 ```
 
-4 - Run `minsarApp.bash $templatefile`
+5 - Run `minsarApp.bash $templatefile`
