@@ -664,9 +664,45 @@ class JOB_SUBMIT:
 
     def add_slurm_commands(self, job_file_lines, job_file_name, hostname, batch_file=None, distribute=None):
 
-        job_file_lines.append("module load python_cacher \n")
-        job_file_lines.append("export PYTHON_IO_CACHE_CWD=0\n")
+        #job_file_lines.append("module load python_cacher \n")
+        #job_file_lines.append("export PYTHON_IO_CACHE_CWD=0\n")
+        #job_file_lines.append("export PYTHON_IO_TargetDir="/scratch/07187/tg864867/codefalk\n")  #Suggestion from Lei@TACC 3/2021
         job_file_lines.append("module load ooops\n")
+
+        job_file_lines.append("\n" )
+        job_file_lines.append( "### install code on /tmp and set environment ###\n" )
+        job_file_lines.append( "df -h /tmp\n" )
+        job_file_lines.append("\n" )
+        job_file_lines.append( "rm -rf /tmp/rsmas_insar\n" )
+        job_file_lines.append( "mkdir -p /tmp/rsmas_insar\n" )
+        job_file_lines.append( "cp -r $RSMASINSAR_HOME/minsar /tmp/rsmas_insar\n" )
+        job_file_lines.append( "cp -r $RSMASINSAR_HOME/setup  /tmp/rsmas_insar\n" )
+        job_file_lines.append( "\n" )
+
+        if "smallbaseline_wrapper" in job_file_name or "insarmaps" in job_file_name:
+            job_file_lines.append( "mkdir -p /tmp/rsmas_insar/sources\n" )
+            job_file_lines.append( "cp -r $RSMASINSAR_HOME/sources/MintPy /tmp/rsmas_insar/sources\n" )
+            job_file_lines.append( "cp -r $RSMASINSAR_HOME/3rdparty/PyAPS /tmp/rsmas_insar/3rparty\n" )
+            job_file_lines.append( "cp -r $RSMASINSAR_HOME/sources/insarmaps_scripts /tmp/rsmas_insar/sources\n" )
+
+        job_file_lines.append( "\n" )
+        job_file_lines.append( "mkdir -p /tmp/rsmas_insar/3rdparty ;\n" )
+        job_file_lines.append( "cp -r $RSMASINSAR_HOME/3rdparty/launcher /tmp/rsmas_insar/3rdparty \n" )
+        job_file_lines.append( "cp $SCRATCH/miniconda3.tar /tmp\n" )
+        job_file_lines.append( "tar xf /tmp/miniconda3.tar -C /tmp/rsmas_insar/3rdparty\n" )
+
+        job_file_lines.append( "\n" )
+        job_file_lines.append( "export RSMASINSAR_HOME=/tmp/rsmas_insar\n" )
+        job_file_lines.append( "cd $RSMASINSAR_HOME; source ~/accounts/platforms_defaults.bash; source setup/environment.bash; export PATH=$ISCE_STACK/topsStack:$PATH; cd -;\n" )
+        job_file_lines.append( "\n" )
+        job_file_lines.append( '### remove /scratch and /work from PATH ###\n' )
+        job_file_lines.append( """export PATH=`echo ${PATH} | awk -v RS=: -v ORS=: '/scratch/ {next} {print}' | sed 's/:*$//'` \n""" )
+        job_file_lines.append( """export PATH=`echo ${PATH} | awk -v RS=: -v ORS=: '/work/ {next} {print}' | sed 's/:*$//'` \n""" )
+        job_file_lines.append( """export PYTHONPATH=`echo ${PYTHONPATH} | awk -v RS=: -v ORS=: '/scratch/ {next} {print}' | sed 's/:*$//'` \n""" )
+        job_file_lines.append( """export PYTHONPATH_RSMAS=`echo ${PYTHONPATH_RSMAS} | awk -v RS=: -v ORS=: '/scratch/ {next} {print}' | sed 's/:*$//'` \n""" )
+
+        #if any(x in job_file_name for x in copy_to_tmp_steps):
+        #job_file_lines.append( """echo ${PATH} | tr ":" "\\n"\n""" )
 
         # for MiNoPy jobs
         if not distribute is None:
@@ -687,17 +723,17 @@ class JOB_SUBMIT:
                 job_file_lines.append('cp -r ' + self.out_dir + '/reference /tmp\n')
                 job_file_lines.append('files="/tmp/reference/*.xml /tmp/reference/*/*.xml"\n')
                 job_file_lines.append('old=' + self.out_dir + '\n')
-                job_file_lines.append('srun sed -i "s|$old|/tmp|g" $files\n')
+                job_file_lines.append('sed -i "s|$old|/tmp|g" $files\n')
             if any(x in job_file_name for x in copy_geom_reference_steps):
                 job_file_lines.append('cp -r ' + self.out_dir + '/geom_reference /tmp\n')
                 job_file_lines.append('files="/tmp/geom_reference/*/*.xml"\n')
                 job_file_lines.append('old=' + self.out_dir + '\n')
-                job_file_lines.append('srun sed -i "s|$old|/tmp|g" $files\n')
+                job_file_lines.append('sed -i "s|$old|/tmp|g" $files\n')
             if any(x in job_file_name for x in copy_stack_steps):
                 job_file_lines.append('cp -r ' + self.out_dir + '/stack /tmp\n')
                 job_file_lines.append('files="/tmp/stack/*xml"\n')
                 job_file_lines.append('old=' + self.out_dir + '\n')
-                job_file_lines.append('srun sed -i "s|$old|/tmp|g" $files\n')
+                job_file_lines.append('sed -i "s|$old|/tmp|g" $files\n')
 
         if 'generate_burst_igram' in job_file_name and not batch_file is None:
             # awk '{printf "%s\\n",$3}' run_08_generate_burst_igram | awk -F _ '{printf "%s\\n%s\\n",$4,$5}' | sort -n | uniq
@@ -718,8 +754,8 @@ class JOB_SUBMIT:
             job_file_lines.append('files1="/tmp/coreg_secondarys/????????/*.xml"\n')
             job_file_lines.append('files2="/tmp/coreg_secondarys/????????/*/*.xml"\n')
             job_file_lines.append('old=' + self.out_dir + '\n')
-            job_file_lines.append('srun sed -i "s|$old|/tmp|g" $files1\n')
-            job_file_lines.append('srun sed -i "s|$old|/tmp|g" $files2\n')
+            job_file_lines.append('sed -i "s|$old|/tmp|g" $files1\n')
+            job_file_lines.append('sed -i "s|$old|/tmp|g" $files2\n')
 
             str = """ref_date=( $(xmllint --xpath 'string(/productmanager_name/component[@name="instance"]/property[@name="ascendingnodetime"]/value)' """ \
                 + self.out_dir + """/reference/IW*.xml | cut -d ' ' -f 1 | sed "s|-||g") )"""
@@ -728,7 +764,7 @@ class JOB_SUBMIT:
             job_file_lines.append('   cp -r ' + self.out_dir + '/reference /tmp\n')
             job_file_lines.append('   files="/tmp/reference/*.xml /tmp/reference/*/*.xml"\n')
             job_file_lines.append('   old=' + self.out_dir + '\n')
-            job_file_lines.append('   srun sed -i "s|$old|/tmp|g" $files\n')
+            job_file_lines.append('   sed -i "s|$old|/tmp|g" $files\n')
             job_file_lines.append('fi\n')
 
         if 'merge_burst_igram' in job_file_name and not batch_file is None:
@@ -743,8 +779,8 @@ class JOB_SUBMIT:
             job_file_lines.append('files1="/tmp/interferograms/????????_????????/*.xml"\n')
             job_file_lines.append('files2="/tmp/interferograms/????????_????????/*/*.xml"\n')
             job_file_lines.append('old=' + self.out_dir + '\n')
-            job_file_lines.append('srun sed -i "s|$old|/tmp|g" $files1\n')
-            job_file_lines.append('srun sed -i "s|$old|/tmp|g" $files2\n')
+            job_file_lines.append('sed -i "s|$old|/tmp|g" $files1\n')
+            job_file_lines.append('sed -i "s|$old|/tmp|g" $files2\n')
 
 
         if 'filter_coherence' in job_file_name and not batch_file is None:
@@ -762,7 +798,7 @@ class JOB_SUBMIT:
 
             job_file_lines.append('files1="/tmp/merged/interferograms/????????_????????/*.xml"\n')
             job_file_lines.append('old=' + self.out_dir +'\n')
-            job_file_lines.append('srun sed -i "s|$old|/tmp|g" $files1\n')
+            job_file_lines.append('sed -i "s|$old|/tmp|g" $files1\n')
 
             job_file_lines.append('mkdir -p /tmp/merged/SLC\n\n')
             job_file_lines.append("""for date in "${date_list[@]}"; do\n""")
@@ -771,7 +807,7 @@ class JOB_SUBMIT:
 
             job_file_lines.append('files1="/tmp/merged/SLC/????????/*.xml"\n')
             job_file_lines.append('old=' + self.out_dir + '\n')
-            job_file_lines.append('srun sed -i "s|$old|/tmp|g" $files1\n')
+            job_file_lines.append('sed -i "s|$old|/tmp|g" $files1\n')
 
 
         if 'unwrap' in job_file_name and not batch_file is None:
@@ -785,7 +821,7 @@ class JOB_SUBMIT:
   
             job_file_lines.append('files1="/tmp/merged/interferograms/????????_????????/*.xml"\n')
             job_file_lines.append('old=' + self.out_dir + '\n')
-            job_file_lines.append('srun sed -i "s|$old|/tmp|g" $files1\n')
+            job_file_lines.append('sed -i "s|$old|/tmp|g" $files1\n')
 
         return job_file_lines
 
@@ -822,7 +858,7 @@ class JOB_SUBMIT:
             if self.remora:
                 job_file_lines.append("\n\nmodule load remora")
 
-            job_file_lines.append("\n\nmodule load launcher")
+            job_file_lines.append("\n\n#falk module load launcher")
             #if self.queue in ['gpu', 'rtx', 'rtx-dev']:
             #    job_file_lines.append("\n\nmodule load launcher_gpu")
             #else:
