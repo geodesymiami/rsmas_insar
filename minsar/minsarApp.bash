@@ -169,6 +169,11 @@ elif [[ $stopstep != "" ]]; then
 fi
 
 ####################################
+if  ! test -f "$SCRATCH/miniconda3.tar" ; then
+    echo "Copying miniconda3.tar to SCRATCH ..."
+    cp $RSMASINSAR_HOME/3rdparty/miniconda3.tar $SCRATCH
+fi
+####################################
 download_dir=$WORK_DIR/SLC
 
 platform_str=$(grep platform $template_file | cut -d'=' -f2)
