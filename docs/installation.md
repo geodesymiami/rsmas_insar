@@ -78,6 +78,13 @@ cp -p ../minsar/additions/isce2/topsStack/FilterAndCoherence.py $ISCE_STACK/tops
 #cp -p ../minsar/additions/isce/stackSentinel.py $ISCE_STACK/topsStack
 
 ```
+* #create your `miniconda3.tar`  (removing `pkgs` saves space, could cause problems with environments)
+```
+cd $RSMASINSAR_HOME/3rdparty
+rm -rf miniconda3/pkgs
+tar cf miniconda3.tar miniconda3
+```
+
 
 ### Orbits and aux files
 This has created directories for the orbits for Sentinel-1 (`$SENTINEL_ORBITS`), which The can be downloaded using `dloadOrbits.py`. The IPF calibration files (`SENTINEL_AUX`) are downloaded from: https://qc.sentinel1.eo.esa.int/aux_cal/ .
