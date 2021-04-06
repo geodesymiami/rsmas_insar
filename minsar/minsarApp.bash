@@ -238,7 +238,10 @@ if [[ $jobfiles_flag == "1" ]]; then
     fi
     
     # modify config files to use /tmp on compute node 
-    files="configs/config_baseline_* configs/*_fullBurst_geo2rdr_* configs/*_fullBurst_resample_* configs/config_igram_unw_*"
+
+    # run_03_average_baseline`
+    files="configs/config_baseline_*"
+
     old="reference : $PWD"
     new="reference : /tmp"
     sed -i "s|$old|$new|g" $files
@@ -247,30 +250,73 @@ if [[ $jobfiles_flag == "1" ]]; then
     new="geom_referenceDir : /tmp"
     sed -i "s|$old|$new|g" $files
 
-    files="configs/config_merge_* configs/*merge_igram*"
+    old="secondary : $PWD"
+    new="secondary : /tmp"
+    sed -i "s|$old|$new|g" $files
+
+    # run_04_fullBurst_geo2rdr
+    files="configs/config_fullBurst_geo2rdr_*"
+
+    old="secondary : $PWD"
+    new="secondary : /tmp"
+    sed -i "s|$old|$new|g" $files
+
+    old="reference : $PWD"
+    new="reference : /tmp"
+    sed -i "s|$old|$new|g" $files
+
+    # run_05_fullBurst_resample
+    files="configs/config_fullBurst_resample_*"
+    old="secondary : $PWD"
+    new="secondary : /tmp"
+    sed -i "s|$old|$new|g" $files
+
+    old="reference : $PWD"
+    new="reference : /tmp"
+    sed -i "s|$old|$new|g" $files
+
+    # run_07_merge_reference_secondary_slc
+    files="configs/config_merge_[0-9]*"
+
     old="stack : $PWD"
     new="stack : /tmp"
     sed -i "s|$old|$new|g" $files
 
+    old="inp_reference : $PWD/reference"
+    new="inp_reference : /tmp/reference"
+    sed -i "s|$old|$new|g" $files
+
+    old="dirname : $PWD/reference"
+    new="dirname : /tmp/reference"
+    sed -i "s|$old|$new|g" $files
+
+    # run_08_generate_burst_igram
     files="configs/config_generate_igram_*"
-    old="reference : $PWD"
-    new="reference : /tmp"
-    sed -i "s|$old|$new|g" $files
-    old="secondary : $PWD"
-    new="secondary : /tmp"
-    sed -i "s|$old|$new|g" $files
+
     old="reference : $PWD"
     new="reference : /tmp"
     sed -i "s|$old|$new|g" $files
 
-    files="configs/config_merge_igram_*"
+    old="secondary : $PWD"
+    new="secondary : /tmp"
+    sed -i "s|$old|$new|g" $files
+
+    # run_09_merge_burst_igram
+    files="configs/config_merge_igram_[0-9]*"
+
+    old="stack : $PWD"
+    new="stack : /tmp"
+    sed -i "s|$old|$new|g" $files
+
     old="inp_reference : $PWD"
     new="inp_reference : /tmp"
     sed -i "s|$old|$new|g" $files
+
     old="dirname : $PWD"
     new="dirname : /tmp"
     sed -i "s|$old|$new|g" $files
 
+    # run_10_filter_coherence
     files="configs/config_igram_filt_coh_*"
     old="input : $PWD"
     new="input : /tmp"
@@ -283,13 +329,21 @@ if [[ $jobfiles_flag == "1" ]]; then
     #new="slc2 : /tmp"
     #sed -i "s|$old|$new|g" $files
 
+    # run_11_unwrap
     files="configs/config_igram_unw_*"
+
     old="ifg : $PWD"
     new="ifg : /tmp"
     sed -i "s|$old|$new|g" $files
+
     old="coh : $PWD"
     new="coh : /tmp"
     sed -i "s|$old|$new|g" $files
+
+    old="reference : $PWD"
+    new="reference : /tmp"
+    sed -i "s|$old|$new|g" $files
+
 
 fi
 
