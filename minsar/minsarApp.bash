@@ -265,6 +265,10 @@ if [[ $jobfiles_flag == "1" ]]; then
     new="reference : /tmp"
     sed -i "s|$old|$new|g" $files
 
+    old="geom_referenceDir : $PWD"
+    new="geom_referenceDir : /tmp"
+    sed -i "s|$old|$new|g" $files
+
     # run_05_fullBurst_resample
     files="configs/config_fullBurst_resample_*"
     old="secondary : $PWD"
