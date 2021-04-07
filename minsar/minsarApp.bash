@@ -282,12 +282,12 @@ if [[ $jobfiles_flag == "1" ]]; then
     new="stack : /tmp"
     sed -i "s|$old|$new|g" $files
 
-    old="inp_reference : $PWD/reference"
-    new="inp_reference : /tmp/reference"
+    old="inp_reference : $PWD"
+    new="inp_reference : /tmp"
     sed -i "s|$old|$new|g" $files
 
-    old="dirname : $PWD/reference"
-    new="dirname : /tmp/reference"
+    old="dirname : $PWD"
+    new="dirname : /tmp"
     sed -i "s|$old|$new|g" $files
 
     # run_08_generate_burst_igram
