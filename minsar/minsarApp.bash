@@ -174,6 +174,22 @@ if  ! test -f "$SCRATCH/miniconda3.tar" ; then
     cp $RSMASINSAR_HOME/3rdparty/miniconda3.tar $SCRATCH
 fi
 ####################################
+if  ! test -f "$SCRATCHDIR/S1orbits.tar" ; then
+    echo "Copying S1orbits.tar to SCRATCHDIR ..."
+    cp $WORK/S1orbits.tar $SCRATCH
+fi
+
+if [ ! "$(ls -A $SCRATCHDIR/S1orbits)" ]; then
+     echo "SCRATCHDIR/S1orbits is empty, untarring S1orbits.tar ..."
+     tar xf $SCRATCHDIR/S1orbits.tar -C $SCRATCHDIR
+fi
+# download latest orbits from ASF mirror
+cd $SCRATCHDIR/S1orbits
+curl --ftp-ssl --silent --use-ascii --ftp-method nocwd --list-only https://s1qc.asf.alaska.edu/aux_poeorb/ > ASF_poeorb.txt
+cat ASF_poeorb.txt | awk '{printf "! test -f %s && wget -c https://s1qc.asf.alaska.edu/aux_poeorb/%s\n", substr($0,10,77), substr($0,10,77)}' | grep 20210[4-9] > ASF_poeorb_latest.txt
+bash ASF_poeorb_latest.txt
+cd -
+####################################
 download_dir=$WORK_DIR/SLC
 
 platform_str=$(grep platform $template_file | cut -d'=' -f2)
