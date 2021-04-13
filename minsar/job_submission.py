@@ -454,8 +454,12 @@ class JOB_SUBMIT:
         number_of_nodes_per_job = 1
 
         max_jobs_per_workflow = self.max_jobs_per_workflow
+
         if ( "generate_burst_igram" in batch_file or "merge_burst_igram" in batch_file) :
             max_jobs_per_workflow = 100
+        # FA 4/2021: we should remove all jobs_per_workflow restrictions as this is done by submit_jobs.bash
+        if 'singleNode' in self.submission_scheme:
+           max_jobs_per_workflow = 1000
         #while number_of_jobs > int(self.max_jobs_per_workflow):
         while number_of_jobs > int(max_jobs_per_workflow):
             number_of_nodes_per_job = number_of_nodes_per_job + 1
@@ -992,8 +996,12 @@ class JOB_SUBMIT:
             else:
                 job_file_lines.append("$LAUNCHER_DIR/paramrun\n")
 
+            # need to remove code because of a Stampede2/SLURM bug that sometimes not all files are removed
+            job_file_lines.append( """rm -rf /tmp/rsmas_insar \n""" )
+
             with open(os.path.join(self.out_dir, job_file_name), "w+") as job_f:
                 job_f.writelines(job_file_lines)
+
 
         else:
 
