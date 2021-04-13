@@ -14,7 +14,6 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 [ -z ${NOTIFICATIONEMAIL} ] && export NOTIFICATIONEMAIL=${USER_PREFERRED}@rsmas.miami.edu
 [ -z ${DOWNLOADHOST} ] && export DOWNLOADHOST=local
 [ -z ${JOBSHEDULER_PROJECTNAME} ] && export JOBSHEDULER_PROJECTNAME=insarlab
-[ -z ${SENTINEL_ORBITS} ] && export SENTINEL_ORBITS=${WORKDIR}/S1orbits
 [ -z ${SENTINEL_ORBITS} ] && export SENTINEL_ORBITS=${SCRATCHDIR}/S1orbits
 [ -z ${SENTINEL_AUX} ] && export SENTINEL_AUX=${SCRATCHDIR}/S1aux
 [ -z ${WEATHER_DIR} ] && export WEATHER_DIR=${WORKDIR}/WEATHER
