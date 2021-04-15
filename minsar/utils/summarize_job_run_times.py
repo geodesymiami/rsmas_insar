@@ -57,7 +57,7 @@ def main(iargs=None):
             run_files_dir = cwd + '/run_files'
 
     run_stdout_files = glob.glob(run_files_dir + '/run_*_*_[0-9][0-9][0-9][0-9]*.o') + glob.glob(run_files_dir + '/*/run_*_*_[0-9][0-9][0-9][0-9]*.o')
-    run_stdout_files = natsorted(run_stdout_files)
+    #run_stdout_files = natsorted(run_stdout_files)
     
     #run_stdout_files2 = glob.glob(run_files_dir + '/stdout_run_*/run_*.o')
     #run_stdout_files2 = natsorted(run_stdout_files2)
@@ -67,7 +67,10 @@ def main(iargs=None):
         run_stdout_files = glob.glob(run_files_dir + '/stdout_run_*/run_*.o')
         run_stdout_files = natsorted(run_stdout_files)
    
-    job_id_list = []
+    run_stdout_files_base=[]
+    for f in run_stdout_files:
+        run_stdout_files_base.append(os.path.basename(f))
+    run_stdout_files = natsorted(run_stdout_files_base)
 
     bursts = glob.glob(inps.work_dir + '/geom_reference/*/hgt*rdr')
     number_of_bursts = len(bursts)
@@ -98,8 +101,10 @@ def main(iargs=None):
        print('Not on TACC system - return from summarize_job_run_times.py')
        return None
 
+    test_lines=[]
+    last_name=[]
     for fname in run_stdout_files:
-        job_id = os.path.basename(fname).split('.o')[0].split('_')[-1]
+        job_id = fname.split('.o')[0].split('_')[-1]
         
         command = 'sacct --format=NNodes,Timelimit,reserved,elapsed -j ' + job_id
         
@@ -116,14 +121,23 @@ def main(iargs=None):
    
         time_per_burst = putils.multiply_walltime(elapsed_time, factor = 1/number_of_bursts)
 
-        string ='{:32} {:1}  {:1}'.format('_'.join(os.path.basename(fname).split('_')[0:-1]) , out.decode('utf-8'), time_per_burst)
+        name = '_'.join(fname.split('_')[0:-2])
+        if name != last_name:
+           last_name = name
+           print("")
+           out_lines.append("\n")
+
+        string ='{:32} {:1}  {:1}'.format('_'.join(fname.split('_')[0:-1]) , out.decode('utf-8'), time_per_burst)
         print( string ); out_lines.append(string)
  
+        if name == "run_04_fullBurst_geo2rdr":
+           test_lines.append(string)
+
         num_nodes_list.append(num_nodes)
         wall_time_list.append(wall_time)
         reserved_time_list.append(reserved_time)
         elapsed_time_list.append(elapsed_time)
-
+       
     reserved_time_sum = putils.sum_time(reserved_time_list)
     elapsed_time_sum = putils.sum_time(elapsed_time_list)
     total_time = putils.sum_time( [reserved_time_sum, elapsed_time_sum] )
@@ -147,6 +161,7 @@ def main(iargs=None):
     home_dir = os.getenv('HOME')
     save_job_run_times_summary(home_dir + '/job_summaries', out_lines, inps.project_name)
 
+    save_job_run_times_summary(home_dir + '/job_summaries', test_lines, inps.project_name)
     return None
 
 
