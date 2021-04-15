@@ -677,17 +677,18 @@ class JOB_SUBMIT:
         job_file_lines.append( "mkdir -p /tmp/rsmas_insar\n" )
         job_file_lines.append( "cp -r $RSMASINSAR_HOME/minsar /tmp/rsmas_insar\n" )
         job_file_lines.append( "cp -r $RSMASINSAR_HOME/setup  /tmp/rsmas_insar\n" )
+        job_file_lines.append( "mkdir -p /tmp/rsmas_insar/3rdparty ;\n" )
 
         if "smallbaseline_wrapper" in job_file_name or "insarmaps" in job_file_name:
             job_file_lines.append( "mkdir -p /tmp/rsmas_insar/sources\n" )
             job_file_lines.append( "cp -r $RSMASINSAR_HOME/sources/MintPy /tmp/rsmas_insar/sources\n" )
-            job_file_lines.append( "cp -r $RSMASINSAR_HOME/3rdparty/PyAPS /tmp/rsmas_insar/3rparty\n" )
+            job_file_lines.append( "cp -r $RSMASINSAR_HOME/3rdparty/PyAPS /tmp/rsmas_insar/3rdparty\n" )
             job_file_lines.append( "cp -r $RSMASINSAR_HOME/sources/insarmaps_scripts /tmp/rsmas_insar/sources\n" )
 
-        job_file_lines.append( "mkdir -p /tmp/rsmas_insar/3rdparty ;\n" )
         job_file_lines.append( "cp -r $RSMASINSAR_HOME/3rdparty/launcher /tmp/rsmas_insar/3rdparty \n" )
         job_file_lines.append( "cp $SCRATCH/miniconda3.tar /tmp\n" )
         job_file_lines.append( "tar xf /tmp/miniconda3.tar -C /tmp/rsmas_insar/3rdparty\n" )
+        job_file_lines.append( "rm /tmp/miniconda3.tar\n" )
 
         job_file_lines.append( "# set environment    \n" )
         job_file_lines.append( "export RSMASINSAR_HOME=/tmp/rsmas_insar\n" )
@@ -695,8 +696,11 @@ class JOB_SUBMIT:
         job_file_lines.append( '# remove /scratch and /work from PATH\n' )
         job_file_lines.append( """export PATH=`echo ${PATH} | awk -v RS=: -v ORS=: '/scratch/ {next} {print}' | sed 's/:*$//'` \n""" )
         job_file_lines.append( """export PATH=`echo ${PATH} | awk -v RS=: -v ORS=: '/work/ {next} {print}' | sed 's/:*$//'` \n""" )
+        job_file_lines.append( """export PATH=`echo ${PATH} | awk -v RS=: -v ORS=: '/home/ {next} {print}' | sed 's/:*$//'` \n""" )
         job_file_lines.append( """export PYTHONPATH=`echo ${PYTHONPATH} | awk -v RS=: -v ORS=: '/scratch/ {next} {print}' | sed 's/:*$//'` \n""" )
+        job_file_lines.append( """export PYTHONPATH=`echo ${PYTHONPATH} | awk -v RS=: -v ORS=: '/home/ {next} {print}' | sed 's/:*$//'` \n""" )
         job_file_lines.append( """export PYTHONPATH_RSMAS=`echo ${PYTHONPATH_RSMAS} | awk -v RS=: -v ORS=: '/scratch/ {next} {print}' | sed 's/:*$//'` \n""" )
+        job_file_lines.append( """export PYTHONPATH_RSMAS=`echo ${PYTHONPATH_RSMAS} | awk -v RS=: -v ORS=: '/home/ {next} {print}' | sed 's/:*$//'` \n""" )
 
         if not 'unpack_topo_reference' in job_file_name and not 'unpack_secondary_slc' in job_file_name:
             job_file_lines.append( "################################################\n" )
@@ -926,6 +930,8 @@ class JOB_SUBMIT:
         #job_file_lines.append("export PYTHON_IO_CACHE_CWD=0\n")
         #job_file_lines.append("export PYTHON_IO_TargetDir="/scratch/07187/tg864867/codefalk\n")  #Suggestion from Lei@TACC 3/2021
 
+        # check space after copy-to-tmp
+        job_file_lines.append( "df -h /tmp\n" )
         # for MiNoPy jobs
         if not distribute is None:
             # DO NOT LOAD 'intel/19.1.1' HERE
