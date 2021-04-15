@@ -114,7 +114,7 @@ def skip_error(file, error_string):
 
     with open(file) as f:
        lines=f.read()
-       if '--- Logging error ---' in lines or '---Loggingerror---':
+       if '--- Logging error ---' in lines or '---Loggingerror---' in lines:
             skip = True
 
 
