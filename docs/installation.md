@@ -30,7 +30,7 @@ git clone https://github.com/geodesymiami/MiNoPy.git sources/MiNoPy
 git clone https://github.com/geodesymiami/geodmod.git sources/geodmod ;
 git clone https://github.com/geodesymiami/insarmaps_scripts.git sources/insarmaps_scripts ;
 git clone https://github.com/geodesymiami/SSARA.git 3rdparty/SSARA ;
-git clone https://github.com/yunjunz/pyaps3.git 3rdparty/PyAPS/pyaps3 ;
+git clone https://github.com/yunjunz/pyaps3.git 3rdparty/PyAPS ;
 git clone https://github.com/geodesymiami/MimtPy.git sources/MimtPy ;
 git clone https://github.com/TACC/launcher.git 3rdparty/launcher ;
 
