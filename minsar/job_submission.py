@@ -800,7 +800,11 @@ class JOB_SUBMIT:
             str = """date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file \
                 + """ | awk -F _ '{printf "%s\\n",$3}' | sed -n '/^[0-9]/p' ) )"""
             job_file_lines.append(str + '\n')
-            job_file_lines.append('mkdir -p /tmp/coreg_secondarys\n')
+            str = """ref_date=( $(xmllint --xpath 'string(/productmanager_name/component[@name="instance"]/property[@name="ascendingnodetime"]/value)' """ \
+                + self.out_dir + """/reference/IW*.xml | cut -d ' ' -f 1 | sed "s|-||g") )"""
+            job_file_lines.append(str + '\n')
+            job_file_lines.append("""# remove ref_date from array\n""")
+            job_file_lines.append("""date_list=( "${date_list[@]/$ref_date}" )\n""")
             job_file_lines.append("""for date in "${date_list[@]}"; do\n""")
             job_file_lines.append('    cp -r ' + self.out_dir + '/coreg_secondarys/' + '$date /tmp/coreg_secondarys\n')
             job_file_lines.append('done\n')
@@ -841,7 +845,7 @@ class JOB_SUBMIT:
             str = """ref_date=( $(xmllint --xpath 'string(/productmanager_name/component[@name="instance"]/property[@name="ascendingnodetime"]/value)' """ \
                 + self.out_dir + """/reference/IW*.xml | cut -d ' ' -f 1 | sed "s|-||g") )"""
             job_file_lines.append( str + '\n')
-            job_file_lines.append('if [[ $date_list == *$ref_date* ]]; then\n')
+            job_file_lines.append('if [[ " ${date_list[@]} " =~ " $ref_date " ]] ; then\n')
             job_file_lines.append('   cp -r ' + self.out_dir + '/reference /tmp\n')
             job_file_lines.append('   files="/tmp/reference/*.xml /tmp/reference/*/*.xml"\n')
             job_file_lines.append('   old=' + self.out_dir + '\n')
