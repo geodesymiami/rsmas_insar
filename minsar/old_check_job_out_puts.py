@@ -9,7 +9,6 @@ import minsar.utils.process_utilities as putils
 import numpy as np
 import shutil
 import glob
-from pathlib import Path
 from natsort import natsorted
 
 
@@ -45,35 +44,28 @@ def main(iargs=None):
                     'Traceback'
                    ]
 
-    #job_file = inps.job_files[0]
-    #job_name = job_file.split('.')[0]
-    #job_files = inps.job_files
-
-    job_names=[]
-    for job_file in inps.job_files:
-        job_names.append(job_file.split('.')[0])
-       
     job_file = inps.job_files[0]
-    job_name = job_names[0]
+    job_name = job_file.split('.')[0]
+    job_files = inps.job_files
 
     if 'run_' in job_name:
-        run_file_base = '_'.join(job_name.split('_')[:-1])
+        run_file = '_'.join(job_name.split('_')[:-1])
     else:
-        run_file_base = job_name
+        run_file = job_name
 
     matched_error_strings = []
-    for job_name in job_names:
-       print('checking *.e, *.o from ' + job_name + '.job')
-       #job_name = job_file.split('.')[0]
+    for job_file in job_files:
+       print('checking *.e, *.o from: ' + job_file)
+       job_name = job_file.split('.')[0]
 
        if 'filter_coherence' in job_name:
            putils.remove_line_counter_lines_from_error_files(run_file=job_name)
 
        if 'run_' in job_name:
-           putils.remove_zero_size_or_length_error_files(run_file=job_name)
+           putils.remove_launcher_message_from_error_file(run_file=job_name)
        
        if 'run_' in job_name:
-           putils.remove_launcher_message_from_error_file(run_file=job_name)
+           putils.remove_zero_size_or_length_error_files(run_file=job_name)
        
        error_files = glob.glob(job_name + '*.e')
        out_files = glob.glob(job_name + '*.o')
@@ -89,26 +81,25 @@ def main(iargs=None):
                    print( 'Error: \"' + error_string + '\" found in ' + file )
 
     if len(matched_error_strings) != 0:
-        with open(run_file_base + '_error_matches.e', 'w') as f:
+        with open(run_file + '_error_matches.e', 'w') as f:
             f.write(''.join(matched_error_strings))
     else:
         print("no error found")
         
     if 'run_' in job_name:
-       putils.concatenate_error_files(run_file=run_file_base, work_dir=project_dir)
+         putils.concatenate_error_files(run_file=run_file, work_dir=project_dir)
     else:
-       out_error_file = os.path.dirname(error_files[-1]) + '/out_' + os.path.basename(error_files[-1])
-       #Path(out_error_file)
-       shutil.copy(error_files[-1], out_error_file)
+         out_error_file = os.path.dirname(error_files[-1]) + '/out_' + os.path.basename(error_files[-1])
+         shutil.copy(error_files[-1], out_error_file)
 
     if len(matched_error_strings) != 0:
         print('For known issues see https://github.com/geodesymiami/rsmas_insar/tree/master/docs/known_issues.md')
-        raise RuntimeError('Error in run_file: ' + run_file_base)
+        raise RuntimeError('Error in run_file: ' + run_file)
 
     # move only if there was no error
-    if len(os.path.dirname(run_file_base))==0:
-       run_file = os.getcwd() + '/' + run_file_base
-    putils.move_out_job_files_to_stdout(run_file=run_file_base)
+    if len(os.path.dirname(run_file))==0:
+       run_file = os.getcwd() + '/' + run_file
+    putils.move_out_job_files_to_stdout(run_file=run_file)
 
     return
 
