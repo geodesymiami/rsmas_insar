@@ -804,7 +804,9 @@ class JOB_SUBMIT:
                 + self.out_dir + """/reference/IW*.xml | cut -d ' ' -f 1 | sed "s|-||g") )"""
             job_file_lines.append(str + '\n')
             job_file_lines.append("""# remove ref_date from array\n""")
-            job_file_lines.append("""date_list=( "${date_list[@]/$ref_date}" )\n""")
+            job_file_lines.append("""index=$(echo ${date_list[@]/$ref_date//} | cut -d/ -f1 | wc -w | tr -d ' ')\n""")
+            job_file_lines.append("""unset date_list[$index]\n""")
+            job_file_lines.append("""mkdir -p /tmp/coreg_secondarys\n""")
             job_file_lines.append("""for date in "${date_list[@]}"; do\n""")
             job_file_lines.append('    cp -r ' + self.out_dir + '/coreg_secondarys/' + '$date /tmp/coreg_secondarys\n')
             job_file_lines.append('done\n')
