@@ -828,12 +828,27 @@ class JOB_SUBMIT:
             # awk '{printf "%s\\n",$3}' run_10_filter_coherence | awk -F _ '{printf "%s\\n %s\\n",$5,$6}' | sort -n | uniq
             # awk '{printf "%s\\n",$3}' run_11_unwrap | awk -F _igram_unw_ '{printf "%s\\n",$2}' | sort -n | uniq
 
-            # coreg_secondarys
-            job_file_lines.append('# coreg_secondarys\n')
             str = """date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file \
                 + """ | awk -F _ '{printf "%s\\n%s\\n",$4,$5}' | sort -n | uniq) )"""
             job_file_lines.append(str + '\n')
-            job_file_lines.append('mkdir -p /tmp/coreg_secondarys\n')
+            str = """ref_date=( $(xmllint --xpath 'string(/productmanager_name/component[@name="instance"]/property[@name="ascendingnodetime"]/value)' """ \
+                + self.out_dir + """/reference/IW*.xml | cut -d ' ' -f 1 | sed "s|-||g") )"""
+            job_file_lines.append( str + '\n')
+            # reference
+            job_file_lines.append('# reference date\n')
+            job_file_lines.append('if [[ " ${date_list[@]} " =~ " $ref_date " ]] ; then\n')
+            job_file_lines.append('   cp -r ' + self.out_dir + '/reference /tmp\n')
+            job_file_lines.append('   files="/tmp/reference/*.xml /tmp/reference/*/*.xml"\n')
+            job_file_lines.append('   old=' + self.out_dir + '\n')
+            job_file_lines.append('   sed -i "s|$old|/tmp|g" $files\n')
+            job_file_lines.append('fi\n')
+
+            # coreg_secondarys
+            job_file_lines.append('# coreg_secondarys\n')
+            job_file_lines.append("""# remove ref_date from array\n""")
+            job_file_lines.append("""index=$(echo ${date_list[@]/$ref_date//} | cut -d/ -f1 | wc -w | tr -d ' ')\n""")
+            job_file_lines.append("""unset date_list[$index]\n""")
+            job_file_lines.append("""mkdir -p /tmp/coreg_secondarys\n""")
             job_file_lines.append("""for date in "${date_list[@]}"; do\n""")
             job_file_lines.append('    cp -r ' + self.out_dir + '/coreg_secondarys/' + '$date /tmp/coreg_secondarys\n')
             job_file_lines.append('done\n')
@@ -842,18 +857,6 @@ class JOB_SUBMIT:
             job_file_lines.append('old=' + self.out_dir + '\n')
             job_file_lines.append('sed -i "s|$old|/tmp|g" $files1\n')
             job_file_lines.append('sed -i "s|$old|/tmp|g" $files2\n')
-            # reference date (FA: I forgot what this exactly is)
-            job_file_lines.append('# reference date\n')
-            str = """ref_date=( $(xmllint --xpath 'string(/productmanager_name/component[@name="instance"]/property[@name="ascendingnodetime"]/value)' """ \
-                + self.out_dir + """/reference/IW*.xml | cut -d ' ' -f 1 | sed "s|-||g") )"""
-            job_file_lines.append( str + '\n')
-            job_file_lines.append('if [[ " ${date_list[@]} " =~ " $ref_date " ]] ; then\n')
-            job_file_lines.append('   cp -r ' + self.out_dir + '/reference /tmp\n')
-            job_file_lines.append('   files="/tmp/reference/*.xml /tmp/reference/*/*.xml"\n')
-            job_file_lines.append('   old=' + self.out_dir + '\n')
-            job_file_lines.append('   sed -i "s|$old|/tmp|g" $files\n')
-            job_file_lines.append('fi\n')
-
         # run_09_merge_burst_igram
         if 'merge_burst_igram' in job_file_name and not batch_file is None:
             # stack
