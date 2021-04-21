@@ -74,6 +74,9 @@ def main(iargs=None):
        
        if 'run_' in job_name:
            putils.remove_launcher_message_from_error_file(run_file=job_name)
+
+       if 'run_' in job_name:
+           putils.remove_zero_size_or_length_error_files(run_file=job_name)
        
        error_files = glob.glob(job_name + '*.e')
        out_files = glob.glob(job_name + '*.o')
@@ -92,7 +95,7 @@ def main(iargs=None):
         with open(run_file_base + '_error_matches.e', 'w') as f:
             f.write(''.join(matched_error_strings))
     else:
-        print("no error found")
+        print("no known error found")
         
     if 'run_' in job_name:
        putils.concatenate_error_files(run_file=run_file_base, work_dir=project_dir)
