@@ -764,9 +764,10 @@ def concatenate_error_files(run_file, work_dir):
                     outfile.write(infile.read())
                 #os.remove(fname)
 
-    if os.path.exists(os.path.abspath(out_name)):
-        shutil.copy(os.path.abspath(out_name), os.path.abspath(work_dir))
-        #os.remove(os.path.abspath(out_name))
+    Path(out_name).touch()
+    shutil.copy(os.path.abspath(out_name), os.path.abspath(work_dir))
+    #if os.path.exists(os.path.abspath(out_name)):
+    #    shutil.copy(os.path.abspath(out_name), os.path.abspath(work_dir))
 
     return None
 
