@@ -204,6 +204,7 @@ for g in "${globlist[@]}"; do
     num_complete=0
     num_running=0
     num_pending=0
+    num_timeout=0
 
     while [[ $num_complete -lt $num_jobs ]]; do
         num_complete=0
