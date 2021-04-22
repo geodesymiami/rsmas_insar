@@ -158,11 +158,11 @@ fi
 for (( i=$startstep; i<=$stopstep; i++ )) do
     stepnum="$(printf "%02d" ${i})"
     if [[ $i -le $last_job_file_number ]]; then
-	    fname="$RUNFILES_DIR/run_${stepnum}_*.job"
+        fname="$RUNFILES_DIR/run_${stepnum}_*.job"
     elif [[ $i -eq $((last_job_file_number+1)) ]]; then
-	    fname="$WORKDIR/smallbaseline_wrapper.job"
+        fname="$WORKDIR/smallbaseline_wrapper.job"
     else
-	    fname="$WORKDIR/insarmaps.job"
+        fname="$WORKDIR/insarmaps.job"
     fi
     globlist+=("$fname")
 done
@@ -192,7 +192,7 @@ for g in "${globlist[@]}"; do
 
     exit_status="$?"
     if [[ $exit_status -eq 0 ]]; then
-	    jobnumbers=($jns)
+        jobnumbers=($jns)
     fi
 
     unset IFS
@@ -263,7 +263,10 @@ for g in "${globlist[@]}"; do
             fi
 
         done
-        printf "%-15s: %-7s; %-12s, %-10s, %-10s.\n" "$step_name_long" "$num_jobs jobs" "$num_complete COMPLETED" "$num_running RUNNING" "$num_pending PENDING"
+
+        num_waiting=$(($num_jobs - $num_completed - $num_running - $num_pending - $num_timeout))
+
+        printf "%s, %s, %-7s: %-12s, %-10s, %-10s, %-12s.\n" "$PROJECT_NAME" "$step_name_long" "$num_jobs jobs" "$num_complete COMPLETED" "$num_running RUNNING" "$num_pending PENDING" "$num_waiting WAITING"
     done
 
 
@@ -278,3 +281,4 @@ for g in "${globlist[@]}"; do
        fi
     echo
 done
+

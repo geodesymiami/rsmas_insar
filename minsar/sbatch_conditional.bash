@@ -1,5 +1,13 @@
 ##!/bin/bash
 
+function abbreviate {
+    abb=$1
+    if [[ "${#abb}" -gt $2 ]]; then
+        abb=$(echo "$(echo $(basename $abb) | cut -c -$3)...$(echo $(basename $abb) | rev | cut -c -$4 | rev)")
+    fi
+    echo $abb
+}
+
 function get_active_jobids {
     running_tasks=$(squeue -u $USER --format="%A" -rh)
     job_ids=($(echo $running_tasks | grep -oP "\d{4,}"))
@@ -104,10 +112,10 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-printf "%0.s-" {1..121} >&2
+printf "%0.s-" {1..143} >&2
 printf "\n" >&2
-printf "| %-20s | %-16s | %-17s | %-18s | %-11s | %-20s | %s \n" "File Name" "Additional Tasks" "Step Active Tasks" "Total Active Tasks" "Active Jobs"  "Message" >&2
-printf "%0.s-" {1..121} >&2
+printf "| %-20s | %-16s | %-17s | %-18s | %-16s | %-14s | %-20s | %s \n" "File Name" "Additional Tasks" "Step Active Tasks" "Total Active Tasks" "Step Active Jobs" "Active Jobs"  "Message" >&2
+printf "%0.s-" {1..143} >&2
 printf "\n" >&2
 
 
@@ -116,8 +124,10 @@ files=( $(ls -1v $file_pattern*.job) )
 if $randomorder; then
     files=( $(echo "${files[@]}" | sed -r 's/(.[^;]*;)/ \1 /g' | tr " " "\n" | shuf | tr -d " " ) )
 fi
+i=0
 for f in "${files[@]}"; do
     time_elapsed=0
+    i=$((i+1))
     #echo "Submitting file: $f" >&2
     while [[ $time_elapsed -lt $max_time ]]; do
         # Compute number of total active tasks and number of active tasks for curent step
@@ -141,14 +151,10 @@ for f in "${files[@]}"; do
         #echo "$num_active_tasks_total running/pending tasks across all jobs (maximum $total_max_tasks)" >&2 
         #echo "step $step_name: $num_active_tasks_step running/pending tasks (maximum $step_max_tasks)" >&2
         #echo "$(basename $f): $num_tasks_job additional tasks" >&2
-	fname=$(basename $f)
-	if [[ "${#fname}" -ge 20 ]]; then
-        abb_fname=$(echo "$(echo $(basename $f) | cut -c -10)...$(echo "${f%.*}" | rev | cut -c -7 | rev)")
-	else
-	    abb_fname=$fname
-	fi
+        fname=$(basename $f)
+        abb_fname=$(abbreviate $fname 20 10 7)
 
-	printf "| %-20s | %-16s | %-17s | %-18s | %-11s | %s" "$abb_fname" "$num_tasks_job" "$num_active_tasks_step/$step_max_tasks" "$num_active_tasks_total/$total_max_tasks" "$num_active_jobs/$MAX_JOBS_PER_QUEUE" >&2
+        printf "| %-20s | %-16s | %-17s | %-18s | %-16s | %-14s | %s" "$abb_fname" "$num_tasks_job" "$num_active_tasks_step/$step_max_tasks" "$num_active_tasks_total/$total_max_tasks" "$i/${#files[@]}" "$num_active_jobs/$MAX_JOBS_PER_QUEUE" >&2
 
         if [[ $num_active_jobs -lt $MAX_JOBS_PER_QUEUE ]] && [[ $new_tasks_step -lt $step_max_tasks ]] && [[ $new_tasks_total -lt $total_max_tasks ]]; then
             job_submit_message=$(sbatch $f | grep "Submitted batch job")
@@ -167,11 +173,11 @@ for f in "${files[@]}"; do
             fi
 
             jobnumber=$(grep -oE "[0-9]{7}" <<< $job_submit_message)
-	        printf "%-20s |\n" "Submitted: $jobnumber" >&2
+            printf "%-20s |\n" "Submitted: $jobnumber" >&2
             jns+=($jobnumber)
             break
         else
-	        printf "%-20s |\n" "Wait 5 min" >&2
+            printf "%-20s |\n" "Wait 5 min" >&2
         fi
 
         sleep 300
@@ -180,7 +186,7 @@ for f in "${files[@]}"; do
     done
 done
 
-printf "%0.s-" {1..121} >&2
+printf "%0.s-" {1..143} >&2
 printf "\n" >&2
 
 if [[ $time_elapsed -ge $max_time ]]; then
@@ -189,3 +195,4 @@ else
     echo "${jns[@]}"
     exit 0
 fi
+
