@@ -54,42 +54,28 @@ urls=($urls_list)
 num_urls=${#urls[@]}
 #num_urls=$(echo $(($num_urls+$parallel)))
 
-echo "URLs to download: ${urls[@]}"
 echo "Datafiles to download: $num_urls"
 
-echo $urls | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd -nv
-exit_code=$?
-
-runs=1
-while [ $exit_code -ne 0 ] && [ $runs -lt 3 ]; do
-    echo "Something went wrong. Exit code was ${exit_code}. Trying again with ${t} second timeout."
-    echo "$(date +"%Y%m%d:%H-%m") * Something went wrong. Exit code was ${exit_code}. Trying again with ${t} second timeout" >> log
-    echo $urls | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd -nv
+start=0
+stop=$(($start+$parallel))
+while [ $start -le $num_urls ]; do
+    us="${urls[@]:$start:$parallel}"
+    echo "URLs to download: ${us[@]}"
+    echo $us | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd -nv
     exit_code=$?
-    runs=$((runs+1))
-    sleep 60
+    runs=1
+    while [ $exit_code -eq 123 -o $exit_code -eq 127 ] && [ $runs -lt 3 ]; do
+        echo "Something went wrong. Exit code was ${exit_code}. Trying again with ${t} second timeout."
+        echo "$(date +"%Y%m%d:%H-%m") * Something went wrong. Exit code was ${exit_code}. Trying again with ${t} second timeout" >> log
+        echo $us | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd -nv
+        exit_code=$?
+        runs=$((runs+1))
+        sleep 60
+    done
+    echo "Finished downloading files $stop/$num_urls succesfully."
+    start=$(($stop+1))
+    stop=$(($start+$parallel))
 done
-
-# start=0
-# stop=$(($start+$parallel))
-# while [ $start -le $num_urls ]; do
-#     us="${urls[@]:$start:$parallel}"
-#     echo "URLs to download: ${us[@]}"
-#     echo $us | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd -nv
-#     exit_code=$?
-#     runs=1
-#     while [ $exit_code -eq 123 -o $exit_code -eq 127 ] && [ $runs -lt 3 ]; do
-#         echo "Something went wrong. Exit code was ${exit_code}. Trying again with ${t} second timeout."
-#         echo "$(date +"%Y%m%d:%H-%m") * Something went wrong. Exit code was ${exit_code}. Trying again with ${t} second timeout" >> log
-#         echo $us | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd -nv
-#         exit_code=$?
-#         runs=$((runs+1))
-#         sleep 60
-#     done
-#     echo "Finished downloading files $stop/$num_urls succesfully."
-#     start=$(($stop+1))
-#     stop=$(($start+$parallel))
-# done
 
 exit 0
 
