@@ -692,7 +692,12 @@ class JOB_SUBMIT:
 
         job_file_lines.append( "# set environment    \n" )
         job_file_lines.append( "export RSMASINSAR_HOME=/tmp/rsmas_insar\n" )
-        job_file_lines.append( "cd $RSMASINSAR_HOME; source ~/accounts/platforms_defaults.bash; source setup/environment.bash; export PATH=$ISCE_STACK/topsStack:$PATH; cd -;\n" )
+
+        if self.prefix == 'stripmap':
+            job_file_lines.append( "cd $RSMASINSAR_HOME; source ~/accounts/platforms_defaults.bash; source setup/environment.bash; export PATH=$ISCE_STACK/stripmapStack:$PATH; cd -;\n" )
+        else:
+            job_file_lines.append( "cd $RSMASINSAR_HOME; source ~/accounts/platforms_defaults.bash; source setup/environment.bash; export PATH=$ISCE_STACK/topsStack:$PATH; cd -;\n" )
+
         job_file_lines.append( '# remove /scratch and /work from PATH\n' )
         job_file_lines.append( """export PATH=`echo ${PATH} | awk -v RS=: -v ORS=: '/scratch/ {next} {print}' | sed 's/:*$//'` \n""" )
         job_file_lines.append( """export PATH=`echo ${PATH} | awk -v RS=: -v ORS=: '/work/ {next} {print}' | sed 's/:*$//'` \n""" )
@@ -806,6 +811,7 @@ class JOB_SUBMIT:
             job_file_lines.append("""# remove ref_date from array\n""")
             job_file_lines.append("""index=$(echo ${date_list[@]/$ref_date//} | cut -d/ -f1 | wc -w | tr -d ' ')\n""")
             job_file_lines.append("""unset date_list[$index]\n""")
+            job_file_lines.append('if [[ ${#date_list[@]} -ne 0 ]]; then\n')
             job_file_lines.append("""mkdir -p /tmp/coreg_secondarys\n""")
             job_file_lines.append("""for date in "${date_list[@]}"; do\n""")
             job_file_lines.append('    cp -r ' + self.out_dir + '/coreg_secondarys/' + '$date /tmp/coreg_secondarys\n')
@@ -815,6 +821,7 @@ class JOB_SUBMIT:
             job_file_lines.append('old=' + self.out_dir + '\n')
             job_file_lines.append('sed -i "s|$old|/tmp|g" $files1\n')
             job_file_lines.append('sed -i "s|$old|/tmp|g" $files2\n')
+            job_file_lines.append('fi\n')
 
         # run_08_generate_burst_igram
         if 'generate_burst_igram' in job_file_name and not batch_file is None:
@@ -848,6 +855,7 @@ class JOB_SUBMIT:
             job_file_lines.append("""# remove ref_date from array\n""")
             job_file_lines.append("""index=$(echo ${date_list[@]/$ref_date//} | cut -d/ -f1 | wc -w | tr -d ' ')\n""")
             job_file_lines.append("""unset date_list[$index]\n""")
+            job_file_lines.append('if [[ ${#date_list[@]} -ne 0 ]]; then\n')
             job_file_lines.append("""mkdir -p /tmp/coreg_secondarys\n""")
             job_file_lines.append("""for date in "${date_list[@]}"; do\n""")
             job_file_lines.append('    cp -r ' + self.out_dir + '/coreg_secondarys/' + '$date /tmp/coreg_secondarys\n')
@@ -857,6 +865,7 @@ class JOB_SUBMIT:
             job_file_lines.append('old=' + self.out_dir + '\n')
             job_file_lines.append('sed -i "s|$old|/tmp|g" $files1\n')
             job_file_lines.append('sed -i "s|$old|/tmp|g" $files2\n')
+            job_file_lines.append('fi\n')
         # run_09_merge_burst_igram
         if 'merge_burst_igram' in job_file_name and not batch_file is None:
             # stack
