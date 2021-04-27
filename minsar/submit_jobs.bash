@@ -205,11 +205,13 @@ for g in "${globlist[@]}"; do
     num_running=0
     num_pending=0
     num_timeout=0
+    num_waiting=0
 
     while [[ $num_complete -lt $num_jobs ]]; do
         num_complete=0
         num_running=0
         num_pending=0
+        num_waiting=0
         sleep 30
         for (( j=0; j < "${#jobnumbers[@]}"; j++)); do
             file=${files[$j]}
@@ -265,7 +267,7 @@ for g in "${globlist[@]}"; do
 
         done
 
-        num_waiting=$(($num_jobs - $num_completed - $num_running - $num_pending - $num_timeout))
+        num_waiting=$(($num_jobs-$num_complete-$num_running-$num_pending))
 
         printf "%s, %s, %-7s: %-12s, %-10s, %-10s, %-12s.\n" "$PROJECT_NAME" "$step_name_long" "$num_jobs jobs" "$num_complete COMPLETED" "$num_running RUNNING" "$num_pending PENDING" "$num_waiting WAITING"
     done

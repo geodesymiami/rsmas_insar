@@ -112,12 +112,13 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-printf "%0.s-" {1..143} >&2
+printf "%0.s-" {1..146} >&2
 printf "\n" >&2
-printf "| %-20s | %-16s | %-17s | %-18s | %-16s | %-14s | %-20s | %s \n" "File Name" "Additional Tasks" "Step Active Tasks" "Total Active Tasks" "Step Active Jobs" "Active Jobs"  "Message" >&2
-printf "%0.s-" {1..143} >&2
+printf "| %-20s | %-16s | %-17s | %-18s | %-19s | %-14s | %-20s | %s \n" "File Name" "Additional Tasks" "Step Active Tasks" "Total Active Tasks" "Step Processed Jobs" "Active Jobs"  "Message" >&2
+printf "%0.s-" {1..146} >&2
 printf "\n" >&2
 
+MAX_JOBS_PER_QUEUE=$(qlimits | grep $QUEUENAME | awk '{print $4}')
 
 jns=()
 files=( $(ls -1v $file_pattern*.job) )
@@ -154,9 +155,9 @@ for f in "${files[@]}"; do
         fname=$(basename $f)
         abb_fname=$(abbreviate $fname 20 10 7)
 
-        printf "| %-20s | %-16s | %-17s | %-18s | %-16s | %-14s | %s" "$abb_fname" "$num_tasks_job" "$num_active_tasks_step/$step_max_tasks" "$num_active_tasks_total/$total_max_tasks" "$i/${#files[@]}" "$num_active_jobs/$MAX_JOBS_PER_QUEUE" >&2
+        printf "| %-20s | %-16s | %-17s | %-18s | %-19s | %-14s | %s" "$abb_fname" "$num_tasks_job" "$num_active_tasks_step/$step_max_tasks" "$num_active_tasks_total/$total_max_tasks" "$i/${#files[@]}" "$num_active_jobs/$MAX_JOBS_PER_QUEUE" >&2
 
-        if [[ $num_active_jobs -lt $MAX_JOBS_PER_QUEUE ]] && [[ $new_tasks_step -lt $step_max_tasks ]] && [[ $new_tasks_total -lt $total_max_tasks ]]; then
+        if [[ $num_active_jobs -le $MAX_JOBS_PER_QUEUE ]] && [[ $new_tasks_step -lt $step_max_tasks ]] && [[ $new_tasks_total -lt $total_max_tasks ]]; then
             job_submit_message=$(sbatch $f | grep "Submitted batch job")
             exit_status="$?"
             if [[ $exit_status -ne 0 ]]; then
@@ -186,7 +187,7 @@ for f in "${files[@]}"; do
     done
 done
 
-printf "%0.s-" {1..143} >&2
+printf "%0.s-" {1..146} >&2
 printf "\n" >&2
 
 if [[ $time_elapsed -ge $max_time ]]; then
