@@ -722,7 +722,7 @@ class JOB_SUBMIT:
             # secondarys
             job_file_lines.append('# secondarys\n')
             str = """date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file \
-                + """ | awk -F _ '{printf "%s\\n",$3}' ) )"""
+                + """ | awk -F _ '{printf "%s\\n",$NF}' ) )"""
             job_file_lines.append(str + '\n')
             job_file_lines.append('mkdir -p /tmp/secondarys\n')
             job_file_lines.append("""for date in "${date_list[@]}"; do\n""")
@@ -751,7 +751,7 @@ class JOB_SUBMIT:
             # secondarys
             job_file_lines.append('# secondarys\n')
             str = """date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file \
-                + """ | awk -F _ '{printf "%s\\n",$4}' ) )"""
+                + """ | awk -F _ '{printf "%s\\n",$NF}' ) )"""
             job_file_lines.append(str + '\n')
             job_file_lines.append('mkdir -p /tmp/secondarys\n')
             job_file_lines.append("""for date in "${date_list[@]}"; do\n""")
@@ -774,7 +774,7 @@ class JOB_SUBMIT:
             # secondarys
             job_file_lines.append('# secondarys\n')
             str = """date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file \
-                + """ | awk -F _ '{printf "%s\\n",$4}' ) )"""
+                + """ | awk -F _ '{printf "%s\\n",$NF}' ) )"""
             job_file_lines.append(str + '\n')
             job_file_lines.append('mkdir -p /tmp/secondarys\n')
             job_file_lines.append("""for date in "${date_list[@]}"; do\n""")
@@ -803,7 +803,7 @@ class JOB_SUBMIT:
             # coreg_secondarys      (different awk)
             job_file_lines.append('# coreg_secondarys (different awk)\n')
             str = """date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file \
-                + """ | awk -F _ '{printf "%s\\n",$3}' | sed -n '/^[0-9]/p' ) )"""
+                + """ | awk -F _ '{printf "%s\\n",$NF}' | sed -n '/^[0-9]/p' ) )"""
             job_file_lines.append(str + '\n')
             str = """ref_date=( $(xmllint --xpath 'string(/productmanager_name/component[@name="instance"]/property[@name="ascendingnodetime"]/value)' """ \
                 + self.out_dir + """/reference/IW*.xml | cut -d ' ' -f 1 | sed "s|-||g") )"""
@@ -836,7 +836,7 @@ class JOB_SUBMIT:
             # awk '{printf "%s\\n",$3}' run_11_unwrap | awk -F _igram_unw_ '{printf "%s\\n",$2}' | sort -n | uniq
 
             str = """date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file \
-                + """ | awk -F _ '{printf "%s\\n%s\\n",$4,$5}' | sort -n | uniq) )"""
+                + """ | awk -F _ '{printf "%s\\n%s\\n",$(NF-1),$NF}' | sort -n | uniq) )"""
             job_file_lines.append(str + '\n')
             str = """ref_date=( $(xmllint --xpath 'string(/productmanager_name/component[@name="instance"]/property[@name="ascendingnodetime"]/value)' """ \
                 + self.out_dir + """/reference/IW*.xml | cut -d ' ' -f 1 | sed "s|-||g") )"""
@@ -908,7 +908,7 @@ class JOB_SUBMIT:
             # merged/SLC
             job_file_lines.append('# merged/SLC\n')
             str = """date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file \
-                + """ | awk -F _ '{printf "%s\\n%s\\n",$5,$6}' | sort -n | uniq) )"""
+                + """ | awk -F _ '{printf "%s\\n%s\\n",$(NF-1),$NF}' | sort -n | uniq) )"""
             job_file_lines.append(str + '\n')
             job_file_lines.append('mkdir -p /tmp/merged/SLC\n\n')
             job_file_lines.append("""for date in "${date_list[@]}"; do\n""")
