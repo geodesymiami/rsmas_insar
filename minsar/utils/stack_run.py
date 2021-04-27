@@ -8,6 +8,7 @@ import sys
 import subprocess
 from argparse import Namespace
 import shutil
+import glob
 from minsar.utils.process_utilities import make_run_list
 from minsar.objects.auto_defaults import PathFind
 import contextlib
@@ -71,6 +72,10 @@ class CreateRun:
              raise Exception('ERROR in create_runfiles.py')
 
         os.environ['PATH'] = system_path
+
+        woke_job_files=glob.glob(self.work_dir + '/run_files/*.job')
+        for f in woke_job_files:
+            os.remove(f)
         
         return
 

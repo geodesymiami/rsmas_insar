@@ -186,8 +186,12 @@ fi
 # download latest orbits from ASF mirror
 cd $SCRATCHDIR/S1orbits
 curl --ftp-ssl --silent --use-ascii --ftp-method nocwd --list-only https://s1qc.asf.alaska.edu/aux_poeorb/ > ASF_poeorb.txt
+curl --ftp-ssl --silent --use-ascii --ftp-method nocwd --list-only https://s1qc.asf.alaska.edu/aux_resorb/ > ASF_resorb.txt
 cat ASF_poeorb.txt | awk '{printf "! test -f %s && wget -c https://s1qc.asf.alaska.edu/aux_poeorb/%s\n", substr($0,10,77), substr($0,10,77)}' | grep 20210[4-9] > ASF_poeorb_latest.txt
+cat ASF_resorb.txt | awk '{printf "! test -f %s && wget -c https://s1qc.asf.alaska.edu/aux_resorb/%s\n", substr($0,10,77), substr($0,10,77)}' | grep 20210[4-9] > ASF_resorb_latest.txt
 bash ASF_poeorb_latest.txt
+#bash ASF_resorb_latest.txt
+
 cd -
 ####################################
 download_dir=$WORK_DIR/SLC
@@ -374,10 +378,10 @@ if [[ $ifgrams_flag == "1" ]]; then
     #cmd_try="download_ERA5_data.py --date_list SAFE_files.txt $template_file"
 
     download_ERA5_cmd=`which download_ERA5_data.py`
-    cmd="$download_ERA5_cmd --date_list SAFE_files.txt $template_file"
+    cmd="$download_ERA5_cmd --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR "
     echo " Running.... python $cmd >& out_download_ERA5_data.e &"
     python $cmd >& out_download_ERA5_data.e &
-    echo "$(date +"%Y%m%d:%H-%m") * $cmd" >> "${WORKDIR}"/log
+    echo "$(date +"%Y%m%d:%H-%m") * download_ERA5_data.py --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR " >> "${WORK_DIR}"/log
 
  
     cmd="submit_jobs.bash $template_file --stop ifgrams"
