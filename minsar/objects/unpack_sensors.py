@@ -291,6 +291,7 @@ class Sensors:
 
         if self.output_dir is not None:
             f = open(run_unPack, 'w')
+            self.output_dir = self.input_dir.replace('RAW_data','SLC')   # FA 4/2021: replaces ./SLC by full path. SM suggests to change defaults to None
             for dateDir in dateDirs:
                 acquisitionDate = os.path.basename(dateDir)
                 slcDir = os.path.join(self.output_dir, acquisitionDate)
