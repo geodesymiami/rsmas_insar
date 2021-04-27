@@ -73,8 +73,8 @@ class CreateRun:
 
         os.environ['PATH'] = system_path
 
-        woke_job_files=glob.glob(self.work_dir + '/run_files/*.job')
-        for f in woke_job_files:
+        woke_PBS_job_files=glob.glob(self.work_dir + '/run_files/*.job')
+        for f in woke_PBS_job_files:
             os.remove(f)
         
         return
