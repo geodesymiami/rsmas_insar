@@ -46,16 +46,17 @@ fi
 echo "Running (with\`s inserted) ... ssara_federated_query.py ${argv[@]:0:$#-1} --maxResults=20000 > ssara_listing.txt"
 ssara_federated_query.py "${argv[@]:0:$#-1}" --maxResults=20000 > ssara_listing.txt
 
+#grep Found ssara_listing.txt >> log
+downloads_num=$(grep Found ssara_listing.txt | cut -d " " -f 2)
 
 urls_list=$(cut -s -d ',' -f 14 ssara_listing.txt)
 unset IFS
 urls=($urls_list)
 
 num_urls=${#urls[@]}
-#num_urls=$(echo $(($num_urls+$parallel)))
 
 echo "URLs to download: ${urls[@]}"
-echo "Datafiles to download: $num_urls"
+echo "Datafiles to download: $num_urls" | tee -a log
 
 echo ${urls[@]} | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd
 exit_code=$?
@@ -69,6 +70,18 @@ while [ $exit_code -ne 0 ] && [ $runs -lt 3 ]; do
     runs=$((runs+1))
     sleep 60
 done
+
+granules_num=$(ls *.{zip,tar.gz} 2> /dev/null | wc -l)
+echo "Downloaded scenes: $granules_num" | tee -a log
+
+if [[ $granules_num -eq $num_urls ]]; then
+   echo "Downlaod successful." | tee -a log
+   exit 0;
+else
+  echo "Not all scenes downloaded" | tee -a log
+  exit 1;
+fi
+
 
 # start=0
 # stop=$(($start+$parallel))
@@ -91,5 +104,4 @@ done
 #     stop=$(($start+$parallel))
 # done
 
-exit 0
 

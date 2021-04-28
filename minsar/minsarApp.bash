@@ -218,11 +218,10 @@ if [[ $download_flag == "1" ]]; then
     
     runs=1
     while [ $exit_status -ne 0 ] && [ $runs -le 4 ]; do
-        echo "ssara_federated_query.bash exited with a non-zero exit code ($exit_status). Trying again in 5 hours."
-        echo "$(date +"%Y%m%d:%H-%m") * Something went wrong. Exit code was ${exit_status}. Trying again in 5 hours" >> /log
-        echo "$(date +"%Y%m%d:%H-%m") * Something went wrong. Exit code was ${exit_status}. Trying again in 5 hours" >> ../log
+        echo "ssara_federated_query.bash exited with a non-zero exit code ($exit_status). Trying again in 2 hours."
+        echo "$(date +"%Y%m%d:%H-%m") * Something went wrong. Exit code was ${exit_status}. Trying again in 2 hours" | tee -a log | tee -a ../log
 
-        sleep 180 # sleep for 5 hours
+        sleep 7200 # sleep for 2 hours
         bash ../ssara_command.txt
         exit_status="$?"
         runs=$((runs+1))
