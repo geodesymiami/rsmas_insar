@@ -66,7 +66,7 @@ def main(iargs=None):
        print('checking *.e, *.o from ' + job_name + '.job')
        #job_name = job_file.split('.')[0]
 
-       if 'filter_coherence' in job_name:
+       if 'filter_coherence' in job_name or 'run_09_igram' in job_name:               # run_09_igram is for stripmap
            putils.remove_line_counter_lines_from_error_files(run_file=job_name)
 
        if 'run_' in job_name:

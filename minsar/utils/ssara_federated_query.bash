@@ -74,7 +74,7 @@ done
 granules_num=$(ls *.{zip,tar.gz} 2> /dev/null | wc -l)
 echo "Downloaded scenes: $granules_num" | tee -a log
 
-if [[ $granules_num -eq $num_urls ]]; then
+if [[ $granules_num -ge $num_urls ]]; then
    echo "Downlaod successful." | tee -a log
    exit 0;
 else

@@ -185,11 +185,7 @@ for g in "${globlist[@]}"; do
     step_name=$(echo $file_pattern | grep -oP "(?<=run_\d{2}_)(.*)|insarmaps|smallbaseline_wrapper")
 echo STEP_NAME: $step_name
 echo FILE_PATTERN: $file_pattern
-echo FILES: ${files[0]}
 
-echo $step_max_tasks_unit
-echo $step_name
-echo ${step_io_load_list[$step_name]}
     step_max_tasks=$(echo "$step_max_tasks_unit/${step_io_load_list[$step_name]}" | bc | awk '{print int($1)}')
 
     sbc_command="sbatch_conditional.bash $file_pattern --step_name $step_name --step_max_tasks $step_max_tasks --total_max_tasks $total_max_tasks"
