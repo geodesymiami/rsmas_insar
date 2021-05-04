@@ -149,7 +149,7 @@ for f in "${files[@]}"; do
         new_tasks_total=$(($num_active_tasks+$num_tasks_job))
         
         # Get active number of running jobs
-        num_active_jobs=$(squeue -u $USER -h -t running,pending -r | wc -l )
+        num_active_jobs=$(squeue -u $USER -h -t running,pending -r -p $QUEUENAME | wc -l )
         
         #echo "Number of running/pending jobs: $num_active_jobs" >&2  
         #echo "$num_active_tasks_total running/pending tasks across all jobs (maximum $total_max_tasks)" >&2 
