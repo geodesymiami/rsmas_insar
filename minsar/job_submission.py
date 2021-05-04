@@ -690,6 +690,7 @@ class JOB_SUBMIT:
         job_file_lines.append( "cp $SCRATCH/miniconda3.tar /tmp\n" )
         job_file_lines.append( "tar xf /tmp/miniconda3.tar -C /tmp/rsmas_insar/3rdparty\n" )
         job_file_lines.append( "rm /tmp/miniconda3.tar\n" )
+        job_file_lines.append( "cp -r $RSMASINSAR_HOME/sources/isce2/contrib/stack/*  /tmp/rsmas_insar/3rdparty/miniconda3/share/isce2\n" )   
 
         job_file_lines.append( "# set environment    \n" )
         job_file_lines.append( "export RSMASINSAR_HOME=/tmp/rsmas_insar\n" )
