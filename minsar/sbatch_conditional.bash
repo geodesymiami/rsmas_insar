@@ -112,13 +112,16 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
+MAX_JOBS_PER_QUEUE=$(qlimits | grep $QUEUENAME | awk '{print $4}')
+if [ -z "$MAX_JOBS_PER_QUEUE" ]; then
+    MAX_JOBS_PER_QUEUE=1
+fi
+
 printf "%0.s-" {1..146} >&2
 printf "\n" >&2
 printf "| %-20s | %-16s | %-17s | %-18s | %-19s | %-14s | %-20s | %s \n" "File Name" "Additional Tasks" "Step Active Tasks" "Total Active Tasks" "Step Processed Jobs" "Active Jobs"  "Message" >&2
 printf "%0.s-" {1..146} >&2
 printf "\n" >&2
-
-MAX_JOBS_PER_QUEUE=$(qlimits | grep $QUEUENAME | awk '{print $4}')
 
 jns=()
 files=( $(ls -1v $file_pattern*.job) )
