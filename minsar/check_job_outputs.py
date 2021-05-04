@@ -51,7 +51,9 @@ def main(iargs=None):
 
     job_names=[]
     for job_file in inps.job_files:
-        job_names.append(job_file.split('.')[0])
+        tmp=job_file.split('.')
+        job_names.append('.'.join(tmp[0:-1]))
+
        
     job_file = inps.job_files[0]
     job_name = job_names[0]
