@@ -27,20 +27,25 @@ helptext="                                                                      
     printf "$helptext"
     exit 0;
 else
-    PROJECT_NAME=$(basename "$1" | cut -d. -f1)
+    PROJECT_NAME=$(basename "$1" | awk -F ".template" '{print $1}')
     exit_status="$?"
     if [[ $PROJECT_NAME == "" ]]; then
        echo "Could not compute basename for that file. Exiting. Make sure you have specified an input file as the first argument."
        exit 1;
     fi
 fi
+
 template_file=$1
+if [[ $1 == $PWD ]]; then
+   template_file=$TEMPLATES/$PROJECT_NAME.template
+fi
+
 WORK_DIR=$SCRATCHDIR/$PROJECT_NAME
 
 mkdir -p $WORK_DIR
 cd $WORK_DIR
 
-echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` $@ " >> "${WORK_DIR}"/log
+echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` $@ " | tee -a "${WORK_DIR}"/log
 
 while [[ $# -gt 0 ]]
 do
