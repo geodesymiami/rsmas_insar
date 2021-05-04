@@ -58,6 +58,7 @@ usage: submit_jobs.bash custom_template_file [--start] [--stop] [--dostep] [--he
     exit 0;
 else
     PROJECT_NAME=$(basename "$1" | cut -d. -f1)
+    PROJECT_NAME=$(basename "$1" | awk -F ".template" '{print $1}')
 fi
 WORKDIR=$SCRATCHDIR/$PROJECT_NAME
 RUNFILES_DIR=$WORKDIR"/run_files"
