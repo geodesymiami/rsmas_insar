@@ -718,6 +718,7 @@ class JOB_SUBMIT:
         if "run_02_unpack_secondary_slc" in job_file_name:
             job_file_lines.append( "################################################\n" )
             job_file_lines.append("module load ooops\n")
+            job_file_lines.append("dummy-to-pop\n")
         #job_file_lines.append("module load python_cacher \n")
         #job_file_lines.append("export PYTHON_IO_CACHE_CWD=0\n")
         #job_file_lines.append("export PYTHON_IO_TargetDir="/scratch/07187/tg864867/codefalk\n")  #Suggestion from Lei@TACC 3/2021
