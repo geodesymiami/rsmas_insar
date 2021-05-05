@@ -942,6 +942,133 @@ class JOB_SUBMIT:
             sed -i "s|$old|/tmp|g" $files1
             """)
 
+        #####################################################
+        ##############  stripmap ############################
+        #####################################################
+
+        # run_01_crop
+        if 'crop' in job_file_name and not batch_file is None:
+            job_file_lines.append(""" 
+            date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file +  """ | awk -F _ '{printf "%s\\n",$NF}' ) )
+            mkdir -p /tmp/SLC
+            for date in "${date_list[@]}"; do
+                cp -r """ + self.out_dir + """/SLC/$date /tmp/SLC
+            done
+            files1="/tmp/SLC/????????/*.xml"
+            old=""" + self.out_dir + """
+            sed -i "s|$old|/tmp|g" $files1
+            """)
+        # run_02_reference:  no copy-to-tmp: only one file
+        # run_03_focus_split: no copy-to-tmp because writes into output directory
+
+        # run_04_geo2rdr_coarseResamp
+        if 'geo2rdr_coarseResamp' in job_file_name and not batch_file is None:
+            job_file_lines.append("""
+ 
+            # cropped reference and secondarys
+            ref_date=( $(awk '{printf "%s\\n",$3}' """ + self.out_dir +  """/run_files/run_02_reference | awk -F _ '{printf "%s\\n",$NF}' ) )
+            date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file +  """ | awk -F _ '{printf "%s\\n",$NF}' ) )
+            mkdir -p /tmp/SLC_crop
+            cp -r """ + self.out_dir + """/SLC_crop/$ref_date /tmp/SLC_crop
+            for date in "${date_list[@]}"; do
+                cp -r """ + self.out_dir + """/SLC_crop/$date /tmp/SLC_crop
+            done
+
+            files="/tmp/SLC_crop/*/*.xml"
+            old=""" + self.out_dir + """ 
+            sed -i "s|$old|/tmp|g" $files
+            
+            # geom_reference
+            mkdir -p /tmp/merged
+            cp -r """ + self.out_dir + """/merged/geom_reference /tmp/merged
+             """)
+
+        # run_05_refineSecondaryTiming
+        if 'refineSecondaryTimin' in job_file_name and not batch_file is None:
+            job_file_lines.append("""
+ 
+            mkdir -p /tmp/SLC_crop
+            mkdir -p /tmp/coregSLC/Coarse
+            
+            date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file +  """ | awk -F _ '{printf "%s\\n",$NF}' |  sort -n | uniq ) )
+            for date in "${date_list[@]}"; do
+                cp -r """ + self.out_dir + """/SLC_crop/$date /tmp/SLC_crop
+                cp -r """ + self.out_dir + """/coregSLC/Coarse/$date /tmp/coregSLC/Coarse
+            done
+
+            files1="/tmp/SLC_crop/*/*.xml"
+            files2="/tmp/coregSLC/Coarse/*/*.xml"
+            old=""" + self.out_dir + """ 
+            sed -i "s|$old|/tmp|g" $files1
+            sed -i "s|$old|/tmp|g" $files2
+             """)
+
+        # run_06_invertMisreg : only one process. Coule be copied over if needed
+
+        # run_07_fineResamp
+        if 'fineResamp' in job_file_name and not batch_file is None:
+            job_file_lines.append("""
+ 
+            mkdir -p /tmp/SLC_crop
+            mkdir -p /tmp/coregSLC/Coarse
+            mkdir -p /tmp/offsets
+            
+            ref_date=( $(awk '{printf "%s\\n",$3}' """ + self.out_dir +  """/run_files/run_02_reference | awk -F _ '{printf "%s\\n",$NF}' ) )
+            date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file +  """ | grep config_fineResamp | awk -F _ '{printf "%s\\n",$NF}' ) )
+
+            cp -r """ + self.out_dir + """/SLC_crop/$ref_date /tmp/SLC_crop
+            
+            for date in "${date_list[@]}"; do
+                cp -r """ + self.out_dir + """/SLC_crop/$date /tmp/SLC_crop
+                cp -r """ + self.out_dir + """/coregSLC/Coarse/$date /tmp/coregSLC/Coarse
+                cp -r """ + self.out_dir + """/offsets/$date /tmp/offsets
+            done
+
+            files1="/tmp/SLC_crop/*/*.xml"
+            files2="/tmp/coregSLC/Coarse/*/*.xml"
+            files3="/tmp/offsets/*/*.xml"
+            old=""" + self.out_dir + """ 
+            sed -i "s|$old|/tmp|g" $files1
+            sed -i "s|$old|/tmp|g" $files2
+            sed -i "s|$old|/tmp|g" $files3
+
+             """)
+
+        # run_08_grid_baseline
+        if 'grid_baseline' in job_file_name and not batch_file is None:
+            job_file_lines.append("""
+ 
+            mkdir -p /tmp/merged/SLC
+           
+            ref_date=( $(awk '{printf "%s\\n",$3}' """ + self.out_dir +  """/run_files/run_02_reference | awk -F _ '{printf "%s\\n",$NF}' ) )
+            date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file +  """ | awk -F _ '{printf "%s\\n",$NF}' ) )
+            
+            cp -r """ + self.out_dir + """/merged/SLC/$ref_date/ /tmp/merged/SLC
+            
+            for date in "${date_list[@]}"; do
+                cp -r """ + self.out_dir + """/merged/SLC/$date/ /tmp/merged/SLC
+            done
+
+             """)
+
+        # run_09_igram
+        if 'run_09_igram' in job_file_name and not batch_file is None:
+            job_file_lines.append("""
+ 
+            mkdir -p /tmp/merged/SLC
+           
+            ref_date=( $(awk '{printf "%s\\n",$3}' """ + self.out_dir +  """/run_files/run_02_reference | awk -F _ '{printf "%s\\n",$NF}' ) )
+            date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file +  """ | awk -F _ '{printf "%s\\n",$NF}' ) )
+            
+            cp -r """ + self.out_dir + """/merged/SLC/$ref_date/ /tmp/merged/SLC
+            
+            for date in "${date_list[@]}"; do
+                cp -r """ + self.out_dir + """/merged/SLC/$date/ /tmp/merged/SLC
+            done
+
+             """)
+
+
         tmp1 = job_file_lines.pop()
         tmp2 = tmp1.split('\n')
         tmp3 = []
