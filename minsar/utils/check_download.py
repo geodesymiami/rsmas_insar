@@ -67,7 +67,7 @@ def delete_files(inps,broken_list):
         real_path = os.path.realpath(file)
         if os.path.exists(real_path):
             os.remove(real_path)
-            message_rsmas.log(os.getcwd(), os.path.basename(__file__) + ': deleting ' + real_path )
+            #message_rsmas.log(os.getcwd(), os.path.basename(__file__) + ': deleting ' + real_path )
     return
 
 def check_size(inps):
