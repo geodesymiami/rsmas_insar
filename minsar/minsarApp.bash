@@ -260,8 +260,15 @@ if [[ $jobfiles_flag == "1" ]]; then
        echo "create_jobfile.py exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
-    
+
     # modify config files to use /tmp on compute node 
+
+    acquisition_mode=$(grep acquisition_mode $template_file  | cut -d '=' -f 2)
+    if [[ $acquisition_mode != 'stripmap' ]]; then
+    
+    #########################
+    ###   topsStack   ###
+    #########################
 
     # run_03_average_baseline`
     files="configs/config_baseline_*"
@@ -350,13 +357,6 @@ if [[ $jobfiles_flag == "1" ]]; then
     new="input : /tmp"
     sed -i "s|$old|$new|g" $files
 
-    #old="slc1 : $PWD/merged/SLC"
-    #new="slc1 : /tmp"
-    #sed -i "s|$old|$new|g" $files
-    #old="slc2 : $PWD/merged/SLC"
-    #new="slc2 : /tmp"
-    #sed -i "s|$old|$new|g" $files
-
     # run_11_unwrap
     files="configs/config_igram_unw_*"
 
@@ -372,6 +372,67 @@ if [[ $jobfiles_flag == "1" ]]; then
     new="reference : /tmp"
     sed -i "s|$old|$new|g" $files
 
+    else
+    #########################
+    ###   stripmapStack   ###
+    #########################
+
+    # run_01_crop
+    files="configs/config_crop_????????"
+
+    old="input : $PWD"
+    new="input : /tmp"
+    sed -i "s|$old|$new|g" $files
+
+    # run_04_geo2rdr_coarseResamp
+    files="configs/config_geo2rdr_coarseResamp_????????"
+
+    old="reference : $PWD"
+    new="reference : /tmp"
+    sed -i "s|$old|$new|g" $files
+
+    old="secondary : $PWD"
+    new="secondary : /tmp"
+    sed -i "s|$old|$new|g" $files
+
+    # run_07_fineResamp
+    files="configs/config_fineResamp_????????"
+
+    old="reference : $PWD"
+    new="reference : /tmp"
+    sed -i "s|$old|$new|g" $files
+
+    old="secondary : $PWD"
+    new="secondary : /tmp"
+    sed -i "s|$old|$new|g" $files
+
+    old="offsets : $PWD"
+    new="offsets : /tmp"
+    sed -i "s|$old|$new|g" $files
+
+    # run_08_grid_baseline
+    files="configs/config_baselinegrid_????????"
+
+    old="reference : $PWD"
+    new="reference : /tmp"
+    sed -i "s|$old|$new|g" $files
+
+    old="secondary : $PWD"
+    new="secondary : /tmp"
+    sed -i "s|$old|$new|g" $files
+
+    # run_09_igram
+    files="configs/config_igram_????????_????????"
+
+    old="reference : $PWD"
+    new="reference : /tmp"
+    sed -i "s|$old|$new|g" $files
+
+    old="secondary : $PWD"
+    new="secondary : /tmp"
+    sed -i "s|$old|$new|g" $files
+
+    fi
 
 fi
 
