@@ -27,7 +27,7 @@ if  [[ -z "$parallel" ]] ; then
    parallel=5 
 fi
 
-timeout=400
+timeout=500
 
 echo "parallel=${parallel}"
 
@@ -56,32 +56,46 @@ urls=($urls_list)
 num_urls=${#urls[@]}
 
 echo "URLs to download: ${urls[@]}"
-echo "Datafiles to download: $num_urls" | tee -a log
+echo "$(date +"%Y%m%d:%H-%m") * Datafiles to download: $num_urls" | tee -a log
 
 echo ${urls[@]} | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd
 exit_code=$?
 
+echo "$(date +"%Y%m%d:%H-%m") check_download: `check_download.py $PWD --delete`"  | tee -a log
+granules_num=$(ls *.{zip,tar.gz} 2> /dev/null | wc -l)
+echo "$(date +"%Y%m%d:%H-%m") * Downloaded scenes after check_download: $granules_num" | tee -a log
+
 runs=1
 while [ $exit_code -ne 0 ] && [ $runs -lt 3 ]; do
-    echo "Something went wrong. Exit code was ${exit_code}. Trying again with ${t} second timeout."
-    echo "$(date +"%Y%m%d:%H-%m") * Something went wrong. Exit code was ${exit_code}. Trying again with ${t} second timeout" >> log
-    echo ${urls[@]} | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd
+    new_timeout=$(echo "$timeout * $runs" | bc)
+    echo "$(date +"%Y%m%d:%H-%m") * Something went wrong. Exit code was ${exit_code}. Trying again with $new_timeout second timeout" | tee -a log
+
+    echo ${urls[@]} | xargs -n 1 -P $parallel timeout $new_timeout wget --continue --user $user --password $passwd
     exit_code=$?
+
+    echo "$(date +"%Y%m%d:%H-%m") check_download: `check_download.py $PWD --delete`"  | tee -a log
+    granules_num=$(ls *.{zip,tar.gz} 2> /dev/null | wc -l)
+    echo "$(date +"%Y%m%d:%H-%m") * Downloaded scenes after check_download: $granules_num" | tee -a log
+
     runs=$((runs+1))
     sleep 60
 done
 
+echo "Running (with\`s inserted) ... ssara_federated_query.py ${argv[@]:0:$#-1} --maxResults=20000 --download" | tee -a log
+ssara_federated_query.py "${argv[@]:0:$#-1}" --maxResults=20000 --download  
+
+echo "$(date +"%Y%m%d:%H-%m") check_download: `check_download.py $PWD --delete`"  | tee -a log
 granules_num=$(ls *.{zip,tar.gz} 2> /dev/null | wc -l)
-echo "Downloaded scenes: $granules_num" | tee -a log
+echo "$(date +"%Y%m%d:%H-%m") * Downloaded scenes after check_download: $granules_num" | tee -a log
+
 
 if [[ $granules_num -ge $num_urls ]]; then
-   echo "Downlaod successful." | tee -a log
+   echo "Download was successful, downloaded scenes: $granules_num" | tee -a log
    exit 0;
 else
-  echo "Not all scenes downloaded" | tee -a log
+  echo "Not all scenes downloaded, downloaded scenes: $granules_num" | tee -a log
   exit 1;
 fi
-
 
 # start=0
 # stop=$(($start+$parallel))
