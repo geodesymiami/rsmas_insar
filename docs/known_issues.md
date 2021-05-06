@@ -1,5 +1,6 @@
 ###  Known issues with data
 * Data unpacking problems
+
 run_02_unpack_secondary_slc (Sentinel1_TOPS) may fail because of issues with the data. `check_job_outputs.py` raises an exception when one of the following strings is found:
 
 ```
@@ -10,6 +11,11 @@ run_02_unpack_secondary_slc (Sentinel1_TOPS) may fail because of issues with the
 ```
 
 Currently  you need to add problem scenes into `topsStack.excludeDates`.  In principle we could remove the offending dates from the run_files, but this hasnot been implemented.
+
+* Different number of bursts problem
+
+run_06_extract_stack_valid_region may generate a warning `WARNING: 20190501 has different number of bursts`.
+Currently you need to add the scenes into `topsStack.excludeDates`.  We plan to implement to remove the offending data from the run_files .
 
 
 * Other potential errors for which excpetions are raised
