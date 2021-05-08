@@ -70,19 +70,14 @@ def main(iargs=None):
        if 'filter_coherence' in job_name or 'run_09_igram' in job_name:               # run_09_igram is for stripmap
            putils.remove_line_counter_lines_from_error_files(run_file=job_name)
 
-       if 'run_' in job_name:
-           putils.remove_zero_size_or_length_error_files(run_file=job_name)
-       
-       if 'run_' in job_name:
-           putils.remove_launcher_message_from_error_file(run_file=job_name)
+       putils.remove_zero_size_or_length_error_files(run_file=job_name)
+       putils.remove_launcher_message_from_error_file(run_file=job_name)
+       putils.remove_zero_size_or_length_error_files(run_file=job_name)
+       putils.remove_timeout_error_files(run_file=job_name)
 
-       if 'run_' in job_name:
-           putils.remove_zero_size_or_length_error_files(run_file=job_name)
-
-       error_files = glob.glob(job_name + '*.e')
-       out_files = glob.glob(job_name + '*.o')
-       error_files = natsorted(error_files)
-       out_files = natsorted(out_files)
+       # analyze *.e and *.o files
+       error_files = natsorted( glob.glob(job_name + '*.e') )
+       out_files = natsorted( glob.glob(job_name + '*.o') )
 
        if 'extract_stack_valid_region' in job_name:               
           for file in out_files:

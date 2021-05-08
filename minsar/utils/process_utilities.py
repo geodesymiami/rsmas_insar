@@ -820,6 +820,25 @@ def remove_launcher_message_from_error_file(run_file):
 
 ##########################################################################
 
+def remove_timeout_error_files(run_file):
+    """Removes error files from timed out jobs """
+
+    error_files = glob.glob(run_file + '*.e*')
+    error_files = natsorted(error_files)
+
+    for item in error_files:
+        new_lines=[]
+        f = open(item, 'r')
+        lines = f.readlines()
+        for line in lines:
+            if ('DUE TO TIME LIMIT ***' in line):
+                os.remove(item)
+        f.close()
+
+    return None
+
+##########################################################################
+
 
 def remove_line_counter_lines_from_error_files(run_file):
     """Removes lines with e.g. 'line:   398' from *.e files (filter_coherence step)"""
