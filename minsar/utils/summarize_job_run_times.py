@@ -124,8 +124,8 @@ def main(iargs=None):
         name = '_'.join(fname.split('_')[0:-2])
         if name != last_name:
            last_name = name
-           print("")
-           out_lines.append("\n")
+           #print("")
+           #out_lines.append("\n")
 
         string ='{:32} {:1}  {:1}'.format('_'.join(fname.split('_')[0:-1]) , out.decode('utf-8'), time_per_burst)
         print( string ); out_lines.append(string)
@@ -160,8 +160,7 @@ def main(iargs=None):
     
     home_dir = os.getenv('HOME')
     save_job_run_times_summary(home_dir + '/job_summaries', out_lines, inps.project_name)
-
-    save_job_run_times_summary(home_dir + '/job_summaries', test_lines, inps.project_name)
+    #save_job_run_times_summary(home_dir + '/job_summaries', test_lines, inps.project_name)
     return None
 
 
