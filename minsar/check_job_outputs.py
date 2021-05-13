@@ -70,6 +70,7 @@ def main(iargs=None):
        if 'filter_coherence' in job_name or 'run_09_igram' in job_name:               # run_09_igram is for stripmap
            putils.remove_line_counter_lines_from_error_files(run_file=job_name)
 
+       # 5/21: sometimes not working. Move before loop using run_file_base ??
        putils.remove_zero_size_or_length_error_files(run_file=job_name)
        putils.remove_launcher_message_from_error_file(run_file=job_name)
        putils.remove_zero_size_or_length_error_files(run_file=job_name)
