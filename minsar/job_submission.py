@@ -714,6 +714,15 @@ class JOB_SUBMIT:
             job_file_lines.append( "# copy infiles to local /tmp and adjust *.xml  #\n" )
             job_file_lines.append( "################################################\n" )
 
+            if 'stampede2' in hostname:
+                job_file_lines.append( 'export CDTOOL=/scratch/01255/siliu/collect_distribute\n' )
+            elif 'frontera' in hostname:
+                job_file_lines.append( 'export CDTOOL=/scratch1/01255/siliu/collect_distribute\n' )
+
+            job_file_lines.append( 'module load intel/19.1.1 2> /dev/null\n' )
+            job_file_lines.append( 'export PATH=${PATH}:${CDTOOL}/bin\n' )  
+            job_file_lines.append( '\n' )                                   #keep `\n` for splitting and remove first 12 characters of line 
+
         # run_02_unpack_secondary_slc
         if "run_02_unpack_secondary_slc" in job_file_name:
             job_file_lines.append( "################################################\n" )
@@ -727,7 +736,8 @@ class JOB_SUBMIT:
         if 'average_baseline' in job_file_name and not batch_file is None:
             job_file_lines.append(""" 
             # reference
-            cp -r """ + self.out_dir + """/reference /tmp
+            #cp -r """ + self.out_dir + """/reference /tmp
+            distribute.bash """ + self.out_dir + """/reference
             files="/tmp/reference/*.xml /tmp/reference/*/*.xml"
             old=""" + self.out_dir + """
             sed -i "s|$old|/tmp|g" $files
@@ -735,7 +745,8 @@ class JOB_SUBMIT:
             date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file + """ | awk -F _ '{printf "%s\\n",$NF}' ) )
             mkdir -p /tmp/secondarys
             for date in "${date_list[@]}"; do
-                cp -r """ + self.out_dir + """/secondarys/$date /tmp/secondarys
+                #cp -r """ + self.out_dir + """/secondarys/$date /tmp/secondarys
+                distribute.bash """ + self.out_dir + """/secondarys/$date /tmp/secondarys; mv /tmp/$date /tmp/secondarys
             done
             files1="/tmp/secondarys/????????/*.xml"
             files2="/tmp/secondarys/????????/*/*.xml"
@@ -749,13 +760,15 @@ class JOB_SUBMIT:
             job_file_lines.append("""
 
             # reference
-            cp -r """ + self.out_dir + """/reference /tmp
+            #cp -r """ + self.out_dir + """/reference /tmp
+            distribute.bash """ + self.out_dir + """/reference 
             files="/tmp/reference/*.xml /tmp/reference/*/*.xml"
             old=""" + self.out_dir + """ 
             sed -i "s|$old|/tmp|g" $files
 
             # geom_reference
-            cp -r """ + self.out_dir + """/geom_reference /tmp
+            #cp -r """ + self.out_dir + """/geom_reference /tmp
+            distribute.bash """ + self.out_dir + """/geom_reference 
             files="/tmp/geom_reference/*/*.xml"
             old=""" + self.out_dir + """
             sed -i "s|$old|/tmp|g" $files
@@ -764,7 +777,8 @@ class JOB_SUBMIT:
             date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file +  """ | awk -F _ '{printf "%s\\n",$NF}' ) )
             mkdir -p /tmp/secondarys
             for date in "${date_list[@]}"; do
-                cp -r """ + self.out_dir + """/secondarys/$date /tmp/secondarys
+                #cp -r """ + self.out_dir + """/secondarys/$date /tmp/secondarys
+                distribute.bash """ + self.out_dir + """/secondarys/$date; mv /tmp/$date /tmp/secondarys
             done
             files1="/tmp/secondarys/????????/*.xml"
             files2="/tmp/secondarys/????????/*/*.xml"
@@ -777,7 +791,8 @@ class JOB_SUBMIT:
         if 'fullBurst_resample' in job_file_name and not batch_file is None:
             job_file_lines.append("""
             # reference
-            cp -r """ + self.out_dir + """/reference /tmp
+            #cp -r """ + self.out_dir + """/reference /tmp
+            distribute.bash """ + self.out_dir + """/reference
             files="/tmp/reference/*.xml /tmp/reference/*/*.xml"
             old=""" + self.out_dir + """ 
             sed -i "s|$old|/tmp|g" $files
@@ -786,7 +801,8 @@ class JOB_SUBMIT:
             date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file +  """ | awk -F _ '{printf "%s\\n",$NF}' ) )
             mkdir -p /tmp/secondarys
             for date in "${date_list[@]}"; do
-                cp -r """ + self.out_dir + """/secondarys/$date /tmp/secondarys
+                #cp -r """ + self.out_dir + """/secondarys/$date /tmp/secondarys
+                distribute.bash """ + self.out_dir + """/secondarys/$date; mv /tmp/$date /tmp/secondarys
             done
             files1="/tmp/secondarys/????????/*.xml"
             files2="/tmp/secondarys/????????/*/*.xml"
@@ -800,14 +816,15 @@ class JOB_SUBMIT:
             job_file_lines.append("""
 
             # stack
-            cp -r """ + self.out_dir + """/stack /tmp
+            #cp -r """ + self.out_dir + """/stack /tmp
+            distribute.bash """ + self.out_dir + """/stack
             files="/tmp/stack/*xml"
             old=""" + self.out_dir + """
             sed -i "s|$old|/tmp|g" $files
 
             # reference
-            cp -r """ + self.out_dir + """/reference /tmp
-            files="/tmp/reference/*.xml /tmp/reference/*/*.xml"
+            #cp -r """ + self.out_dir + """/reference /tmp
+            distribute.bash """ + self.out_dir + """/reference; files="/tmp/reference/*.xml /tmp/reference/*/*.xml"
             old=""" + self.out_dir + """ 
             sed -i "s|$old|/tmp|g" $files
 
@@ -822,7 +839,8 @@ class JOB_SUBMIT:
             if [[ ${#date_list[@]} -ne 0 ]]; then
             mkdir -p /tmp/coreg_secondarys
             for date in "${date_list[@]}"; do
-                cp -r """ + self.out_dir + """/coreg_secondarys/$date /tmp/coreg_secondarys
+                #cp -r """ + self.out_dir + """/coreg_secondarys/$date /tmp/coreg_secondarys
+                distribute.bash """ + self.out_dir + """/coreg_secondarys/$date; mv /tmp/$date /tmp/coreg_secondarys
             done
             files1="/tmp/coreg_secondarys/????????/*.xml"
             files2="/tmp/coreg_secondarys/????????/*/*.xml"
@@ -851,7 +869,8 @@ class JOB_SUBMIT:
             
             # reference
             if [[ " ${date_list[@]} " =~ " $ref_date " ]] ; then
-               cp -r """ + self.out_dir + """/reference /tmp
+               #cp -r """ + self.out_dir + """/reference /tmp
+               distribute.bash """ + self.out_dir + """/reference
                files="/tmp/reference/*.xml /tmp/reference/*/*.xml"
                old=""" + self.out_dir + """ 
                sed -i "s|$old|/tmp|g" $files
@@ -863,7 +882,8 @@ class JOB_SUBMIT:
             if [[ ${#date_list[@]} -ne 0 ]]; then
             mkdir -p /tmp/coreg_secondarys
             for date in "${date_list[@]}"; do
-                cp -r """ + self.out_dir + """/coreg_secondarys/$date /tmp/coreg_secondarys
+                #cp -r """ + self.out_dir + """/coreg_secondarys/$date /tmp/coreg_secondarys
+                distribute.bash """ + self.out_dir + """/coreg_secondarys/$date; mv /tmp/$date /tmp/coreg_secondarys
             done
             files1="/tmp/coreg_secondarys/????????/*.xml"
             files2="/tmp/coreg_secondarys/????????/*/*.xml"
@@ -878,7 +898,8 @@ class JOB_SUBMIT:
             job_file_lines.append("""
            
             # stack
-            cp -r """ + self.out_dir + """/stack /tmp
+            #cp -r """ + self.out_dir + """/stack /tmp
+            distribute.bash """ + self.out_dir + """/stack
             files="/tmp/stack/*xml"
             old=""" + self.out_dir + """
             sed -i "s|$old|/tmp|g" $files
@@ -887,7 +908,8 @@ class JOB_SUBMIT:
             pair_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file + """ | awk -F _merge_igram_ '{printf "%s\\n",$2}' | sort -n | uniq) )
             mkdir -p /tmp/interferograms
             for pair in "${pair_list[@]}"; do
-               cp -r """ + self.out_dir + """/interferograms/$pair /tmp/interferograms
+               #cp -r """ + self.out_dir + """/interferograms/$pair /tmp/interferograms
+               distribute.bash """ + self.out_dir + """/interferograms/$pair; mv /tmp/$pair /tmp/interferograms
             done
             files1="/tmp/interferograms/????????_????????/*.xml"
             files2="/tmp/interferograms/????????_????????/*/*.xml"
@@ -904,7 +926,8 @@ class JOB_SUBMIT:
             pair_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file + """ | awk -F _igram_filt_coh_ '{printf "%s\\n",$2}' | sort -n | uniq) )
             mkdir -p /tmp/merged/interferograms
             for pair in "${pair_list[@]}"; do
-               cp -r """ + self.out_dir + """/merged/interferograms/$pair /tmp/merged/interferograms
+               #cp -r """ + self.out_dir + """/merged/interferograms/$pair /tmp/merged/interferograms
+               distribute.bash """ + self.out_dir + """/merged/interferograms/$pair; mv /tmp/$pair /tmp/merged/interferograms
             done
             files1="/tmp/merged/interferograms/????????_????????/*.xml"
             old=""" + self.out_dir + """
@@ -914,7 +937,8 @@ class JOB_SUBMIT:
             date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file + """ | awk -F _ '{printf "%s\\n%s\\n",$(NF-1),$NF}' | sort -n | uniq) )
             mkdir -p /tmp/merged/SLC
             for date in "${date_list[@]}"; do
-               cp -r """ + self.out_dir + """/merged/SLC/$date /tmp/merged/SLC
+               #cp -r """ + self.out_dir + """/merged/SLC/$date /tmp/merged/SLC
+               distribute.bash """ + self.out_dir + """/merged/SLC/$date; mv /tmp/$date /tmp/merged/SLC
             done
             files1="/tmp/merged/SLC/????????/*.xml"
             old=""" + self.out_dir + """
@@ -926,7 +950,8 @@ class JOB_SUBMIT:
             job_file_lines.append("""
 
             # reference
-            cp -r """ + self.out_dir + """/reference /tmp
+            #cp -r """ + self.out_dir + """/reference /tmp
+            distribute.bash """ + self.out_dir + """/reference /tmp
             files="/tmp/reference/*.xml /tmp/reference/*/*.xml"
             old=""" + self.out_dir + """ 
             sed -i "s|$old|/tmp|g" $files
@@ -935,7 +960,8 @@ class JOB_SUBMIT:
             pair_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file + """ | awk -F _igram_unw_ '{printf "%s\\n",$2}' | sort -n | uniq) )
             mkdir -p /tmp/merged/interferograms
             for pair in "${pair_list[@]}"; do
-               cp -r """ + self.out_dir + """/merged/interferograms/$pair /tmp/merged/interferograms
+               #cp -r """ + self.out_dir + """/merged/interferograms/$pair /tmp/merged/interferograms
+               distribute.bash """ + self.out_dir + """/merged/interferograms/$pair; mv /tmp/$pair /tmp/merged/interferograms
             done
             files1="/tmp/merged/interferograms/????????_????????/*.xml"
             old=""" + self.out_dir + """
@@ -952,7 +978,8 @@ class JOB_SUBMIT:
             date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file +  """ | awk -F _ '{printf "%s\\n",$NF}' ) )
             mkdir -p /tmp/SLC
             for date in "${date_list[@]}"; do
-                cp -r """ + self.out_dir + """/SLC/$date /tmp/SLC
+                #cp -r """ + self.out_dir + """/SLC/$date /tmp/SLC
+                distribute.bash """ + self.out_dir + """/SLC/$date; mv /tmp/$date /tmp/SLC
             done
             files1="/tmp/SLC/????????/*.xml"
             old=""" + self.out_dir + """
@@ -969,9 +996,11 @@ class JOB_SUBMIT:
             ref_date=( $(awk '{printf "%s\\n",$3}' """ + self.out_dir +  """/run_files/run_02_reference | awk -F _ '{printf "%s\\n",$NF}' ) )
             date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file +  """ | awk -F _ '{printf "%s\\n",$NF}' ) )
             mkdir -p /tmp/SLC_crop
-            cp -r """ + self.out_dir + """/SLC_crop/$ref_date /tmp/SLC_crop
+            #cp -r """ + self.out_dir + """/SLC_crop/$ref_date /tmp/SLC_crop
+            distribute.bash """ + self.out_dir + """/SLC_crop/$ref_date; mv /tmp/$ref_date /tmp/SLC_crop
             for date in "${date_list[@]}"; do
-                cp -r """ + self.out_dir + """/SLC_crop/$date /tmp/SLC_crop
+                #cp -r """ + self.out_dir + """/SLC_crop/$date /tmp/SLC_crop
+                distribute.bash """ + self.out_dir + """/SLC_crop/$date; mv /tmp/$date /tmp/SLC_crop
             done
 
             files="/tmp/SLC_crop/*/*.xml"
@@ -980,7 +1009,8 @@ class JOB_SUBMIT:
             
             # geom_reference
             mkdir -p /tmp/merged
-            cp -r """ + self.out_dir + """/merged/geom_reference /tmp/merged
+            #cp -r """ + self.out_dir + """/merged/geom_reference /tmp/merged
+            distribute.bash """ + self.out_dir + """/merged/geom_reference; mv /tmp/geom_reference /tmp/merged
              """)
 
         # run_05_refineSecondaryTiming
@@ -992,8 +1022,10 @@ class JOB_SUBMIT:
             
             date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file +  """ | awk -F _ '{printf "%s\\n",$NF}' |  sort -n | uniq ) )
             for date in "${date_list[@]}"; do
-                cp -r """ + self.out_dir + """/SLC_crop/$date /tmp/SLC_crop
-                cp -r """ + self.out_dir + """/coregSLC/Coarse/$date /tmp/coregSLC/Coarse
+                #cp -r """ + self.out_dir + """/SLC_crop/$date /tmp/SLC_crop
+                #cp -r """ + self.out_dir + """/coregSLC/Coarse/$date /tmp/coregSLC/Coarse
+                distribute.bash """ + self.out_dir + """/SLC_crop/$date; mv /tmp/$date /tmp/SLC_crop
+                distribute.bash """ + self.out_dir + """/coregSLC/Coarse/$date; mv /tmp/$date /tmp/coregSLC/Coarse
             done
 
             files1="/tmp/SLC_crop/*/*.xml"
@@ -1016,12 +1048,16 @@ class JOB_SUBMIT:
             ref_date=( $(awk '{printf "%s\\n",$3}' """ + self.out_dir +  """/run_files/run_02_reference | awk -F _ '{printf "%s\\n",$NF}' ) )
             date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file +  """ | grep config_fineResamp | awk -F _ '{printf "%s\\n",$NF}' ) )
 
-            cp -r """ + self.out_dir + """/SLC_crop/$ref_date /tmp/SLC_crop
+            #cp -r """ + self.out_dir + """/SLC_crop/$ref_date /tmp/SLC_crop
+            distribute.bash """ + self.out_dir + """/SLC_crop/$ref_date; mv /tmp/$ref_date /tmp/SLC_crop
             
             for date in "${date_list[@]}"; do
-                cp -r """ + self.out_dir + """/SLC_crop/$date /tmp/SLC_crop
-                cp -r """ + self.out_dir + """/coregSLC/Coarse/$date /tmp/coregSLC/Coarse
-                cp -r """ + self.out_dir + """/offsets/$date /tmp/offsets
+                #cp -r """ + self.out_dir + """/SLC_crop/$date /tmp/SLC_crop
+                #cp -r """ + self.out_dir + """/coregSLC/Coarse/$date /tmp/coregSLC/Coarse
+                #cp -r """ + self.out_dir + """/offsets/$date /tmp/offsets
+                distribute.bash """ + self.out_dir + """/SLC_crop/$date; mv /tmp/$date /tmp/SLC_crop
+                distribute.bash """ + self.out_dir + """/coregSLC/Coarse/$date; mv /tmp/$date /tmp/coregSLC/Coarse
+                distribute.bash """ + self.out_dir + """/offsets/$date; mv /tmp/$date /tmp/offsets
             done
 
             files1="/tmp/SLC_crop/*/*.xml"
@@ -1043,10 +1079,12 @@ class JOB_SUBMIT:
             ref_date=( $(awk '{printf "%s\\n",$3}' """ + self.out_dir +  """/run_files/run_02_reference | awk -F _ '{printf "%s\\n",$NF}' ) )
             date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file +  """ | awk -F _ '{printf "%s\\n",$NF}' ) )
             
-            cp -r """ + self.out_dir + """/merged/SLC/$ref_date/ /tmp/merged/SLC
+            #cp -r """ + self.out_dir + """/merged/SLC/$ref_date/ /tmp/merged/SLC
+            distribute.bash """ + self.out_dir + """/merged/SLC/$ref_date/; mv /tmp/$ref_date /tmp/merged/SLC
             
             for date in "${date_list[@]}"; do
-                cp -r """ + self.out_dir + """/merged/SLC/$date/ /tmp/merged/SLC
+                #cp -r """ + self.out_dir + """/merged/SLC/$date/ /tmp/merged/SLC
+                distribute.bash """ + self.out_dir + """/merged/SLC/$date/; mv /tmp/$date /tmp/merged/SLC
             done
 
              """)
@@ -1060,10 +1098,12 @@ class JOB_SUBMIT:
             ref_date=( $(awk '{printf "%s\\n",$3}' """ + self.out_dir +  """/run_files/run_02_reference | awk -F _ '{printf "%s\\n",$NF}' ) )
             date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file +  """ | awk -F _ '{printf "%s\\n",$NF}' ) )
             
-            cp -r """ + self.out_dir + """/merged/SLC/$ref_date/ /tmp/merged/SLC
+            #cp -r """ + self.out_dir + """/merged/SLC/$ref_date/ /tmp/merged/SLC
+            distribute.bash """ + self.out_dir + """/merged/SLC/$ref_date/; mv /tmp/$ref_date /tmp/merged/SLC
             
             for date in "${date_list[@]}"; do
-                cp -r """ + self.out_dir + """/merged/SLC/$date/ /tmp/merged/SLC
+                #cp -r """ + self.out_dir + """/merged/SLC/$date/ /tmp/merged/SLC
+                distribute.bash """ + self.out_dir + """/merged/SLC/$date/; mv /tmp/$date /tmp/merged/SLC
             done
 
              """)
