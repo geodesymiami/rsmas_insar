@@ -57,6 +57,7 @@ def  run_generate_chunk_template_files(inps):
  
     commands_file = inps.work_dir + '/minsar_commands.txt'
     f = open(commands_file, "w")
+    commands = []
 
     if inps.download_flag == True:
         minsarApp_option = '--start download'
@@ -102,10 +103,14 @@ def  run_generate_chunk_template_files(inps):
 
         minsar_command = 'minsarApp.bash ' + chunk_template_file + ' ' + minsarApp_option
 
+        print(minsar_command)
         f.write(minsar_command + '\n')
+        commands.append(minsar_command)
         
         lat = lat + inps.lat_step
     
+    for item in commands:
+       print(item)
     return
 
 ###########################################################################################

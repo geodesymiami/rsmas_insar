@@ -195,17 +195,16 @@ class JOB_SUBMIT:
         if self.platform_name in supported_platforms:
             #print('\nWorking on a {} machine ...\n'.format(self.scheduler))
 
+            # assume stripmap size corredponds to 8 busts
+            if self.prefix == 'stripmap':       
+               self.num_bursts = 8
+
             self.get_memory_walltime(batch_file, job_type='batch')
 
-            if self.prefix == 'tops':
-                message_rsmas.log(self.work_dir, 'job_submission.py --template {t} {a} --outdir {b} '
+            message_rsmas.log(self.work_dir, 'job_submission.py --template {t} {a} --outdir {b} '
                                                  '--numBursts {c} --writeonly'.format(t=self.custom_template_file,
                                                                                       a=batch_file, b=self.out_dir,
                                                                                       c=self.num_bursts))
-            else:
-                message_rsmas.log(self.work_dir, 'job_submission.py --template {t} {a} --outdir {b} '
-                                                 '--writeonly'.format(t=self.custom_template_file,
-                                                                      a=batch_file, b=self.out_dir))
 
             with open(batch_file, 'r') as f:
                 tasks = f.readlines()
