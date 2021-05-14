@@ -1079,8 +1079,12 @@ class JOB_SUBMIT:
             date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file +  """ | awk -F _ '{printf "%s\\n",$NF}' ) )
             
             #cp -r """ + self.out_dir + """/merged/SLC/$ref_date/ /tmp/merged/SLC
-            distribute.bash """ + self.out_dir + """/merged/SLC/$ref_date/; mv /tmp/$ref_date /tmp/merged/SLC
+            #distribute.bash """ + self.out_dir + """/merged/SLC/$ref_date/; mv /tmp/$ref_date /tmp/merged/SLC
             
+            date_list+=($ref_date)
+            #date_list=( $(echo "${date_list[@]}" | sort -n | uniq) )
+            date_list=( $(printf "%s\\n" ${date_list[@]} | sort -n | uniq) )
+
             for date in "${date_list[@]}"; do
                 #cp -r """ + self.out_dir + """/merged/SLC/$date/ /tmp/merged/SLC
                 distribute.bash """ + self.out_dir + """/merged/SLC/$date/; mv /tmp/$date /tmp/merged/SLC
@@ -1093,16 +1097,21 @@ class JOB_SUBMIT:
             job_file_lines.append("""
  
             mkdir -p /tmp/merged/SLC
+            mkdir -p /tmp/SLC_crop
            
             ref_date=( $(awk '{printf "%s\\n",$3}' """ + self.out_dir +  """/run_files/run_02_reference | awk -F _ '{printf "%s\\n",$NF}' ) )
             date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file +  """ | awk -F _ '{printf "%s\\n",$NF}' ) )
             
             #cp -r """ + self.out_dir + """/merged/SLC/$ref_date/ /tmp/merged/SLC
-            distribute.bash """ + self.out_dir + """/merged/SLC/$ref_date/; mv /tmp/$ref_date /tmp/merged/SLC
+            #distribute.bash """ + self.out_dir + """/merged/SLC/$ref_date/; mv /tmp/$ref_date /tmp/merged/SLC
             
+            date_list+=($ref_date)
+            date_list=( $(printf "%s\\n" ${date_list[@]} | sort -n | uniq) )
+
             for date in "${date_list[@]}"; do
                 #cp -r """ + self.out_dir + """/merged/SLC/$date/ /tmp/merged/SLC
                 distribute.bash """ + self.out_dir + """/merged/SLC/$date/; mv /tmp/$date /tmp/merged/SLC
+                distribute.bash """ + self.out_dir + """/SLC_crop/$date/; mv /tmp/$date /tmp/SLC_crop
             done
 
              """)

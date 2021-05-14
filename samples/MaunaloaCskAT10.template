@@ -4,11 +4,11 @@ acquisition_mode        = stripmap
 
 ssaraopt.platform       = COSMO-SKYMED-1,COSMO-SKYMED-2,COSMO-SKYMED-3,COSMO-SKYMED-4
 ssaraopt.relativeOrbit  = 10
+relative_orbit          = 10
 ssaraopt.intersectsWithPoint = -155.6 19.45
 ssaraopt.collectionName = "Supersites CSK Hawaii"
 ssaraopt.startDate      = 20141001
 ssaraopt.endDate        = 20141220
-relative_orbit          = 10
 ##################### ISCE OPTIONS ####################
 stripmapStack.boundingBox    = 19.1 19.7 -155.5 -154.9                           # '-1 0.15 -91.6 -90.9'                           
 stripmapStack.azimuthLooks         = 16

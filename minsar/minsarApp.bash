@@ -264,7 +264,8 @@ if [[ $jobfiles_flag == "1" ]]; then
     # modify config files to use /tmp on compute node 
 
     acquisition_mode=$(grep acquisition_mode $template_file  | cut -d '=' -f 2)
-    if [[ $acquisition_mode != 'stripmap' ]]; then
+
+    if [[ $acquisition_mode != *"stripmap"* ]]; then
     
     #########################
     ###   topsStack   ###
@@ -442,6 +443,7 @@ if [[ $ifgrams_flag == "1" ]]; then
     #timeout 0.1 ls  $WEATHER_DIR/ERA5/* >> /dev/null ; echo $?
     #cmd_try="download_ERA5_data.py --date_list SAFE_files.txt $template_file"
 
+    # need to use differnt date_list file for CSK
     download_ERA5_cmd=`which download_ERA5_data.py`
     cmd="$download_ERA5_cmd --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR "
     echo " Running.... python $cmd >& out_download_ERA5_data.e &"
