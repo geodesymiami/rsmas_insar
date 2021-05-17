@@ -820,6 +820,30 @@ def remove_launcher_message_from_error_file(run_file):
 
 ##########################################################################
 
+def remove_ssh_warning_message_from_error_file(run_file):
+    """Removes warning message from *.e files when invoking ssh """
+
+    error_files = glob.glob(run_file + '*.e*')
+    error_files = natsorted(error_files)
+
+    for item in error_files:
+        new_lines=[]
+        f = open(item, 'r')
+        lines = f.readlines()
+        for line in lines:
+            if not any(skip in line for skip in ['Warning: Permanently added']):
+                new_lines.append(line)
+        f.close()
+        f = open(item, 'w')
+        f.write(''.join(new_lines))
+        f.close()
+        Path(item).touch()
+
+    return None
+
+##########################################################################
+##########################################################################
+
 def remove_timeout_error_files(run_file):
     """Removes error files from timed out jobs """
 

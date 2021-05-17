@@ -73,6 +73,7 @@ def main(iargs=None):
        # 5/21: sometimes not working. Move before loop using run_file_base ??
        putils.remove_zero_size_or_length_error_files(run_file=job_name)
        putils.remove_launcher_message_from_error_file(run_file=job_name)
+       putils.remove_ssh_warning_message_from_error_file(run_file=job_name)
        putils.remove_zero_size_or_length_error_files(run_file=job_name)
        putils.remove_timeout_error_files(run_file=job_name)
 
