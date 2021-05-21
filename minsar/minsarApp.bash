@@ -173,6 +173,10 @@ elif [[ $stopstep != "" ]]; then
     exit 1
 fi
 
+# this works for logiginhg to process.log, but doe snot wroiite to screen
+#exec 3>&1 1>process1.log 2>&1
+
+
 ####################################
 if  ! test -f "$SCRATCH/miniconda3.tar" ; then
     echo "Copying miniconda3.tar to SCRATCH ..."
