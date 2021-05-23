@@ -105,7 +105,6 @@ def  run_generate_chunk_template_files(inps):
 
         minsar_command = 'minsarApp.bash ' + chunk_template_file + ' ' + minsarApp_option + ' 2>&1 | tee process.log'
 
-        print(minsar_command)
         f.write(minsar_command + '\n')
         commands.append(minsar_command)
         
