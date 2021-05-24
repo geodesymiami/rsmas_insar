@@ -124,7 +124,9 @@ if $randomorder; then
     files=( $(echo "${files[@]}" | sed -r 's/(.[^;]*;)/ \1 /g' | tr " " "\n" | shuf | tr -d " " ) )
 fi
 i=0
-for f in "${files[@]}"; do
+# for f in "${files[@]}"; do
+for ((j=0; j < "${#files[@]}"; j++)); do
+    f=${files[$j]}
     time_elapsed=0
     i=$((i+1))
     #echo "Submitting file: $f" >&2
@@ -168,18 +170,21 @@ for f in "${files[@]}"; do
             job_submit_message=$(echo "$job_submit_message_full" | grep "Submitted batch job")
 
             if [[ $exit_status -ne 0 ]]; then
-                echo "sbatch message: $job_submit_message_full" >&2 
-                echo "sbatch submit error: exit code $exit_status. Sleep 60 seconds and try again" >&2 
-                exit
-                sleep 30
-                job_submit_message_full=$(sbatch $f)
-                exit_status="$?"
-                job_submit_message=$(echo "$job_submit_message_full" | grep "Submitted batch job")
-                if [[ $exit_status -ne 0 ]]; then
-                    echo "sbatch message: $job_submit_message_full" >&2 
-                    echo "sbatch submit error: exit code $exit_status. Exiting with status code 1." >&2 
-                    sleep 60
-                fi
+                printf "%-20s |\n" "Submission error." >&2
+                j=$(($j-1))
+                break
+                # echo "sbatch message: $job_submit_message_full" >&2 
+                # echo "sbatch submit error: exit code $exit_status. Sleep 60 seconds and try again" >&2 
+                # exit
+                # sleep 30
+                # job_submit_message_full=$(sbatch $f)
+                # exit_status="$?"
+                # job_submit_message=$(echo "$job_submit_message_full" | grep "Submitted batch job")
+                # if [[ $exit_status -ne 0 ]]; then
+                #     echo "sbatch message: $job_submit_message_full" >&2 
+                #     echo "sbatch submit error: exit code $exit_status. Exiting with status code 1." >&2 
+                #     sleep 60
+                # fi
             fi
 
             jobnumber=$(grep -oE "[0-9]{7}" <<< $job_submit_message)
