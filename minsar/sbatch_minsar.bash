@@ -1,0 +1,100 @@
+##!/bin/bash
+
+function get_active_jobids {
+    running_tasks=$(squeue -u $USER --format="%A" -rh)
+    job_ids=($(echo $running_tasks | grep -oP "\d{4,}"))
+    echo "${job_ids[@]}"
+    return 0
+}
+
+function num_tasks_for_file {
+    file=$1
+    file="${file%.*}"
+    if [[ ! -f $file ]]; then
+        num_tasks=1
+    else
+        num_tasks=$(cat $file | wc -l)
+    fi
+    echo $num_tasks
+    return 0
+}
+
+function compute_num_tasks {
+    stepname=$1
+
+    job_ids=($(get_active_jobids))
+
+    tasks=0
+    for j in "${job_ids[@]}"; do
+        task_file=$(scontrol show jobid -dd $j | grep -oP "(?<=Command=)(.*)(?=.job)")
+        if [[ "$task_file" == *"$stepname"* ]]; then
+            num_tasks=$(num_tasks_for_file $task_file)
+            ((tasks=tasks+$num_tasks))
+        fi
+    done
+
+    echo $tasks
+    return 0
+}
+
+f=$1
+step_name=$(echo $f | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,}.job)")
+if [ -z "$step_name" ]; then
+    step_name=${file%.*}
+fi
+
+# Get queue to submit to and identify job submission limits for that queue
+QUEUENAME=$(cat $f | grep "#SBATCH -p" | awk -F'[ ]' '{print $3}')
+MAX_JOBS_PER_QUEUE=$(qlimits | grep $QUEUENAME | awk '{print $4}')
+if [ -z "$MAX_JOBS_PER_QUEUE" ]; then
+    MAX_JOBS_PER_QUEUE=1
+fi
+
+# Compute number of total active tasks and number of active tasks for curent step
+num_active_tasks_total=$(compute_num_tasks)
+num_active_tasks_step=$(compute_num_tasks $step_name)
+
+# Get number of tasks associated with current jobfile
+# insarmaps.job and smallbaseline_wrapper.job always have 1 task.
+# ISCE runfiles have number of tasks equal to number of lines in associated launcher script
+# Launcher script: "run_01_unpack_topo_reference_0.job" -> "run_01_unpack_topo_reference_0"    
+num_tasks_job=$(num_tasks_for_file $f)
+
+# Compute new total number of tasks and tasks for current step
+new_tasks_step=$(($num_active_tasks_step+$num_tasks_job))
+new_tasks_total=$(($num_active_tasks+$num_tasks_job))
+
+# Get active number of running jobs
+num_active_jobs=$(squeue -u $USER -h -t running,pending -r -p $QUEUENAME | wc -l )
+new_active_jobs=$(($num_active_jobs+1))        
+
+step_max_tasks=1500
+total_max_tasks=3000
+
+sbatch_message=$(sbatch --test-only -Q $f)
+echo "${sbatch_message[@]:1}"
+
+if [[ $new_active_jobs -lt $MAX_JOBS_PER_QUEUE ]]; then job_count="OK"; else job_count="FAILED"; fi
+if [[ $new_tasks_step -lt $step_max_tasks ]]; then steptask_count="OK"; else steptask_count="FAILED"; fi
+if [[ $new_tasks_total -lt $total_max_tasks ]]; then task_count="OK"; else task_count="FAILED"; fi
+
+if [[ $job_count == "OK" ]] && [[ $steptask_count == "OK" ]] && [[ $task_count == "OK" ]]; then resource_check="OK"; else resource_check="FAILED"; fi
+
+echo -e "\n"
+echo -e "--> Verifying job request is within resource limits...$resource_check"
+echo -e "\t[*] Maximum job count ($new_active_jobs/$MAX_JOBS_PER_QUEUE)...$job_count"
+echo -e "\t[*] Total task count ($new_tasks_step/$step_max_tasks)...$steptask_count"
+echo -e "\t[*] Total tasks count for step ($new_tasks_total/$total_max_tasks)...$task_count"
+echo -e "\n"
+
+if  [[ $resource_check == "OK" ]] && 
+    [[ $sbatch_message != *"FAILED"* ]];  then
+
+    sbatch_submit=$(sbatch --parsable $f)
+    job_number=$(echo $sbatch_submit | grep -oE "[0-9]{7,}")
+    echo "$f submitted as job $job_number at $(date +"%H:%m:%s") on $(date +"%Y-%m-%d")."
+    exit 0
+else
+    echo "$f could not be submitted."
+    exit 1
+fi
