@@ -86,10 +86,10 @@ do
             shift # past value
             ;;
         --step_max_tasks)
-                step_max_tasks="$2"
-                shift
-                shift
-                ;;
+            step_max_tasks="$2"
+            shift
+            shift
+            ;;
         --total_max_tasks)
             total_max_tasks="$2"
             shift
@@ -112,10 +112,10 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-printf "%0.s-" {1..146} >&2
+printf "%0.s-" {1..153} >&2
 printf "\n" >&2
-printf "| %-20s | %-16s | %-17s | %-18s | %-19s | %-14s | %-20s | %s \n" "File Name" "Additional Tasks" "Step Active Tasks" "Total Active Tasks" "Step Processed Jobs" "Active Jobs"  "Message" >&2
-printf "%0.s-" {1..146} >&2
+printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s | %s \n" "File Name" "Extra Tasks" "Step Active Tasks" "Total Active Tasks" "Step Processed Jobs" "Active Jobs"  "Message" >&2
+printf "%0.s-" {1..153} >&2
 printf "\n" >&2
 
 jns=()
@@ -129,7 +129,6 @@ for ((j=0; j < "${#files[@]}"; j++)); do
     f=${files[$j]}
     time_elapsed=0
     i=$((i+1))
-    #echo "Submitting file: $f" >&2
     
     QUEUENAME=$(cat $f | grep "#SBATCH -p" | awk -F'[ ]' '{print $3}')
     MAX_JOBS_PER_QUEUE=$(qlimits | grep $QUEUENAME | awk '{print $4}')
@@ -138,61 +137,37 @@ for ((j=0; j < "${#files[@]}"; j++)); do
     fi
 
     while [[ $time_elapsed -lt $max_time ]]; do
-        # Compute number of total active tasks and number of active tasks for curent step
-        num_active_tasks_total=$(compute_num_tasks)
-        num_active_tasks_step=$(compute_num_tasks $step_name)
 
-        # Get number of tasks associated with current jobfile
-        # insarmaps.job and smallbaseline_wrapper.job always have 1 task.
-        # ISCE runfiles have number of tasks equal to number of lines in associated launcher script
-        # Launcher script: "run_01_unpack_topo_reference_0.job" -> "run_01_unpack_topo_reference_0"    
-        num_tasks_job=$(num_tasks_for_file $f)
-        
-        # Compute new total number of tasks and tasks for current step
-        new_tasks_step=$(($num_active_tasks_step+$num_tasks_job))
-        new_tasks_total=$(($num_active_tasks+$num_tasks_job))
-        
-        # Get active number of running jobs
-        num_active_jobs=$(squeue -u $USER -h -t running,pending -r -p $QUEUENAME | wc -l )
-        
-        #echo "Number of running/pending jobs: $num_active_jobs" >&2  
-        #echo "$num_active_tasks_total running/pending tasks across all jobs (maximum $total_max_tasks)" >&2 
-        #echo "step $step_name: $num_active_tasks_step running/pending tasks (maximum $step_max_tasks)" >&2
-        #echo "$(basename $f): $num_tasks_job additional tasks" >&2
         fname=$(basename $f)
         abb_fname=$(abbreviate $fname 20 10 7)
 
-        printf "| %-20s | %-16s | %-17s | %-18s | %-19s | %-14s | %s" "$abb_fname" "$num_tasks_job" "$num_active_tasks_step/$step_max_tasks" "$num_active_tasks_total/$total_max_tasks" "$i/${#files[@]}" "$num_active_jobs/$MAX_JOBS_PER_QUEUE" >&2
+        # Submit job using sbatch_minsar.batch, performing all necesarry resource checks.
+        # Grep sbatch_minsar output for current resource statuses for logging.
+        sbatch_minsar=$(sbatch_minsar.bash $f --step_max_tasks $step_max_tasks --total_max_tasks $total_max_tasks)
+        sbatch_exit_status="$?"
 
-        if [[ $num_active_jobs -lt $MAX_JOBS_PER_QUEUE ]] && [[ $new_tasks_step -lt $step_max_tasks ]] && [[ $new_tasks_total -lt $total_max_tasks ]]; then
-            job_submit_message_full=$(sbatch $f)
-            exit_status="$?"
-            job_submit_message=$(echo "$job_submit_message_full" | grep "Submitted batch job")
+        num_tasks_job=$(echo $sbatch_minsar | grep -oP "(\d{1,})(?= additional tasks)")
+        resource_limits=$(echo $sbatch_minsar | grep -oP "(?<= --> \()(\d{1,}\/\d{1,})(?=\)...)")
+        num_jobs=$(echo $resource_limits | awk '{print $1}')
+        num_step_tasks=$(echo $resource_limits | awk '{print $2}')
+        num_total_tasks=$(echo $resource_limits | awk '{print $3}')
 
-            if [[ $exit_status -ne 0 ]]; then
-                printf "%-20s |\n" "Submission error." >&2
-                j=$(($j-1))
-                break
-                # echo "sbatch message: $job_submit_message_full" >&2 
-                # echo "sbatch submit error: exit code $exit_status. Sleep 60 seconds and try again" >&2 
-                # exit
-                # sleep 30
-                # job_submit_message_full=$(sbatch $f)
-                # exit_status="$?"
-                # job_submit_message=$(echo "$job_submit_message_full" | grep "Submitted batch job")
-                # if [[ $exit_status -ne 0 ]]; then
-                #     echo "sbatch message: $job_submit_message_full" >&2 
-                #     echo "sbatch submit error: exit code $exit_status. Exiting with status code 1." >&2 
-                #     sleep 60
-                # fi
-            fi
 
-            jobnumber=$(grep -oE "[0-9]{7}" <<< $job_submit_message)
-            printf "%-20s |\n" "Submitted: $jobnumber" >&2
-            jns+=($jobnumber)
-            break
+        printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %s" "$abb_fname" "$num_tasks_job" "$num_step_tasks" "$num_total_tasks" "$i/${#files[@]}" "$num_jobs" >&2
+
+        # If there was a problem submitting the job, grep sbatch_minsar output for failure reason and wait.
+        # If job submitted succesfully, grep sbatch_minsar output for job_number.
+        if [[ $sbatch_exit_status -ne 0 ]]; then
+            fail_reason=$(echo $sbatch_minsar | grep -oP "(?<= could not be submitted. )(.*)")
+            printf "%-35s |\n" "Submission failed." >&2
+            printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s |\n" "" "" "" "" "" "" "$fail_reason"
+            printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s |\n" "" "" "" "" "" "" "Wait 5 minutes"
         else
-            printf "%-20s |\n" "Wait 5 min" >&2
+            job_number=$(echo $sbatch_minsar | grep -oP "\d{7,}")
+            printf "%-35s |\n" "Submitted: $job_number" >&2
+
+            jns+=($job_number)
+            break
         fi
 
         sleep 300
@@ -201,7 +176,7 @@ for ((j=0; j < "${#files[@]}"; j++)); do
     done
 done
 
-printf "%0.s-" {1..146} >&2
+printf "%0.s-" {1..153} >&2
 printf "\n" >&2
 
 if [[ $time_elapsed -ge $max_time ]]; then
