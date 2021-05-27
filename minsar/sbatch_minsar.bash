@@ -42,6 +42,33 @@ step_name=$(echo $f | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,}.job)")
 if [ -z "$step_name" ]; then
     step_name=${file%.*}
 fi
+step_max_tasks=1500
+total_max_tasks=3000
+
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+    case $key in
+        --step_max_tasks)
+            step_max_tasks="$2"
+            shift
+            shift
+            ;;
+        --total_max_tasks)
+            total_max_tasks="$2"
+            shift
+            shift
+            ;;
+        *)
+            POSITIONAL+=("$1") # save it in an array for later
+            shift # past argument
+            ;;
+esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+echo "Jobfile: $(basename $1)"
+echo "Step: $step_name"
 
 # Get queue to submit to and identify job submission limits for that queue
 QUEUENAME=$(cat $f | grep "#SBATCH -p" | awk -F'[ ]' '{print $3}')
@@ -62,29 +89,27 @@ num_tasks_job=$(num_tasks_for_file $f)
 
 # Compute new total number of tasks and tasks for current step
 new_tasks_step=$(($num_active_tasks_step+$num_tasks_job))
-new_tasks_total=$(($num_active_tasks+$num_tasks_job))
+new_tasks_total=$(($num_active_tasks_total+$num_tasks_job))
 
 # Get active number of running jobs
 num_active_jobs=$(squeue -u $USER -h -t running,pending -r -p $QUEUENAME | wc -l )
 new_active_jobs=$(($num_active_jobs+1))        
 
-step_max_tasks=1500
-total_max_tasks=3000
-
 sbatch_message=$(sbatch --test-only -Q $f)
 echo "${sbatch_message[@]:1}"
 
-if [[ $new_active_jobs -lt $MAX_JOBS_PER_QUEUE ]]; then job_count="OK"; else job_count="FAILED"; fi
-if [[ $new_tasks_step -lt $step_max_tasks ]]; then steptask_count="OK"; else steptask_count="FAILED"; fi
-if [[ $new_tasks_total -lt $total_max_tasks ]]; then task_count="OK"; else task_count="FAILED"; fi
+if [[ $new_active_jobs   -le $MAX_JOBS_PER_QUEUE ]]; then job_count="OK";        else job_count="FAILED";        fi
+if [[ $new_tasks_step    -le $step_max_tasks     ]]; then steptask_count="OK";   else steptask_count="FAILED";   fi
+if [[ $new_tasks_total   -le $total_max_tasks    ]]; then task_count="OK";       else task_count="FAILED";       fi
 
 if [[ $job_count == "OK" ]] && [[ $steptask_count == "OK" ]] && [[ $task_count == "OK" ]]; then resource_check="OK"; else resource_check="FAILED"; fi
 
 echo -e "\n"
-echo -e "--> Verifying job request is within resource limits...$resource_check"
-echo -e "\t[*] Maximum job count ($new_active_jobs/$MAX_JOBS_PER_QUEUE)...$job_count"
-echo -e "\t[*] Total task count ($new_tasks_step/$step_max_tasks)...$steptask_count"
-echo -e "\t[*] Total tasks count for step ($new_tasks_total/$total_max_tasks)...$task_count"
+echo -e "--> Verifying job request is within custom resource limits...$resource_check"
+echo -e "\t--> $num_tasks_job additional tasks."
+echo -e "\t[*] Job count \t\t($num_active_jobs/$MAX_JOBS_PER_QUEUE) --> ($new_active_jobs/$MAX_JOBS_PER_QUEUE)...$job_count"
+echo -e "\t[*] Step task count \t($num_active_tasks_step/$step_max_tasks) --> ($new_tasks_step/$step_max_tasks)...$steptask_count"
+echo -e "\t[*] Total task count \t($num_active_tasks_total/$total_max_tasks) --> ($new_tasks_total/$total_max_tasks)...$task_count"
 echo -e "\n"
 
 if  [[ $resource_check == "OK" ]] && 
@@ -92,9 +117,14 @@ if  [[ $resource_check == "OK" ]] &&
 
     sbatch_submit=$(sbatch --parsable $f)
     job_number=$(echo $sbatch_submit | grep -oE "[0-9]{7,}")
-    echo "$f submitted as job $job_number at $(date +"%H:%m:%s") on $(date +"%Y-%m-%d")."
+    echo "$f submitted as job $job_number at $(date +"%T") on $(date +"%Y-%m-%d")."
     exit 0
+
 else
-    echo "$f could not be submitted."
+    if [[ $job_count != "OK" ]]; then reason="Max job count exceeded"
+    elif [[ $steptask_count != "OK" ]]; then reason="Max task count for step exceeded"
+    elif [[ $task_count != "OK" ]]; then reason="Total task count exceeded"
+    fi
+    echo "$f could not be submitted. $reason."
     exit 1
 fi
