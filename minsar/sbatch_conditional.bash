@@ -74,6 +74,7 @@ step_max_tasks=1500
 total_max_tasks=3000
 max_time=604800
 randomorder=false
+wait_time=300
 
 while [[ $# -gt 0 ]]
 do
@@ -102,6 +103,10 @@ do
             ;;
         --random)
             randomorder=true
+            shift
+            ;;
+        --rapid)
+            wait_time=60
             shift
             ;;
         *)
@@ -161,7 +166,7 @@ for ((j=0; j < "${#files[@]}"; j++)); do
             fail_reason=$(echo $sbatch_minsar | grep -oP "(?<= could not be submitted. )(.*)")
             printf "%-35s |\n" "Submission failed." >&2
             printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s |\n" "" "" "" "" "" "" "$fail_reason"
-            printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s |\n" "" "" "" "" "" "" "Wait 5 minutes"
+            printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s |\n" "" "" "" "" "" "" "Wait $(($wait_time/60)) minutes."
         else
             job_number=$(echo $sbatch_minsar | grep -oP "\d{7,}")
             printf "%-35s |\n" "Submitted: $job_number" >&2
@@ -170,8 +175,8 @@ for ((j=0; j < "${#files[@]}"; j++)); do
             break
         fi
 
-        sleep 300
-        time_elapsed=$((time_elapsed+300))
+        sleep $wait_time
+        time_elapsed=$((time_elapsed+$wait_time))
         #echo "Time Elapsed: $time_elapsed of $max_time (7 days)" >&2 
     done
 done

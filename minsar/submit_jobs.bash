@@ -66,6 +66,9 @@ RUNFILES_DIR=$WORKDIR"/run_files"
 cd $WORKDIR
 
 randomorder=false
+rapid=true
+wait_time=30
+
 startstep=1
 stopstep="insarmaps"
 
@@ -95,6 +98,11 @@ do
             ;;
         --random)
             randomorder=true
+            shift
+            ;;
+        --rapid)
+            rapid=true
+            wait_time=10
             shift
             ;;
         *)
@@ -192,6 +200,10 @@ for g in "${globlist[@]}"; do
         sbc_command="$sbc_command --random"
         echo "Jobs are being submitted in random order. Submission order is likely different from the order above."
     fi
+    if $rapid; then
+        sbc_command="$sbc_command --rapid"
+        echo "Rapid job submission enabled."
+    fi
     jns=$($sbc_command)
 
     exit_status="$?"
@@ -216,7 +228,8 @@ for g in "${globlist[@]}"; do
         num_running=0
         num_pending=0
         num_waiting=0
-        sleep 30
+        sleep $wait_time
+
         for (( j=0; j < "${#jobnumbers[@]}"; j++)); do
             file=${files[$j]}
             file_pattern="${file%.*}"
