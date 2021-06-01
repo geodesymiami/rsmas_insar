@@ -65,8 +65,15 @@ RUNFILES_DIR=$WORKDIR"/run_files"
 
 cd $WORKDIR
 
+##### For proper logging to both file and stdout #####
+printf '' > $WORKDIR/process.log
+tail -f $WORKDIR/process.log & 
+trap "pkill -P $$" EXIT
+exec 1>>$WORKDIR/process.log 2>>$WORKDIR/process.log
+######################################################
+
 randomorder=false
-rapid=true
+rapid=false
 wait_time=30
 
 startstep=1
@@ -86,10 +93,10 @@ do
             shift # past value
             ;;
         --stop)
-                stopstep="$2"
-                shift
-                shift
-                ;;
+            stopstep="$2"
+            shift
+            shift
+            ;;
         --dostep)
             startstep="$2"
             stopstep="$2"
@@ -249,7 +256,7 @@ for g in "${globlist[@]}"; do
                 step_max_tasks=$(echo "$step_max_tasks_unit/${step_io_load_list[$step_name]}" | bc | awk '{print int($1)}')
         
                 init_walltime=$(grep -oP '(?<=#SBATCH -t )[0-9]+:[0-9]+:[0-9]+' $file)
-                echo "Timedout with walltime of ${init_walltime}."
+                echo "${file} timedout with walltime of ${init_walltime}."
                                 
                 # Compute a new walltime and update the job file
                 update_walltime.py "$file" &> /dev/null
