@@ -135,18 +135,18 @@ for ((j=0; j < "${#files[@]}"; j++)); do
     time_elapsed=0
     i=$((i+1))
     
-    QUEUENAME=$(cat $f | grep "#SBATCH -p" | awk -F'[ ]' '{print $3}')
-    MAX_JOBS_PER_QUEUE=$(qlimits | grep $QUEUENAME | awk '{print $4}')
-    if [ -z "$MAX_JOBS_PER_QUEUE" ]; then
-        MAX_JOBS_PER_QUEUE=1
-    fi
+    # QUEUENAME=$(cat $f | grep "#SBATCH -p" | awk -F'[ ]' '{print $3}')
+    # MAX_JOBS_PER_QUEUE=$(qlimits | grep $QUEUENAME | awk '{print $4}')
+    # if [ -z "$MAX_JOBS_PER_QUEUE" ]; then
+    #     MAX_JOBS_PER_QUEUE=1
+    # fi
 
     while [[ $time_elapsed -lt $max_time ]]; do
 
         fname=$(basename $f)
         abb_fname=$(abbreviate $fname 20 10 7)
 
-        # Submit job using sbatch_minsar.batch, performing all necesarry resource checks.
+        # Submit job using sbatch_minsar.bash, performing all necesarry resource checks.
         # Grep sbatch_minsar output for current resource statuses for logging.
         sbatch_minsar=$(sbatch_minsar.bash $f --step_max_tasks $step_max_tasks --total_max_tasks $total_max_tasks)
         sbatch_exit_status="$?"
@@ -167,17 +167,15 @@ for ((j=0; j < "${#files[@]}"; j++)); do
             printf "%-35s |\n" "Submission failed." >&2
             printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s |\n" "" "" "" "" "" "" "$fail_reason"
             printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s |\n" "" "" "" "" "" "" "Wait $(($wait_time/60)) minutes."
+            sleep $wait_time
+            time_elapsed=$((time_elapsed+$wait_time))
         else
             job_number=$(echo $sbatch_minsar | grep -oP "\d{7,}")
             printf "%-35s |\n" "Submitted: $job_number" >&2
 
             jns+=($job_number)
-            break
+            break;
         fi
-
-        sleep $wait_time
-        time_elapsed=$((time_elapsed+$wait_time))
-        #echo "Time Elapsed: $time_elapsed of $max_time (7 days)" >&2 
     done
 done
 

@@ -72,10 +72,13 @@ echo "Step: $step_name"
 
 # Get queue to submit to and identify job submission limits for that queue
 QUEUENAME=$(cat $f | grep "#SBATCH -p" | awk -F'[ ]' '{print $3}')
-MAX_JOBS_PER_QUEUE=$(qlimits | grep $QUEUENAME | awk '{print $4}')
 if [ -z "$MAX_JOBS_PER_QUEUE" ]; then
-    MAX_JOBS_PER_QUEUE=1
+    MAX_JOBS_PER_QUEUE=$(qlimits | grep $QUEUENAME | awk '{print $4}')
+else
+    MAX_JOBS_PER_QUEUE="${MAX_JOBS_PER_QUEUE}"
 fi
+
+
 
 # Compute number of total active tasks and number of active tasks for curent step
 num_active_tasks_total=$(compute_num_tasks)
@@ -102,7 +105,11 @@ if [[ $new_active_jobs   -le $MAX_JOBS_PER_QUEUE ]]; then job_count="OK";       
 if [[ $new_tasks_step    -le $step_max_tasks     ]]; then steptask_count="OK";   else steptask_count="FAILED";   fi
 if [[ $new_tasks_total   -le $total_max_tasks    ]]; then task_count="OK";       else task_count="FAILED";       fi
 
-if [[ $job_count == "OK" ]] && [[ $steptask_count == "OK" ]] && [[ $task_count == "OK" ]]; then resource_check="OK"; else resource_check="FAILED"; fi
+if  [[ $job_count == "OK" ]] && [[ $steptask_count == "OK" ]] && [[ $task_count == "OK" ]]; then 
+    resource_check="OK" 
+else 
+    resource_check="FAILED"
+fi
 
 echo -e "\n"
 echo -e "--> Verifying job request is within custom resource limits...$resource_check"
@@ -124,6 +131,7 @@ else
     if [[ $job_count != "OK" ]]; then reason="Max job count exceeded"
     elif [[ $steptask_count != "OK" ]]; then reason="Max task count for step exceeded"
     elif [[ $task_count != "OK" ]]; then reason="Total task count exceeded"
+    else reason="`sbatch` submission error"
     fi
     echo "$f could not be submitted. $reason."
     exit 1
