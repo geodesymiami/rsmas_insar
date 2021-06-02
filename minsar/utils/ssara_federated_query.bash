@@ -15,13 +15,15 @@ for i in "${!copy[@]}"; do
     elif [[ ${copy[$i]} == --parallel* ]]; then
         parallel=$(echo ${copy[$i]} | cut -d= -f2)
     fi
-    echo element $i: ${copy[$i]}
+    #echo element $i: ${copy[$i]}
 done
 
 echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` "${copy[@]}" " >> log
 
 argv=( "$@" )
-
+argstring=$(printf " %s" "${copy[@]}")
+argstring=${argstring:1}
+#echo $argstring
 
 if  [[ -z "$parallel" ]] ; then 
    parallel=5 
@@ -29,10 +31,10 @@ fi
 
 timeout=500
 
-echo "parallel=${parallel}"
+#echo "parallel=${parallel}"
 
 # select password according to satellite
-echo ${copy[0]}
+#echo ${copy[0]}
 if [[ ${copy[0]} == *SENTINEL* ]]; then
    user=`grep asfuser $RSMASINSAR_HOME/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
    passwd=`grep asfpass $RSMASINSAR_HOME/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
@@ -43,7 +45,7 @@ elif [[ ${copy[0]} == *COSMO-SKYMED* ]] || [[ ${copy[0]} == *ALOS-2* ]]; then
    regex="https:\/\/imaging\.unavco\.\.org\/*\.gz"
 fi
 
-echo "Running (with\`s inserted) ... ssara_federated_query.py ${argv[@]:0:$#-1} --maxResults=20000 > ssara_listing.txt"
+echo "Running ... ssara_federated_query.py $argstring --maxResults=20000 > ssara_listing.txt"
 ssara_federated_query.py "${argv[@]:0:$#-1}" --maxResults=20000 > ssara_listing.txt
 
 #grep Found ssara_listing.txt >> log
