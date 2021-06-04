@@ -66,10 +66,12 @@ RUNFILES_DIR=$WORKDIR"/run_files"
 cd $WORKDIR
 
 ##### For proper logging to both file and stdout #####
-printf '' > $WORKDIR/process.log
-tail -f $WORKDIR/process.log & 
+num_logfiles=$(ls $WORKDIR/process*.log | wc -l)
+logfile_name="${WORKDIR}/process${num_logfiles}.log"
+printf '' > $logfile_name
+tail -f $logfile_name & 
 trap "pkill -P $$" EXIT
-exec 1>>$WORKDIR/process.log 2>>$WORKDIR/process.log
+exec 1>>$logfile_name 2>>$logfile_name
 ######################################################
 
 randomorder=false
