@@ -251,20 +251,22 @@ for g in "${globlist[@]}"; do
                 num_running=$(($num_running+1))
             elif [[ $state == *"PENDING"* ]]; then
                 num_pending=$(($num_pending+1))
-            elif [[ $state == *"TIMEOUT"* ]]; then
+            elif [[ $state == *"TIMEOUT"* || $state == *"NODE_FAIL"* ]]; then
                 num_timeout=$(($num_timeout+1))
                 step_max_tasks=$(echo "$step_max_tasks_unit/${step_io_load_list[$step_name]}" | bc | awk '{print int($1)}')
         
-                init_walltime=$(grep -oP '(?<=#SBATCH -t )[0-9]+:[0-9]+:[0-9]+' $file)
-                echo "${file} timedout with walltime of ${init_walltime}."
-                                
-                # Compute a new walltime and update the job file
-                update_walltime.py "$file" &> /dev/null
-                updated_walltime=$(grep -oP '(?<=#SBATCH -t )[0-9]+:[0-9]+:[0-9]+' $file)
+                if [[ $state == *"TIMEOUT"* ]]; then
+                    init_walltime=$(grep -oP '(?<=#SBATCH -t )[0-9]+:[0-9]+:[0-9]+' $file)
+                    echo "${file} timedout with walltime of ${init_walltime}."
+                                    
+                    # Compute a new walltime and update the job file
+                    update_walltime.py "$file" &> /dev/null
+                    updated_walltime=$(grep -oP '(?<=#SBATCH -t )[0-9]+:[0-9]+:[0-9]+' $file)
 
-                datetime=$(date +"%Y-%m-%d:%H-%M")
-                echo "${datetime}: re-running: ${file}: ${init_walltime} --> ${updated_walltime}" >> "${RUNFILES_DIR}"/rerun.log
-                echo "Resubmitting file (${file}) with new walltime of ${updated_walltime}"
+                    datetime=$(date +"%Y-%m-%d:%H-%M")
+                    echo "${datetime}: re-running: ${file}: ${init_walltime} --> ${updated_walltime}" >> "${RUNFILES_DIR}"/rerun.log
+                    echo "Resubmitting file (${file}) with new walltime of ${updated_walltime}"
+                fi
 
                 jobnumbers=($(remove_from_list $jobnumber "${jobnumbers[@]}"))
                 files=($(remove_from_list $jf "${files[@]}"))
@@ -286,6 +288,7 @@ for g in "${globlist[@]}"; do
                 echo "Job failed. Exiting."
                 exit 1; 
             else
+                echo "Strange job state: $state, encountered."
                 continue;
             fi
 
