@@ -34,7 +34,9 @@ def main(iargs=None):
                     'No annotation xml file found in zip file',
                     'There appears to be a gap between slices. Cannot stitch them successfully',
                     'no element found: line',
-                    'Exiting ...',
+                    'mismatched tag: line 77, column 6',
+                    'SLCs are sliced differently with different versions of the processor',
+                    'Exiting ...',                # remove if above works fine (5/21)
                     'Segmentation fault',
                     'Bus',
                     'Aborted',
