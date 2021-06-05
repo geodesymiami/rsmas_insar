@@ -103,7 +103,7 @@ def  run_generate_chunk_template_files(inps):
         putils.write_template_file(chunk_template_file, custom_tempObj)
         putils.beautify_template_file(chunk_template_file)
 
-        minsar_command = 'minsarApp.bash ' + chunk_template_file + ' ' + minsarApp_option + ' 2>&1 | tee process.log'
+        minsar_command = 'mkdir ' + os.getenv('SCRATCHDIR') + '/' + chunk_name[0] + ' && cd "$_"; minsarApp.bash ' + chunk_template_file + ' ' + minsarApp_option 
 
         f.write(minsar_command + '\n')
         commands.append(minsar_command)
