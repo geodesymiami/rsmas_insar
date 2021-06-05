@@ -7,6 +7,7 @@ run_02_unpack_secondary_slc (Sentinel1_TOPS) may fail because of issues with the
 `There appears to be a gap between slices. Cannot stitch them successfully`
 `no element found: line`
 `Trying to combine SLC products from different IPF versions`
+`mismatched tag: line 77, column 6`
 `Exiting .......`
 ```
 
