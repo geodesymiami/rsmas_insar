@@ -150,7 +150,7 @@ for ((j=0; j < "${#files[@]}"; j++)); do
         sbatch_exit_status="$?"
 
         num_tasks_job=$(echo $sbatch_minsar | grep -oP "(\d{1,})(?= additional tasks)")
-        resource_limits=$(echo $sbatch_minsar | grep -oP "(?<= --> \()(\d{1,}\/\d{1,})(?=\)...)")
+        resource_limits=$(echo $sbatch_minsar | grep -oP "(?<=\()(\d{1,}\/\d{1,})(?=\) -->)")
         num_jobs=$(echo $resource_limits | awk '{print $1}')
         num_step_tasks=$(echo $resource_limits | awk '{print $2}')
         num_total_tasks=$(echo $resource_limits | awk '{print $3}')
@@ -162,9 +162,9 @@ for ((j=0; j < "${#files[@]}"; j++)); do
         # If job submitted succesfully, grep sbatch_minsar output for job_number.
         if [[ $sbatch_exit_status -ne 0 ]]; then
             fail_reason=$(echo $sbatch_minsar | grep -oP "(?<= could not be submitted. )(.*)")
-            printf "%-35s |\n" "Submission failed." >&2
-            printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s |\n" "" "" "" "" "" "" "$fail_reason"
-            printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s |\n" "" "" "" "" "" "" "Wait $(($wait_time/60)) minutes."
+            printf "%-35s |\n" "Not submitted." >&2
+            printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s |\n" "" "" "" "" "" "" "$fail_reason" >&2
+            printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s |\n" "" "" "" "" "" "" "Wait $(($wait_time/60))  minutes." >&2
             sleep $wait_time
             time_elapsed=$((time_elapsed+$wait_time))
         else
