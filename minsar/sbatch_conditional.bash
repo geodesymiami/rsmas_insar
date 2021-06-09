@@ -124,7 +124,10 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 printf "%0.s-" {1..153} >&2
 printf "\n" >&2
-printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s | %s \n" "File Name" "Extra Tasks" "Step Active Tasks" "Total Active Tasks" "Step Processed Jobs" "Active Jobs"  "Message" >&2
+#printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s | %s \n" "File Name" "Extra Tasks" "Step Active Tasks" "Total Active Tasks" "Step Processed Jobs" "Active Jobs"  "Message" >&2
+printf "| %-20s | %-5s | %-9s | %-9s | %-9s | %-7s | %-70s | %s \n" "" "" "Step" "Total" "Step" ""  "" >&2
+printf "| %-20s | %-5s | %-9s | %-9s | %-9s | %-7s | %-70s | %s \n" "" "Extra" "active" "active" "processed" "Active"  "" >&2
+printf "| %-20s | %-5s | %-9s | %-9s | %-9s | %-7s | %-70s | %s \n" "File Name" "tasks" "tasks" "tasks" "jobs" "jobs"  "Message" >&2
 printf "%0.s-" {1..153} >&2
 printf "\n" >&2
 
@@ -156,20 +159,20 @@ for ((j=0; j < "${#files[@]}"; j++)); do
         num_total_tasks=$(echo $resource_limits | awk '{print $3}')
 
 
-        printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %s" "$abb_fname" "$num_tasks_job" "$num_step_tasks" "$num_total_tasks" "$i/${#files[@]}" "$num_jobs" >&2
+        printf "| %-20s | %-5s | %-9s | %-9s | %-9s | %-7s | %s" "$abb_fname" "$num_tasks_job" "$num_step_tasks" "$num_total_tasks" "$i/${#files[@]}" "$num_jobs" >&2
 
         # If there was a problem submitting the job, grep sbatch_minsar output for failure reason and wait.
         # If job submitted succesfully, grep sbatch_minsar output for job_number.
         if [[ $sbatch_exit_status -ne 0 ]]; then
             fail_reason=$(echo $sbatch_minsar | grep -oP "(?<= could not be submitted. )(.*)")
-            printf "%-35s |\n" "Not submitted." >&2
-            printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s |\n" "" "" "" "" "" "" "$fail_reason" >&2
-            printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s |\n" "" "" "" "" "" "" "Wait $(($wait_time/60))  minutes." >&2
+            printf "%-70s |\n" "Not submitted. $fail_reason Waiting $(($wait_time/60)) minutes." >&2
+            #printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s |\n" "" "" "" "" "" "" "$fail_reason" >&2
+            #printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s |\n" "" "" "" "" "" "" "Wait $(($wait_time/60))  minutes." >&2
             sleep $wait_time
             time_elapsed=$((time_elapsed+$wait_time))
         else
             job_number=$(echo $sbatch_minsar | grep -oP "\d{7,}")
-            printf "%-35s |\n" "Submitted: $job_number" >&2
+            printf "%-70s |\n" "Submitted: $job_number" >&2
 
             jns+=($job_number)
             break;
