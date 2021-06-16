@@ -68,7 +68,12 @@ usage: sbatch_conditional.bash job_file_pattern [--step_name] [--step_max_tasks]
     exit 0;
 fi
 
-file_pattern=$1
+if [[ $1 == *".job"* ]]; then
+     file_pattern=$1
+else
+     file_pattern="$1*.job"
+fi
+
 step_name=$file_pattern
 step_max_tasks=1500
 total_max_tasks=3000
@@ -119,20 +124,18 @@ printf "%0.s-" {1..146} >&2
 printf "\n" >&2
 
 jns=()
-files=( $(ls -1v $file_pattern*.job) )
+files=( $(ls -1v $file_pattern) )
 if $randomorder; then
     files=( $(echo "${files[@]}" | sed -r 's/(.[^;]*;)/ \1 /g' | tr " " "\n" | shuf | tr -d " " ) )
 fi
-i=0
+i=1
 for f in "${files[@]}"; do
     time_elapsed=0
-    i=$((i+1))
-    #echo "Submitting file: $f" >&2
     
     QUEUENAME=$(cat $f | grep "#SBATCH -p" | awk -F'[ ]' '{print $3}')
     MAX_JOBS_PER_QUEUE=$(qlimits | grep $QUEUENAME | awk '{print $4}')
 
-    if [ "$QUEUENAME" = "skx-normal" ]; then MAX_JOBS_PER_QUEUE="$(($MAX_JOBS_PER_QUEUE-2))"; fi    # reduce by 1 because  does not work with 25 on stampede2
+    if [ "$QUEUENAME" = "skx-normal" ]; then MAX_JOBS_PER_QUEUE="$(($MAX_JOBS_PER_QUEUE-3))"; fi    # reduce by 1 because  does not work with 25 on stampede2
 
     if [ -z "$MAX_JOBS_PER_QUEUE" ]; then
         MAX_JOBS_PER_QUEUE=1
@@ -197,6 +200,9 @@ for f in "${files[@]}"; do
         time_elapsed=$((time_elapsed+300))
         #echo "Time Elapsed: $time_elapsed of $max_time (7 days)" >&2 
     done
+
+    i=$(($i+1))
+
 done
 
 printf "%0.s-" {1..146} >&2
