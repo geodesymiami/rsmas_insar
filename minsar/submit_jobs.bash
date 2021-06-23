@@ -271,7 +271,7 @@ for g in "${globlist[@]}"; do
                 fi
 
                 jobnumbers=($(remove_from_list $jobnumber "${jobnumbers[@]}"))
-                files=($(remove_from_list $jf "${files[@]}"))
+                files=($(remove_from_list $file "${files[@]}"))
 
                 # Resubmit as a new job number
                 jobnumber=$(sbatch_conditional.bash $file_pattern --step_name $step_name --step_max_tasks $step_max_tasks --total_max_tasks $total_max_tasks 2> /dev/null) 
