@@ -66,8 +66,8 @@ RUNFILES_DIR=$WORKDIR"/run_files"
 cd $WORKDIR
 
 ##### For proper logging to both file and stdout #####
-num_logfiles=$(ls $WORKDIR/process*.log | wc -l)
-logfile_name="${WORKDIR}/process${num_logfiles}.log"
+num_logfiles=$(ls $WORKDIR/submit_jobs.*.log | wc -l)
+logfile_name="${WORKDIR}/submit_jobs.${num_logfiles}.log"
 printf '' > $logfile_name
 tail -f $logfile_name & 
 trap "pkill -P $$" EXIT
@@ -122,8 +122,8 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-step_max_tasks_unit=500
-total_max_tasks=1000
+step_max_tasks_unit=400
+total_max_tasks=500
 # IO load for each step. For step_io_load=1 the maximum tasks allowed is step_max_tasks_unit
 # for step_io_load=2 the maximum tasks allowed is step_max_tasks_unit/2
 declare -A  step_io_load_list
