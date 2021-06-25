@@ -1156,7 +1156,6 @@ def multiply_walltime(wall_time, factor):
 
 ##########################################################################
 
-
 def replace_walltime_in_job_file(file, new_wall_time):
     """ replaces the walltime from a SLURM job file """
     new_lines=[]
@@ -1173,6 +1172,38 @@ def replace_walltime_in_job_file(file, new_wall_time):
     with open(file, 'w') as job_file:
             job_file.writelines(new_lines)
 
+    return
+
+##########################################################################
+
+def run_remove_date_from_run_files(run_files_dir, date, start_run_file):
+    """ removes dates from run_files """
+    run_files=[]
+    run_files = glob.glob(run_files_dir + '/run_*_*[0-9]') 
+    run_files = natsorted(run_files)
+
+    # remove run_files with index < start_run_file
+    for i in range(1, start_run_file):
+        string = 'run_' + str(i).zfill(2)
+        run_files = [item for item in run_files if string not in item]
+
+    for run_file in run_files:
+       with open(run_file) as f:
+            if date in f.read():
+               #print(run_file + ': YES')
+               with open(run_file) as f:
+                   lines = f.readlines()
+                   new_lines=[]
+                   for line in lines:
+                       if date not in line:
+                           new_lines.append(line)
+                   f.close()
+
+                   with open(run_file, 'w') as f:
+                           f.writelines(new_lines)
+
+            #else:
+            #   print(run_file + ': NO')
     return
 
 ############################################################################

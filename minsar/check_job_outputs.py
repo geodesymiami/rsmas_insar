@@ -32,11 +32,7 @@ def main(iargs=None):
     error_happened = False
     error_strings = [
                     'No annotation xml file found in zip file',
-                    'There appears to be a gap between slices. Cannot stitch them successfully',
                     'no element found: line',
-                    'mismatched tag: line 77, column 6',
-                    'SLCs are sliced differently with different versions of the processor',
-                    'Exiting ...',                # remove if above works fine (5/21)
                     'Segmentation fault',
                     'Bus',
                     'Aborted',
@@ -45,6 +41,12 @@ def main(iargs=None):
                     'FileNotFoundError',
                     'IOErr',
                     'Traceback'
+                    ]
+                    #'Exiting ...',                # remove if above works fine (5/21)
+    data_problems_strings = [
+                    'There appears to be a gap between slices. Cannot stitch them successfully',
+                    'mismatched tag: line 77, column 6',
+                    'SLCs are sliced differently with different versions of the processor'
                     ]
     different_number_of_bursts_string = [
                     'has different number of bursts',
@@ -83,12 +85,40 @@ def main(iargs=None):
        error_files = natsorted( glob.glob(job_name + '*.e') )
        out_files = natsorted( glob.glob(job_name + '*.o') )
 
+       if 'unpack_secondary_slc' in job_name:               
+          for file in out_files:
+              for string in data_problems_strings:
+                  if check_words_in_file(file, string):
+                      #matched_data_problem_strings.append('Warning: \"' + string + '\" found in ' + file + '\n')
+                      date = file.split("_")[-2]
+                      print( 'WARNING: \"' + string + '\" found in ' + os.path.basename(file) + ': removing ' + date + ' from run_files ')
+                      run_files_dir=project_dir + '/run_files'
+                      putils.run_remove_date_from_run_files(run_files_dir=run_files_dir, date=date, start_run_file = 2 )
+                      with open(run_files_dir + '/removedates.log', 'a') as rd:
+                          rd.writelines('run_02: removing ' + date + ', \"' + string + '\" found in ' + os.path.basename(file) + ' \n')
+
        if 'extract_stack_valid_region' in job_name:               
           for file in out_files:
               string = different_number_of_bursts_string[0]
               if check_words_in_file(file, string):
-                 matched_data_problem_strings.append('Warning: \"' + string + '\" found in ' + file + '\n')
+                 #matched_data_problem_strings.append('Warning: \"' + string + '\" found in ' + file + '\n')
                  print( 'Warning: \"' + string + '\" found in ' + file )
+                 with open(file) as fo:
+                      problem_dates=[]
+                      lines = fo.readlines()
+                      for line in lines:
+                          if 'WARNING:' in line:
+                              date = line.split(' ')[1]
+                              problem_dates.append(date)
+                 
+                 problem_dates = list(set(problem_dates))
+                 problem_dates = natsorted(problem_dates)
+                 for date in problem_dates:
+                      run_files_dir=project_dir + '/run_files'
+                      print( 'WARNING: \"' + string + '\" found in ' + os.path.basename(file) + ': removing ' + date + ' from run_files ')
+                      putils.run_remove_date_from_run_files(run_files_dir=run_files_dir, date=date, start_run_file = 7 )
+                      with open(run_files_dir + '/removedates.log', 'a') as rd:
+                          rd.writelines('run_06: removing ' + date + ', \"' + string + '\" found in ' + os.path.basename(file) + ' \n')
 
        for file in error_files + out_files:
            for error_string in error_strings:
@@ -98,17 +128,14 @@ def main(iargs=None):
                    matched_error_strings.append('Error: \"' + error_string + '\" found in ' + file + '\n')
                    print( 'Error: \"' + error_string + '\" found in ' + file )
 
-    if len(matched_error_strings) != 0:
-        with open(run_file_base + '_error_matches.e', 'w') as f:
-            f.write(''.join(matched_error_strings))
-    else:
-        print("no known error found")
-
     if len(matched_data_problem_strings) != 0:
         with open(run_file_base + '_data_problem_matches.e', 'w') as f:
             f.write(''.join(matched_data_problem_strings))
+    elif len(matched_error_strings) != 0:
+        with open(run_file_base + '_error_matches.e', 'w') as f:
+            f.write(''.join(matched_error_strings))
     else:
-        print("no known data problem found")
+        print("no error found")
         
     if 'run_' in job_name:
        putils.concatenate_error_files(run_file=run_file_base, work_dir=project_dir)
