@@ -137,11 +137,11 @@ if $randomorder; then
     files=( $(echo "${files[@]}" | sed -r 's/(.[^;]*;)/ \1 /g' | tr " " "\n" | shuf | tr -d " " ) )
 fi
 i=1
+
 # for f in "${files[@]}"; do
 for ((j=0; j < "${#files[@]}"; j++)); do
     f=${files[$j]}
     time_elapsed=0
-
     while [[ $time_elapsed -lt $max_time ]]; do
 
         fname=$(basename $f)
@@ -164,14 +164,14 @@ for ((j=0; j < "${#files[@]}"; j++)); do
         # If there was a problem submitting the job, grep sbatch_minsar output for failure reason and wait.
         # If job submitted succesfully, grep sbatch_minsar output for job_number.
         if [[ $sbatch_exit_status -ne 0 ]]; then
-            fail_reason=$(echo $sbatch_minsar | grep -oP "(?<= could not be submitted. )(.*)")
-            printf "%-70s |\n" "Not submitted. $fail_reason Waiting $(($wait_time/60)) minutes." >&2
+            fail_reason=$(echo $sbatch_minsar | grep -oP "(?<= could not be submitted. )(.*)(?=\.)")
+            printf "%-70s |\n" "Not submitted. $fail_reason. Waiting $(($wait_time/60)) minutes." >&2
             #printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s |\n" "" "" "" "" "" "" "$fail_reason" >&2
             #printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s |\n" "" "" "" "" "" "" "Wait $(($wait_time/60))  minutes." >&2
             sleep $wait_time
             time_elapsed=$((time_elapsed+$wait_time))
         else
-            job_number=$(echo $sbatch_minsar | grep -oP "\d{7,}")
+            job_number=$(echo $sbatch_minsar | grep -oP "\d{7,}(?= )")
             printf "%-70s |\n" "Submitted: $job_number" >&2
 
             jns+=($job_number)
