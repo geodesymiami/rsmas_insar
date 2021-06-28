@@ -128,10 +128,16 @@ if  [[ $resource_check == "OK" ]] &&
     exit 0
 
 else
-    if [[ $job_count != "OK" ]]; then reason="Max job count exceeded"
-    elif [[ $steptask_count != "OK" ]]; then reason="Max task count for step exceeded"
-    elif [[ $task_count != "OK" ]]; then reason="Total task count exceeded"
-    else reason="`sbatch` submission error"
+
+    if [[ $job_count != "OK" ]]; then 
+        reason="Max job count exceeded"
+    elif [[ $steptask_count != "OK" ]]; then 
+        reason="Max task count for step exceeded"
+    elif [[ $task_count != "OK" ]]; then 
+        reason="Total task count exceeded"
+    else 
+        echot "sbatch submission error."
+        reason="'sbatch' submission error"
     fi
     echo "$f could not be submitted. $reason."
     exit 1
