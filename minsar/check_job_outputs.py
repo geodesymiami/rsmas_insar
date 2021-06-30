@@ -140,9 +140,13 @@ def main(iargs=None):
     if 'run_' in job_name:
        putils.concatenate_error_files(run_file=run_file_base, work_dir=project_dir)
     else:
-       out_error_file = os.path.dirname(error_files[-1]) + '/out_' + os.path.basename(error_files[-1])
-       #Path(out_error_file)
-       shutil.copy(error_files[-1], out_error_file)
+       out_error_file = work_dir + '/out_' + os.path.basename(job_name)
+       if len(error_files) == 0:
+           Path(out_error_file).touch()
+       else:
+           #out_error_file = os.path.dirname(error_files[-1]) + '/out_' + os.path.basename(error_files[-1])
+           #Path(out_error_file)
+           shutil.copy(error_files[-1], out_error_file)
 
     if len(matched_error_strings) + len(matched_data_problem_strings) != 0:
         print('For known issues see https://github.com/geodesymiami/rsmas_insar/tree/master/docs/known_issues.md')
