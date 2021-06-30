@@ -140,7 +140,7 @@ def main(iargs=None):
     if 'run_' in job_name:
        putils.concatenate_error_files(run_file=run_file_base, work_dir=project_dir)
     else:
-       out_error_file = work_dir + '/out_' + os.path.basename(job_name)
+       out_error_file = work_dir + '/out_' + os.path.basename(job_name) + '.e'
        if len(error_files) == 0:
            Path(out_error_file).touch()
        else:
