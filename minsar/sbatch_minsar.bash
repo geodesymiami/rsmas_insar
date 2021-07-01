@@ -9,6 +9,15 @@ function echot {
     
 }
 
+function move_logfile {
+    exec_date=$(date +"%Y%m%d.%H%M%S")
+    if [[ $verbose == "true" ]]; then
+         new_logfile="${WORKDIR}/sbatch_minsar/${step}.${exec_date}.log"
+         mv $logfile_name $new_logfile
+         echo "Logs at $new_logfile"
+    fi
+}
+
 function get_active_jobids {
     running_tasks=$(squeue -u $USER --format="%A" -rh)
     job_ids=($(echo $running_tasks | grep -oP "\d{4,}"))
@@ -45,6 +54,8 @@ function compute_num_tasks {
     echo $tasks
     return 0
 }
+
+echo $$
 
 f=$1
 step_name=$(echo $f | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,}.job)")
@@ -112,7 +123,7 @@ echot "Jobfile: $(basename $f)"
 echot "Step: $step_name"
 
 # Get queue to submit to and identify job submission limits for that queue
-echo $1
+#echo $1
 QUEUENAME=$(grep "#SBATCH -p" $f | awk -F'[ ]' '{print $3}')
 if [ -z "$MAX_JOBS_PER_QUEUE" ]; then
     MAX_JOBS_PER_QUEUE=$(qlimits | grep $QUEUENAME | awk '{print $4}')
@@ -120,7 +131,12 @@ else
     MAX_JOBS_PER_QUEUE="${MAX_JOBS_PER_QUEUE}"
 fi
 
-
+################ Set up lockfile
+lockfile="$SCRATCH/sbatch_minsar.lock"
+exec 200>$lockfile
+flock 200
+echo "PID: $$" 1>&200
+################
 
 # Compute number of total active tasks and number of active tasks for curent step
 num_active_tasks_total=$(compute_num_tasks)
@@ -138,10 +154,22 @@ new_tasks_total=$(($num_active_tasks_total+$num_tasks_job))
 
 # Get active number of running jobs
 num_active_jobs=$(squeue -u $USER -h -t running,pending -r -p $QUEUENAME | wc -l )
-new_active_jobs=$(($num_active_jobs+1))        
+new_active_jobs=$(($num_active_jobs+1)) 
+
+########### Release lockfile
+flock -u 200
+###########
 
 sbatch_message=$(sbatch --test-only -Q $f)
 echot -e "${sbatch_message[@]:1}"
+
+#rand=$(echo $(($(shuf -i 25-300 -n 1))))
+#rand=$(echo "scale=2; ${rand}/100" | bc -l)
+#sleep $rand
+#echo "slept for $rand seconds".
+
+#echo "Sleeping 5 seconds"
+#sleep 5
 
 if [[ $new_active_jobs   -le $MAX_JOBS_PER_QUEUE ]]; then job_count="OK";        else job_count="FAILED";        fi
 if [[ $new_tasks_step    -le $step_max_tasks     ]]; then steptask_count="OK";   else steptask_count="FAILED";   fi
@@ -165,16 +193,21 @@ if  [[ $resource_check == "OK" ]] &&
     [[ $sbatch_message != *"FAILED"* ]];  then
 
     sbatch_submit=$(sbatch --parsable $f)
-    job_number=$(echo $sbatch_submit | grep -oE "[0-9]{7,}")
+    exit_status="$?"
 
-    exec_date=$(date +"%Y%m%d.%H%M%S")
+    if [[ $exit_status -ne 0 ]]; then
+        reason="'sbatch' submission error"
+        echot "$f could not be submitted. $reason."
+        move_logfile
+
+        exit 1
+    fi
+
+    job_number=$(echo $sbatch_submit | grep -oE "[0-9]{7,}")
+    
     echot "$f submitted as job $job_number at $(date +"%T") on $(date +"%Y-%m-%d")."
 
-    if [[ $verbose == "true" ]]; then
-         new_logfile="${WORKDIR}/sbatch_minsar/${step}.${exec_date}.log"
-         mv $logfile_name $new_logfile
-         echo "Logs at $new_logfile"
-    fi
+    move_logfile
 
     exit 0
 
@@ -192,12 +225,7 @@ else
     fi
     echot "$f could not be submitted. $reason."
 
-    exec_date=$(date +"%Y%m%d.%H%M%S")
-    if [[ $verbose == "true" ]]; then
-         new_logfile="${WORKDIR}/sbatch_minsar/${step}.${exec_date}.log"
-         mv $logfile_name $new_logfile
-         echo "Logs at $new_logfile"
-    fi
+    move_logfile
 
     exit 1
 fi
