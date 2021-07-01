@@ -1127,6 +1127,7 @@ class JOB_SUBMIT:
 
         # check space after copy-to-tmp
         job_file_lines.append( """echo After copy-to-tmp: `df -h /tmp`\n""" )
+        job_file_lines.append( """module purge\n""" )
         # for MiNoPy jobs
         if not distribute is None:
             # DO NOT LOAD 'intel/19.1.1' HERE
