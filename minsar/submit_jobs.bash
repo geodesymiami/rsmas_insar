@@ -65,17 +65,9 @@ RUNFILES_DIR=$WORKDIR"/run_files"
 
 cd $WORKDIR
 
-##### For proper logging to both file and stdout #####
-num_logfiles=$(ls $WORKDIR/submit_jobs.*.log | wc -l)
-logfile_name="${WORKDIR}/submit_jobs.${num_logfiles}.log"
-printf '' > $logfile_name
-tail -f $logfile_name & 
-trap "pkill -P $$" EXIT
-exec 1>>$logfile_name 2>>$logfile_name
-######################################################
-
 randomorder=false
 rapid=false
+append=false
 wait_time=30
 
 startstep=1
@@ -112,6 +104,10 @@ do
         --rapid)
             rapid=true
             wait_time=10
+            shift
+            ;;
+        --append)
+            append=true
             shift
             ;;
         *)
@@ -151,7 +147,15 @@ step_io_load_list=(
     [crop]=1
 )
 
-
+##### For proper logging to both file and stdout #####
+num_logfiles=$(ls $WORKDIR/submit_jobs.*.log | wc -l)
+if $append; then num_logfiles=$(($num_logfiles-1)); fi
+logfile_name="${WORKDIR}/submit_jobs.${num_logfiles}.log"
+#printf '' > $logfile_name
+tail -f $logfile_name & 
+trap "pkill -P $$" EXIT
+exec 1>>$logfile_name 2>>$logfile_name
+######################################################
 
 
 #find the last job (11 for 'geometry' and 16 for 'NESD') and remove leading zero
@@ -188,7 +192,7 @@ for (( i=$startstep; i<=$stopstep; i++ )) do
     globlist+=("$fname")
 done
 
-
+echo "Started at: $(date +"%Y-%m-%d %H:%M:%S")"
 for g in "${globlist[@]}"; do
     files=($(ls -1v $g ))
     if $randomorder; then
