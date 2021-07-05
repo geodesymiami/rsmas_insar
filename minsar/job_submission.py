@@ -829,7 +829,7 @@ class JOB_SUBMIT:
 
             # coreg_secondarys      (different awk)
             date_list=( $(awk '{printf "%s\\n",$3}' """ + batch_file + """ | awk -F _ '{printf "%s\\n",$NF}' | sed -n '/^[0-9]/p' ) )
-            ref_date=( $(xmllint --xpath 'string(/productmanager_name/component[@name="instance"]/property[@name="ascendingnodetime"]/value)' """ \
+            ref_date=( $(xmllint --xpath 'string(/productmanager_name/component[@name="instance"]/component[@name="bursts"]/component[@name="burst1"]/property[@name="burststartutc"]/value)' """ \
                 + self.out_dir + """/reference/IW*.xml | cut -d ' ' -f 1 | sed "s|-||g") )
 
             # remove ref_date from array
