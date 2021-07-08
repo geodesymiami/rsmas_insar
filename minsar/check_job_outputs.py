@@ -44,9 +44,9 @@ def main(iargs=None):
                     #'Exiting ...',                # remove if above works fine (5/21)
     data_problems_strings = [
                     'There appears to be a gap between slices. Cannot stitch them successfully',
-                    'SLCs are sliced differently with different versions of the processor'
+                    'SLCs are sliced differently with different versions of the processor',
                     'No annotation xml file found in zip file',
-                    'mismatched tag: line 77, column 6',
+                    'mismatched tag: line 77, column 6'
                     ]
     different_number_of_bursts_string = [
                     'has different number of bursts',
@@ -94,7 +94,7 @@ def main(iargs=None):
                       print( 'WARNING: \"' + string + '\" found in ' + os.path.basename(file) + ': removing ' + date + ' from run_files ')
                       run_files_dir=project_dir + '/run_files'
                       putils.run_remove_date_from_run_files(run_files_dir=run_files_dir, date=date, start_run_file = 2 )
-                      with open(run_files_dir + '/removedates.log', 'a') as rd:
+                      with open(run_files_dir + '/removeddates.txt', 'a') as rd:
                           rd.writelines('run_02: removing ' + date + ', \"' + string + '\" found in ' + os.path.basename(file) + ' \n')
 
        if 'extract_stack_valid_region' in job_name:               
@@ -117,7 +117,7 @@ def main(iargs=None):
                       run_files_dir=project_dir + '/run_files'
                       print( 'WARNING: \"' + string + '\" found in ' + os.path.basename(file) + ': removing ' + date + ' from run_files ')
                       putils.run_remove_date_from_run_files(run_files_dir=run_files_dir, date=date, start_run_file = 7 )
-                      with open(run_files_dir + '/removedates.log', 'a') as rd:
+                      with open(run_files_dir + '/removeddates.txt', 'a') as rd:
                           rd.writelines('run_06: removing ' + date + ', \"' + string + '\" found in ' + os.path.basename(file) + ' \n')
 
        for file in error_files + out_files:
