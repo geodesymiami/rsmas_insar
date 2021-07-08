@@ -31,7 +31,6 @@ def main(iargs=None):
 
     error_happened = False
     error_strings = [
-                    'No annotation xml file found in zip file',
                     'no element found: line',
                     'Segmentation fault',
                     'Bus',
@@ -45,8 +44,9 @@ def main(iargs=None):
                     #'Exiting ...',                # remove if above works fine (5/21)
     data_problems_strings = [
                     'There appears to be a gap between slices. Cannot stitch them successfully',
-                    'mismatched tag: line 77, column 6',
                     'SLCs are sliced differently with different versions of the processor'
+                    'No annotation xml file found in zip file',
+                    'mismatched tag: line 77, column 6',
                     ]
     different_number_of_bursts_string = [
                     'has different number of bursts',
