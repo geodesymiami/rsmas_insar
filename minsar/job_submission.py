@@ -685,6 +685,12 @@ class JOB_SUBMIT:
             job_file_lines.append( "cp -r $RSMASINSAR_HOME/3rdparty/PyAPS /tmp/rsmas_insar/3rdparty\n" )
             job_file_lines.append( "cp -r $RSMASINSAR_HOME/sources/insarmaps_scripts /tmp/rsmas_insar/sources\n" )
 
+        if 'minopy' in job_file_name or 'mintpy' in job_file_name:
+            job_file_lines.append("mkdir -p /tmp/rsmas_insar/sources\n")
+            job_file_lines.append("cp -r $RSMASINSAR_HOME/sources/MiNoPy /tmp/rsmas_insar/sources\n")
+            job_file_lines.append("cp -r $RSMASINSAR_HOME/sources/MintPy /tmp/rsmas_insar/sources\n")
+
+
         job_file_lines.append( "cp -r $RSMASINSAR_HOME/3rdparty/launcher /tmp/rsmas_insar/3rdparty \n" )
         job_file_lines.append( "cp $SCRATCH/miniconda3.tar /tmp\n" )
         job_file_lines.append( "tar xf /tmp/miniconda3.tar -C /tmp/rsmas_insar/3rdparty\n" )
