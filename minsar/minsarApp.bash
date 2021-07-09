@@ -173,9 +173,13 @@ elif [[ $stopstep != "" ]]; then
     exit 1
 fi
 
-# this works for logiginhg to process.log, but doe snot wroiite to screen
-#exec 3>&1 1>process1.log 2>&1
-
+###################################
+# adjust insarmaps_flag based on $template_file
+str_insarmaps_flag=($(grep ^insarmaps $template_file | cut -d "=" -f 2 | xargs))
+str_insarmaps_flag=${str_insarmaps_flag[-1]}
+if [[ $str_insarmaps_flag == "False" ]]; then
+   insarmaps_flag=0
+fi
 
 ####################################
 if  ! test -f "$SCRATCH/miniconda3.tar" ; then
