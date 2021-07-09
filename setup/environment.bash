@@ -101,7 +101,7 @@ export PATH=${PATH}:${PROJ_LIB}
 export PATH=${PATH}:${RSMASINSAR_HOME}/3rdparty/tippecanoe
 export PATH=${PATH}:${RSMASINSAR_HOME}/sources/insarmaps_scripts
 export PATH=${PATH}:${DASK_CONFIG}
-export PATH=${RSMASINSAR_HOME}/3rdparty/snaphu/bin:${PATH}
+export PATH=${MINOPY_HOME}/snaphu/bin:${PATH}
 
 [ -n ${MATLAB_HOME} ] && export PATH=${PATH}:${MATLAB_HOME}/bin
 
