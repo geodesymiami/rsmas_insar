@@ -175,7 +175,6 @@ fi
 
 ###################################
 # adjust insarmaps_flag based on $template_file
-set -xv
 str_insarmaps_flag=($(grep ^insarmaps $template_file | cut -d "=" -f 2 | xargs))
 length_str_insarmaps_flag=$(wc -w <<< $str_insarmaps_flag)
 [[ $length_str_insarmaps_flag == '0' ]] && str_insarmaps_flag=False 
