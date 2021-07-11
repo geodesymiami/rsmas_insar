@@ -175,7 +175,10 @@ fi
 
 ###################################
 # adjust insarmaps_flag based on $template_file
+set -xv
 str_insarmaps_flag=($(grep ^insarmaps $template_file | cut -d "=" -f 2 | xargs))
+length_str_insarmaps_flag=$(wc -w <<< $str_insarmaps_flag)
+[[ $length_str_insarmaps_flag == '0' ]] && str_insarmaps_flag=False 
 str_insarmaps_flag=${str_insarmaps_flag[-1]}
 if [[ $str_insarmaps_flag == "False" ]]; then
    insarmaps_flag=0
@@ -459,18 +462,18 @@ if [[ $ifgrams_flag == "1" ]]; then
     echo "$(date +"%Y%m%d:%H-%m") * download_ERA5_data.py --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR " >> "${WORK_DIR}"/log
 
  
-    cmd="submit_jobs.bash $template_file --stop ifgrams"
+    cmd="submit_jobs.bash $template_file --dostep ifgrams"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
-       echo "submit_jobs.bash --stop ifgrams  exited with a non-zero exit code ($exit_status). Exiting."
+       echo "submit_jobs.bash --dostep ifgrams  exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
 fi
 
 if [[ $timeseries_flag == "1" ]]; then
-    cmd="submit_jobs.bash $PWD --dostep timeseries"
+    cmd="submit_jobs.bash $PWD --append --dostep timeseries"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"
@@ -492,7 +495,7 @@ if [[ $upload_flag == "1" ]]; then
 fi
 
 if [[ $insarmaps_flag == "1" ]]; then
-    cmd="submit_jobs.bash $PWD --dostep insarmaps"
+    cmd="submit_jobs.bash $PWD --append --dostep insarmaps"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"
