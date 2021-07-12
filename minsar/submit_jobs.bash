@@ -61,8 +61,6 @@ else
     PROJECT_NAME=$(basename "$1" | awk -F ".template" '{print $1}')
 fi
 WORKDIR=$SCRATCHDIR/$PROJECT_NAME
-RUNFILES_DIR=$WORKDIR"/run_files"
-
 cd $WORKDIR
 
 randomorder=false
@@ -157,11 +155,14 @@ trap "pkill -P $$" EXIT
 exec 1>>$logfile_name 2>>$logfile_name
 ######################################################
 
+RUNFILES_DIR=$WORKDIR"/run_files"
 
 #find the last job (11 for 'geometry' and 16 for 'NESD') and remove leading zero
-job_file_arr=(run_files/run_*_0.job)
+job_file_arr=($RUNFILES_DIR/run_*_0.job)
+#job_file_arr=(run_files/run_*_0.job)
 last_job_file=${job_file_arr[-1]}
-last_job_file_number=${last_job_file:14:2}
+last_job_file=$(basename -- "$last_job_file")
+last_job_file_number=${last_job_file:4:2}
 last_job_file_number=$(echo $last_job_file_number | sed 's/^0*//')
 
 if [[ $startstep == "ifgrams" ]]; then
