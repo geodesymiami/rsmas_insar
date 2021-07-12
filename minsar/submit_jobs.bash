@@ -40,10 +40,13 @@ usage: submit_jobs.bash custom_template_file [--start] [--stop] [--dostep] [--he
       submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --stop 8     \n\
       submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --start timeseries \n\
       submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep insarmaps \n\
+      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep minopy    \n\
+      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --minopy    \n\
+      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --append    \n\
                                                                                    \n\
  Processing steps (start/end/dostep): \n\
                                                                                  \n\
-   ['1-16', 'timeseries', 'insarmaps' ]                                          \n\
+   ['1-16', 'timeseries', 'minopy', 'insarmaps' ]                                          \n\
                                                                                  \n\
    In order to use either --start or --dostep, it is necessary that a            \n\
    previous run was done using one of the steps options to process at least      \n\
@@ -108,6 +111,10 @@ do
             append=true
             shift
             ;;
+        --minopy)
+            minopy_flag=true
+            shift
+            ;;
         *)
             POSITIONAL+=("$1") # save it in an array for later
             shift # past argument
@@ -115,6 +122,10 @@ do
 esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
+
+if [[ $startstep == "minopy" ]]; then
+   minopy_flag=true
+fi
 
 step_max_tasks_unit=400
 total_max_tasks=500
@@ -142,7 +153,13 @@ step_io_load_list=(
     [smallbaseline_wrapper]=1
     [insarmaps]=1
 
-    [crop]=1
+    [minopy_crop]=1
+    [minopy_inversion]=1
+    [minopy_ifgrams]=1
+    [minopy_unwrap]=1
+    [minopy_un-wrap]=1
+    [minopy_mintpy_corrections]=1
+    
 )
 
 ##### For proper logging to both file and stdout #####
@@ -157,6 +174,10 @@ exec 1>>$logfile_name 2>>$logfile_name
 
 RUNFILES_DIR=$WORKDIR"/run_files"
 
+if [[ $minopy_flag == "true" ]]; then
+   RUNFILES_DIR=$WORKDIR"/minopy/run_files"
+fi
+
 #find the last job (11 for 'geometry' and 16 for 'NESD') and remove leading zero
 job_file_arr=($RUNFILES_DIR/run_*_0.job)
 #job_file_arr=(run_files/run_*_0.job)
@@ -165,7 +186,7 @@ last_job_file=$(basename -- "$last_job_file")
 last_job_file_number=${last_job_file:4:2}
 last_job_file_number=$(echo $last_job_file_number | sed 's/^0*//')
 
-if [[ $startstep == "ifgrams" ]]; then
+if [[ $startstep == "ifgrams" || $startstep == "minopy" ]]; then
     startstep=1
 elif [[ $startstep == "timeseries" ]]; then
     startstep=$((last_job_file_number+1))
@@ -173,7 +194,7 @@ elif [[ $startstep == "insarmaps" ]]; then
     startstep=$((last_job_file_number+2))
 fi
 
-if [[ $stopstep == "ifgrams" ]]; then
+if [[ $stopstep == "ifgrams" || $stopstep == "minopy" ]]; then
     stopstep=$last_job_file_number
 elif [[ $stopstep == "timeseries" ]]; then
     stopstep=$((last_job_file_number+1))
