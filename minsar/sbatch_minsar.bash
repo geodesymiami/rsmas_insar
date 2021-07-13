@@ -112,11 +112,6 @@ if [[ $verbose == "true" ]]; then
     fi
 
     logfile_name="${WORKDIR}/sbatch_minsar/${step}.${exec_date}.log"
-    # printf '' > $logfile_name
-    # tail -f $logfile_name & 
-    # trap "pkill -P $$" EXIT
-    # exec 1>>$logfile_name 2>>$logfile_name
-    ######################################################
 fi
 
 echot "Jobfile: $(basename $f)"
@@ -126,7 +121,9 @@ echot "Step: $step_name"
 #echo $1
 QUEUENAME=$(grep "#SBATCH -p" $f | awk -F'[ ]' '{print $3}')
 if [ -z "$MAX_JOBS_PER_QUEUE" ]; then
-    MAX_JOBS_PER_QUEUE=$(qlimits | grep $QUEUENAME | awk '{print $4}')
+    queues_file="${RSMASINSAR_HOME}/minsar/defaults/queues.cfg"
+    MAX_JOBS_PER_QUEUE=$(cat $queues_file | grep $QUEUENAME | awk '{print $7}')
+    #MAX_JOBS_PER_QUEUE=$(qlimits | grep $QUEUENAME | awk '{print $4}')
 else
     MAX_JOBS_PER_QUEUE="${MAX_JOBS_PER_QUEUE}"
 fi
@@ -162,14 +159,6 @@ flock -u 200
 
 sbatch_message=$(sbatch --test-only -Q $f)
 echot -e "${sbatch_message[@]:1}"
-
-#rand=$(echo $(($(shuf -i 25-300 -n 1))))
-#rand=$(echo "scale=2; ${rand}/100" | bc -l)
-#sleep $rand
-#echo "slept for $rand seconds".
-
-#echo "Sleeping 5 seconds"
-#sleep 5
 
 if [[ $new_active_jobs   -le $MAX_JOBS_PER_QUEUE ]]; then job_count="OK";        else job_count="FAILED";        fi
 if [[ $new_tasks_step    -le $step_max_tasks     ]]; then steptask_count="OK";   else steptask_count="FAILED";   fi
