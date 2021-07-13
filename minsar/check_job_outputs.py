@@ -42,11 +42,15 @@ def main(iargs=None):
                     'Traceback'
                     ]
                     #'Exiting ...',                # remove if above works fine (5/21)
+                    #'FileNotFoundError: [Errno 2] No such file or directory: '/tmp/secondarys/20190917/IW2.xml'
     data_problems_strings = [
                     'There appears to be a gap between slices. Cannot stitch them successfully',
                     'SLCs are sliced differently with different versions of the processor',
                     'No annotation xml file found in zip file',
-                    'mismatched tag: line 77, column 6'
+                    'mismatched tag: line 77, column 6',
+                    ]
+    data_problems_strings_run_04 = [
+                    'FileNotFoundError: [Errno 2] No such file or directory:'
                     ]
     different_number_of_bursts_string = [
                     'has different number of bursts',
@@ -93,9 +97,29 @@ def main(iargs=None):
                       date = file.split("_")[-2]
                       print( 'WARNING: \"' + string + '\" found in ' + os.path.basename(file) + ': removing ' + date + ' from run_files ')
                       run_files_dir=project_dir + '/run_files'
-                      putils.run_remove_date_from_run_files(run_files_dir=run_files_dir, date=date, start_run_file = 2 )
+                      putils.run_remove_date_from_run_files(run_files_dir=run_files_dir, date=date, start_run_file = 3 )
                       with open(run_files_dir + '/removeddates.txt', 'a') as rd:
                           rd.writelines('run_02: removing ' + date + ', \"' + string + '\" found in ' + os.path.basename(file) + ' \n')
+
+       # this covers missing frames: run_files are generated although a frame in the middle is missing
+       if 'fullBurst_geo2rdr' in job_name:               
+          for file in error_files:
+              for string in data_problems_strings_run_04:
+                  if check_words_in_file(file, string):
+                      date = file.split("_")[-2]
+                      print( 'WARNING: \"' + string + '\" found in ' + os.path.basename(file) + ': removing ' + date + ' from run_files ')
+                      run_files_dir=project_dir + '/run_files'
+                      putils.run_remove_date_from_run_files(run_files_dir=run_files_dir, date=date, start_run_file = 5 )
+                      secondary_date_dir = project_dir + '/coreg_secondarys/' + date
+                      shutil.rmtree(secondary_date_dir)
+                      with open(run_files_dir + '/removeddates.txt', 'a') as rd:
+                          rd.writelines('run_04: removing ' + date + ', \"' + string + '\" found in ' + os.path.basename(file) + ' \n')
+                          rd.writelines('run_04: removing directory ' + secondary_date_dir + ' \n')
+
+                      out_dir = run_files_dir + '/stdout_run_04_fullBurst_geo2rdr'
+                      os.makedirs(out_dir, exist_ok=True)
+                      shutil.move(file, out_dir + '/' + os.path.basename(file))
+                      error_files.remove(file)
 
        if 'extract_stack_valid_region' in job_name:               
           for file in out_files:

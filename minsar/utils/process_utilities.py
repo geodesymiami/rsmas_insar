@@ -904,9 +904,6 @@ def move_out_job_files_to_stdout(run_file):
     #job_files = glob.glob(run_file + '*.job')
     stdout_files = glob.glob(run_file + '*.o')
 
-    #if len(job_files) + len(stdout_files) == 0:
-    #    return
-
     if len(stdout_files) == 0:
         return
 
@@ -921,12 +918,6 @@ def move_out_job_files_to_stdout(run_file):
     if len(stdout_files) >= 1:           #changed 9/2020. was 2 but unclear why
         for item in stdout_files:
             shutil.move(item, out_folder)
-
-    #extra_batch_files = glob.glob(run_file + '_*')
-    #for item in extra_batch_files:
-    #    if os.path.exists(out_folder + '/' + os.path.basename(item)):
-    #        os.remove(out_folder + '/' + os.path.basename(item))
-    #    shutil.move(item, out_folder)
 
     return None
 
@@ -1190,7 +1181,6 @@ def run_remove_date_from_run_files(run_files_dir, date, start_run_file):
     for run_file in run_files:
        with open(run_file) as f:
             if date in f.read():
-               #print(run_file + ': YES')
                with open(run_file) as f:
                    lines = f.readlines()
                    new_lines=[]
@@ -1202,8 +1192,10 @@ def run_remove_date_from_run_files(run_files_dir, date, start_run_file):
                    with open(run_file, 'w') as f:
                            f.writelines(new_lines)
 
-            #else:
-            #   print(run_file + ': NO')
+                   if os.path.getsize(run_file) == 0:  # remove zero-size files FA 6/21: It would be cleaner to change the long run_file and recreate jobfiles
+                         os.remove(run_file)
+                         os.remove(run_file + '.job')
+
     return
 
 ############################################################################
