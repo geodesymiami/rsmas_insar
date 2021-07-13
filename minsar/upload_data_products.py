@@ -84,6 +84,43 @@ def main(iargs=None):
                 if status is not 0:
                     raise Exception('ERROR in upload_data_products.py')
 
+    # need to simplify so that there is no repeated code 
+    if inps.minopy_products_flag:
+
+        REMOTE_DIR = '/data/HDF5EOS/'
+        destination = DATA_SERVER + ':' + REMOTE_DIR
+
+        scp_list = [
+                '/minopy/pic',
+                '/minopy/*.he5',
+                '/minopy/inputs',
+                '/remora_*'
+                ]
+        
+        if inps.mintpy_products_all_flag:
+            scp_list = [ '/minopy' ]
+
+        command = 'ssh ' + DATA_SERVER + ' mkdir -p ' + REMOTE_DIR + project_name + '/minopy'
+        print (command)
+        status = subprocess.Popen(command, shell=True).wait()
+        if status is not 0:
+             raise Exception('ERROR in upload_data_products.py')
+
+        for pattern in scp_list:
+            if ( len(glob.glob(inps.work_dir + '/' + pattern)) >= 1 ):
+                command = 'scp -r ' + inps.work_dir + pattern + ' ' + destination + project_name + '/'.join(pattern.split('/')[0:-1])
+                print (command)
+                status = subprocess.Popen(command, shell=True).wait()
+                if status is not 0:
+                    raise Exception('ERROR in upload_data_products.py')
+
+                print ('\nAdjusting permissions:')
+                command = 'ssh ' + DATA_SERVER + ' chmod -R u=rwX,go=rX ' + REMOTE_DIR + project_name 
+                print (command)
+                status = subprocess.Popen(command, shell=True).wait()
+                if status is not 0:
+                    raise Exception('ERROR in upload_data_products.py')
+
     if inps.image_products_flag:
         REMOTE_DIR = '/data/image_products/'
         destination = DATA_SERVER + ':' + REMOTE_DIR

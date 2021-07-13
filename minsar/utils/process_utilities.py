@@ -109,6 +109,11 @@ def add_upload_data_products(parser):
                              action='store_true',
                              default=True,
                              help='uploads mintpy data products to data portal')
+    flag_parser.add_argument('--minopyProducts',
+                             dest='minopy_products_flag',
+                             action='store_true',
+                             default=True,
+                             help='uploads minopy data products to data portal')
     flag_parser.add_argument('--all',
                              dest='mintpy_products_all_flag',
                              action='store_true',
