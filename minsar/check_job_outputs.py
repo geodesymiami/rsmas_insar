@@ -100,6 +100,11 @@ def main(iargs=None):
                       putils.run_remove_date_from_run_files(run_files_dir=run_files_dir, date=date, start_run_file = 3 )
                       with open(run_files_dir + '/removeddates.txt', 'a') as rd:
                           rd.writelines('run_02: removing ' + date + ', \"' + string + '\" found in ' + os.path.basename(file) + ' \n')
+                      # exit if too many removed dates
+                      num_lines = sum(1 for line in open(run_files_dir + '/removeddates.txt'))
+                      if (num_lines >= 10):
+                         raise RuntimeError('Too many bad data: ', num_lines)
+
 
        # this covers missing frames: run_files are generated although a frame in the middle is missing
        if 'fullBurst_geo2rdr' in job_name:               
@@ -143,6 +148,10 @@ def main(iargs=None):
                       putils.run_remove_date_from_run_files(run_files_dir=run_files_dir, date=date, start_run_file = 7 )
                       with open(run_files_dir + '/removeddates.txt', 'a') as rd:
                           rd.writelines('run_06: removing ' + date + ', \"' + string + '\" found in ' + os.path.basename(file) + ' \n')
+                      # exit if too many removed dates
+                      num_lines = sum(1 for line in open(run_files_dir + '/removeddates.txt'))
+                      if (num_lines >= 10):
+                         raise RuntimeError('Too many bad data: ', num_lines)
 
        for file in error_files + out_files:
            for error_string in error_strings:
