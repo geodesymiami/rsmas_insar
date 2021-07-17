@@ -170,6 +170,8 @@ step_io_load_list=(
     [smallbaseline_wrapper]=1
     [insarmaps]=1
 
+    [crop]=1
+
     [minopy_crop]=1
     [minopy_inversion]=1
     [minopy_ifgrams]=1
@@ -181,6 +183,7 @@ step_io_load_list=(
 
 ##### For proper logging to both file and stdout #####
 num_logfiles=$(ls $WORKDIR/submit_jobs.*.log | wc -l)
+test -f $WORKDIR/submit_jobs.0.log  || touch submit_jobs.0.log
 if $append; then num_logfiles=$(($num_logfiles-1)); fi
 logfile_name="${WORKDIR}/submit_jobs.${num_logfiles}.log"
 #printf '' > $logfile_name
