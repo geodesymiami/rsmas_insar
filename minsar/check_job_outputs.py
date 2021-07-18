@@ -148,10 +148,11 @@ def main(iargs=None):
                       putils.run_remove_date_from_run_files(run_files_dir=run_files_dir, date=date, start_run_file = 7 )
                       with open(run_files_dir + '/removeddates.txt', 'a') as rd:
                           rd.writelines('run_06: removing ' + date + ', \"' + string + '\" found in ' + os.path.basename(file) + ' \n')
-                      # exit if too many removed dates
-                      num_lines = sum(1 for line in open(run_files_dir + '/removeddates.txt'))
-                      if (num_lines >= 10):
-                         raise RuntimeError('Too many bad data: ', num_lines)
+
+                 # exit if too many removed dates
+                 num_lines = sum(1 for line in open(run_files_dir + '/removeddates.txt'))
+                 if (num_lines >= 10):
+                    raise RuntimeError('Too many dates with missing bursts: ', num_lines)
 
        for file in error_files + out_files:
            for error_string in error_strings:
@@ -177,10 +178,9 @@ def main(iargs=None):
        if len(error_files) == 0:
            Path(out_error_file).touch()
        else:
-           #out_error_file = os.path.dirname(error_files[-1]) + '/out_' + os.path.basename(error_files[-1])
-           #Path(out_error_file)
            shutil.copy(error_files[-1], out_error_file)
 
+    # exit for errors
     if len(matched_error_strings) + len(matched_data_problem_strings) != 0:
         print('For known issues see https://github.com/geodesymiami/rsmas_insar/tree/master/docs/known_issues.md')
         raise RuntimeError('Error in run_file: ' + run_file_base)
