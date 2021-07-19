@@ -474,7 +474,7 @@ def get_config_defaults(config_file='job_defaults.cfg'):
 
     if os.path.basename(config_file) in ['job_defaults.cfg']:
 
-        fields = ['c_walltime', 's_walltime', 'c_memory', 's_memory', 'num_threads']
+        fields = ['c_walltime', 's_walltime', 'c_memory', 's_memory', 'num_threads','copy_to_tmp','io_load']
 
         with open(config_file, 'r') as f:
             lines = f.readlines()
@@ -484,7 +484,7 @@ def get_config_defaults(config_file='job_defaults.cfg'):
             if line.startswith('#') or line.startswith('----'):
                 continue
             sections = line.split()
-            if len(sections) > 4:
+            if len(sections) > 6:
                 config.add_section(sections[0])
                 for t in range(0, len(fields)):
                     config.set(sections[0], fields[t], sections[t + 1])
