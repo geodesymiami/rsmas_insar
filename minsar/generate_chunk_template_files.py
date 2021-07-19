@@ -55,8 +55,9 @@ def  run_generate_chunk_template_files(inps):
     location_name = location_name.split('Big')[0]
 
     chunk_templates_dir = inps.work_dir + '/chunk_templates'
+    chunk_templates_dir_string = '$SCRATCHDIR/' + project_name + '/chunk_templates'
     os.makedirs(chunk_templates_dir, exist_ok=True)
- 
+
     command_list1 = []
     command_list2 = []
     sleep_time = 0
@@ -88,6 +89,7 @@ def  run_generate_chunk_template_files(inps):
 
         chunk_name =[ location_name + 'Chunk' +  str(int(lat)) + sat_direction + sat_track ] 
         chunk_template_file = chunk_templates_dir + '/' + chunk_name[0] + '.template'
+        chunk_template_file_base = chunk_name[0] + '.template'
         shutil.copy(inps.custom_template_file, chunk_template_file)
 
         chunk_bbox_list = bbox_list
@@ -109,6 +111,9 @@ def  run_generate_chunk_template_files(inps):
 
         command1 = 'mkdir ' + os.getenv('SCRATCHDIR') + '/' + chunk_name[0] + ' && cd "$_"; minsarApp.bash ' + chunk_template_file + ' ' + minsarApp_option + ' --sleep ' + str(sleep_time)
         command2 = 'minsarApp.bash ' + chunk_template_file + ' ' + minsarApp_option + ' --sleep ' + str(sleep_time) + ' &'
+        command1 = 'mkdir -p $SCRATCHDIR/' + chunk_name[0] + ' && cd "$_"; minsarApp.bash ' + chunk_templates_dir_string + '/' +  chunk_template_file_base + ' ' +  minsarApp_option + ' --sleep ' + str(sleep_time)
+        command2 = 'minsarApp.bash ' + chunk_templates_dir_string + '/' + chunk_template_file_base + ' ' + minsarApp_option + ' --sleep ' + str(sleep_time) + ' &'
+
 
         command_list1.append(command1)
         command_list2.append(command2)
