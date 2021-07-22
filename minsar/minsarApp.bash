@@ -68,6 +68,11 @@ do
             shift
             shift
             ;;
+	--sleep)
+            sleep_time="$2"
+            shift
+            shift
+            ;;
         *)
             POSITIONAL+=("$1") # save it in an array for later
             shift # past argument
@@ -79,6 +84,11 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 if [[ ${#POSITIONAL[@]} -gt 1 ]]; then
     echo "Unknown parameters provided."
     exit 1;
+fi
+
+if [ ! -z ${sleep_time+x} ]; then
+  echo "sleeping $sleep_time secs before starting ..."
+  sleep $sleep_time
 fi
 
 download_flag=1

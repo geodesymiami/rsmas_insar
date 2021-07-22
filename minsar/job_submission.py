@@ -520,6 +520,7 @@ class JOB_SUBMIT:
         :param job_type: 'batch' or 'script'
         """
         config = putils.get_config_defaults(config_file='job_defaults.cfg')
+        #import pdb; pdb.set_trace()
 
         if job_type == 'batch':
             step_name = '_'
@@ -571,6 +572,12 @@ class JOB_SUBMIT:
             self.default_num_threads = config[step_name]['num_threads']
         else:
             self.default_num_threads = config['default']['num_threads']
+
+        if step_name in config:
+            self.copy_to_tmp_flag = config[step_name]['copy_to_tmp']
+        else:
+            self.copy_to_tmp_flag = config['default']['copy_to_tmp']
+        print("QQ:",self.copy_to_tmp_flag)
 
         return
 
@@ -713,6 +720,9 @@ class JOB_SUBMIT:
         job_file_lines.append( """export PYTHONPATH=`echo ${PYTHONPATH} | awk -v RS=: -v ORS=: '/home/ {next} {print}' | sed 's/:*$//'` \n""" )
         job_file_lines.append( """export PYTHONPATH_RSMAS=`echo ${PYTHONPATH_RSMAS} | awk -v RS=: -v ORS=: '/scratch/ {next} {print}' | sed 's/:*$//'` \n""" )
         job_file_lines.append( """export PYTHONPATH_RSMAS=`echo ${PYTHONPATH_RSMAS} | awk -v RS=: -v ORS=: '/home/ {next} {print}' | sed 's/:*$//'` \n""" )
+
+        if self.copy_to_tmp_flag == "no":
+             return job_file_lines
 
         if not 'unpack_topo_reference' in job_file_name and not 'unpack_secondary_slc' in job_file_name:
             job_file_lines.append( "################################################\n" )

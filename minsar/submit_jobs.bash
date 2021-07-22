@@ -129,6 +129,7 @@ fi
 
 # IO load for each step. For step_io_load=1 the maximum tasks allowed is step_max_tasks_unit
 # for step_io_load=2 the maximum tasks allowed is step_max_tasks_unit/2
+
 # declare -A  step_io_load_list
 # step_io_load_list=(
 #     [unpack_topo_reference]=1
@@ -157,11 +158,13 @@ fi
 #     [minopy_unwrap]=1
 #     [minopy_un-wrap]=1
 #     [minopy_mintpy_corrections]=1
+
     
 # )
 
 ##### For proper logging to both file and stdout #####
 num_logfiles=$(ls $WORKDIR/submit_jobs.*.log | wc -l)
+test -f $WORKDIR/submit_jobs.0.log  || touch submit_jobs.0.log
 if $append; then num_logfiles=$(($num_logfiles-1)); fi
 logfile_name="${WORKDIR}/submit_jobs.${num_logfiles}.log"
 #printf '' > $logfile_name
