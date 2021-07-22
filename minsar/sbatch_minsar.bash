@@ -62,24 +62,12 @@ step_name=$(echo $f | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,}.job)")
 if [ -z "$step_name" ]; then
     step_name=${f%.*}
 fi
-step_max_tasks=1500
-total_max_tasks=3000
 verbose="false"
 
 while [[ $# -gt 0 ]]
 do
     key="$1"
     case $key in
-        --step_max_tasks)
-            step_max_tasks="$2"
-            shift
-            shift
-            ;;
-        --total_max_tasks)
-            total_max_tasks="$2"
-            shift
-            shift
-            ;;
         --verbose)
             verbose="true"
             shift
@@ -117,16 +105,33 @@ fi
 echot "Jobfile: $(basename $f)"
 echot "Step: $step_name"
 
+defaults_file="${RSMASINSAR_HOME}/minsar/defaults/job_defaults.cfg"
+
+step_io_load=$(cat $defaults_file | grep $step_name | awk '{print $7}')
+
 # Get queue to submit to and identify job submission limits for that queue
-#echo $1
 QUEUENAME=$(grep "#SBATCH -p" $f | awk -F'[ ]' '{print $3}')
+queues_file="${RSMASINSAR_HOME}/minsar/defaults/queues.cfg"
+
 if [ -z "$MAX_JOBS_PER_QUEUE" ]; then
-    queues_file="${RSMASINSAR_HOME}/minsar/defaults/queues.cfg"
     MAX_JOBS_PER_QUEUE=$(cat $queues_file | grep $QUEUENAME | awk '{print $7}')
-    #MAX_JOBS_PER_QUEUE=$(qlimits | grep $QUEUENAME | awk '{print $4}')
 else
     MAX_JOBS_PER_QUEUE="${MAX_JOBS_PER_QUEUE}"
 fi
+
+if [ -z "$SJOBS_STEP_MAX_TASKS" ]; then
+    SJOBS_STEP_MAX_TASKS=$(cat $queues_file | grep $QUEUENAME | awk '{print $9}')
+else
+    SJOBS_STEP_MAX_TASKS="${SJOBS_STEP_MAX_TASKS}"
+fi
+
+if [ -z "$SJOBS_TOTAL_MAX_TASKS" ]; then
+    SJOBS_TOTAL_MAX_TASKS=$(cat $queues_file | grep $QUEUENAME | awk '{print $10}')
+else
+    SJOBS_TOTAL_MAX_TASKS="${SJOBS_TOTAL_MAX_TASKS}"
+fi
+
+SJOBS_STEP_MAX_TASKS=$(echo "$SJOBS_STEP_MAX_TASKS/$step_io_load" | bc | awk '{print int($1)}')
 
 ################ Set up lockfile
 lockfile="$SCRATCH/sbatch_minsar.lock"
@@ -160,9 +165,9 @@ flock -u 200
 sbatch_message=$(sbatch --test-only -Q $f)
 echot -e "${sbatch_message[@]:1}"
 
-if [[ $new_active_jobs   -le $MAX_JOBS_PER_QUEUE ]]; then job_count="OK";        else job_count="FAILED";        fi
-if [[ $new_tasks_step    -le $step_max_tasks     ]]; then steptask_count="OK";   else steptask_count="FAILED";   fi
-if [[ $new_tasks_total   -le $total_max_tasks    ]]; then task_count="OK";       else task_count="FAILED";       fi
+if [[ $new_active_jobs   -le $MAX_JOBS_PER_QUEUE       ]]; then job_count="OK";        else job_count="FAILED";        fi
+if [[ $new_tasks_step    -le $SJOBS_STEP_MAX_TASKS     ]]; then steptask_count="OK";   else steptask_count="FAILED";   fi
+if [[ $new_tasks_total   -le $SJOBS_TOTAL_MAX_TASKS    ]]; then task_count="OK";       else task_count="FAILED";       fi
 
 if  [[ $job_count == "OK" ]] && [[ $steptask_count == "OK" ]] && [[ $task_count == "OK" ]]; then 
     resource_check="OK" 
@@ -174,8 +179,8 @@ echot -e "\n"
 echot -e "--> Verifying job request is within custom resource limits...$resource_check"
 echot -e "\t--> $num_tasks_job additional tasks."
 echot -e "\t[*] Job count \t\t($num_active_jobs/$MAX_JOBS_PER_QUEUE) --> ($new_active_jobs/$MAX_JOBS_PER_QUEUE)...$job_count"
-echot -e "\t[*] Step task count \t($num_active_tasks_step/$step_max_tasks) --> ($new_tasks_step/$step_max_tasks)...$steptask_count"
-echot -e "\t[*] Total task count \t($num_active_tasks_total/$total_max_tasks) --> ($new_tasks_total/$total_max_tasks)...$task_count"
+echot -e "\t[*] Step task count \t($num_active_tasks_step/$SJOBS_STEP_MAX_TASKS) --> ($new_tasks_step/$SJOBS_STEP_MAX_TASKS)...$steptask_count"
+echot -e "\t[*] Total task count \t($num_active_tasks_total/$SJOBS_TOTAL_MAX_TASKS) --> ($new_tasks_total/$SJOBS_TOTAL_MAX_TASKS)...$task_count"
 echot -e "\n"
 
 if  [[ $resource_check == "OK" ]] && 

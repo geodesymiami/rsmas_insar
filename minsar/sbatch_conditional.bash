@@ -75,8 +75,6 @@ else
 fi
 
 step_name=$file_pattern
-step_max_tasks=1500
-total_max_tasks=3000
 max_time=604800
 randomorder=false
 wait_time=300
@@ -86,21 +84,6 @@ do
     key="$1"
 
     case $key in
-        --step_name)
-            step_name="$2"
-            shift # past argument
-            shift # past value
-            ;;
-        --step_max_tasks)
-            step_max_tasks="$2"
-            shift
-            shift
-            ;;
-        --total_max_tasks)
-            total_max_tasks="$2"
-            shift
-            shift
-            ;;
         --max_time)
             max_time="$2"
             shift
@@ -138,7 +121,6 @@ if $randomorder; then
 fi
 i=1
 
-# for f in "${files[@]}"; do
 for ((j=0; j < "${#files[@]}"; j++)); do
     f=${files[$j]}
     time_elapsed=0
@@ -149,7 +131,7 @@ for ((j=0; j < "${#files[@]}"; j++)); do
 
         # Submit job using sbatch_minsar.bash, performing all necesarry resource checks.
         # Grep sbatch_minsar output for current resource statuses for logging.
-        sbatch_minsar=$(sbatch_minsar.bash $f --step_max_tasks $step_max_tasks --total_max_tasks $total_max_tasks)
+        sbatch_minsar=$(sbatch_minsar.bash $f)
         sbatch_exit_status="$?"
 
         num_tasks_job=$(echo $sbatch_minsar | grep -oP "(\d{1,})(?= additional tasks)")
