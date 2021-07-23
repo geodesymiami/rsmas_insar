@@ -1,5 +1,7 @@
 ##!/bin/bash
 
+# Custom replacement for echo command that also
+# appends to a logfile when --verbose is on.
 function echot {
     if [[ $verbose == "true" ]]; then
         echo "$@" | tee -ai ${logfile_name}
@@ -9,6 +11,8 @@ function echot {
     
 }
 
+# Renames a file with the current execution date and time
+# and movesit to the sbatch_minsar directory
 function move_logfile {
     exec_date=$(date +"%Y%m%d.%H%M%S")
     if [[ $verbose == "true" ]]; then
@@ -18,6 +22,7 @@ function move_logfile {
     fi
 }
 
+# Gets list of job_ids for running and pending jobs
 function get_active_jobids {
     running_tasks=$(squeue -u $USER --format="%A" -rh)
     job_ids=($(echo $running_tasks | grep -oP "\d{4,}"))
@@ -25,6 +30,9 @@ function get_active_jobids {
     return 0
 }
 
+# Parses the number of tasks from a job file.
+# Number of tasks is equal to number of lines.
+# insarmaps.job and smallbaseline.job have 1 task.
 function num_tasks_for_file {
     file=$1
     file="${file%.*}"
@@ -37,6 +45,8 @@ function num_tasks_for_file {
     return 0
 }
 
+# Computes the number of tasks actively running
+# or in a pending state on the submission queue.
 function compute_num_tasks {
     stepname=$1
 
@@ -93,12 +103,12 @@ if [[ "$1" == "--help" || "$1" == "-h" ]]; then
         exit 0;
 fi
 
-echo $$
+#echo $$
 
-f=$1
-step_name=$(echo $f | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,}.job)")
+job_file=$1
+step_name=$(echo $job_file | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,}.job)")
 if [ -z "$step_name" ]; then
-    step_name=${f%.*}
+    step_name=${job_file%.*}
 fi
 verbose="false"
 
@@ -118,8 +128,9 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
+# Sets up sbatch_minsar directory for log files if --verbose is on
 if [[ $verbose == "true" ]]; then
-    cd $(dirname $(readlink -f $f))
+    cd $(dirname $(readlink -job_file $job_file))
     WORKDIR=$(pwd)
 
     if [[ $WORKDIR == *"run_file"* ]]; then
@@ -130,7 +141,7 @@ if [[ $verbose == "true" ]]; then
 
     ##### For proper logging to both file and stdout #####
     exec_date=$(date +"%Y%m%d.%H%M%S")
-    step=$(basename $1 | cut -d. -f1)
+    step=$(basename $job_file | cut -d. -f1)
 
     if [ ! -d "${WORKDIR}/sbatch_minsar/" ]
     then
@@ -140,35 +151,39 @@ if [[ $verbose == "true" ]]; then
     logfile_name="${WORKDIR}/sbatch_minsar/${step}.${exec_date}.log"
 fi
 
-echot "Jobfile: $(basename $f)"
+echot "Jobfile: $(basename $job_file)"
 echot "Step: $step_name"
 
+# Get io_load for step from job_defaults.cfg file.
+# io_load needs to remain as column 8 in the .cfg file.
 defaults_file="${RSMASINSAR_HOME}/minsar/defaults/job_defaults.cfg"
+step_io_load=$(grep $step_name $defaults_file | awk '{print $8}')
 
-step_io_load=$(cat $defaults_file | grep $step_name | awk '{print $8}')
-
-# Get queue to submit to and identify job submission limits for that queue
-QUEUENAME=$(grep "#SBATCH -p" $f | awk -F'[ ]' '{print $3}')
+# Get queue that job_file is being submitted to from job_file definition
+QUEUENAME=$(grep "#SBATCH -p" $job_file | awk -F'[ ]' '{print $3}')
 queues_file="${RSMASINSAR_HOME}/minsar/defaults/queues.cfg"
 
+# Parse custom resource allocation limits from queues.cfg
+# If environment variable already exists, use that instead.
 if [ -z "$SJOBS_MAX_JOBS_PER_QUEUE" ]; then
-    SJOBS_MAX_JOBS_PER_QUEUE=$(cat $queues_file | grep $QUEUENAME | awk '{print $7}')
+    SJOBS_MAX_JOBS_PER_QUEUE=$(grep $QUEUENAME $queues_file | awk '{print $7}')
 else
     SJOBS_MAX_JOBS_PER_QUEUE="${SJOBS_MAX_JOBS_PER_QUEUE}"
 fi
 
 if [ -z "$SJOBS_STEP_MAX_TASKS" ]; then
-    SJOBS_STEP_MAX_TASKS=$(cat $queues_file | grep $QUEUENAME | awk '{print $9}')
+    SJOBS_STEP_MAX_TASKS=$(grep $QUEUENAME $queues_file | awk '{print $9}')
 else
     SJOBS_STEP_MAX_TASKS="${SJOBS_STEP_MAX_TASKS}"
 fi
 
 if [ -z "$SJOBS_TOTAL_MAX_TASKS" ]; then
-    SJOBS_TOTAL_MAX_TASKS=$(cat $queues_file | grep $QUEUENAME | awk '{print $10}')
+    SJOBS_TOTAL_MAX_TASKS=$(grep $QUEUENAME $queues_file | awk '{print $10}')
 else
     SJOBS_TOTAL_MAX_TASKS="${SJOBS_TOTAL_MAX_TASKS}"
 fi
 
+# Update SJOBS_STEP_MAX_TASKS based on io_load for step
 SJOBS_STEP_MAX_TASKS=$(echo "$SJOBS_STEP_MAX_TASKS/$step_io_load" | bc | awk '{print int($1)}')
 
 ################ Set up lockfile
@@ -186,7 +201,7 @@ num_active_tasks_step=$(compute_num_tasks $step_name)
 # insarmaps.job and smallbaseline_wrapper.job always have 1 task.
 # ISCE runfiles have number of tasks equal to number of lines in associated launcher script
 # Launcher script: "run_01_unpack_topo_reference_0.job" -> "run_01_unpack_topo_reference_0"    
-num_tasks_job=$(num_tasks_for_file $f)
+num_tasks_job=$(num_tasks_for_file $job_file)
 
 # Compute new total number of tasks and tasks for current step
 new_tasks_step=$(($num_active_tasks_step+$num_tasks_job))
@@ -200,9 +215,11 @@ new_active_jobs=$(($num_active_jobs+1))
 flock -u 200
 ###########
 
-sbatch_message=$(sbatch --test-only -Q $f)
+# Let default sbatch test if job file is able to be submitted
+sbatch_message=$(sbatch --test-only -Q $job_file)
 echot -e "${sbatch_message[@]:1}"
 
+# Check if submitting job_file will exceed custom resource limits
 if [[ $new_active_jobs   -le $SJOBS_MAX_JOBS_PER_QUEUE  ]]; then job_count="OK";        else job_count="FAILED";        fi
 if [[ $new_tasks_step    -le $SJOBS_STEP_MAX_TASKS      ]]; then steptask_count="OK";   else steptask_count="FAILED";   fi
 if [[ $new_tasks_total   -le $SJOBS_TOTAL_MAX_TASKS     ]]; then task_count="OK";       else task_count="FAILED";       fi
@@ -224,12 +241,12 @@ echot -e "\n"
 if  [[ $resource_check == "OK" ]] && 
     [[ $sbatch_message != *"FAILED"* ]];  then
 
-    sbatch_submit=$(sbatch --parsable $f)
+    sbatch_submit=$(sbatch --parsable $job_file)
     exit_status="$?"
 
     if [[ $exit_status -ne 0 ]]; then
         reason="'sbatch' submission error"
-        echot "$f could not be submitted. $reason."
+        echot "$job_file could not be submitted. $reason."
         move_logfile
 
         exit 1
@@ -237,7 +254,7 @@ if  [[ $resource_check == "OK" ]] &&
 
     job_number=$(echo $sbatch_submit | grep -oE "[0-9]{7,}")
     
-    echot "$f submitted as job $job_number at $(date +"%T") on $(date +"%Y-%m-%d")."
+    echot "$job_file submitted as job $job_number at $(date +"%T") on $(date +"%Y-%m-%d")."
 
     move_logfile
 
@@ -255,7 +272,7 @@ else
         echot "sbatch submission error."
         reason="'sbatch' submission error"
     fi
-    echot "$f could not be submitted. $reason."
+    echot "$job_file could not be submitted. $reason."
 
     move_logfile
 

@@ -8,43 +8,6 @@ function abbreviate {
     echo $abb
 }
 
-function get_active_jobids {
-    running_tasks=$(squeue -u $USER --format="%A" -rh)
-    job_ids=($(echo $running_tasks | grep -oP "\d{4,}"))
-    echo "${job_ids[@]}"
-    return 0
-}
-
-function num_tasks_for_file {
-    file=$1
-    file="${file%.*}"
-    if [[ ! -f $file ]]; then
-        num_tasks=1
-    else
-        num_tasks=$(cat $file | wc -l)
-    fi
-    echo $num_tasks
-    return 0
-}
-
-function compute_num_tasks {
-    stepname=$1
-
-    job_ids=($(get_active_jobids))
-
-    tasks=0
-    for j in "${job_ids[@]}"; do
-        task_file=$(scontrol show jobid -dd $j | grep -oP "(?<=Command=)(.*)(?=.job)")
-        if [[ "$task_file" == *"$stepname"* ]]; then
-            num_tasks=$(num_tasks_for_file $task_file)
-            ((tasks=tasks+$num_tasks))
-        fi
-    done
-
-    echo $tasks
-    return 0
-}
-
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     helptext="
     Conditional batch job submission wrapper. Attempts to submit a batch of job files using sbatch_minsar.bash
@@ -126,23 +89,37 @@ fi
 i=1
 
 for ((j=0; j < "${#files[@]}"; j++)); do
-    f=${files[$j]}
+    job_file=${files[$j]}
     time_elapsed=0
     while [[ $time_elapsed -lt $max_time ]]; do
 
-        fname=$(basename $f)
+        fname=$(basename $job_file)
+
+        # Abbreivates the file name to 20 characters long. 
+        # First 10 characters, followed by '...', followed by final 7 characters.
         abb_fname=$(abbreviate $fname 20 10 7)
 
         # Submit job using sbatch_minsar.bash, performing all necesarry resource checks.
         # Grep sbatch_minsar output for current resource statuses for logging.
-        sbatch_minsar=$(sbatch_minsar.bash $f)
+        sbatch_minsar=$(sbatch_minsar.bash $job_file)
         sbatch_exit_status="$?"
 
+        # Parse custom resource checks from sbatch_minsar output
         num_tasks_job=$(echo $sbatch_minsar | grep -oP "(\d{1,})(?= additional tasks)")
         resource_limits=$(echo $sbatch_minsar | grep -oP "(?<=\()(\d{1,}\/\d{1,})(?=\) -->)")
         num_jobs=$(echo $resource_limits | awk '{print $1}')
         num_step_tasks=$(echo $resource_limits | awk '{print $2}')
         num_total_tasks=$(echo $resource_limits | awk '{print $3}')
+
+        # (?<=\()(\d{1,}\/\d{1,})(?=\) -->) regex matches all sets of two number seaparated by a '/'
+        # contained with parenetheses '()' prior to '-->'.
+        #
+        # Example:
+        # [*] Job count           (0/3) --> (1/3)...OK
+        # [*] Step task count     (0/400) --> (1/400)...OK
+        # [*] Total task count    (0/10) --> (1/10)...OK
+        #
+        # Matches 0/3, 0/400, and 0/10
 
 
         printf "| %-20s | %-5s | %-9s | %-9s | %-9s | %-7s | %s" "$abb_fname" "$num_tasks_job" "$num_step_tasks" "$num_total_tasks" "$i/${#files[@]}" "$num_jobs" >&2
@@ -152,14 +129,14 @@ for ((j=0; j < "${#files[@]}"; j++)); do
         if [[ $sbatch_exit_status -ne 0 ]]; then
             fail_reason=$(echo $sbatch_minsar | grep -oP "(?<= could not be submitted. )(.*)(?=\.)")
             printf "%-70s |\n" "Not submitted. $fail_reason. Waiting $(($wait_time/60)) minutes." >&2
-            #printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s |\n" "" "" "" "" "" "" "$fail_reason" >&2
-            #printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s |\n" "" "" "" "" "" "" "Wait $(($wait_time/60))  minutes." >&2
             sleep $wait_time
             time_elapsed=$((time_elapsed+$wait_time))
         else
+            # Parse job number (7+ digit number) from sbatch_minsar output
             job_number=$(echo $sbatch_minsar | grep -oP "\d{7,}(?= )")
             printf "%-70s |\n" "Submitted: $job_number" >&2
 
+            # Add job nunmber to running list of succesfully submitted job numbers
             jns+=($job_number)
             break;
         fi
