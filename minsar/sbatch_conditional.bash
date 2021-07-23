@@ -46,25 +46,29 @@ function compute_num_tasks {
 }
 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-    helptext="                                                                         \n\
-Job submission script that handles conditional job submission based on io load.
-usage: sbatch_conditional.bash job_file_pattern [--step_name] [--step_max_tasks] [--total_max_tasks] [--max_time] [--help]\n\
-                                                                                                         \n\
-  Examples:                                                                                              \n\
-      sbatch_conditional.bash run_01                                                                     \n\
-      sbatch_conditional.bash run_01 --step_name unpack_topo_reference                                   \n\
-      sbatch_conditional.bash run_01 --step_name unpack_topo_reference --step_max_tasks 100              \n\
-      
- Default option values (step_max_tasks/total_max_tasks/max_time):                        \n\
-                                                                                         \n\
-   --step_max_tasks  NUM         1500                                                    \n\
-   --total_max_tasks NUM         3000                                                    \n\
-   --max_time        NUM         604800                                                  \n\
-                                                                                         \n\
-   --step_name       STR         same as job_file_pattern
+    helptext="
+    Conditional batch job submission wrapper. Attempts to submit a batch of job files using sbatch_minsar.bash
+    and waits for succesful submission of each job file prior to exiting.
 
+    usage: sbatch_conditional.bash job_file_pattern [--max_time] [--random] [--rapid] [--help]                                                            
+        
+    job_file_pattern        A file pattern describing the set of job files names to be submitted.
+                            Can also be a single file name.
+    --max_time              The maximum amount of time to attempt to submit a job before exiting.
+                            Default value is 604800 seconds (7 days).
+    --random                Flag to induce random job submission order. If not provided, jobs are submitted
+                            in alphanumeric order.
+    --rapid                 Attempts to resubmit a failed job after 60 seconds (1 minute) rather then the
+                            default 300 seconds (5 minutes). Useful for rapid testing and debugging on small
+                            datasets.
+
+    Examples:                                                                                              
+        sbatch_conditional.bash run_01
+        sbatch_conditional.bash run_01 --rapid
+        sbatch_conditional.bash run_01 --max_time 86400
+        sbatch_conditional.bash run_01 --random --rapid
 "
-    printf "$helptext"
+    echo -e "$helptext"
     exit 0;
 fi
 

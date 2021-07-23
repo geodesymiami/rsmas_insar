@@ -55,6 +55,44 @@ function compute_num_tasks {
     return 0
 }
 
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    helptext="
+    Custom sbatch job submission wrapper. Conditionally submits jobs to the sbatch scheduler                     
+    if and only if all standard 'sbatch' elligibility tests pass as well as the following                        
+    custom conditions are met:
+        1) Total number of user submitted jobs is less than the queue support maxiumum.                           
+        2) Total number of user submitted tasks is less than some maximum number.                                 
+        3) Total number of user submitted tasks for the current processing step is less than some maximum number.   
+                                                                                                                    
+    usage: sbatch_minsar.bash job_file [--verbose] [--help]                                                      
+                                                                                                                    
+    --verbose           Log all output to files stored in \$WORKDIR/sbatch_minsar                                
+                        Log files are named by date and time of execution.                                       
+                        Should only be needed for advanced dubgging.                                             
+                                                                                                                    
+    Examples:                                                                                                    
+        sbatch_minsar.bash run_01_unpack_topo_reference_0.job                                                    
+        sbatch_minsar.bash run_01_unpack_topo_reference_0.job --verbose                                          
+                                                                                                                    
+                                                                                                                    
+    ADDITIONAL NOTES:                                                                                            
+                                                                                                                    
+    Maximum values for custom conditions are set using the following variables:                                  
+        1) \$SJOBS_MAX_JOBS_PER_QUEUE   (minsar/defaults/queues.cfg)                                             
+        2) \$SJOBS_TOTAL_MAX_TASKS      (minsar/defaults/queues.cfg)                                             
+        3) \$SJOBS_STEP_MAX_TASKS       (minsar/defaults/queues.cfg)                                             
+                                                                                                                    
+        Computation of \$SJOBS_STEP_MAX_TASKS also relies on a custom 'io_load' paramameter set in 
+        minsar/defaults/job_defaults.cfg 
+
+        \$SJOBS_MAX_JOBS_PER_QUEUE, \$SJOBS_TOTAL_MAX_TASKS, and \$SJOBS_STEP_MAX_TASKS can be set in
+        the default queues.cfg file or be overwritten by an external environmental variable of the same
+        name (export SJOBS_STEP_MAX_TASKS=1).
+        "
+        echo -e "$helptext"
+        exit 0;
+fi
+
 echo $$
 
 f=$1
