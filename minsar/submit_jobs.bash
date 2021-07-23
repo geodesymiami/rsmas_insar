@@ -127,59 +127,40 @@ if [[ $startstep == "minopy" ]]; then
    minopy_flag=true
 fi
 
-if [ -z "$SJOBS_STEP_MAX_TASKS" ]; then
-    queues_file="${RSMASINSAR_HOME}/minsar/defaults/queues.cfg"
-    SJOBS_STEP_MAX_TASKS=$(cat $queues_file | grep $QUEUENAME | awk '{print $9}')
-else
-    SJOBS_STEP_MAX_TASKS="${SJOBS_STEP_MAX_TASKS}"
-fi
-
-if [ -z "$SJOBS_TOTAL_MAX_TASKS" ]; then
-    queues_file="${RSMASINSAR_HOME}/minsar/defaults/queues.cfg"
-    SJOBS_TOTAL_MAX_TASKS=$(cat $queues_file | grep $QUEUENAME | awk '{print $10}')
-else
-    SJOBS_TOTAL_MAX_TASKS="${SJOBS_TOTAL_MAX_TASKS}"
-fi
-
-echo $SJOBS_STEP_MAX_TASKS
-echo $SJOBS_TOTAL_MAX_TASKS
-
-#step_max_tasks_unit=400
-#total_max_tasks=500
 # IO load for each step. For step_io_load=1 the maximum tasks allowed is step_max_tasks_unit
 # for step_io_load=2 the maximum tasks allowed is step_max_tasks_unit/2
-declare -A  step_io_load_list
-step_io_load_list=(
-    [unpack_topo_reference]=1
-    [unpack_secondary_slc]=1
-    [average_baseline]=1
-    [extract_burst_overlaps]=1
-    [overlap_geo2rdr]=1
-    [overlap_resample]=1
-    [pairs_misreg]=1
-    [timeseries_misreg]=1
-    [fullBurst_geo2rdr]=1
-    [fullBurst_resample]=1
-    [extract_stack_valid_region]=1
-    [merge_reference_secondary_slc]=1
-    [generate_burst_igram]=1
-    [merge_burst_igram]=1
-    [filter_coherence]=1
-    [unwrap]=1
 
-    [smallbaseline_wrapper]=1
-    [insarmaps]=1
+# declare -A  step_io_load_list
+# step_io_load_list=(
+#     [unpack_topo_reference]=1
+#     [unpack_secondary_slc]=1
+#     [average_baseline]=1
+#     [extract_burst_overlaps]=1
+#     [overlap_geo2rdr]=1
+#     [overlap_resample]=1
+#     [pairs_misreg]=1
+#     [timeseries_misreg]=1
+#     [fullBurst_geo2rdr]=1
+#     [fullBurst_resample]=1
+#     [extract_stack_valid_region]=1
+#     [merge_reference_secondary_slc]=1
+#     [generate_burst_igram]=1
+#     [merge_burst_igram]=1
+#     [filter_coherence]=1
+#     [unwrap]=1
 
-    [crop]=1
+#     [smallbaseline_wrapper]=1
+#     [insarmaps]=1
 
-    [minopy_crop]=1
-    [minopy_inversion]=1
-    [minopy_ifgrams]=1
-    [minopy_unwrap]=1
-    [minopy_un-wrap]=1
-    [minopy_mintpy_corrections]=1
+#     [minopy_crop]=1
+#     [minopy_inversion]=1
+#     [minopy_ifgrams]=1
+#     [minopy_unwrap]=1
+#     [minopy_un-wrap]=1
+#     [minopy_mintpy_corrections]=1
+
     
-)
+# )
 
 ##### For proper logging to both file and stdout #####
 num_logfiles=$(ls $WORKDIR/submit_jobs.*.log | wc -l)
@@ -248,12 +229,14 @@ for g in "${globlist[@]}"; do
 
     jobnumbers=()
     file_pattern=$(echo "${files[0]}" | grep -oP "(.*)(?=_\d{1,}.job)|insarmaps|smallbaseline_wrapper")
-    step_name=$(echo $file_pattern | grep -oP "(?<=run_\d{2}_)(.*)|insarmaps|smallbaseline_wrapper")
+    #step_name=$(echo $file_pattern | grep -oP "(?<=run_\d{2}_)(.*)|insarmaps|smallbaseline_wrapper")
     
-    step_io_load=$(cat $defaults_file | grep $step_name | awk '{print $7}')
-    step_max_tasks=$(echo "$SJOBS_STEP_MAX_TASKS/$step_io_load" | bc | awk '{print int($1)}')
+    #step_io_load=$(cat $defaults_file | grep $step_name | awk '{print $7}')
+    #step_max_tasks=$(echo "$SJOBS_STEP_MAX_TASKS/$step_io_load" | bc | awk '{print int($1)}')
 
-    sbc_command="sbatch_conditional.bash $file_pattern --step_name $step_name --step_max_tasks $step_max_tasks --total_max_tasks $SJOBS_TOTAL_MAX_TASKS"
+    #sbc_command="sbatch_conditional.bash $file_pattern --step_name $step_name --step_max_tasks $step_max_tasks --total_max_tasks $SJOBS_TOTAL_MAX_TASKS"
+
+    sbc_command="sbatch_conditional.bash $file_pattern"
 
     if $randomorder; then
         sbc_command="$sbc_command --random"
@@ -305,7 +288,7 @@ for g in "${globlist[@]}"; do
                 num_pending=$(($num_pending+1))
             elif [[ $state == *"TIMEOUT"* || $state == *"NODE_FAIL"* ]]; then
                 num_timeout=$(($num_timeout+1))
-                step_max_tasks=$(echo "$SJOBS_STEP_MAX_TASKS/${step_io_load_list[$step_name]}" | bc | awk '{print int($1)}')
+                #step_max_tasks=$(echo "$SJOBS_STEP_MAX_TASKS/${step_io_load_list[$step_name]}" | bc | awk '{print int($1)}')
         
                 if [[ $state == *"TIMEOUT"* ]]; then
                     init_walltime=$(grep -oP '(?<=#SBATCH -t )[0-9]+:[0-9]+:[0-9]+' $file)
@@ -324,8 +307,8 @@ for g in "${globlist[@]}"; do
                 files=($(remove_from_list $file "${files[@]}"))
 
                 # Resubmit as a new job number
-                jobnumber=$(sbatch_conditional.bash $file_pattern --step_name $step_name --step_max_tasks $step_max_tasks --total_max_tasks $SJOBS_TOTAL_MAX_TASKS 2> /dev/null) 
-
+                #jobnumber=$(sbatch_conditional.bash $file_pattern --step_name $step_name --step_max_tasks $step_max_tasks --total_max_tasks $SJOBS_TOTAL_MAX_TASKS 2> /dev/null) 
+                jobnumber=$(sbatch_conditional.bash $file_pattern 2> /dev/null)
                 exit_status="$?"
                 if [[ $exit_status -eq 0 ]]; then
                     jobnumbers+=("$jobnumber")
