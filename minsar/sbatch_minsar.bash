@@ -107,16 +107,16 @@ echot "Step: $step_name"
 
 defaults_file="${RSMASINSAR_HOME}/minsar/defaults/job_defaults.cfg"
 
-step_io_load=$(cat $defaults_file | grep $step_name | awk '{print $7}')
+step_io_load=$(cat $defaults_file | grep $step_name | awk '{print $8}')
 
 # Get queue to submit to and identify job submission limits for that queue
 QUEUENAME=$(grep "#SBATCH -p" $f | awk -F'[ ]' '{print $3}')
 queues_file="${RSMASINSAR_HOME}/minsar/defaults/queues.cfg"
 
-if [ -z "$MAX_JOBS_PER_QUEUE" ]; then
-    MAX_JOBS_PER_QUEUE=$(cat $queues_file | grep $QUEUENAME | awk '{print $7}')
+if [ -z "$SJOBS_MAX_JOBS_PER_QUEUE" ]; then
+    SJOBS_MAX_JOBS_PER_QUEUE=$(cat $queues_file | grep $QUEUENAME | awk '{print $7}')
 else
-    MAX_JOBS_PER_QUEUE="${MAX_JOBS_PER_QUEUE}"
+    SJOBS_MAX_JOBS_PER_QUEUE="${SJOBS_MAX_JOBS_PER_QUEUE}"
 fi
 
 if [ -z "$SJOBS_STEP_MAX_TASKS" ]; then
@@ -165,9 +165,9 @@ flock -u 200
 sbatch_message=$(sbatch --test-only -Q $f)
 echot -e "${sbatch_message[@]:1}"
 
-if [[ $new_active_jobs   -le $MAX_JOBS_PER_QUEUE       ]]; then job_count="OK";        else job_count="FAILED";        fi
-if [[ $new_tasks_step    -le $SJOBS_STEP_MAX_TASKS     ]]; then steptask_count="OK";   else steptask_count="FAILED";   fi
-if [[ $new_tasks_total   -le $SJOBS_TOTAL_MAX_TASKS    ]]; then task_count="OK";       else task_count="FAILED";       fi
+if [[ $new_active_jobs   -le $SJOBS_MAX_JOBS_PER_QUEUE  ]]; then job_count="OK";        else job_count="FAILED";        fi
+if [[ $new_tasks_step    -le $SJOBS_STEP_MAX_TASKS      ]]; then steptask_count="OK";   else steptask_count="FAILED";   fi
+if [[ $new_tasks_total   -le $SJOBS_TOTAL_MAX_TASKS     ]]; then task_count="OK";       else task_count="FAILED";       fi
 
 if  [[ $job_count == "OK" ]] && [[ $steptask_count == "OK" ]] && [[ $task_count == "OK" ]]; then 
     resource_check="OK" 
@@ -178,7 +178,7 @@ fi
 echot -e "\n"
 echot -e "--> Verifying job request is within custom resource limits...$resource_check"
 echot -e "\t--> $num_tasks_job additional tasks."
-echot -e "\t[*] Job count \t\t($num_active_jobs/$MAX_JOBS_PER_QUEUE) --> ($new_active_jobs/$MAX_JOBS_PER_QUEUE)...$job_count"
+echot -e "\t[*] Job count \t\t($num_active_jobs/$SJOBS_MAX_JOBS_PER_QUEUE) --> ($new_active_jobs/$SJOBS_MAX_JOBS_PER_QUEUE)...$job_count"
 echot -e "\t[*] Step task count \t($num_active_tasks_step/$SJOBS_STEP_MAX_TASKS) --> ($new_tasks_step/$SJOBS_STEP_MAX_TASKS)...$steptask_count"
 echot -e "\t[*] Total task count \t($num_active_tasks_total/$SJOBS_TOTAL_MAX_TASKS) --> ($new_tasks_total/$SJOBS_TOTAL_MAX_TASKS)...$task_count"
 echot -e "\n"
