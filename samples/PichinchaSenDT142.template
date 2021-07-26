@@ -12,6 +12,14 @@ topsStack.azimuthLooks                = 5
 topsStack.rangeLooks                  = 15
 topsStack.coregistration              = geometry
 #
+# Mintpy options
+mintpy.compute.cluster     = local  # if dask is not available, set this option to no 
+mintpy.compute.numWorker   = 8 
+mintpy.subset.lalo = -0.199:-0.142,-78.612:-78.578    #[31.5:32.5,130.5:131.0 / no], auto for no
+mintpy.reference.lalo      =  -0.1784, -78.597
+mintpy.troposphericDelay.method = no
+mintpy.load.autoPath       = yes
+mintpy.save.hdfEos5        = yes                                               # [yes / update / no], auto for no, save timeseries to UNAVCO 
 
 # MiNoPy options 
 minopy.load.processor      = isce  
@@ -26,10 +34,4 @@ minopy.inversion.shp_test                  = ks
 minopy.inversion.plmethod                  = sequential_EMI   
 
 minopy.interferograms.type               = single_reference
-
-## Mintpy options
-mintpy.compute.cluster     = local  # if dask is not available, set this option to no 
-mintpy.compute.numWorker   = 8 
-mintpy.reference.yx      = 314, 388
-mintpy.troposphericDelay.method = no
 
