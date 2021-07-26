@@ -961,7 +961,7 @@ class JOB_SUBMIT:
             """)
 
         # run_11_unwrap
-        if 'unwrap' in job_file_name and not batch_file is None:
+        if 'unwrap' in job_file_name and not batch_file is None and not 'minopy' in job_file_name:
             job_file_lines.append("""
 
             # reference
