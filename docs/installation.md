@@ -48,9 +48,10 @@ chmod 755 $miniconda_version
 mkdir -p ../3rdparty
 ./$miniconda_version -b -p ../3rdparty/miniconda3
 ../3rdparty/miniconda3/bin/conda config --add channels conda-forge
-../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MintPy/docs/conda.txt
+../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MintPy/docs/requirements.txt
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/insarlab/PySolid.git
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
+../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MiNoPy/docs/conda.txt
 ../3rdparty/miniconda3/bin/conda install isce2 -c conda-forge --yes
 ../3rdparty/miniconda3/bin/conda install --yes --file ../docs/conda.txt
 ```
