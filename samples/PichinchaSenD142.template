@@ -1,0 +1,35 @@
+#######################################################
+processor                             = isce
+cleanopt                              = 0
+ssaraopt.platform                     = SENTINEL-1A,SENTINEL-1B
+ssaraopt.startDate                    = 20160417
+ssaraopt.endDate                      = 20180101
+ssaraopt.relativeOrbit                = 142
+topsStack.boundingBox                 = -0.3 0.1 -78.7 -78.4
+topsStack.subswath                    = 3
+topsStack.numConnections              = 3
+topsStack.azimuthLooks                = 5
+topsStack.rangeLooks                  = 15
+topsStack.coregistration              = geometry
+#
+
+# MiNoPy options 
+minopy.load.processor      = isce  
+minopy.load.autoPath       = yes
+minopy.compute.num_workers  = 8
+minopy.subset.lalo = -0.199:-0.142,-78.612:-78.578    #[31.5:32.5,130.5:131.0 / no], auto for no
+
+minopy.inversion.patch_size                = 200       
+minopy.inversion.range_window              = 11        
+minopy.inversion.azimuth_window            = 5        
+minopy.inversion.shp_test                  = ks        
+minopy.inversion.plmethod                  = sequential_EMI   
+
+minopy.interferograms.type               = single_reference
+
+## Mintpy options
+mintpy.compute.cluster     = local  # if dask is not available, set this option to no 
+mintpy.compute.numWorker   = 8 
+mintpy.reference.yx      = 314, 388
+mintpy.troposphericDelay.method = no
+
