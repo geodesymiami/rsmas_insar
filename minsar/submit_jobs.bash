@@ -1,4 +1,4 @@
-##! /bin/bash
+##!/bin/bash
 
 function abbreviate {
     abb=$1
@@ -8,93 +8,51 @@ function abbreviate {
     echo $abb
 }
 
-function remove_from_list {
-    var=$1
-    shift
-    list=("$@")
-    new_list=() # Not strictly necessary, but added for clarity
-    
-    #echo "VAR: $var"
-    for item in ${list[@]}
-    do
-        #echo "$item"
-        if [ "$item" != "$var" ]
-        then
-            new_list+=("$item")
-        fi
-    done
-    list=("${new_list[@]}")
-    unset new_list
-    echo "${list[@]}"
-}
-
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-helptext="                                                                         \n\
-Job submission script
-usage: submit_jobs.bash custom_template_file [--start] [--stop] [--dostep] [--help]\n\
-                                                                                   \n\
-  Examples:                                                                        \n\
-      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template              \n\
-      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --start 2    \n\
-      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep 4   \n\
-      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --stop 8     \n\
-      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --start timeseries \n\
-      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep insarmaps \n\
-      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep minopy    \n\
-      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --minopy    \n\
-      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --append    \n\
-                                                                                   \n\
- Processing steps (start/end/dostep): \n\
-                                                                                 \n\
-   ['1-16', 'timeseries', 'minopy', 'insarmaps' ]                                          \n\
-                                                                                 \n\
-   In order to use either --start or --dostep, it is necessary that a            \n\
-   previous run was done using one of the steps options to process at least      \n\
-   through the step immediately preceding the starting step of the current run.  \n\
-                                                                                 \n\
-   --start STEP          start processing at the named step [default: load_data].\n\
-   --end STEP, --stop STEP                                                       \n\
-                         end processing at the named step [default: upload]      \n\
-   --dostep STEP         run processing at the named step only                   \n 
-     "
-    printf "$helptext"
+    helptext="
+    Conditional batch job submission wrapper. Attempts to submit a batch of job files using sbatch_conditional.bash
+    and waits for succesful submission of each job file prior to exiting.
+
+    usage: sbatch_conditional.bash job_file_pattern [--max_time] [--random] [--rapid] [--help]                                                            
+        
+    job_file_pattern        A file pattern describing the set of job files names to be submitted.
+                            Can also be a single file name.
+    --max_time              The maximum amount of time to attempt to submit a job before exiting.
+                            Default value is 604800 seconds (7 days).
+    --random                Flag to induce random job submission order. If not provided, jobs are submitted
+                            in alphanumeric order.
+    --rapid                 Attempts to resubmit a failed job after 60 seconds (1 minute) rather then the
+                            default 300 seconds (5 minutes). Useful for rapid testing and debugging on small
+                            datasets.
+
+    Examples:                                                                                              
+        sbatch_conditional.bash run_01
+        sbatch_conditional.bash run_01 --rapid
+        sbatch_conditional.bash run_01 --max_time 86400
+        sbatch_conditional.bash run_01 --random --rapid
+"
+    echo -e "$helptext"
     exit 0;
-else
-    PROJECT_NAME=$(basename "$1" | cut -d. -f1)
-    PROJECT_NAME=$(basename "$1" | awk -F ".template" '{print $1}')
 fi
-WORKDIR=$SCRATCHDIR/$PROJECT_NAME
-cd $WORKDIR
 
+if [[ $1 == *".job"* ]]; then
+    file_pattern=$1
+else
+    file_pattern="$1*.job"
+fi
+
+step_name=$file_pattern
+max_time=604800
 randomorder=false
-rapid=false
-append=false
-wait_time=30
-
-startstep=1
-stopstep="insarmaps"
-
-start_datetime=$(date +"%Y%m%d:%H-%m")
-echo "${start_datetime} * submit_jobs.bash ${WORKDIR} ${@:2}" >> "${WORKDIR}"/log
+wait_time=300
 
 while [[ $# -gt 0 ]]
 do
     key="$1"
 
     case $key in
-        --start)
-            startstep="$2"
-            shift # past argument
-            shift # past value
-            ;;
-        --stop)
-            stopstep="$2"
-            shift
-            shift
-            ;;
-        --dostep)
-            startstep="$2"
-            stopstep="$2"
+        --max_time)
+            max_time="$2"
             shift
             shift
             ;;
@@ -103,16 +61,7 @@ do
             shift
             ;;
         --rapid)
-            rapid=true
-            wait_time=10
-            shift
-            ;;
-        --append)
-            append=true
-            shift
-            ;;
-        --minopy)
-            minopy_flag=true
+            wait_time=60
             shift
             ;;
         *)
@@ -123,227 +72,87 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-if [[ $startstep == "minopy" ]]; then
-   minopy_flag=true
+printf "%0.s-" {1..153} >&2
+printf "\n" >&2
+#printf "| %-20s | %-11s | %-17s | %-18s | %-19s | %-11s | %-35s | %s \n" "File Name" "Extra Tasks" "Step Active Tasks" "Total Active Tasks" "Step Processed Jobs" "Active Jobs"  "Message" >&2
+printf "| %-20s | %-5s | %-9s | %-9s | %-9s | %-7s | %-70s | %s \n" "" "" "Step" "Total" "Step" ""  "" >&2
+printf "| %-20s | %-5s | %-9s | %-9s | %-9s | %-7s | %-70s | %s \n" "" "Extra" "active" "active" "processed" "Active"  "" >&2
+printf "| %-20s | %-5s | %-9s | %-9s | %-9s | %-7s | %-70s | %s \n" "File Name" "tasks" "tasks" "tasks" "jobs" "jobs"  "Message" >&2
+printf "%0.s-" {1..153} >&2
+printf "\n" >&2
+
+jns=()
+files=( $(ls -1v $file_pattern) )
+if $randomorder; then
+    files=( $(echo "${files[@]}" | sed -r 's/(.[^;]*;)/ \1 /g' | tr " " "\n" | shuf | tr -d " " ) )
 fi
+i=1
 
-# IO load for each step. For step_io_load=1 the maximum tasks allowed is step_max_tasks_unit
-# for step_io_load=2 the maximum tasks allowed is step_max_tasks_unit/2
+for ((j=0; j < "${#files[@]}"; j++)); do
+    job_file=${files[$j]}
+    time_elapsed=0
+    while [[ $time_elapsed -lt $max_time ]]; do
 
-# declare -A  step_io_load_list
-# step_io_load_list=(
-#     [unpack_topo_reference]=1
-#     [unpack_secondary_slc]=1
-#     [average_baseline]=1
-#     [extract_burst_overlaps]=1
-#     [overlap_geo2rdr]=1
-#     [overlap_resample]=1
-#     [pairs_misreg]=1
-#     [timeseries_misreg]=1
-#     [fullBurst_geo2rdr]=1
-#     [fullBurst_resample]=1
-#     [extract_stack_valid_region]=1
-#     [merge_reference_secondary_slc]=1
-#     [generate_burst_igram]=1
-#     [merge_burst_igram]=1
-#     [filter_coherence]=1
-#     [unwrap]=1
+        fname=$(basename $job_file)
 
-#     [smallbaseline_wrapper]=1
-#     [insarmaps]=1
+        # Abbreivates the file name to 20 characters long. 
+        # First 10 characters, followed by '...', followed by final 7 characters.
+        abb_fname=$(abbreviate $fname 20 10 7)
 
-#     [minopy_crop]=1
-#     [minopy_inversion]=1
-#     [minopy_ifgrams]=1
-#     [minopy_unwrap]=1
-#     [minopy_un-wrap]=1
-#     [minopy_mintpy_corrections]=1
+        # Submit job using sbatch_conditional.bash, performing all necesarry resource checks.
+        # Grep sbatch_conditional output for current resource statuses for logging.
+        sbatch_conditional=$(sbatch_conditional.bash $job_file)
+        sbatch_exit_status="$?"
 
-    
-# )
+        # Parse custom resource checks from sbatch_conditional output
+        num_tasks_job=$(echo $sbatch_conditional | grep -oP "(\d{1,})(?= additional tasks)")
+        resource_limits=$(echo $sbatch_conditional | grep -oP "(?<=\()(\d{1,}\/\d{1,})(?=\) -->)")
+        num_jobs=$(echo $resource_limits | awk '{print $1}')
+        num_step_tasks=$(echo $resource_limits | awk '{print $2}')
+        num_total_tasks=$(echo $resource_limits | awk '{print $3}')
 
-##### For proper logging to both file and stdout #####
-num_logfiles=$(ls $WORKDIR/submit_jobs.*.log | wc -l)
-test -f $WORKDIR/submit_jobs.0.log  || touch submit_jobs.0.log
-if $append; then num_logfiles=$(($num_logfiles-1)); fi
-logfile_name="${WORKDIR}/submit_jobs.${num_logfiles}.log"
-#printf '' > $logfile_name
-tail -f $logfile_name & 
-trap "pkill -P $$" EXIT
-exec 1>>$logfile_name 2>>$logfile_name
-######################################################
+        # (?<=\()(\d{1,}\/\d{1,})(?=\) -->) regex matches all sets of two number seaparated by a '/'
+        # contained with parenetheses '()' prior to '-->'.
+        #
+        # Example:
+        # [*] Job count           (0/3) --> (1/3)...OK
+        # [*] Step task count     (0/400) --> (1/400)...OK
+        # [*] Total task count    (0/10) --> (1/10)...OK
+        #
+        # Matches 0/3, 0/400, and 0/10
 
-RUNFILES_DIR=$WORKDIR"/run_files"
 
-if [[ $minopy_flag == "true" ]]; then
-   RUNFILES_DIR=$WORKDIR"/minopy/run_files"
-fi
+        printf "| %-20s | %-5s | %-9s | %-9s | %-9s | %-7s | %s" "$abb_fname" "$num_tasks_job" "$num_step_tasks" "$num_total_tasks" "$i/${#files[@]}" "$num_jobs" >&2
 
-#find the last job (11 for 'geometry' and 16 for 'NESD') and remove leading zero
-job_file_arr=($RUNFILES_DIR/run_*_0.job)
-#job_file_arr=(run_files/run_*_0.job)
-last_job_file=${job_file_arr[-1]}
-last_job_file=$(basename -- "$last_job_file")
-last_job_file_number=${last_job_file:4:2}
-last_job_file_number=$(echo $last_job_file_number | sed 's/^0*//')
+        # If there was a problem submitting the job, grep sbatch_conditional output for failure reason and wait.
+        # If job submitted succesfully, grep sbatch_conditional output for job_number.
+        if [[ $sbatch_exit_status -ne 0 ]]; then
+            fail_reason=$(echo $sbatch_conditional | grep -oP "(?<= could not be submitted. )(.*)(?=\.)")
+            printf "%-70s |\n" "Not submitted. $fail_reason. Waiting $(($wait_time/60)) minutes." >&2
+            sleep $wait_time
+            time_elapsed=$((time_elapsed+$wait_time))
+        else
+            # Parse job number (7+ digit number) from sbatch_conditional output
+            job_number=$(echo $sbatch_conditional | grep -oP "\d{7,}(?= )")
+            printf "%-70s |\n" "Submitted: $job_number" >&2
 
-if [[ $startstep == "ifgrams" || $startstep == "minopy" ]]; then
-    startstep=1
-elif [[ $startstep == "timeseries" ]]; then
-    startstep=$((last_job_file_number+1))
-elif [[ $startstep == "insarmaps" ]]; then
-    startstep=$((last_job_file_number+2))
-fi
-
-if [[ $stopstep == "ifgrams" || $stopstep == "minopy" ]]; then
-    stopstep=$last_job_file_number
-elif [[ $stopstep == "timeseries" ]]; then
-    stopstep=$((last_job_file_number+1))
-elif [[ $stopstep == "insarmaps" ]]; then
-    stopstep=$((last_job_file_number+2))
-fi
-
-for (( i=$startstep; i<=$stopstep; i++ )) do
-    stepnum="$(printf "%02d" ${i})"
-    if [[ $i -le $last_job_file_number ]]; then
-        fname="$RUNFILES_DIR/run_${stepnum}_*.job"
-    elif [[ $i -eq $((last_job_file_number+1)) ]]; then
-        fname="$WORKDIR/smallbaseline_wrapper.job"
-    else
-        fname="$WORKDIR/insarmaps.job"
-    fi
-    globlist+=("$fname")
-done
-
-defaults_file="${RSMASINSAR_HOME}/minsar/defaults/job_defaults.cfg"
-
-echo "Started at: $(date +"%Y-%m-%d %H:%M:%S")"
-for g in "${globlist[@]}"; do
-    files=($(ls -1v $g ))
-    if $randomorder; then
-        files=( $(echo "${files[@]}" | sed -r 's/(.[^;]*;)/ \1 /g' | tr " " "\n" | shuf | tr -d " " ) )
-    fi
-
-    echo "Jobfiles to run:"
-    printf "%s\n" "${files[@]}"
-
-    jobnumbers=()
-    file_pattern=$(echo "${files[0]}" | grep -oP "(.*)(?=_\d{1,}.job)|insarmaps|smallbaseline_wrapper")
-    #step_name=$(echo $file_pattern | grep -oP "(?<=run_\d{2}_)(.*)|insarmaps|smallbaseline_wrapper")
-    
-    #step_io_load=$(cat $defaults_file | grep $step_name | awk '{print $7}')
-    #step_max_tasks=$(echo "$SJOBS_STEP_MAX_TASKS/$step_io_load" | bc | awk '{print int($1)}')
-
-    #sbc_command="sbatch_conditional.bash $file_pattern --step_name $step_name --step_max_tasks $step_max_tasks --total_max_tasks $SJOBS_TOTAL_MAX_TASKS"
-
-    sbc_command="sbatch_conditional.bash $file_pattern"
-
-    if $randomorder; then
-        sbc_command="$sbc_command --random"
-        echo "Jobs are being submitted in random order. Submission order is likely different from the order above."
-    fi
-    if $rapid; then
-        sbc_command="$sbc_command --rapid"
-        echo "Rapid job submission enabled."
-    fi
-    jns=$($sbc_command)
-
-    exit_status="$?"
-    if [[ $exit_status -eq 0 ]]; then
-        jobnumbers=($jns)
-    fi
-
-    unset IFS
-    echo "Jobs submitted: ${jobnumbers[@]}"
-    sleep 5
-
-    # Wait for each job to complete
-    num_jobs=${#jobnumbers[@]}
-    num_complete=0
-    num_running=0
-    num_pending=0
-    num_timeout=0
-    num_waiting=0
-
-    while [[ $num_complete -lt $num_jobs ]]; do
-        num_complete=0
-        num_running=0
-        num_pending=0
-        num_waiting=0
-        sleep $wait_time
-
-        for (( j=0; j < "${#jobnumbers[@]}"; j++)); do
-            file=${files[$j]}
-            file_pattern="${file%.*}"
-            step_name=$(echo $file_pattern | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,})|insarmaps|smallbaseline_wrapper")
-            step_name_long=$(echo $file_pattern | grep -oP "(?<=run_files\/)(.*)(?=_\d{1,})|insarmaps|smallbaseline_wrapper")
-            jobnumber=${jobnumbers[$j]}
-            state=$(sacct --format="State" -j $jobnumber | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | head -3 | tail -1 )
-
-            if [[ $state == *"COMPLETED"* ]]; then
-                num_complete=$(($num_complete+1))
-            elif [[ $state == *"RUNNING"* ]]; then
-                num_running=$(($num_running+1))
-            elif [[ $state == *"PENDING"* ]]; then
-                num_pending=$(($num_pending+1))
-            elif [[ $state == *"TIMEOUT"* || $state == *"NODE_FAIL"* ]]; then
-                num_timeout=$(($num_timeout+1))
-                #step_max_tasks=$(echo "$SJOBS_STEP_MAX_TASKS/${step_io_load_list[$step_name]}" | bc | awk '{print int($1)}')
-        
-                if [[ $state == *"TIMEOUT"* ]]; then
-                    init_walltime=$(grep -oP '(?<=#SBATCH -t )[0-9]+:[0-9]+:[0-9]+' $file)
-                    echo "${file} timedout with walltime of ${init_walltime}."
-                                    
-                    # Compute a new walltime and update the job file
-                    update_walltime.py "$file" &> /dev/null
-                    updated_walltime=$(grep -oP '(?<=#SBATCH -t )[0-9]+:[0-9]+:[0-9]+' $file)
-
-                    datetime=$(date +"%Y-%m-%d:%H-%M")
-                    echo "${datetime}: re-running: ${file}: ${init_walltime} --> ${updated_walltime}" >> "${RUNFILES_DIR}"/rerun.log
-                    echo "Resubmitting file (${file}) with new walltime of ${updated_walltime}"
-                fi
-
-                jobnumbers=($(remove_from_list $jobnumber "${jobnumbers[@]}"))
-                files=($(remove_from_list $file "${files[@]}"))
-
-                # Resubmit as a new job number
-                #jobnumber=$(sbatch_conditional.bash $file_pattern --step_name $step_name --step_max_tasks $step_max_tasks --total_max_tasks $SJOBS_TOTAL_MAX_TASKS 2> /dev/null) 
-                jobnumber=$(sbatch_conditional.bash $file_pattern 2> /dev/null)
-                exit_status="$?"
-                if [[ $exit_status -eq 0 ]]; then
-                    jobnumbers+=("$jobnumber")
-                    files+=("$file")
-                    j=$(($j-1))
-                    echo "Resubmitted as jobumber: ${jobnumber}."
-                else
-                    echo "Error on resubmit for $jobnumber. Exiting."
-                    exit 1
-                fi
-            elif [[ ( $state == *"FAILED"* || $state ==  *"CANCELLED"* ) ]]; then
-                echo "Job failed. Exiting."
-                exit 1; 
-            else
-                echo "Strange job state: $state, encountered."
-                continue;
-            fi
-
-        done
-
-        num_waiting=$(($num_jobs-$num_complete-$num_running-$num_pending))
-
-        printf "%s, %s, %-7s: %-12s, %-10s, %-10s, %-12s.\n" "$PROJECT_NAME" "$step_name_long" "$num_jobs jobs" "$num_complete COMPLETED" "$num_running RUNNING" "$num_pending PENDING" "$num_waiting WAITING"
+            # Add job nunmber to running list of succesfully submitted job numbers
+            jns+=($job_number)
+            break;
+        fi
     done
 
-
-    # Run check_job_output.py on all files
-    cmd="check_job_outputs.py  ${files[@]}"
-    echo "$cmd"
-    $cmd
-       exit_status="$?"
-       if [[ $exit_status -ne 0 ]]; then
-            echo "Error in submit_jobs.bash: check_job_outputs.py exited with code ($exit_status)."
-            exit 1
-       fi
-    echo
+    i=$(($i+1))
+    
 done
+
+printf "%0.s-" {1..153} >&2
+printf "\n" >&2
+
+if [[ $time_elapsed -ge $max_time ]]; then
+    exit 1
+else
+    echo "${jns[@]}"
+    exit 0
+fi
 
