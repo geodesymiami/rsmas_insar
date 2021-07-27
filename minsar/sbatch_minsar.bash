@@ -162,23 +162,24 @@ step_io_load=$(grep ^$step_name $defaults_file | awk '{print $8}')
 # Get queue that job_file is being submitted to from job_file definition
 QUEUENAME=$(grep "#SBATCH -p" $job_file | awk -F'[ ]' '{print $3}')
 queues_file="${RSMASINSAR_HOME}/minsar/defaults/queues.cfg"
+queue_info=$(grep "^[^#;]" $queues_file | grep $PLATFORM_NAME | grep $QUEUENAME)
 
 # Parse custom resource allocation limits from queues.cfg
 # If environment variable already exists, use that instead.
 if [ -z "$SJOBS_MAX_JOBS_PER_QUEUE" ]; then
-    SJOBS_MAX_JOBS_PER_QUEUE=$(grep $QUEUENAME $queues_file | awk '{print $7}')
+    SJOBS_MAX_JOBS_PER_QUEUE=$(echo $queue_info | awk '{print $7}')
 else
     SJOBS_MAX_JOBS_PER_QUEUE="${SJOBS_MAX_JOBS_PER_QUEUE}"
 fi
 
 if [ -z "$SJOBS_STEP_MAX_TASKS" ]; then
-    SJOBS_STEP_MAX_TASKS=$(grep $QUEUENAME $queues_file | awk '{print $9}')
+    SJOBS_STEP_MAX_TASKS=$(echo $queue_info | awk '{print $9}')
 else
     SJOBS_STEP_MAX_TASKS="${SJOBS_STEP_MAX_TASKS}"
 fi
 
 if [ -z "$SJOBS_TOTAL_MAX_TASKS" ]; then
-    SJOBS_TOTAL_MAX_TASKS=$(grep $QUEUENAME $queues_file | awk '{print $10}')
+    SJOBS_TOTAL_MAX_TASKS=$(echo $queue_info | awk '{print $10}')
 else
     SJOBS_TOTAL_MAX_TASKS="${SJOBS_TOTAL_MAX_TASKS}"
 fi
