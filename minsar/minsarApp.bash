@@ -479,6 +479,7 @@ if [[ $ifgrams_flag == "1" ]]; then
        echo "run_workflow.bash --dostep ifgrams  exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
+    
 fi
 
 if [[ $timeseries_flag == "1" ]]; then
@@ -490,6 +491,9 @@ if [[ $timeseries_flag == "1" ]]; then
        echo "run_workflow.bash --start timeseries exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
+    # correct *xm and *vrt files
+    sed -i "s|/tmp|$PWD|g" */*.xml */*/*.xml  */*/*/*.xml 
+    sed -i "s|/tmp|$PWD|g" */*.vrt */*/*.vrt  */*/*/*.vrt 
 fi
 
 if [[ $upload_flag == "1" ]]; then
