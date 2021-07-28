@@ -31,18 +31,18 @@ function remove_from_list {
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 helptext="                                                                         \n\
 Job submission script
-usage: submit_jobs.bash custom_template_file [--start] [--stop] [--dostep] [--help]\n\
+usage: run_workflow.bash custom_template_file [--start] [--stop] [--dostep] [--help]\n\
                                                                                    \n\
   Examples:                                                                        \n\
-      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template              \n\
-      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --start 2    \n\
-      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep 4   \n\
-      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --stop 8     \n\
-      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --start timeseries \n\
-      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep insarmaps \n\
-      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep minopy    \n\
-      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --minopy    \n\
-      submit_jobs.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --append    \n\
+      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template              \n\
+      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --start 2    \n\
+      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep 4   \n\
+      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --stop 8     \n\
+      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --start timeseries \n\
+      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep insarmaps \n\
+      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep minopy    \n\
+      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --minopy    \n\
+      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --append    \n\
                                                                                    \n\
  Processing steps (start/end/dostep): \n\
                                                                                  \n\
@@ -75,7 +75,7 @@ startstep=1
 stopstep="insarmaps"
 
 start_datetime=$(date +"%Y%m%d:%H-%m")
-echo "${start_datetime} * submit_jobs.bash ${WORKDIR} ${@:2}" >> "${WORKDIR}"/log
+echo "${start_datetime} * run_workflow.bash ${WORKDIR} ${@:2}" >> "${WORKDIR}"/log
 
 while [[ $# -gt 0 ]]
 do
@@ -163,7 +163,7 @@ fi
 # )
 
 ##### For proper logging to both file and stdout #####
-num_logfiles=$(ls $WORKDIR/submit_jobs.*.log | wc -l)
+num_logfiles=$(ls $WORKDIR/workflow.*.log | wc -l)
 test -f $WORKDIR/submit_jobs.0.log  || touch submit_jobs.0.log
 if $append; then num_logfiles=$(($num_logfiles-1)); fi
 logfile_name="${WORKDIR}/submit_jobs.${num_logfiles}.log"
@@ -341,7 +341,7 @@ for g in "${globlist[@]}"; do
     $cmd
        exit_status="$?"
        if [[ $exit_status -ne 0 ]]; then
-            echo "Error in submit_jobs.bash: check_job_outputs.py exited with code ($exit_status)."
+            echo "Error in run_workflow.bash: check_job_outputs.py exited with code ($exit_status)."
             exit 1
        fi
     echo
