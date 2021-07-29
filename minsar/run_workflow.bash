@@ -38,7 +38,7 @@ usage: run_workflow.bash custom_template_file [--start] [--stop] [--dostep] [--h
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --start 2    \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep 4   \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --stop 8     \n\
-      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --start timeseries \n\
+      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --start mintpy \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep insarmaps \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep minopy    \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --minopy    \n\
@@ -46,7 +46,7 @@ usage: run_workflow.bash custom_template_file [--start] [--stop] [--dostep] [--h
                                                                                    \n\
  Processing steps (start/end/dostep): \n\
                                                                                  \n\
-   ['1-16', 'timeseries', 'minopy', 'insarmaps' ]                                          \n\
+   ['1-16', 'mintpy', 'minopy', 'insarmaps' ]                                          \n\
                                                                                  \n\
    In order to use either --start or --dostep, it is necessary that a            \n\
    previous run was done using one of the steps options to process at least      \n\
@@ -164,9 +164,9 @@ fi
 
 ##### For proper logging to both file and stdout #####
 num_logfiles=$(ls $WORKDIR/workflow.*.log | wc -l)
-test -f $WORKDIR/submit_jobs.0.log  || touch submit_jobs.0.log
+test -f $WORKDIR/workflow.0.log  || touch submit_jobs.0.log
 if $append; then num_logfiles=$(($num_logfiles-1)); fi
-logfile_name="${WORKDIR}/submit_jobs.${num_logfiles}.log"
+logfile_name="${WORKDIR}/workflow.${num_logfiles}.log"
 #printf '' > $logfile_name
 tail -f $logfile_name & 
 trap "pkill -P $$" EXIT
@@ -189,7 +189,7 @@ last_job_file_number=$(echo $last_job_file_number | sed 's/^0*//')
 
 if [[ $startstep == "ifgrams" || $startstep == "minopy" ]]; then
     startstep=1
-elif [[ $startstep == "timeseries" ]]; then
+elif [[ $startstep == "mintpy" ]]; then
     startstep=$((last_job_file_number+1))
 elif [[ $startstep == "insarmaps" ]]; then
     startstep=$((last_job_file_number+2))
@@ -197,7 +197,7 @@ fi
 
 if [[ $stopstep == "ifgrams" || $stopstep == "minopy" ]]; then
     stopstep=$last_job_file_number
-elif [[ $stopstep == "timeseries" ]]; then
+elif [[ $stopstep == "mintpy" ]]; then
     stopstep=$((last_job_file_number+1))
 elif [[ $stopstep == "insarmaps" ]]; then
     stopstep=$((last_job_file_number+2))

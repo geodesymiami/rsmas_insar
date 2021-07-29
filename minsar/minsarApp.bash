@@ -13,16 +13,20 @@ helptext="                                                                      
   Processing steps (start/end/dostep): \n\
    Command line options for steps processing with names are chosen from the following list: \n\
                                                                                  \n\
-   ['download', 'dem', 'jobfiles', 'ifgrams', 'timeseries', 'insarmaps', 'upload']             \n\
+   ['download', 'dem', 'jobfiles', 'ifgrams', 'mintpy', 'minopy', 'insarmaps', 'upload']             \n\
                                                                                  \n\
    In order to use either --start or --dostep, it is necessary that a            \n\
    previous run was done using one of the steps options to process at least      \n\
    through the step immediately preceding the starting step of the current run.  \n\
                                                                                  \n\
-   --start STEP          start processing at the named step [default: load_data].\n\
+   --start STEP     start processing at the named step [default: download].      \n\
    --end STEP, --stop STEP                                                       \n\
-                         end processing at the named step [default: upload]      \n\
-   --dostep STEP         run processing at the named step only                   \n 
+                    end processing at the named step [default: upload]           \n\
+   --dostep STEP    run processing at the named step only                        \n\
+                                                                                 \n\
+   --mintpy         use smallbaselineApp.py for time series [default]            \n\
+   --minopy         use minopyApp.py                                             \n\
+   --mintpy --minopy    both                                                     \n
      "
     printf "$helptext"
     exit 0;
@@ -68,6 +72,14 @@ do
             shift
             shift
             ;;
+        --mintpy)
+            mintpy_flag=1
+            shift
+            ;;
+        --minopy)
+            minopy_flag=1
+            shift
+            ;;
 	--sleep)
             sleep_time="$2"
             shift
@@ -95,7 +107,20 @@ download_flag=1
 dem_flag=1
 jobfiles_flag=1
 ifgrams_flag=1
-timeseries_flag=1
+
+if [[ -v mintpy_flag ]]; then lock_mintpy_flag=1; fi
+mintpy_flag=1
+if [[ -v minopy_flag ]]; then  
+    minopy_flag=1;
+   if [[ -v lock_mintpy_flag ]]; then
+      mintpy_flag=1; 
+   else
+      mintpy_flag=0; 
+   fi
+else
+    minopy_flag=0;
+fi
+
 upload_flag=1
 insarmaps_flag=1
 finishup_flag=1
@@ -112,30 +137,40 @@ elif [[ $startstep == "ifgrams" ]]; then
     download_flag=0
     dem_flag=0
     jobfiles_flag=0
-elif [[ $startstep == "timeseries" ]]; then
+elif [[ $startstep == "mintpy" ]]; then
     download_flag=0
     dem_flag=0
     jobfiles_flag=0
     ifgrams_flag=0
+elif [[ $startstep == "minopy" ]]; then
+    download_flag=0
+    dem_flag=0
+    jobfiles_flag=0
+    ifgrams_flag=0
+    mintpy_flag=0
+    minopy_flag=1
 elif [[ $startstep == "upload" ]]; then
     download_flag=0
     dem_flag=0
     jobfiles_flag=0
     ifgrams_flag=0
-    timeseries_flag=0
+    mintpy_flag=0
+    minopy_flag=0
 elif [[ $startstep == "insarmaps" ]]; then
     download_flag=0
     dem_flag=0
     jobfiles_flag=0
     ifgrams_flag=0
-    timeseries_flag=0
+    mintpy_flag=0
+    minopy_flag=0
     upload_flag=0
 elif [[ $startstep == "finishup" ]]; then
     download_flag=0
     dem_flag=0
     jobfiles_flag=0
     ifgrams_flag=0
-    timeseries_flag=0
+    mintpy_flag=0
+    minopy_flag=0
     upload_flag=0
     insarmaps_flag=0
 elif [[ $startstep != "" ]]; then
@@ -147,29 +182,34 @@ if [[ $stopstep == "download" ]]; then
     dem_flag=0
     jobfiles_flag=0
     ifgrams_flag=0
-    timeseries_flag=0
+    mintpy_flag=0
+    minooy_flag=0
     upload_flag=0
     insarmaps_flag=0
     finishup_flag=0
 elif [[ $stopstep == "dem" ]]; then
     jobfiles_flag=0
     ifgrams_flag=0
-    timeseries_flag=0
+    mintpy_flag=0
+    minopy_flag=0
     upload_flag=0
     insarmaps_flag=0
     finishup_flag=0
 elif [[ $stopstep == "jobfiles" ]]; then
     ifgrams_flag=0
-    timeseries_flag=0
+    mintpy_flag=0
+    minopy_flag=0
     upload_flag=0
     insarmaps_flag=0
     finishup_flag=0
 elif [[ $stopstep == "ifgrams" ]]; then
-    timeseries_flag=0
+    mintpy_flag=0
+    minopy_flag=0
     upload_flag=0
     insarmaps_flag=0
     finishup_flag=0
-elif [[ $stopstep == "timeseries" ]]; then
+elif [[ $stopstep == "mintpy" ]]; then
+    minopy_flag=0
     upload_flag=0
     insarmaps_flag=0
     finishup_flag=0
@@ -183,6 +223,10 @@ elif [[ $stopstep != "" ]]; then
     exit 1
 fi
 
+echo "Step flags:"
+echo "download dem jobfiles ifgrams mintpy minopy upload insarmaps"
+echo "    $download_flag     $dem_flag      $jobfiles_flag      $ifgrams_flag        $mintpy_flag     $minopy_flag      $upload_flag       $insarmaps_flag"
+#exit
 ###################################
 # adjust insarmaps_flag based on $template_file
 str_insarmaps_flag=($(grep ^insarmaps $template_file | cut -d "=" -f 2 | xargs))
@@ -479,21 +523,40 @@ if [[ $ifgrams_flag == "1" ]]; then
        echo "run_workflow.bash --dostep ifgrams  exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
-    
+    # correct *xm and *vrt files
+    sed -i "s|/tmp|$PWD|g" */*.xml */*/*.xml  */*/*/*.xml 
+    sed -i "s|/tmp|$PWD|g" */*.vrt */*/*.vrt  */*/*/*.vrt 
 fi
 
-if [[ $timeseries_flag == "1" ]]; then
-    cmd="run_workflow.bash $PWD --append --dostep timeseries"
+if [[ $mintpy_flag == "1" ]]; then
+    cmd="run_workflow.bash $PWD --append --dostep mintpy"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
-       echo "run_workflow.bash --start timeseries exited with a non-zero exit code ($exit_status). Exiting."
+       echo "run_workflow.bash --start mintpy exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
-    # correct *xm and *vrt files
-    sed -i "s|/tmp|$PWD|g" */*.xml */*/*.xml  */*/*/*.xml 
-    sed -i "s|/tmp|$PWD|g" */*.vrt */*/*.vrt  */*/*/*.vrt 
+fi
+
+if [[ $minopy_flag == "1" ]]; then
+    cmd="minopyApp.py $template_file --dir minopy --jobfiles"
+    echo "Running.... $cmd"
+    $cmd
+    exit_status="$?"
+    if [[ $exit_status -ne 0 ]]; then
+       echo "$cmd exited with a non-zero exit code ($exit_status). Exiting."
+       exit 1;
+    fi
+
+    cmd="run_workflow.bash $template_file --append --dostep minopy"
+    echo "Running.... $cmd"
+    $cmd
+    exit_status="$?"
+    if [[ $exit_status -ne 0 ]]; then
+       echo "run_workflow.bash --start minopy exited with a non-zero exit code ($exit_status). Exiting."
+       exit 1;
+    fi
 fi
 
 if [[ $upload_flag == "1" ]]; then
