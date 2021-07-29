@@ -164,7 +164,7 @@ fi
 
 ##### For proper logging to both file and stdout #####
 num_logfiles=$(ls $WORKDIR/workflow.*.log | wc -l)
-test -f $WORKDIR/workflow.0.log  || touch submit_jobs.0.log
+test -f $WORKDIR/workflow.0.log  || touch workflow.0.log
 if $append; then num_logfiles=$(($num_logfiles-1)); fi
 logfile_name="${WORKDIR}/workflow.${num_logfiles}.log"
 #printf '' > $logfile_name
