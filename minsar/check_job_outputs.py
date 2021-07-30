@@ -98,11 +98,13 @@ def main(iargs=None):
                       print( 'WARNING: \"' + string + '\" found in ' + os.path.basename(file) + ': removing ' + date + ' from run_files ')
                       run_files_dir=project_dir + '/run_files'
                       putils.run_remove_date_from_run_files(run_files_dir=run_files_dir, date=date, start_run_file = 3 )
-                      with open(run_files_dir + '/removeddates.txt', 'a') as rd:
+                      with open(run_files_dir + '/removed_dates.txt', 'a') as rd:
                           rd.writelines('run_02: removing ' + date + ', \"' + string + '\" found in ' + os.path.basename(file) + ' \n')
                       # exit if too many removed dates
-                      num_lines = sum(1 for line in open(run_files_dir + '/removeddates.txt'))
+                      num_lines = sum(1 for line in open(run_files_dir + '/removed_dates.txt'))
                       if (num_lines >= 10):
+                         #shutil.copy(run_files_dir + '/removed_dates.txt', project_dir + '/out_run_02_removed_dates.txt')
+                         shutil.copy(run_files_dir + '/removed_dates.txt', project_dir + '/out_' + os.path.basename(job_name) + '.e')
                          raise RuntimeError('Too many bad data: ', num_lines)
 
 
@@ -117,7 +119,7 @@ def main(iargs=None):
                       putils.run_remove_date_from_run_files(run_files_dir=run_files_dir, date=date, start_run_file = 5 )
                       secondary_date_dir = project_dir + '/coreg_secondarys/' + date
                       shutil.rmtree(secondary_date_dir)
-                      with open(run_files_dir + '/removeddates.txt', 'a') as rd:
+                      with open(run_files_dir + '/removed_dates.txt', 'a') as rd:
                           rd.writelines('run_04: removing ' + date + ', \"' + string + '\" found in ' + os.path.basename(file) + ' \n')
                           rd.writelines('run_04: removing directory ' + secondary_date_dir + ' \n')
 
@@ -146,12 +148,14 @@ def main(iargs=None):
                       run_files_dir=project_dir + '/run_files'
                       print( 'WARNING: \"' + string + '\" found in ' + os.path.basename(file) + ': removing ' + date + ' from run_files ')
                       putils.run_remove_date_from_run_files(run_files_dir=run_files_dir, date=date, start_run_file = 7 )
-                      with open(run_files_dir + '/removeddates.txt', 'a') as rd:
+                      with open(run_files_dir + '/removed_dates.txt', 'a') as rd:
                           rd.writelines('run_06: removing ' + date + ', \"' + string + '\" found in ' + os.path.basename(file) + ' \n')
 
                  # exit if too many removed dates
-                 num_lines = sum(1 for line in open(run_files_dir + '/removeddates.txt'))
+                 num_lines = sum(1 for line in open(run_files_dir + '/removed_dates.txt'))
                  if (num_lines >= 10):
+                    #shutil.copy(run_files_dir + '/removed_dates.txt', project_dir + '/out_run_06_removed_dates.txt')
+                    shutil.copy(run_files_dir + '/removed_dates.txt', project_dir + '/out_' + os.path.basename(job_name) + '.e')
                     raise RuntimeError('Too many dates with missing bursts: ', num_lines)
 
        for file in error_files + out_files:
