@@ -8,6 +8,7 @@ helptext="                                                                      
       minsarApp.bash  $TE/GalapagosSenDT128.template --dostep dem                \n\
       minsarApp.bash  $TE/GalapagosSenDT128.template --start  ifgrams            \n\
       minsarApp.bash  $TE/GalapagosSenDT128.template --dostep upload             \n\
+      minsarApp.bash  $TE/GalapagosSenDT128.template --start jobfiles --mintpy --minopy\n\
       minsarApp.bash  $TE/GalapagosSenDT128.template                             \n\
                                                                                  \n\
   Processing steps (start/end/dostep): \n\
@@ -213,8 +214,12 @@ elif [[ $stopstep == "mintpy" ]]; then
     upload_flag=0
     insarmaps_flag=0
     finishup_flag=0
-elif [[ $stopstep == "upload" ]]; then
+elif [[ $stopstep == "minopy" ]]; then
     upload_flag=0
+    insarmaps_flag=0
+    finishup_flag=0
+elif [[ $stopstep == "upload" ]]; then
+    insarmaps_flag=0
     finishup_flag=0
 elif [[ $stopstep == "insarmaps" ]]; then
     finishup_flag=0
@@ -223,10 +228,9 @@ elif [[ $stopstep != "" ]]; then
     exit 1
 fi
 
-echo "Step flags:"
+echo "Flags for processing steps:"
 echo "download dem jobfiles ifgrams mintpy minopy upload insarmaps"
 echo "    $download_flag     $dem_flag      $jobfiles_flag      $ifgrams_flag        $mintpy_flag     $minopy_flag      $upload_flag       $insarmaps_flag"
-#exit
 ###################################
 # adjust insarmaps_flag based on $template_file
 str_insarmaps_flag=($(grep ^insarmaps $template_file | cut -d "=" -f 2 | xargs))
