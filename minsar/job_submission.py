@@ -577,7 +577,6 @@ class JOB_SUBMIT:
             self.copy_to_tmp_flag = config[step_name]['copy_to_tmp']
         else:
             self.copy_to_tmp_flag = config['default']['copy_to_tmp']
-        print("QQ:",self.copy_to_tmp_flag)
 
         return
 
