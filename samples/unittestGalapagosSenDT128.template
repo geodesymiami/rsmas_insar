@@ -5,7 +5,7 @@ ssaraopt.platform                 = SENTINEL-1A,SENTINEL-1B
 ssaraopt.relativeOrbit            = 128
 ssaraopt.startDate                = 20160601
 ssaraopt.endDate                  = 20160831
-insarmaps_flag                    = True
+insarmaps_flag                    = False
 image_products_flag               = False
 
 ######################################################
@@ -21,14 +21,24 @@ topsStack.unwMethod               = snaphu  # comment
 topsStack.coregistration          = auto  # [NESD geometry], auto for NESD
 topsStack.slcDir                  = $TESTDATA_ISCE/unittestGalapagosSenDT128/SLC
 
-mintpy.compute.cluster              = local #[local / slurm / pbs / lsf / none], auto for none, cluster type
-mintpy.compute.numWorker            = 6 #[int > 1 / all], auto for 4 (local) or 40 (non-local), num of workers
-mintpy.reference.lalo              = -0.7,-91.3     # N of SN
-mintpy.networkInversion.parallel   = yes  #[yes / no], auto for no, parallel processing using dask
-#mintpy.networkInversion.walltime   = 00:15 #[yes / no], auto for no, parallel processing using dask
-mintpy.troposphericDelay.method    = no    # pyaps  #[pyaps / height_correlation / base_trop_cor / no], auto for pyaps
-mintpy.save.hdfEos5                = yes   #[yes / update / no], auto for no, save timeseries to UNAVCO InSAR Archive format
-mintpy.save.hdfEos5.update         = yes   #[yes / no], auto for no, put XXXXXXXX as endDate in output filename
-mintpy.save.kmz                    = yes  #[yes / no], auto for yes, save geocoded velocity to Google Earth KMZ file
-mintpy.load.autoPath               = yes
 ######################################################
+
+mintpy.compute.cluster            = local #[local / slurm / pbs / lsf / none], auto for none, cluster type
+mintpy.compute.numWorker          = 6 #[int > 1 / all], auto for 4 (local) or 40 (non-local), num of workers
+mintpy.reference.lalo             = -0.82,-91.14     # S of SN
+mintpy.networkInversion.parallel  = yes  #[yes / no], auto for no, parallel processing using dask
+mintpy.troposphericDelay.method   = no    # pyaps  #[pyaps / height_correlation / base_trop_cor / no], auto for pyaps
+mintpy.save.hdfEos5               = yes   #[yes / update / no], auto for no, save timeseries to UNAVCO InSAR Archive format
+mintpy.save.hdfEos5.update        = yes   #[yes / no], auto for no, put XXXXXXXX as endDate in output filename
+mintpy.save.kmz                   = yes  #[yes / no], auto for yes, save geocoded velocity to Google Earth KMZ file
+mintpy.load.autoPath              = yes
+
+######################################################
+
+minopy.load.processor      = isce  
+minopy.load.autoPath       = yes
+minopy.compute.num_workers = 46
+minopy.subset.lalo         = -0.86:-0.81,-91.19:-91.13    #[31.5:32.5,130.5:131.0 / no], auto for no
+minopy.interferograms.type = sequential     # [single_reference, sequential, combine, list] default: single_reference
+
+
