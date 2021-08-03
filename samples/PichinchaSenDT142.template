@@ -24,14 +24,14 @@ mintpy.save.hdfEos5        = yes                                               #
 # MiNoPy options 
 minopy.load.processor      = isce  
 minopy.load.autoPath       = yes
-minopy.compute.num_workers  = 8
-minopy.subset.lalo = -0.199:-0.142,-78.612:-78.578    #[31.5:32.5,130.5:131.0 / no], auto for no
+minopy.compute.numWorkers  = 46
+minopy.subset.lalo         = -0.199:-0.142,-78.612:-78.578    #[31.5:32.5,130.5:131.0 / no], auto for no
 
-minopy.inversion.patch_size                = 200       
-minopy.inversion.range_window              = 11        
-minopy.inversion.azimuth_window            = 5        
-minopy.inversion.shp_test                  = ks        
-minopy.inversion.plmethod                  = sequential_EMI   
+minopy.inversion.patchSize                = 200       
+minopy.inversion.rangeWindow              = 11        
+minopy.inversion.azimuthWindow            = 5        
+minopy.inversion.shpTest                  = auto   # [ks, ad, ttest] auto for ks: kolmogorov-smirnov test
+minopy.inversion.phaseLinkingMethod       = auto   # [EVD, EMI, PTA, sequential_EVD, sequential_EMI, sequential_PTA], auto for sequential_EMI
 
-minopy.interferograms.type               = single_reference
+minopy.interferograms.type               = sequential     # [single_reference, sequential, combine, list] default: single_reference
 
