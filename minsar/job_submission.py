@@ -65,6 +65,8 @@ def create_argument_parser():
                        help="output directory for run files")
     group.add_argument('--numBursts', dest='num_bursts', type=int, metavar='number of bursts',
                             help='number of bursts to calculate walltime')
+    group.add_argument('--numData', dest='num_data', type=int, default=1, metavar='number of data',
+                       help='number of data (interferogram or slc) to calculate walltime')
     group.add_argument('--writeonly', dest='writeonly', action='store_true', help='Write job files without submitting')
     group.add_argument('--remora', dest='remora', action='store_true', help='use remora to get job information')
 
@@ -114,6 +116,7 @@ class JOB_SUBMIT:
         self.submission_scheme, self.platform_name, self.scheduler, self.queue_name, \
         self.number_of_cores_per_node, self.number_of_threads_per_core, self.max_jobs_per_workflow, \
         self.max_memory_per_node, self.wall_time_factor = set_job_queue_values(inps)
+        self.number_of_parallel_tasks_per_node = 1
 
         if not 'num_bursts' in inps or not inps.num_bursts:
             self.num_bursts = None
@@ -127,6 +130,8 @@ class JOB_SUBMIT:
             self.out_dir = '.'
         if not 'remora' in inps:
             self.remora = None
+
+        self.num_data = inps.num_data
 
         self.default_memory = None
         self.default_wall_time = None
@@ -183,12 +188,12 @@ class JOB_SUBMIT:
         :param email_notif: If email notifications should be on or not. Defaults to true.
         :return: True if running on a cluster
         """
+
         if batch_file is None:
             batch_file = self.file
 
         if not email_notif is None:
             self.email_notif = email_notif
-
 
         self.job_files = []
 
@@ -215,10 +220,11 @@ class JOB_SUBMIT:
 
             if not num_cores_per_task is None:
                 self.number_of_parallel_tasks_per_node = self.number_of_cores_per_node // num_cores_per_task
+                number_of_nodes += num_cores_per_task
 
             if 'singleTask' in self.submission_scheme:
 
-                self.write_batch_singletask_jobs(batch_file, distribute=distribute)
+                self.write_batch_singletask_jobs(batch_file, number_of_nodes, distribute=distribute)
 
             elif 'multiTask_multiNode' in self.submission_scheme: # or number_of_nodes == 1:
 
@@ -333,7 +339,7 @@ class JOB_SUBMIT:
 
         return
 
-    def write_batch_singletask_jobs(self, batch_file, distribute=None):
+    def write_batch_singletask_jobs(self, batch_file, number_of_nodes=1, distribute=None):
         """
         Iterates through jobs in input file and writes a job file for each job using the specified scheduler. This function
         is used for batch jobs in pegasus (LSF) to split the tasks into multiple jobs
@@ -345,7 +351,8 @@ class JOB_SUBMIT:
 
         for i, command_line in enumerate(job_list):
             job_file_name = os.path.abspath(batch_file).split(os.sep)[-1] + "_" + str(i)
-            self.write_single_job_file(job_file_name, job_file_name, command_line, work_dir=os.path.dirname(batch_file), distribute=distribute)
+            self.write_single_job_file(job_file_name, job_file_name, command_line, work_dir=os.path.dirname(batch_file),
+                                       number_of_nodes=number_of_nodes, distribute=distribute)
             job_file = os.path.dirname(batch_file) + '/' + job_file_name + '.job'
             #self.write_single_job_file(job_file_name, job_file_name, command_line, work_dir=self.out_dir)
 
@@ -553,20 +560,22 @@ class JOB_SUBMIT:
             if step_name in config:
                 c_walltime = config[step_name]['c_walltime']
                 s_walltime = config[step_name]['s_walltime']
+                extra_seconds = float(config[step_name]['extra_seconds']) * self.num_data
 
             else:
                 c_walltime = config['default']['c_walltime']
                 s_walltime = config['default']['s_walltime']
+                extra_seconds = float(config['default']['extra_seconds']) * self.num_dat
 
             self.default_wall_time = putils.scale_walltime(number_of_bursts, self.wall_time_factor,
-                                                           c_walltime, s_walltime, self.scheduler)
+                                                           c_walltime, s_walltime, extra_seconds, self.scheduler)
         else:
             #self.default_wall_time = self.wall_time
             c_walltime = self.wall_time
             s_walltime = '0'
 
         self.default_wall_time = putils.scale_walltime(number_of_bursts, self.wall_time_factor,
-                                                       c_walltime, s_walltime, self.scheduler)
+                                                       c_walltime, s_walltime, extra_seconds, self.scheduler)
 
         if step_name in config:
             self.default_num_threads = config[step_name]['num_threads']
@@ -651,7 +660,7 @@ class JOB_SUBMIT:
             job_file_lines.append(prefix + email_option.format(os.getenv("NOTIFICATIONEMAIL")))
 
         job_file_lines.extend([
-            prefix + process_option.format(number_of_nodes, number_of_tasks),
+            prefix + process_option.format(int(number_of_nodes), int(number_of_tasks)),
             prefix + stdout_option.format(os.path.join(work_dir, job_file_name)),
             prefix + stderr_option.format(os.path.join(work_dir, job_file_name)),
             prefix + queue_option.format(self.queue),
@@ -1132,6 +1141,16 @@ class JOB_SUBMIT:
 
              """)
 
+        # for MiNoPy jobs
+        if not distribute is None:
+            # DO NOT LOAD 'intel/19.1.1' HERE
+            job_file_lines.append("""
+            ###### for MiNoPy ########################################
+            distribute.bash """ + distribute + """ 
+            """)
+            #job_file_lines.append("# for MiNoPy\n")
+            #job_file_lines.append("{} {}\n".format('distribute.bash', distribute))
+
 
         tmp1 = job_file_lines.pop()
         tmp2 = tmp1.split('\n')
@@ -1143,12 +1162,6 @@ class JOB_SUBMIT:
         # check space after copy-to-tmp
         job_file_lines.append( """echo After copy-to-tmp: `df -h /tmp`\n""" )
         job_file_lines.append( """module purge\n""" )
-        # for MiNoPy jobs
-        if not distribute is None:
-            # DO NOT LOAD 'intel/19.1.1' HERE
-            job_file_lines.append( "################################################\n" )
-            job_file_lines.append( "# for MinoPy\n" )
-            job_file_lines.append('distribute.bash ' + distribute)
 
         return job_file_lines
 
