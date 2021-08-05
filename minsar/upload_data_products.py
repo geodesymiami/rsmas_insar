@@ -66,7 +66,20 @@ def main(iargs=None):
                 '/minopy/pic',
                 '/minopy/*.he5',
                 '/minopy/inputs',
-                '/remora_*'
+                ])
+
+        if os.path.exists(inps.work_dir + '/minopy_sequential'):
+            scp_list.extend([
+                '/minopy_sequential/pic',
+                '/minopy_sequential/*.he5',
+                '/minopy_sequential/inputs',
+                ])
+        
+        if os.path.exists(inps.work_dir + '/minopy_single_reference'):
+            scp_list.extend([
+                '/minopy_single_reference/pic',
+                '/minopy_single_reference/*.he5',
+                '/minopy_single_reference/inputs',
                 ])
         
         if inps.mintpy_products_all_flag:
