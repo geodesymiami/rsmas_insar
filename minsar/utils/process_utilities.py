@@ -474,8 +474,7 @@ def get_config_defaults(config_file='job_defaults.cfg'):
 
     if os.path.basename(config_file) in ['job_defaults.cfg']:
 
-        fields = ['c_walltime', 's_walltime', 'c_memory', 's_memory', 'num_threads','copy_to_tmp','io_load']
-
+        fields = ['c_walltime', 's_walltime', 'extra_seconds', 'c_memory', 's_memory', 'num_threads','copy_to_tmp','io_load']
         with open(config_file, 'r') as f:
             lines = f.readlines()
 
@@ -1048,7 +1047,7 @@ def get_number_of_bursts(inps_dict):
 ############################################################################
 
 
-def scale_walltime(number_of_bursts, walltime_factor, c_walltime, s_walltime, scheduler='SLURM'):
+def scale_walltime(number_of_bursts, walltime_factor, c_walltime, s_walltime, extra_seconds=0, scheduler='SLURM'):
     """
     scales default walltime by number of bursts
     scaled_walltime = c_walltime + number_of_bursts * s_walltime
@@ -1079,7 +1078,7 @@ def scale_walltime(number_of_bursts, walltime_factor, c_walltime, s_walltime, sc
     else:
         c_time_seconds = 0
 
-    time_seconds = float(c_time_seconds) + float(number_of_bursts) * float(s_time_seconds)
+    time_seconds = float(c_time_seconds) + float(number_of_bursts) * float(s_time_seconds) + extra_seconds
 
     time_seconds *= walltime_factor
 
