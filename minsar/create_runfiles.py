@@ -35,6 +35,7 @@ def main(iargs=None):
     time.sleep(putils.pause_seconds(inps.wait_time))
 
     inps.out_dir = inps.work_dir
+    inps.num_data = 1
     job_obj = JOB_SUBMIT(inps)
     #########################################
     # Submit job
