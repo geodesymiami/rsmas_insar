@@ -20,6 +20,7 @@ cd ~/test/test1
 
 ```
 bash
+module purge
 git clone https://github.com/geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
 export RSMASINSAR_HOME=`pwd`
@@ -93,7 +94,7 @@ tar cf miniconda3.tar miniconda3
 ```
 
 
-### Orbits and aux files
+### #Orbits and aux files
 This has created directories for the orbits for Sentinel-1 (`$SENTINEL_ORBITS`), which The can be downloaded using `dloadOrbits.py`. The IPF calibration files (`SENTINEL_AUX`) are downloaded from: https://qc.sentinel1.eo.esa.int/aux_cal/ .
 ### Next steps and possible problems
 * To check your installation, run the testdata as explained [here](https://github.com/geodesymiami/rsmas_insar/wiki/Testing-the-code). You need to have the testdata in your `$TESTDATA_ISCE` directory.
