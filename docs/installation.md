@@ -52,6 +52,8 @@ mkdir -p ../3rdparty
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/insarlab/PySolid.git
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
 ../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MiNoPy/docs/requirements.txt
+../3rdparty/miniconda3/bin/conda install --yes --file ../sources/insarmaps_scripts/docs/requirements.txt
+
 ```
 * #Source the environment and create aux directories. Install credential files for data download:
 ```
