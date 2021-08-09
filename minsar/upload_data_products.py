@@ -66,7 +66,20 @@ def main(iargs=None):
                 '/minopy/pic',
                 '/minopy/*.he5',
                 '/minopy/inputs',
-                '/remora_*'
+                ])
+
+        if os.path.exists(inps.work_dir + '/minopy_sequential'):
+            scp_list.extend([
+                '/minopy_sequential/pic',
+                '/minopy_sequential/*.he5',
+                '/minopy_sequential/inputs',
+                ])
+        
+        if os.path.exists(inps.work_dir + '/minopy_single_reference'):
+            scp_list.extend([
+                '/minopy_single_reference/pic',
+                '/minopy_single_reference/*.he5',
+                '/minopy_single_reference/inputs',
                 ])
         
         if inps.mintpy_products_all_flag:
@@ -84,6 +97,20 @@ def main(iargs=None):
             status = subprocess.Popen(command, shell=True).wait()
             if status is not 0:
                  raise Exception('ERROR in upload_data_products.py')
+        if os.path.exists(inps.work_dir + '/minopy_sequential'):
+            command = 'ssh ' + DATA_SERVER + ' mkdir -p ' + REMOTE_DIR + project_name + '/minopy_sequential'
+            print (command)
+            status = subprocess.Popen(command, shell=True).wait()
+            if status is not 0:
+                 raise Exception('ERROR in upload_data_products.py')
+        if os.path.exists(inps.work_dir + '/minopy_single_reference'):
+            command = 'ssh ' + DATA_SERVER + ' mkdir -p ' + REMOTE_DIR + project_name + '/minopy_single_reference'
+            print (command)
+            status = subprocess.Popen(command, shell=True).wait()
+            if status is not 0:
+                 raise Exception('ERROR in upload_data_products.py')
+
+
 
         for pattern in scp_list:
             if ( len(glob.glob(inps.work_dir + '/' + pattern)) >= 1 ):
