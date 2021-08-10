@@ -20,6 +20,7 @@ cd ~/test/test1
 
 ```
 bash
+module purge
 git clone https://github.com/geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
 export RSMASINSAR_HOME=`pwd`
@@ -51,9 +52,9 @@ mkdir -p ../3rdparty
 ../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MintPy/docs/requirements.txt
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/insarlab/PySolid.git
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
-../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MiNoPy/docs/conda.txt
-../3rdparty/miniconda3/bin/conda install isce2 -c conda-forge --yes
-../3rdparty/miniconda3/bin/conda install --yes --file ../docs/conda.txt
+../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MiNoPy/docs/requirements.txt
+../3rdparty/miniconda3/bin/conda install --yes --file ../sources/insarmaps_scripts/docs/requirements.txt
+
 ```
 * #Source the environment and create aux directories. Install credential files for data download:
 ```
@@ -65,6 +66,11 @@ source environment.bash;
 mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 
 ```
+* #Compile [MiNoPy](https://github.com/geodesymiami/MiNoPy) and install [SNAPHU](https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/) (if required):
+```
+bash $MINOPY_HOME/docs/install
+```
+
 * #Adding HPC support for MintPy (parallel plotting and defaults to use dask Local Cluster) and latest isce version plus fixes
 ```
 #cp -p ../minsar/additions/mintpy/plot_smallbaselineApp.sh ../sources/MintPy/mintpy/sh/
@@ -88,7 +94,7 @@ tar cf miniconda3.tar miniconda3
 ```
 
 
-### Orbits and aux files
+### #Orbits and aux files
 This has created directories for the orbits for Sentinel-1 (`$SENTINEL_ORBITS`), which The can be downloaded using `dloadOrbits.py`. The IPF calibration files (`SENTINEL_AUX`) are downloaded from: https://qc.sentinel1.eo.esa.int/aux_cal/ .
 ### Next steps and possible problems
 * To check your installation, run the testdata as explained [here](https://github.com/geodesymiami/rsmas_insar/wiki/Testing-the-code). You need to have the testdata in your `$TESTDATA_ISCE` directory.

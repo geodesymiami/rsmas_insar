@@ -687,47 +687,49 @@ class JOB_SUBMIT:
         job_file_lines.append( "################################################\n" )
         job_file_lines.append( "#   install code on /tmp                       #\n" )
         job_file_lines.append( "################################################\n" )
-        job_file_lines.append( "df -h /tmp\n" )
-        job_file_lines.append( "rm -rf /tmp/rsmas_insar\n" )
-        job_file_lines.append( "mkdir -p /tmp/rsmas_insar\n" )
-        job_file_lines.append( "cp -r $RSMASINSAR_HOME/minsar /tmp/rsmas_insar\n" )
-        job_file_lines.append( "cp -r $RSMASINSAR_HOME/setup  /tmp/rsmas_insar\n" )
-        job_file_lines.append( "mkdir -p /tmp/rsmas_insar/3rdparty ;\n" )
+        # job_file_lines.append( "df -h /tmp\n" )
+        # job_file_lines.append( "rm -rf /tmp/rsmas_insar\n" )
+        # job_file_lines.append( "mkdir -p /tmp/rsmas_insar\n" )
+        # job_file_lines.append( "cp -r $RSMASINSAR_HOME/minsar /tmp/rsmas_insar\n" )
+        # job_file_lines.append( "cp -r $RSMASINSAR_HOME/setup  /tmp/rsmas_insar\n" )
+        # job_file_lines.append( "mkdir -p /tmp/rsmas_insar/3rdparty ;\n" )
 
-        if "smallbaseline_wrapper" in job_file_name or "insarmaps" in job_file_name or 'mintpy' in job_file_name:
-            job_file_lines.append( "mkdir -p /tmp/rsmas_insar/sources\n" )
-            job_file_lines.append( "cp -r $RSMASINSAR_HOME/sources/MintPy /tmp/rsmas_insar/sources\n" )
-            job_file_lines.append( "cp -r $RSMASINSAR_HOME/3rdparty/PyAPS /tmp/rsmas_insar/3rdparty\n" )
-            job_file_lines.append( "cp -r $RSMASINSAR_HOME/sources/insarmaps_scripts /tmp/rsmas_insar/sources\n" )
+        # if "smallbaseline_wrapper" in job_file_name or "insarmaps" in job_file_name or 'mintpy' in job_file_name:
+        #     job_file_lines.append( "mkdir -p /tmp/rsmas_insar/sources\n" )
+        #     job_file_lines.append( "cp -r $RSMASINSAR_HOME/sources/MintPy /tmp/rsmas_insar/sources\n" )
+        #     job_file_lines.append( "cp -r $RSMASINSAR_HOME/3rdparty/PyAPS /tmp/rsmas_insar/3rdparty\n" )
+        #     job_file_lines.append( "cp -r $RSMASINSAR_HOME/sources/insarmaps_scripts /tmp/rsmas_insar/sources\n" )
 
-        if 'minopy' in job_file_name:
-            job_file_lines.append("mkdir -p /tmp/rsmas_insar/sources\n")
-            job_file_lines.append("cp -r $RSMASINSAR_HOME/sources/MiNoPy /tmp/rsmas_insar/sources\n")
-            job_file_lines.append("cp -r $RSMASINSAR_HOME/sources/MintPy /tmp/rsmas_insar/sources\n")
+        # if 'minopy' in job_file_name:
+        #     job_file_lines.append("mkdir -p /tmp/rsmas_insar/sources\n")
+        #     job_file_lines.append("cp -r $RSMASINSAR_HOME/sources/MiNoPy /tmp/rsmas_insar/sources\n")
+        #     job_file_lines.append("cp -r $RSMASINSAR_HOME/sources/MintPy /tmp/rsmas_insar/sources\n")
 
 
-        job_file_lines.append( "cp -r $RSMASINSAR_HOME/3rdparty/launcher /tmp/rsmas_insar/3rdparty \n" )
-        job_file_lines.append( "cp $SCRATCH/miniconda3.tar /tmp\n" )
-        job_file_lines.append( "tar xf /tmp/miniconda3.tar -C /tmp/rsmas_insar/3rdparty\n" )
-        job_file_lines.append( "rm /tmp/miniconda3.tar\n" )
-        job_file_lines.append( "cp -r $RSMASINSAR_HOME/sources/isce2/contrib/stack/*  /tmp/rsmas_insar/3rdparty/miniconda3/share/isce2\n" )   
+        # job_file_lines.append( "cp -r $RSMASINSAR_HOME/3rdparty/launcher /tmp/rsmas_insar/3rdparty \n" )
+        # job_file_lines.append( "cp $SCRATCH/miniconda3.tar /tmp\n" )
+        # job_file_lines.append( "tar xf /tmp/miniconda3.tar -C /tmp/rsmas_insar/3rdparty\n" )
+        # job_file_lines.append( "rm /tmp/miniconda3.tar\n" )
+        # job_file_lines.append( "cp -r $RSMASINSAR_HOME/sources/isce2/contrib/stack/*  /tmp/rsmas_insar/3rdparty/miniconda3/share/isce2\n" )   
 
-        job_file_lines.append( "# set environment    \n" )
-        job_file_lines.append( "export RSMASINSAR_HOME=/tmp/rsmas_insar\n" )
+        # job_file_lines.append( "# set environment    \n" )
+        # job_file_lines.append( "export RSMASINSAR_HOME=/tmp/rsmas_insar\n" )
 
-        if self.prefix == 'stripmap':
-            job_file_lines.append( "cd $RSMASINSAR_HOME; source ~/accounts/platforms_defaults.bash; source setup/environment.bash; export PATH=$ISCE_STACK/stripmapStack:$PATH; cd -;\n" )
-        else:
-            job_file_lines.append( "cd $RSMASINSAR_HOME; source ~/accounts/platforms_defaults.bash; source setup/environment.bash; export PATH=$ISCE_STACK/topsStack:$PATH; cd -;\n" )
+        # if self.prefix == 'stripmap':
+        #     job_file_lines.append( "cd $RSMASINSAR_HOME; source ~/accounts/platforms_defaults.bash; source setup/environment.bash; export PATH=$ISCE_STACK/stripmapStack:$PATH; cd -;\n" )
+        # else:
+        #     job_file_lines.append( "cd $RSMASINSAR_HOME; source ~/accounts/platforms_defaults.bash; source setup/environment.bash; export PATH=$ISCE_STACK/topsStack:$PATH; cd -;\n" )
 
-        job_file_lines.append( '# remove /scratch and /work from PATH\n' )
-        job_file_lines.append( """export PATH=`echo ${PATH} | awk -v RS=: -v ORS=: '/scratch/ {next} {print}' | sed 's/:*$//'` \n""" )
-        job_file_lines.append( """export PATH=`echo ${PATH} | awk -v RS=: -v ORS=: '/work/ {next} {print}' | sed 's/:*$//'` \n""" )
-        job_file_lines.append( """export PATH=`echo ${PATH} | awk -v RS=: -v ORS=: '/home/ {next} {print}' | sed 's/:*$//'` \n""" )
-        job_file_lines.append( """export PYTHONPATH=`echo ${PYTHONPATH} | awk -v RS=: -v ORS=: '/scratch/ {next} {print}' | sed 's/:*$//'` \n""" )
-        job_file_lines.append( """export PYTHONPATH=`echo ${PYTHONPATH} | awk -v RS=: -v ORS=: '/home/ {next} {print}' | sed 's/:*$//'` \n""" )
-        job_file_lines.append( """export PYTHONPATH_RSMAS=`echo ${PYTHONPATH_RSMAS} | awk -v RS=: -v ORS=: '/scratch/ {next} {print}' | sed 's/:*$//'` \n""" )
-        job_file_lines.append( """export PYTHONPATH_RSMAS=`echo ${PYTHONPATH_RSMAS} | awk -v RS=: -v ORS=: '/home/ {next} {print}' | sed 's/:*$//'` \n""" )
+        # job_file_lines.append( '# remove /scratch and /work from PATH\n' )
+        # job_file_lines.append( """export PATH=`echo ${PATH} | awk -v RS=: -v ORS=: '/scratch/ {next} {print}' | sed 's/:*$//'` \n""" )
+        # job_file_lines.append( """export PATH=`echo ${PATH} | awk -v RS=: -v ORS=: '/work/ {next} {print}' | sed 's/:*$//'` \n""" )
+        # job_file_lines.append( """export PATH=`echo ${PATH} | awk -v RS=: -v ORS=: '/home/ {next} {print}' | sed 's/:*$//'` \n""" )
+        # job_file_lines.append( """export PYTHONPATH=`echo ${PYTHONPATH} | awk -v RS=: -v ORS=: '/scratch/ {next} {print}' | sed 's/:*$//'` \n""" )
+        # job_file_lines.append( """export PYTHONPATH=`echo ${PYTHONPATH} | awk -v RS=: -v ORS=: '/home/ {next} {print}' | sed 's/:*$//'` \n""" )
+        # job_file_lines.append( """export PYTHONPATH_RSMAS=`echo ${PYTHONPATH_RSMAS} | awk -v RS=: -v ORS=: '/scratch/ {next} {print}' | sed 's/:*$//'` \n""" )
+        # job_file_lines.append( """export PYTHONPATH_RSMAS=`echo ${PYTHONPATH_RSMAS} | awk -v RS=: -v ORS=: '/home/ {next} {print}' | sed 's/:*$//'` \n""" )
+
+        job_file_lines.append("install_to_tmp.bash {} --prefix {}\n".format(job_file_name, self.prefix))
 
         if self.copy_to_tmp_flag == "no":
              return job_file_lines
@@ -1152,11 +1154,11 @@ class JOB_SUBMIT:
             #job_file_lines.append("{} {}\n".format('distribute.bash', distribute))
 
 
-        tmp1 = job_file_lines.pop()
-        tmp2 = tmp1.split('\n')
-        tmp3 = []
-        for item in tmp2:
-            job_file_lines.append( item[12:] + '\n')
+        # tmp1 = job_file_lines.pop()
+        # tmp2 = tmp1.split('\n')
+        # tmp3 = []
+        # for item in tmp2:
+        #     job_file_lines.append( item[12:] + '\n')
         #import pdb; pdb.set_trace()
 
         # check space after copy-to-tmp
