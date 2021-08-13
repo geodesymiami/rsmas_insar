@@ -52,6 +52,8 @@ cd $WORK_DIR
 
 echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` $@ " | tee -a "${WORK_DIR}"/log
 
+copy_to_tmp="--tmp"
+
 while [[ $# -gt 0 ]]
 do
     key="$1"
@@ -62,12 +64,12 @@ do
             shift # past argument
             shift # past value
             ;;
-	--stop)
+	    --stop)
             stopstep="$2"
             shift
             shift
             ;;
-	--dostep)
+	    --dostep)
             startstep="$2"
             stopstep="$2"
             shift
@@ -81,9 +83,13 @@ do
             minopy_flag=1
             shift
             ;;
-	--sleep)
+	    --sleep)
             sleep_time="$2"
             shift
+            shift
+            ;;
+        --no_tmp)
+            copy_to_tmp=""
             shift
             ;;
         *)
@@ -231,6 +237,10 @@ fi
 echo "Flags for processing steps:"
 echo "download dem jobfiles ifgrams mintpy minopy upload insarmaps"
 echo "    $download_flag     $dem_flag      $jobfiles_flag      $ifgrams_flag        $mintpy_flag     $minopy_flag      $upload_flag       $insarmaps_flag"
+if [[ $copy_to_tmp == "--tmp" ]]; then
+    echo "Copying files to /tmp"
+fi
+
 ###################################
 # adjust insarmaps_flag based on $template_file
 str_insarmaps_flag=($(grep ^insarmaps $template_file | cut -d "=" -f 2 | xargs))
@@ -320,7 +330,7 @@ if [[ $dem_flag == "1" ]]; then
 fi
 
 if [[ $jobfiles_flag == "1" ]]; then
-    cmd="create_runfiles.py $template_file --jobfiles --queue $QUEUENAME"
+    cmd="create_runfiles.py $template_file --jobfiles --queue $QUEUENAME $copy_to_tmp"
     echo "Running.... $cmd >create_jobfiles.e 1>out_create_jobfiles.o"
     $cmd 2>create_jobfiles.e 1>out_create_jobfiles.o
     exit_status="$?"
@@ -329,179 +339,7 @@ if [[ $jobfiles_flag == "1" ]]; then
        exit 1;
     fi
 
-    # modify config files to use /tmp on compute node 
-
-    acquisition_mode=$(grep acquisition_mode $template_file  | cut -d '=' -f 2)
-
-    if [[ $acquisition_mode != *"stripmap"* ]]; then
-    
-    #########################
-    ###   topsStack   ###
-    #########################
-
-    # run_03_average_baseline`
-    files="configs/config_baseline_*"
-
-    old="reference : $PWD"
-    new="reference : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    old="geom_referenceDir : $PWD"
-    new="geom_referenceDir : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    old="secondary : $PWD"
-    new="secondary : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    # run_04_fullBurst_geo2rdr
-    files="configs/config_fullBurst_geo2rdr_*"
-
-    old="secondary : $PWD"
-    new="secondary : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    old="reference : $PWD"
-    new="reference : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    old="geom_referenceDir : $PWD"
-    new="geom_referenceDir : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    # run_05_fullBurst_resample
-    files="configs/config_fullBurst_resample_*"
-    old="secondary : $PWD"
-    new="secondary : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    old="reference : $PWD"
-    new="reference : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    # run_07_merge_reference_secondary_slc
-    files="configs/config_merge_[0-9]*"
-
-    old="stack : $PWD"
-    new="stack : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    old="inp_reference : $PWD"
-    new="inp_reference : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    old="dirname : $PWD"
-    new="dirname : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    # run_08_generate_burst_igram
-    files="configs/config_generate_igram_*"
-
-    old="reference : $PWD"
-    new="reference : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    old="secondary : $PWD"
-    new="secondary : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    # run_09_merge_burst_igram
-    files="configs/config_merge_igram_[0-9]*"
-
-    old="stack : $PWD"
-    new="stack : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    old="inp_reference : $PWD"
-    new="inp_reference : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    old="dirname : $PWD"
-    new="dirname : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    # run_10_filter_coherence
-    files="configs/config_igram_filt_coh_*"
-    old="input : $PWD"
-    new="input : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    # run_11_unwrap
-    files="configs/config_igram_unw_*"
-
-    old="ifg : $PWD"
-    new="ifg : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    old="coh : $PWD"
-    new="coh : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    old="reference : $PWD"
-    new="reference : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    else
-    #########################
-    ###   stripmapStack   ###
-    #########################
-
-    # run_01_crop
-    files="configs/config_crop_????????"
-
-    old="input : $PWD"
-    new="input : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    # run_04_geo2rdr_coarseResamp
-    files="configs/config_geo2rdr_coarseResamp_????????"
-
-    old="reference : $PWD"
-    new="reference : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    old="secondary : $PWD"
-    new="secondary : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    # run_07_fineResamp
-    files="configs/config_fineResamp_????????"
-
-    old="reference : $PWD"
-    new="reference : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    old="secondary : $PWD"
-    new="secondary : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    old="offsets : $PWD"
-    new="offsets : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    # run_08_grid_baseline
-    files="configs/config_baselinegrid_????????"
-
-    old="reference : $PWD"
-    new="reference : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    old="secondary : $PWD"
-    new="secondary : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    # run_09_igram
-    files="configs/config_igram_????????_????????"
-
-    old="reference : $PWD"
-    new="reference : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    old="secondary : $PWD"
-    new="secondary : /tmp"
-    sed -i "s|$old|$new|g" $files
-
-    fi
+    # # modify config files to use /tmp on compute node
 
 fi
 
@@ -519,7 +357,7 @@ if [[ $ifgrams_flag == "1" ]]; then
     echo "$(date +"%Y%m%d:%H-%m") * download_ERA5_data.py --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR " >> "${WORK_DIR}"/log
 
  
-    cmd="run_workflow.bash $template_file --dostep ifgrams"
+    cmd="run_workflow.bash $template_file --dostep ifgrams $copy_to_tmp"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"
@@ -533,7 +371,7 @@ if [[ $ifgrams_flag == "1" ]]; then
 fi
 
 if [[ $mintpy_flag == "1" ]]; then
-    cmd="run_workflow.bash $PWD --append --dostep mintpy"
+    cmd="run_workflow.bash $PWD --append --dostep mintpy $copy_to_tmp"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"
@@ -553,7 +391,7 @@ if [[ $minopy_flag == "1" ]]; then
        exit 1;
     fi
 
-    cmd="run_workflow.bash $template_file --append --dostep minopy"
+    cmd="run_workflow.bash $template_file --append --dostep minopy $copy_to_tmp"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"
@@ -575,7 +413,7 @@ if [[ $upload_flag == "1" ]]; then
 fi
 
 if [[ $insarmaps_flag == "1" ]]; then
-    cmd="run_workflow.bash $PWD --append --dostep insarmaps"
+    cmd="run_workflow.bash $PWD --append --dostep insarmaps $copy_to_tmp"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"

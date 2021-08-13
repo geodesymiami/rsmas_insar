@@ -69,6 +69,8 @@ cd $WORKDIR
 randomorder=false
 rapid=false
 append=false
+tmp=false
+run_files_name="run_files"
 wait_time=30
 
 startstep=1
@@ -113,6 +115,11 @@ do
             ;;
         --minopy)
             minopy_flag=true
+            shift
+            ;;
+        --tmp)
+            tmp=true
+            run_files_name="run_files_tmp"
             shift
             ;;
         *)
@@ -173,7 +180,7 @@ trap "pkill -P $$" EXIT
 exec 1>>$logfile_name 2>>$logfile_name
 ######################################################
 
-RUNFILES_DIR=$WORKDIR"/run_files"
+RUNFILES_DIR=$WORKDIR"/"$run_files_name
 
 if [[ $minopy_flag == "true" ]]; then
    RUNFILES_DIR=$WORKDIR"/minopy/run_files"
@@ -276,7 +283,7 @@ for g in "${globlist[@]}"; do
             file=${files[$j]}
             file_pattern="${file%.*}"
             step_name=$(echo $file_pattern | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,})|insarmaps|smallbaseline_wrapper")
-            step_name_long=$(echo $file_pattern | grep -oP "(?<=run_files\/)(.*)(?=_\d{1,})|insarmaps|smallbaseline_wrapper")
+            step_name_long=$(echo $file_pattern | grep -oP "(?<=$run_files_name\/)(.*)(?=_\d{1,})|insarmaps|smallbaseline_wrapper")
             jobnumber=${jobnumbers[$j]}
             state=$(sacct --format="State" -j $jobnumber | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | head -3 | tail -1 )
 
