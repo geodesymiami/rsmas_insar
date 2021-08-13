@@ -8,6 +8,7 @@ import sys
 import glob
 import time
 import shutil
+import subprocess
 from minsar.objects import message_rsmas
 from minsar.objects.auto_defaults import PathFind
 from minsar.utils.stack_run import CreateRun
@@ -84,6 +85,7 @@ def main(iargs=None):
     # make run file:
     run_dir = os.path.join(inps.work_dir, 'run_files')
     config_dir = os.path.join(inps.work_dir, 'configs')
+
     for directory in [run_dir, config_dir]:
         if os.path.exists(directory):
             shutil.rmtree(directory)
@@ -133,6 +135,21 @@ def main(iargs=None):
         job_file_name = job_name
         command = ['ingest_insarmaps.py', inps.custom_template_file]
         job_obj.submit_script(job_name, job_file_name, command, writeOnly='True')
+
+    print("Copy to /tmp: {}".format(inps.copy_temp))
+    if inps.copy_temp:
+        run_dir_tmp = os.path.join(inps.work_dir, 'run_files_tmp')
+        config_dir_tmp = os.path.join(inps.work_dir, 'configs_tmp')
+
+        for directory, base_directory in zip([run_dir_tmp, config_dir_tmp], [run_dir, config_dir]):
+            if os.path.exists(directory):
+                shutil.rmtree(directory)
+
+            shutil.copytree(base_directory, directory)
+        
+        cmd = "update_configs_for_tmp.bash {}".format(inps.work_dir)
+        subprocess.Popen(cmd, shell=True)
+        
 
     return None
 

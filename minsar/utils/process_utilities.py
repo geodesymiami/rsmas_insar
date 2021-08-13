@@ -81,6 +81,8 @@ def add_common_parser(parser):
 
 def add_create_runfiles(parser):
     run_parser = parser.add_argument_group('create run files and jobs options:')
+    run_parser.add_argument('--tmp', dest='copy_temp', action='store_true',
+                            help='writes job files to run on /tmp rather than /scratch.')
     run_parser.add_argument('--jobfiles', dest='write_jobs', action='store_true',
                              help='writes the jobs corresponding to run files')
     return parser
