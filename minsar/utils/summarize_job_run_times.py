@@ -39,12 +39,16 @@ def main(iargs=None):
                                      epilog=EXAMPLE)
     parser.add_argument('custom_template_file', metavar="FILE", default='None', nargs='?', help='template file to use [default: working directory]')
     parser.add_argument('--local', dest='local_flag', action='store_true', default=False, help='for current (local) directory')
+    parser.add_argument('--tmp', dest='tmp', action='store_true', default=False, help='process run_files in run_files_tmp directory')
 
     inps = parser.parse_args(args=iargs)
 
     try: 
         inps = putils.create_or_update_template(inps)
-        run_files_dir = inps.work_dir + '/run_files'
+        if inps.tmp:
+            run_files_dir = inps.work_dir + '/run_files_tmp'
+        else:
+            run_files_dir = inps.work_dir + '/run_files'
     except:
         cwd = os.getcwd()
         if 'run_files' in os.path.basename(cwd):

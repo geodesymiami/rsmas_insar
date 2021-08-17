@@ -69,6 +69,7 @@ def create_argument_parser():
                        help='number of data (interferogram or slc) to calculate walltime')
     group.add_argument('--writeonly', dest='writeonly', action='store_true', help='Write job files without submitting')
     group.add_argument('--remora', dest='remora', action='store_true', help='use remora to get job information')
+    group.add_argument('--tmp', dest='tmp', action='store_true', help='write to run_files_tmp/ directory')
 
     return parser
 
@@ -91,7 +92,10 @@ def parse_arguments(args):
     job_params.work_dir = os.path.join(scratch_dir,
                                        job_params.file.rsplit(os.path.basename(scratch_dir))[1].split('/')[1])
 
-    if job_params.out_dir == 'run_files':
+    if inps.tmp:
+        job_params.out_dir = job_params.out_dir + "_tmp"
+
+    if 'run_files' in job_params.out_dir:
         job_params.out_dir = os.path.join(job_params.work_dir, job_params.out_dir)
 
     return job_params
@@ -422,7 +426,7 @@ class JOB_SUBMIT:
                    dateStr=datetime.strftime(datetime.now(), '%Y%m%d:%H-%M')
                    string = dateStr + ': re-running: ' + os.path.basename(job_file_name) + ': ' + wall_time + ' --> ' + new_wall_time
 
-                   with open(self.work_dir + '/run_files/rerun.log', 'a') as rerun:
+                   with open(self.out_dir + '/rerun.log', 'a') as rerun:
                       rerun.writelines(string)
 
                self.submit_and_check_job_status(rerun_job_files, work_dir=self.work_dir)

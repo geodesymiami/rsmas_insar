@@ -424,7 +424,7 @@ if [[ $insarmaps_flag == "1" ]]; then
 fi
 
 if [[ $finishup_flag == "1" ]]; then
-    cmd="summarize_job_run_times.py $template_file"
+    cmd="summarize_job_run_times.py $template_file $copy_to_tmp"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"

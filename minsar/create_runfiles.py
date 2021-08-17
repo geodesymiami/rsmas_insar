@@ -83,8 +83,15 @@ def main(iargs=None):
             raise Exception('ERROR: No data (SLC or Raw) available')
 
     # make run file:
-    run_dir = os.path.join(inps.work_dir, 'run_files')
-    config_dir = os.path.join(inps.work_dir, 'configs')
+    run_files_dirname = "run_files"
+    config_dirnane = "configs"
+
+    if inps.copy_temp:
+        run_files_dirname += "_tmp"
+        config_dirnane += "_tmp"
+
+    run_dir = os.path.join(inps.work_dir, run_files_dirname)
+    config_dir = os.path.join(inps.work_dir, config_dirnane)
 
     for directory in [run_dir, config_dir]:
         if os.path.exists(directory):
@@ -94,17 +101,23 @@ def main(iargs=None):
     runObj = CreateRun(inps)
     runObj.run_stack_workflow()
 
-    if os.path.isfile(inps.work_dir + '/run_files/run_06_extract_stack_valid_region'):
-        with open(inps.work_dir + '/run_files/run_06_extract_stack_valid_region', 'r') as f:
+    if os.path.isfile(run_dir + '/run_06_extract_stack_valid_region'):
+        with open(run_dir + '/run_06_extract_stack_valid_region', 'r') as f:
             line = f.readlines()
-        with open(inps.work_dir + '/run_files/run_06_extract_stack_valid_region', 'w') as f:
+        with open(run_dir + '/run_06_extract_stack_valid_region', 'w') as f:
             f.writelines(['rm -rf ./stack; '] + line )
 
     run_file_list = putils.make_run_list(inps.work_dir)
-
     with open(inps.work_dir + '/run_files_list', 'w') as run_file:
         for item in run_file_list:
             run_file.writelines(item + '\n')
+
+    if inps.copy_temp:
+        run_file_list = [item.replace("/run_files/", "/run_files_tmp/") for item in run_file_list]
+        with open(inps.work_dir + '/run_files_tmp_list', 'w') as run_file:
+            for item in run_file_list:
+                run_file.writelines(item + '\n')
+        shutil.copytree(pathObj.rundir, run_dir)
 
     if inps.prefix == 'tops':
         # check for orbits
@@ -138,14 +151,9 @@ def main(iargs=None):
 
     print("Copy to /tmp: {}".format(inps.copy_temp))
     if inps.copy_temp:
-        run_dir_tmp = os.path.join(inps.work_dir, 'run_files_tmp')
+        #run_dir_tmp = os.path.join(inps.work_dir, 'run_files_tmp')
         config_dir_tmp = os.path.join(inps.work_dir, 'configs_tmp')
-
-        for directory, base_directory in zip([run_dir_tmp, config_dir_tmp], [run_dir, config_dir]):
-            if os.path.exists(directory):
-                shutil.rmtree(directory)
-
-            shutil.copytree(base_directory, directory)
+        shutil.copytree(os.path.join(inps.work_dir, "configs"), config_dir_tmp)
         
         cmd = "update_configs_for_tmp.bash {}".format(inps.work_dir)
         subprocess.Popen(cmd, shell=True)
