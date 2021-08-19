@@ -28,7 +28,9 @@ function distribute_reference {
 job_name="$1"
 batch_file="$2"
 out_dir="$3"
-
+if [[ $4 ]]; then
+    distribute_file="$4"
+fi
 # ------------------
 
 if [[ $job_name != *"unpack_topo_reference"* && $job_name != *"unpack_secondary_slc"* ]]; then
@@ -288,5 +290,8 @@ elif [[ $job_name == *"run_09_igram"* ]]; then
         distribute.bash $out_dir/merged/SLC/$date/; mv /tmp/$date /tmp/merged/SLC
         distribute.bash $out_dir/SLC_crop/$date/; mv /tmp/$date /tmp/SLC_crop
     done
+
+elif [[ $distribute_file ]]; then
+    distribute.bash $distribute_file
 
 fi
