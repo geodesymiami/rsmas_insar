@@ -716,13 +716,6 @@ class JOB_SUBMIT:
         # job_file_lines.append( "rm /tmp/miniconda3.tar\n" )
         # job_file_lines.append( "cp -r $RSMASINSAR_HOME/sources/isce2/contrib/stack/*  /tmp/rsmas_insar/3rdparty/miniconda3/share/isce2\n" )   
 
-        # job_file_lines.append( "# set environment    \n" )
-        # job_file_lines.append( "export RSMASINSAR_HOME=/tmp/rsmas_insar\n" )
-
-        # if self.prefix == 'stripmap':
-        #     job_file_lines.append( "cd $RSMASINSAR_HOME; source ~/accounts/platforms_defaults.bash; source setup/environment.bash; export PATH=$ISCE_STACK/stripmapStack:$PATH; cd -;\n" )
-        # else:
-        #     job_file_lines.append( "cd $RSMASINSAR_HOME; source ~/accounts/platforms_defaults.bash; source setup/environment.bash; export PATH=$ISCE_STACK/topsStack:$PATH; cd -;\n" )
 
         # job_file_lines.append( '# remove /scratch and /work from PATH\n' )
         # job_file_lines.append( """export PATH=`echo ${PATH} | awk -v RS=: -v ORS=: '/scratch/ {next} {print}' | sed 's/:*$//'` \n""" )
@@ -742,6 +735,14 @@ class JOB_SUBMIT:
             job_file_lines.append("copy_to_tmp.bash {} {} {} {}\n".format(job_file_name, batch_file, self.out_dir, distribute))
         else:
             job_file_lines.append("copy_to_tmp.bash {} {} {}\n".format(job_file_name, batch_file, self.out_dir))
+
+        job_file_lines.append( "# set environment    \n" )
+        job_file_lines.append( "export RSMASINSAR_HOME=/tmp/rsmas_insar\n" )
+
+        if self.prefix == 'stripmap':
+            job_file_lines.append( "cd $RSMASINSAR_HOME; source ~/accounts/platforms_defaults.bash; source setup/environment.bash; export PATH=$ISCE_STACK/stripmapStack:$PATH; cd -;\n" )
+        else:
+            job_file_lines.append( "cd $RSMASINSAR_HOME; source ~/accounts/platforms_defaults.bash; source setup/environment.bash; export PATH=$ISCE_STACK/topsStack:$PATH; cd -;\n" )
 
         # if False:
         #     if not 'unpack_topo_reference' in job_file_name and not 'unpack_secondary_slc' in job_file_name:
