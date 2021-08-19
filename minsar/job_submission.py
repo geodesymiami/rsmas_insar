@@ -569,7 +569,7 @@ class JOB_SUBMIT:
             else:
                 c_walltime = config['default']['c_walltime']
                 s_walltime = config['default']['s_walltime']
-                extra_seconds = float(config['default']['extra_seconds']) * self.num_dat
+                extra_seconds = float(config['default']['extra_seconds']) * self.num_data
 
             self.default_wall_time = putils.scale_walltime(number_of_bursts, self.wall_time_factor,
                                                            c_walltime, s_walltime, extra_seconds, self.scheduler)
@@ -738,7 +738,10 @@ class JOB_SUBMIT:
         if self.copy_to_tmp_flag == "no":
              return job_file_lines
 
-        job_file_lines.append("copy_to_tmp.bash {} {} {}\n".format(job_file_name, batch_file, self.out_dir))
+        if not distribute is None:
+            job_file_lines.append("copy_to_tmp.bash {} {} {} {}\n".format(job_file_name, batch_file, self.out_dir, distribute))
+        else:
+            job_file_lines.append("copy_to_tmp.bash {} {} {}\n".format(job_file_name, batch_file, self.out_dir))
 
         # if False:
         #     if not 'unpack_topo_reference' in job_file_name and not 'unpack_secondary_slc' in job_file_name:
@@ -1151,14 +1154,14 @@ class JOB_SUBMIT:
         #         """)
 
         # for MiNoPy jobs
-        if not distribute is None:
-            # DO NOT LOAD 'intel/19.1.1' HERE
-            job_file_lines.append("""
-            ###### for MiNoPy ########################################
-            distribute.bash """ + distribute + """ 
-            """)
-            #job_file_lines.append("# for MiNoPy\n")
-            #job_file_lines.append("{} {}\n".format('distribute.bash', distribute))
+        #if not distribute is None:
+        #    # DO NOT LOAD 'intel/19.1.1' HERE
+        #    job_file_lines.append("""
+        #    ###### for MiNoPy ########################################
+        #    distribute.bash """ + distribute + """
+        #    """)
+        #    #job_file_lines.append("# for MiNoPy\n")
+        #    #job_file_lines.append("{} {}\n".format('distribute.bash', distribute))
 
 
         # tmp1 = job_file_lines.pop()
@@ -1169,8 +1172,8 @@ class JOB_SUBMIT:
         #import pdb; pdb.set_trace()
 
         # check space after copy-to-tmp
-        job_file_lines.append( """echo After copy-to-tmp: `df -h /tmp`\n""" )
-        job_file_lines.append( """module purge\n""" )
+        #job_file_lines.append( """echo After copy-to-tmp: `df -h /tmp`\n""" )
+        #job_file_lines.append( """module purge\n""" )
 
         return job_file_lines
 
