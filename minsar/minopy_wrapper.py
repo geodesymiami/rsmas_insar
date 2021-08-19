@@ -47,17 +47,10 @@ def main(iargs=None):
 
     os.chdir(inps.work_dir)
 
-    try:
-        with open('out_minopy.o', 'w') as f:
-            with contextlib.redirect_stdout(f):
-                smallbaselineApp.main([inps.custom_template_file, '--dir', pathObj.mintpydir])
-    except:
-        with open('out_minopy.e', 'w') as g:
-            with contextlib.redirect_stderr(g):
-                smallbaselineApp.main([inps.custom_template_file, '--dir', pathObj.mintpydir])
+    minopyApp.main([inps.custom_template_file, '--dir', pathObj.minopydir])
 
-    inps.mintpy_dir = os.path.join(inps.work_dir, pathObj.mintpydir)
-    putils.set_permission_dask_files(directory=inps.mintpy_dir)
+    inps.minopy_dir = os.path.join(inps.work_dir, pathObj.minopydir)
+    putils.set_permission_dask_files(directory=inps.minopy_dir)
 
     # Email Minopy results
     if inps.email:
