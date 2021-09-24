@@ -187,3 +187,9 @@ else
     sed -i "s|$old|$new|g" $files
 
 fi
+
+## Update run files
+files="run_files_tmp/run_*"
+old="configs"
+new="configs_tmp"
+sed -i "s|$old|$new|g" $files

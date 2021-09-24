@@ -47,7 +47,7 @@ fi
 if [[ $job_name == *"run_02_unpack_secondary_slc"* ]]; then
 
     module load ooops
-    dummy-to-pop
+    # dummy-to-pop
 
 elif [[ $job_name == *"average_baseline"* ]]; then
 
