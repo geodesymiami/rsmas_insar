@@ -44,19 +44,6 @@ else
 fi
 
 template_file=$1
-     "
-    printf "$helptext"
-    exit 0;
-else
-    PROJECT_NAME=$(basename "$1" | awk -F ".template" '{print $1}')
-    exit_status="$?"
-    if [[ $PROJECT_NAME == "" ]]; then
-       echo "Could not compute basename for that file. Exiting. Make sure you have specified an input file as the first argument."
-       exit 1;
-    fi
-fi
-
-template_file=$1
 if [[ $1 == $PWD ]]; then
    template_file=$TEMPLATES/$PROJECT_NAME.template
 fi
@@ -253,6 +240,8 @@ fi
 echo "Flags for processing steps:"
 if [[ $copy_to_tmp == "--tmp" ]]; then
     echo "--tmp flag is switched on"
+else
+    echo "--tmp flag is switched off"
 fi
 echo "download dem jobfiles ifgrams mintpy minopy upload insarmaps"
 echo "    $download_flag     $dem_flag      $jobfiles_flag      $ifgrams_flag        $mintpy_flag     $minopy_flag      $upload_flag       $insarmaps_flag"
