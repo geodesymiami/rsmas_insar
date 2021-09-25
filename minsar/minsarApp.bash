@@ -29,8 +29,8 @@ helptext="                                                                      
    --minopy         use minopyApp.py                                             \n\
    --mintpy --minopy    both                                                     \n\
                                                                                  \n\
-   The default mode is copying code and data to local /tmp. This can be          \n\
-   switched off using --no_tmp option.                                           \n 
+   --tmp            copy code and data to local /tmp [default].                  \n\
+   --no_tmp         no copying to local /tmp. This can be                        \n 
      "
     printf "$helptext"
     exit 0;
@@ -89,6 +89,10 @@ do
 	    --sleep)
             sleep_time="$2"
             shift
+            shift
+            ;;
+        --tmp)
+            copy_to_tmp="--tmp"
             shift
             ;;
         --no_tmp)
@@ -260,15 +264,15 @@ fi
 # check weather miniconda3.tar, S1orbits.tar and S1orbits 
 # have not been purged from $SCRATCHDIR
 if  ! test -f "$SCRATCHDIR/miniconda3.tar" ; then
-    echo "Copying miniconda3.tar to SCRATCHDIR ..."
+    echo "No miniconda3.tar found on $SCRATCHDIR. Copying...."
     cp $RSMASINSAR_HOME/3rdparty/miniconda3.tar $SCRATCHDIR
 fi
 if  ! test -f "$SCRATCHDIR/S1orbits.tar" ; then
-    echo "Copying S1orbits.tar to SCRATCHDIR ..."
+    echo "No S1orbits.tar found on $SCRATCHDIR. Copying...."
     cp $WORKDIR/S1orbits.tar $SCRATCH
 fi
 if [ ! "$(ls -A $SCRATCHDIR/S1orbits)" ]; then
-     echo "SCRATCHDIR/S1orbits is empty, untarring S1orbits.tar ..."
+     echo "SCRATCHDIR/S1orbits is empty. Untarring S1orbits.tar ..."
      tar xf $SCRATCHDIR/S1orbits.tar -C $SCRATCHDIR
 fi
 #############################################################
