@@ -27,7 +27,23 @@ helptext="                                                                      
                                                                                  \n\
    --mintpy         use smallbaselineApp.py for time series [default]            \n\
    --minopy         use minopyApp.py                                             \n\
-   --mintpy --minopy    both                                                     \n
+   --mintpy --minopy    both                                                     \n\
+                                                                                 \n\
+   The default mode is copying code and data to local /tmp. This can be          \n\
+   switched off using --no_tmp option.                                           \n 
+     "
+    printf "$helptext"
+    exit 0;
+else
+    PROJECT_NAME=$(basename "$1" | awk -F ".template" '{print $1}')
+    exit_status="$?"
+    if [[ $PROJECT_NAME == "" ]]; then
+       echo "Could not compute basename for that file. Exiting. Make sure you have specified an input file as the first argument."
+       exit 1;
+    fi
+fi
+
+template_file=$1
      "
     printf "$helptext"
     exit 0;
@@ -235,11 +251,11 @@ elif [[ $stopstep != "" ]]; then
 fi
 
 echo "Flags for processing steps:"
+if [[ $copy_to_tmp == "--tmp" ]]; then
+    echo "--tmp flag is switched on"
+fi
 echo "download dem jobfiles ifgrams mintpy minopy upload insarmaps"
 echo "    $download_flag     $dem_flag      $jobfiles_flag      $ifgrams_flag        $mintpy_flag     $minopy_flag      $upload_flag       $insarmaps_flag"
-if [[ $copy_to_tmp == "--tmp" ]]; then
-    echo "Copying files to /tmp"
-fi
 
 ###################################
 # adjust insarmaps_flag based on $template_file
@@ -251,21 +267,22 @@ if [[ $str_insarmaps_flag == "False" ]]; then
    insarmaps_flag=0
 fi
 
-####################################
-if  ! test -f "$SCRATCH/miniconda3.tar" ; then
-    echo "Copying miniconda3.tar to SCRATCH ..."
-    cp $RSMASINSAR_HOME/3rdparty/miniconda3.tar $SCRATCH
+#############################################################
+# check weather miniconda3.tar, S1orbits.tar and S1orbits 
+# have not been purged from $SCRATCHDIR
+if  ! test -f "$SCRATCHDIR/miniconda3.tar" ; then
+    echo "Copying miniconda3.tar to SCRATCHDIR ..."
+    cp $RSMASINSAR_HOME/3rdparty/miniconda3.tar $SCRATCHDIR
 fi
-####################################
 if  ! test -f "$SCRATCHDIR/S1orbits.tar" ; then
     echo "Copying S1orbits.tar to SCRATCHDIR ..."
-    cp $WORK/S1orbits.tar $SCRATCH
+    cp $WORKDIR/S1orbits.tar $SCRATCH
 fi
-
 if [ ! "$(ls -A $SCRATCHDIR/S1orbits)" ]; then
      echo "SCRATCHDIR/S1orbits is empty, untarring S1orbits.tar ..."
      tar xf $SCRATCHDIR/S1orbits.tar -C $SCRATCHDIR
 fi
+#############################################################
 # download latest orbits from ASF mirror
 cd $SCRATCHDIR/S1orbits
 curl --ftp-ssl --silent --use-ascii --ftp-method nocwd --list-only https://s1qc.asf.alaska.edu/aux_poeorb/ > ASF_poeorb.txt
