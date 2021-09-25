@@ -86,16 +86,20 @@ cp -r ../sources/isce2/contrib/stack/* $ISCE_STACK
 #cp -p ../minsar/additions/isce/stackSentinel.py $ISCE_STACK/topsStack
 
 ```
-* #create your `miniconda3.tar`  (removing `pkgs` saves space, could cause problems with environments)
+* #create your `miniconda3.tar`  (removing `pkgs` saves space, could cause problems with environments) (needed for `install_code_to_tmp.bash)
 ```
 cd $RSMASINSAR_HOME/3rdparty
 rm -rf miniconda3/pkgs
 tar cf miniconda3.tar miniconda3
+cp miniconda3.tar $SCRATCHDUR
 ```
-
 
 ### #Orbits and aux files
 This has created directories for the orbits for Sentinel-1 (`$SENTINEL_ORBITS`), which The can be downloaded using `dloadOrbits.py`. The IPF calibration files (`SENTINEL_AUX`) are downloaded from: https://qc.sentinel1.eo.esa.int/aux_cal/ .
+
+### #Keep copys in the case your `$SCRATCHDIR` gets purged
+The `$SENTINEL_ORBITS` and `miniconda3.tar` are located on `$SCRATCHDIR` which  gets purged every couple of weeks. `minsarApp.bash uses `$RSMASINSAR_HOME/3rdparty/miniconda3.tar` and  `$WORKDIR/S1orbits.tar`  if files have been purged`.
+
 ### Next steps and possible problems
 * To check your installation, run the testdata as explained [here](https://github.com/geodesymiami/rsmas_insar/wiki/Testing-the-code). You need to have the testdata in your `$TESTDATA_ISCE` directory.
 
