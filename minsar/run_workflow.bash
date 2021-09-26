@@ -69,8 +69,8 @@ cd $WORKDIR
 randomorder=false
 rapid=false
 append=false
-tmp=false
-run_files_name="run_files"
+tmp=true
+run_files_name="run_files_tmp"
 wait_time=30
 
 startstep=1
@@ -120,6 +120,11 @@ do
         --tmp)
             tmp=true
             run_files_name="run_files_tmp"
+            shift
+            ;;
+        --no_tmp)
+            tmp=false
+            run_files_name="run_files"
             shift
             ;;
         *)
@@ -186,13 +191,13 @@ if [[ $minopy_flag == "true" ]]; then
    RUNFILES_DIR=$WORKDIR"/minopy/run_files"
 fi
 
-#find the last job (11 for 'geometry' and 16 for 'NESD') and remove leading zero
-job_file_arr=($RUNFILES_DIR/run_*_0.job)
-#job_file_arr=(run_files/run_*_0.job)
-last_job_file=${job_file_arr[-1]}
-last_job_file=$(basename -- "$last_job_file")
+#find the last job (11 for 'geometry' and 16 for 'NESD', 9 for stripmap) and remove leading zero
+job_file_arr=( $RUNFILES_DIR/run_*_0.job )
+last_job_file="${job_file_arr[-1]}"
+last_job_file=${last_job_file##*/}
 last_job_file_number=${last_job_file:4:2}
-last_job_file_number=$(echo $last_job_file_number | sed 's/^0*//')
+#last_job_file_number=$( echo $last_job_file_number | sed 's/^0*// ')     # FA 9/21 sed command did not always work well
+last_job_file_number=$(echo $((10#${last_job_file_number})))
 
 if [[ $startstep == "ifgrams" || $startstep == "minopy" ]]; then
     startstep=1
