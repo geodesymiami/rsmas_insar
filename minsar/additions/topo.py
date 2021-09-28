@@ -6,11 +6,15 @@ import shelve
 import datetime
 import shutil
 import numpy as np
-import gdal
+from osgeo import gdal
 import isce
 import isceobj
 from isceobj.Constants import SPEED_OF_LIGHT
 from isceobj.Util.Poly2D import Poly2D
+
+
+gdal.UseExceptions()
+
 
 
 def createParser():
@@ -358,7 +362,7 @@ def runSimamp(outdir, hname='z.rdr'):
     return
 
 
-def runMultilook(in_dir, out_dir, alks, rlks, in_ext='.rdr', out_ext='.rdr', method='gdal',
+def runMultilook(in_dir, out_dir, alks, rlks, in_ext='.rdr', out_ext='.rdr', method='isce',
                  fbase_list=['hgt', 'incLocal', 'lat', 'lon', 'los', 'shadowMask', 'waterMask']):
     """
     Multilook geometry files.
@@ -416,6 +420,8 @@ def runMultilook(in_dir, out_dir, alks, rlks, in_ext='.rdr', out_ext='.rdr', met
                 options_str = '-of ENVI -a_nodata 0 -outsize {ox} {oy} -srcwin 0 0 {sx} {sy} '.format(
                     ox=out_wid, oy=out_len, sx=src_wid, sy=src_len)
                 gdal.Translate(out_file, ds, options=options_str)
+                dso = gdal.Open(out_file, gdal.GA_ReadOnly)
+                gdal.Translate(out_file+'.vrt', dso, options=gdal.TranslateOptions(format='VRT'))
 
                 # generate ISCE .xml file
                 if not os.path.isfile(out_file+'.xml'):
@@ -522,7 +528,7 @@ def main(iargs=None):
     # write multilooked geometry files in "geom_reference" directory, same level as "Igrams"
     if inps.rlks * inps.rlks > 1:
         out_dir = os.path.join(os.path.dirname(os.path.dirname(info.outdir)), 'geom_reference')
-        runMultilook(in_dir=info.outdir, out_dir=out_dir, alks=inps.alks, rlks=inps.rlks, method='isce')
+        runMultilook(in_dir=info.outdir, out_dir=out_dir, alks=inps.alks, rlks=inps.rlks)
 
     return
 
