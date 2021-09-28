@@ -96,7 +96,7 @@ do
             shift
             ;;
         --no_tmp)
-            copy_to_tmp=""
+            copy_to_tmp="--no_tmp"
             shift
             ;;
         *)
@@ -326,6 +326,18 @@ if [[ $download_flag == "1" ]]; then
        exit 1;
     fi
     cd ..
+
+    # remove excluded dates
+    if [[ ! -z $(grep "^minsar.excludeDates" $template_file) ]];  then
+      date_string=$(grep ^minsar.excludeDates $template_file | awk -F = '{printf "%s\n",$2}')
+      date_array=($(echo $date_string | tr ',' "\n"))
+      echo "${date_array[@]}"
+      
+       for date in "${date_array[@]}"; do
+           rm RAW_data/*$date*
+       done
+    fi
+
 fi
 
 if [[ $dem_flag == "1" ]]; then
