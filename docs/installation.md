@@ -81,6 +81,9 @@ cp -p ../minsar/additions/isce2/stripmapStack/prepRawCSK.py ../sources/isce2/con
 
 cp -r ../sources/isce2/contrib/stack/* $ISCE_STACK 
 
+cp -p ../minsar/additions/isce2/topo.py ../sources/isce2/contrib/stack/stripmapStack
+#( uses method isce instead of gdal)
+
 #cp -p ../minsar/additions/isce/invertMisreg.py ../sources/isce2/contrib/stack/stripmapStack
 #cp -p ../minsar/additions/stackStripMap.py $ISCE_STACK/stripmapStack
 #cp -p ../minsar/additions/isce/stackSentinel.py $ISCE_STACK/topsStack
