@@ -100,7 +100,6 @@ def parse_arguments(args):
 
     return job_params
 
-
 class JOB_SUBMIT:
     """
         A class representing the job submission object
@@ -686,6 +685,9 @@ class JOB_SUBMIT:
         return job_file_lines
 
     def add_slurm_commands(self, job_file_lines, job_file_name, hostname, batch_file=None, distribute=None):
+        
+        if not self.copy_temp or self.copy_to_tmp_flag == "no":
+             return job_file_lines
 
         job_file_lines.append("\n" )
         job_file_lines.append( "################################################\n" )
@@ -727,9 +729,6 @@ class JOB_SUBMIT:
         # job_file_lines.append( """export PYTHONPATH_RSMAS=`echo ${PYTHONPATH_RSMAS} | awk -v RS=: -v ORS=: '/home/ {next} {print}' | sed 's/:*$//'` \n""" )
 
         job_file_lines.append("install_to_tmp.bash {} --prefix {}\n".format(job_file_name, self.prefix))
-
-        if self.copy_to_tmp_flag == "no":
-             return job_file_lines
 
         if not distribute is None:
             job_file_lines.append("copy_to_tmp.bash {} {} {} {}\n".format(job_file_name, batch_file, self.out_dir, distribute))
