@@ -133,7 +133,8 @@ class JOB_SUBMIT:
             self.out_dir = '.'
         if not 'remora' in inps:
             self.remora = None
-
+        if not 'tmp' in inps: 
+            self.tmp = None
         self.num_data = inps.num_data
 
         self.default_memory = None
@@ -686,7 +687,7 @@ class JOB_SUBMIT:
 
     def add_slurm_commands(self, job_file_lines, job_file_name, hostname, batch_file=None, distribute=None):
         
-        if not self.copy_temp or self.copy_to_tmp_flag == "no":
+        if not self.tmp or self.copy_to_tmp_flag == "no":
              return job_file_lines
 
         job_file_lines.append("\n" )
@@ -1218,7 +1219,7 @@ class JOB_SUBMIT:
 
             #job_file_lines.append("\n\n#falk module load launcher")
 
-            job_file_lines.append( "################################################\n" )
+            job_file_lines.append( "\n################################################\n" )
             job_file_lines.append( "# execute tasks with launcher\n" )
             job_file_lines.append( "################################################\n" )
             job_file_lines.append( "export OMP_NUM_THREADS={0}\n".format(self.default_num_threads))
