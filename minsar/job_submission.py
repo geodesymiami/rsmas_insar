@@ -729,12 +729,12 @@ class JOB_SUBMIT:
         # job_file_lines.append( """export PYTHONPATH_RSMAS=`echo ${PYTHONPATH_RSMAS} | awk -v RS=: -v ORS=: '/scratch/ {next} {print}' | sed 's/:*$//'` \n""" )
         # job_file_lines.append( """export PYTHONPATH_RSMAS=`echo ${PYTHONPATH_RSMAS} | awk -v RS=: -v ORS=: '/home/ {next} {print}' | sed 's/:*$//'` \n""" )
 
-        job_file_lines.append("install_to_tmp.bash {} --prefix {}\n".format(job_file_name, self.prefix))
+        job_file_lines.append("install_code_on_tmp.bash {} --prefix {}\n".format(job_file_name, self.prefix))
 
         if not distribute is None:
-            job_file_lines.append("copy_to_tmp.bash {} {} {} {}\n".format(job_file_name, batch_file, self.out_dir, distribute))
+            job_file_lines.append("copy_data_to_tmp.bash {} {} {} {}\n".format(job_file_name, batch_file, self.out_dir, distribute))
         else:
-            job_file_lines.append("copy_to_tmp.bash {} {} {}\n".format(job_file_name, batch_file, self.out_dir))
+            job_file_lines.append("copy_data_to_tmp.bash {} {} {}\n".format(job_file_name, batch_file, self.out_dir))
 
         job_file_lines.append( "# set environment    \n" )
         job_file_lines.append( "export RSMASINSAR_HOME=/tmp/rsmas_insar\n" )
