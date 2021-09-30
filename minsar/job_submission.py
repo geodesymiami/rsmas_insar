@@ -69,7 +69,7 @@ def create_argument_parser():
                        help='number of data (interferogram or slc) to calculate walltime')
     group.add_argument('--writeonly', dest='writeonly', action='store_true', help='Write job files without submitting')
     group.add_argument('--remora', dest='remora', action='store_true', help='use remora to get job information')
-    group.add_argument('--tmp', dest='tmp', action='store_true', help='write to run_files_tmp/ directory')
+    group.add_argument('--tmp', dest='copy_temp', action='store_true', help='write to run_files_tmp/ directory')
 
     return parser
 
@@ -133,8 +133,8 @@ class JOB_SUBMIT:
             self.out_dir = '.'
         if not 'remora' in inps:
             self.remora = None
-        if not 'tmp' in inps: 
-            self.tmp = None
+        if not 'copy_temp' in inps: 
+            self.copy_temp = None
         self.num_data = inps.num_data
 
         self.default_memory = None
@@ -687,7 +687,7 @@ class JOB_SUBMIT:
 
     def add_slurm_commands(self, job_file_lines, job_file_name, hostname, batch_file=None, distribute=None):
         
-        if not self.tmp or self.copy_to_tmp_flag == "no":
+        if not self.copy_temp or self.copy_to_tmp_flag == "no":
              return job_file_lines
 
         job_file_lines.append("\n" )
