@@ -28,7 +28,7 @@ NOTE 20 NOV:  Don't do slope for memory. That was a mistake
 stripmapStack
 igram                            4000 900  --> 4000 950                           9/21      MaunaLoaCskA10
 igram                                      --> 4000 1105                          9/26      MaunaLoaCskDT91
-igram                                      --> 4000 1105                          9/26      MaunaLoaCskDT91
+igram                                      --> 4000 1215                          9/26      MaunaLoaCskDT91
 fineResamp                       4000 1950 --> 4000 2500                          9/26             same
 
 
