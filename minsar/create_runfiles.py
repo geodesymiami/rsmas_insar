@@ -86,7 +86,7 @@ def main(iargs=None):
     run_files_dirname = "run_files"
     config_dirnane = "configs"
 
-    if inps.copy_temp:
+    if inps.copy_to_tmp:
         run_files_dirname += "_tmp"
         config_dirnane += "_tmp"
 
@@ -112,7 +112,7 @@ def main(iargs=None):
         for item in run_file_list:
             run_file.writelines(item + '\n')
 
-    if inps.copy_temp:
+    if inps.copy_to_tmp:
         run_file_list = [item.replace("/run_files/", "/run_files_tmp/") for item in run_file_list]
         with open(inps.work_dir + '/run_files_tmp_list', 'w') as run_file:
             for item in run_file_list:
@@ -149,8 +149,8 @@ def main(iargs=None):
         command = ['ingest_insarmaps.py', inps.custom_template_file]
         job_obj.submit_script(job_name, job_file_name, command, writeOnly='True')
 
-    print("Copy to /tmp: {}".format(inps.copy_temp))
-    if inps.copy_temp:
+    print("copy_to_tmp: {}".format(inps.copy_to_tmp))
+    if inps.copy_to_tmp:
         #run_dir_tmp = os.path.join(inps.work_dir, 'run_files_tmp')
         config_dir_tmp = os.path.join(inps.work_dir, 'configs_tmp')
         shutil.copytree(os.path.join(inps.work_dir, "configs"), config_dir_tmp)

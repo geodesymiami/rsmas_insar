@@ -241,12 +241,12 @@ elif [[ $stopstep != "" ]]; then
     exit 1
 fi
 
-echo "Flags for processing steps:"
 if [[ $copy_to_tmp == "--tmp" ]]; then
-    echo "--tmp flag is switched on"
+    echo "copy_to_tmp  is switched ON"
 else
-    echo "--tmp flag is switched off"
+    echo "copy_to_tmp is switched OFF"
 fi
+echo "Flags for processing steps:"
 echo "download dem jobfiles ifgrams mintpy minopy upload insarmaps"
 echo "    $download_flag     $dem_flag      $jobfiles_flag      $ifgrams_flag        $mintpy_flag     $minopy_flag      $upload_flag       $insarmaps_flag"
 
