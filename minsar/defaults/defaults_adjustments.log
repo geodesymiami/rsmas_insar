@@ -30,5 +30,4 @@ igram                            4000 900  --> 4000 950                         
 igram                                      --> 4000 1105                          9/26      MaunaLoaCskDT91
 igram                                      --> 4000 1215                          9/26      MaunaLoaCskDT91
 fineResamp                       4000 1950 --> 4000 2500                          9/26             same
-
-
+refineSecondaryTiming            4000    0 --> 4000  840                         10/01      KilaueaCskDT165
