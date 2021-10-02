@@ -29,6 +29,7 @@ helptext="                                                                      
    --minopy         use minopyApp.py                                             \n\
    --mintpy --minopy    both                                                     \n\
                                                                                  \n\
+   --sleep SECS     sleep seconds before running                                 \n\
    --tmp            copy code and data to local /tmp [default].                  \n\
    --no_tmp         no copying to local /tmp. This can be                        \n 
      "
@@ -67,12 +68,12 @@ do
             shift # past argument
             shift # past value
             ;;
-	    --stop)
+	--stop)
             stopstep="$2"
             shift
             shift
             ;;
-	    --dostep)
+	--dostep)
             startstep="$2"
             stopstep="$2"
             shift
@@ -86,7 +87,7 @@ do
             minopy_flag=1
             shift
             ;;
-	    --sleep)
+	--sleep)
             sleep_time="$2"
             shift
             shift
@@ -296,6 +297,7 @@ fi
 echo download_dir: $download_dir
 ####################################
 if [[ $download_flag == "1" ]]; then
+
     echo "Running.... download_data.py $template_file"
     download_data.py $template_file
     exit_status="$?"
@@ -308,7 +310,7 @@ if [[ $download_flag == "1" ]]; then
     echo "Running.... 'cat ../ssara_command.txt'"
     bash ../ssara_command.txt
     exit_status="$?"
-    
+   
     runs=1
     while [ $exit_status -ne 0 ] && [ $runs -le 4 ]; do
         echo "ssara_federated_query.bash exited with a non-zero exit code ($exit_status). Trying again in 2 hours."
@@ -340,21 +342,31 @@ if [[ $download_flag == "1" ]]; then
            rm $files
        done
     fi
-
 fi
 
 if [[ $dem_flag == "1" ]]; then
-    cmd=" dem_rsmas.py $template_file"
-    echo "Running... $cmd"
-    echo "$cmd" | bash
-    exit_status="$?"
-    if [[ $exit_status -ne 0 ]]; then
-       echo "dem_rsmas.py exited with a non-zero exit code ($exit_status). Exiting."
-       exit 1;
+    if [[ ! -z $(grep -E "^stripmapStack.demDir|^topsStack.demDir" $template_file) ]];  then
+       # copy DEM if given
+       demDir=$(grep -E "^stripmapStack.demDir|^topsStack.demDir" $template_file | awk -F = '{printf "%s\n",$2}' | sed 's/ //')
+       rm -rf DEM; eval "cp -r $demDir DEM"
+    else   
+       # download DEM
+       cmd=" dem_rsmas.py $template_file"
+       echo "Running... $cmd"
+       echo "$cmd" | bash
+       exit_status="$?"
+       if [[ $exit_status -ne 0 ]]; then
+          echo "dem_rsmas.py exited with a non-zero exit code ($exit_status). Exiting."
+          exit 1;
+       fi
     fi
 fi
 
 if [[ $jobfiles_flag == "1" ]]; then
+    
+    # clean durectory for processing
+    rmprocessed.bash
+
     cmd="create_runfiles.py $template_file --jobfiles --queue $QUEUENAME $copy_to_tmp"
     echo "Running.... $cmd >create_jobfiles.e 1>out_create_jobfiles.o"
     $cmd 2>create_jobfiles.e 1>out_create_jobfiles.o
