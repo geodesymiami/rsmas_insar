@@ -364,8 +364,15 @@ fi
 
 if [[ $jobfiles_flag == "1" ]]; then
     
-    # clean durectory for processing
-    rmprocessed.bash
+    # clean directory for processing
+    cmd="clean_dir.bash $PWD --runfiles --ifgrams --mintpy --minopy"
+    echo "Running.... $cmd"
+    $cmd
+    exit_status="$?"
+    if [[ $exit_status -ne 0 ]]; then
+       echo "clean_dir.bash exited with a non-zero exit code ($exit_status). Exiting."
+       exit 1;
+    fi
 
     cmd="create_runfiles.py $template_file --jobfiles --queue $QUEUENAME $copy_to_tmp"
     echo "Running.... $cmd >create_jobfiles.e 1>out_create_jobfiles.o"
