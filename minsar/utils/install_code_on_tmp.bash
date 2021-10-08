@@ -39,6 +39,7 @@ if [[ $job_name == *"minopy"* ]]; then
     mkdir -p /tmp/rsmas_insar/sources
     cp -r $RSMASINSAR_HOME/sources/MiNoPy /tmp/rsmas_insar/sources
     cp -r $RSMASINSAR_HOME/sources/MintPy /tmp/rsmas_insar/sources
+    cp -r $RSMASINSAR_HOME/3rdparty/PyAPS /tmp/rsmas_insar/3rdparty
 fi
 
 cp -r $RSMASINSAR_HOME/3rdparty/launcher /tmp/rsmas_insar/3rdparty 
