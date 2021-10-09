@@ -70,6 +70,7 @@ randomorder=false
 rapid=false
 append=false
 tmp=true
+tmp_flag_str="--tmp"
 run_files_name="run_files_tmp"
 wait_time=30
 
@@ -119,11 +120,13 @@ do
             ;;
         --tmp)
             tmp=true
+            tmp_flag_str="--tmp"
             run_files_name="run_files_tmp"
             shift
             ;;
         --no_tmp)
             tmp=false
+            tmp_flag_str="--no_tmp"
             run_files_name="run_files"
             shift
             ;;
@@ -348,7 +351,7 @@ for g in "${globlist[@]}"; do
 
 
     # Run check_job_output.py on all files
-    cmd="check_job_outputs.py  ${files[@]}"
+    cmd="check_job_outputs.py  ${files[@]} $tmp_flag_str"
     echo "$cmd"
     $cmd
        exit_status="$?"
