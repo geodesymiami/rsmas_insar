@@ -88,13 +88,11 @@ cp -p ../minsar/additions/isce2/topo.py ../sources/isce2/contrib/stack/stripmapS
 #cp -p ../minsar/additions/isce/stackSentinel.py $ISCE_STACK/topsStack
 
 ```
-* #create your `${codedir}_miniconda3.tar`  (removing `pkgs` saves space, could cause problems with environments) (needed for `install_code_to_tmp.bash) ($codedir is the parent directory of rsmas_insar)
+* #create your `$miniconda3.tar`  (removing `pkgs` saves space, could cause problems with environments) (needed for `install_code_to_tmp.bash)
 ```
 cd $RSMASINSAR_HOME/3rdparty
 rm -rf miniconda3/pkgs
-codedir=$(basename $(dirname $RSMASINSAR_HOME))
-tar cf ${codedir}_miniconda3.tar miniconda3
-cp ${codedir}_miniconda3.tar $SCRATCHDIR
+tar cf miniconda3.tar miniconda3
 ```
 
 ### #Orbits and aux files
