@@ -737,7 +737,7 @@ class JOB_SUBMIT:
             job_file_lines.append("copy_data_to_tmp.bash {} {} {}\n".format(job_file_name, batch_file, self.out_dir))
 
         job_file_lines.append( "# set environment    \n" )
-        job_file_lines.append( "unset PATH\n")
+        job_file_lines.append( "export PATH=/bin\n")
         job_file_lines.append( "export RSMASINSAR_HOME=/tmp/rsmas_insar\n" )
 
         if self.prefix == 'stripmap':
