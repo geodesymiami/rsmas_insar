@@ -1,4 +1,6 @@
 #! /bin/bash
+##################################################################################
+source $RSMASINSAR_HOME/minsar/utils/minsar_functions.bash
 #set -x
 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
@@ -30,6 +32,8 @@ helptext="                                                                      
    --mintpy --minopy    both                                                     \n\
                                                                                  \n\
    --sleep SECS     sleep seconds before running                                 \n\
+   --select_reference     select reference date [default].                      \n\
+   --no_select_reference  don't select reference date.                           \n\
    --tmp            copy code and data to local /tmp [default].                  \n\
    --no_tmp         no copying to local /tmp. This can be                        \n 
      "
@@ -56,7 +60,18 @@ cd $WORK_DIR
 
 echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` $@ " | tee -a "${WORK_DIR}"/log
 
+download_flag=1
+dem_flag=1
+jobfiles_flag=1
+select_reference_flag=1
+ifgrams_flag=1
+upload_flag=1
+insarmaps_flag=1
+finishup_flag=1
+
 copy_to_tmp="--tmp"
+runfiles_dir="run_files_tmp"
+configs_dir="configs_tmp"
 
 while [[ $# -gt 0 ]]
 do
@@ -94,10 +109,22 @@ do
             ;;
         --tmp)
             copy_to_tmp="--tmp"
+            runfiles_dir="run_files_tmp"
+            configs_dir="configs_tmp"
             shift
             ;;
         --no_tmp)
             copy_to_tmp="--no_tmp"
+            runfiles_dir="run_files"
+            configs_dir="configs"
+            shift
+            ;;
+        --select_reference)
+            select_reference_flag=1
+            shift
+            ;;
+        --no_select_reference)
+            select_reference_flag=0
             shift
             ;;
         *)
@@ -118,11 +145,6 @@ if [ ! -z ${sleep_time+x} ]; then
   sleep $sleep_time
 fi
 
-download_flag=1
-dem_flag=1
-jobfiles_flag=1
-ifgrams_flag=1
-
 if [[ -v mintpy_flag ]]; then lock_mintpy_flag=1; fi
 mintpy_flag=1
 if [[ -v minopy_flag ]]; then  
@@ -135,10 +157,6 @@ if [[ -v minopy_flag ]]; then
 else
     minopy_flag=0;
 fi
-
-upload_flag=1
-insarmaps_flag=1
-finishup_flag=1
 
 if [[ $startstep == "download" ]]; then
     download_flag=1
@@ -248,10 +266,10 @@ else
     echo "copy_to_tmp is switched OFF"
 fi
 echo "Flags for processing steps:"
-echo "download dem jobfiles ifgrams mintpy minopy upload insarmaps"
-echo "    $download_flag     $dem_flag      $jobfiles_flag      $ifgrams_flag        $mintpy_flag     $minopy_flag      $upload_flag       $insarmaps_flag"
+echo "download dem jobfiles select_reference ifgrams mintpy minopy upload insarmaps"
+echo "    $download_flag     $dem_flag      $jobfiles_flag          $select_reference_flag             $ifgrams_flag       $mintpy_flag      $minopy_flag      $upload_flag       $insarmaps_flag"
 
-###################################
+##################################
 # adjust insarmaps_flag based on $template_file
 str_insarmaps_flag=($(grep ^insarmaps $template_file | cut -d "=" -f 2 | xargs))
 length_str_insarmaps_flag=$(wc -w <<< $str_insarmaps_flag)
@@ -383,10 +401,63 @@ if [[ $jobfiles_flag == "1" ]]; then
        exit 1;
     fi
 
-    # # modify config files to use /tmp on compute node
-
 fi
+ 
+if [[ $select_reference_flag == "1" ]]  && [[ $template_file == *"Sen"* ]]; then 
+    echo "Unpacking data to select reference image..."
 
+    #modify config_reference so that data are unpacked only
+    sed -i '/Function-2/s/^#\?/#/' $configs_dir/config_reference
+    sed -i '/^topo/s/^#\?/#/' $configs_dir/config_reference
+    sed -i '/^reference/s/^#\?/#/' $configs_dir/config_reference
+    sed -i '/^dem/s/^#\?/#/' $configs_dir/config_reference
+    sed -i '/^geom_referenceDir/s/^#\?/#/' $configs_dir/config_reference
+    sed -i '/^numProcess/s/^#\?/#/' $configs_dir/config_reference
+
+    #unpack all data
+    cmd="run_workflow.bash $template_file --start 1 --stop 2 $copy_to_tmp"
+    echo "Running.... $cmd"
+    $cmd
+    exit_status="$?"
+    if [[ $exit_status -ne 0 ]]; then
+       echo "run_workflow.bash --start 1 --stop 2 exited with a non-zero exit code ($exit_status). Exiting."
+       exit 1;
+    fi
+    reference_date=$(get_reference_date)
+
+    # select new reference date
+    countbursts | sort -k3,3 > number_of_bursts_sorted.txt
+    number_of_dates=$(wc -l < number_of_bursts_sorted.txt)
+    percentile=2    #don't take the date with the lowest number of bursts as it may be corrupt. Allow for 3% dates elimination
+    threshold=$(echo "scale=1; $number_of_dates / 100 * $percentile" | bc | awk '{print int($1+0.5)}')
+    head -$threshold  number_of_bursts_sorted.txt | tail -1 
+    new_reference_date=$(head -$threshold  number_of_bursts_sorted.txt | tail -1 | awk '{print $1}' | cut -d'/' -f2)
+    echo "#########################################"
+    echo "Original reference date:  $reference_date" | tee -a log
+    echo "Selected reference date ( $threshold'th image after sorting): $new_reference_date" | tee -a log
+    echo "#########################################"
+
+    # insert new reference date into templatefile and save run_files and config fikes
+    rm -rf modified_template
+    mkdir modified_template
+    cp $template_file modified_template
+    template_file=$PWD/modified_template/$(basename $template_file)
+    sed -i  "s|topsStack.subswath.*|&\ntopsStack.referenceDate              = $new_reference_date|" $template_file
+
+    mv $runfiles_dir modified_template
+    mv $configs_dir modified_template
+    rm -rf run_files configs
+
+    cmd="create_runfiles.py $template_file --jobfiles --queue $QUEUENAME $copy_to_tmp"
+    echo "Running.... $cmd >create_jobfiles.e 1>out_create_jobfiles.o"
+    $cmd 2>create_jobfiles.e 1>out_create_jobfiles.o
+    exit_status="$?"
+    if [[ $exit_status -ne 0 ]]; then
+       echo "create_jobfile.py exited with a non-zero exit code ($exit_status). Exiting."
+       exit 1;
+    fi
+fi
+   
 if [[ $ifgrams_flag == "1" ]]; then
     # possibly set local WEATHER_DIR if WORK is slow
     #timeout 2 ls  $WEATHER_DIR/ERA5/* >> /dev/null ; echo $?
@@ -400,7 +471,6 @@ if [[ $ifgrams_flag == "1" ]]; then
     python $cmd >& out_download_ERA5_data.e &
     echo "$(date +"%Y%m%d:%H-%m") * download_ERA5_data.py --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR " >> "${WORK_DIR}"/log
 
- 
     cmd="run_workflow.bash $template_file --dostep ifgrams $copy_to_tmp"
     echo "Running.... $cmd"
     $cmd
