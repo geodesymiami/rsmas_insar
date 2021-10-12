@@ -6,25 +6,25 @@ function get_reference_date(){
 }
 
 #####################################################################
-function countbursts(){ files=()
+function countbursts(){ 
                    subswaths=reference/???
                    unset array
                    declare -a array 
                    for subswath in $subswaths; do
-                       last=`ls $subswath/burst*xml | tail -1`
-                       array+=($(basename $last))
+                       icount=`ls $subswath/burst*xml | wc -l`
+                       array+=($(basename $icount))
                    done;
                    reference_date=$(get_reference_date)
-                   echo "reference/$reference_date  #of_bursts: `ls reference/IW*/burst*xml | wc -l`   ${array[@]}"
+                   echo "reference/$reference_date        #of_bursts: `ls reference/IW*/burst*xml | wc -l`   ${array[@]}"
 
-                   dates="secondarys/*"
+                   dates="coreg_secondarys/*"
                    for date in $dates; do
                        subswaths=$date/???
                        unset array
                        declare -a array 
                        for subswath in $subswaths; do
-                           last=`ls $subswath/burst*xml | tail -1`
-                           array+=($(basename $last))
+                           icount=`ls $subswath/burst*xml | wc -l`
+                           array+=($(basename $icount))
                        done;
                        echo "$date #of_bursts: `ls $date/IW*/burst*xml | wc -l`   ${array[@]}"
                    done;
