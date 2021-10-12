@@ -428,13 +428,13 @@ if [[ $select_reference_flag == "1" ]]  && [[ $template_file == *"Sen"* ]]; then
     # select new reference date
     countbursts | sort -k3,3 > number_of_bursts_sorted.txt
     number_of_dates=$(wc -l < number_of_bursts_sorted.txt)
-    percentile=2    #don't take the date with the lowest number of bursts as it may be corrupt. Allow for 3% dates elimination
-    threshold=$(echo "scale=1; $number_of_dates / 100 * $percentile" | bc | awk '{print int($1+0.5)}')
+    percentile=3    #don't take the date with the lowest number of bursts as it may be corrupt. Allow for 3% dates elimination
+    threshold=$(echo "scale=2; $number_of_dates / 100 * $percentile" | bc | awk '{print int($1+1)}')
     head -$threshold  number_of_bursts_sorted.txt | tail -1 
     new_reference_date=$(head -$threshold  number_of_bursts_sorted.txt | tail -1 | awk '{print $1}' | cut -d'/' -f2)
     echo "#########################################"
     echo "Original reference date:  $reference_date" | tee -a log
-    echo "Selected reference date ( $threshold'th image after sorting): $new_reference_date" | tee -a log
+    echo "Selected reference date (image $threshold after sorting): $new_reference_date" | tee -a log
     echo "#########################################"
 
     # insert new reference date into templatefile and save run_files and config fikes
