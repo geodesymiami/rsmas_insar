@@ -92,7 +92,7 @@ def parse_arguments(args):
     job_params.work_dir = os.path.join(scratch_dir,
                                        job_params.file.rsplit(os.path.basename(scratch_dir))[1].split('/')[1])
 
-    if job_params.tmp:
+    if job_params.copy_to_tmp:
         job_params.out_dir = job_params.out_dir + "_tmp"
 
     if 'run_files' in job_params.out_dir:
@@ -148,7 +148,7 @@ class JOB_SUBMIT:
 
         try:
             dem_file = glob.glob(self.work_dir + '/DEM/*.wgs84')[0]
-            inps.template[inps.prefix + 'Stack.demDir'] = dem_file
+            inps.template[inps.prefix + 'Stack.demDir'] = os.path.dirname(dem_file)
         except:
             print('DEM does not exist in {}'.format(self.work_dir + '/DEM'))
 
