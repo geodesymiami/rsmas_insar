@@ -51,7 +51,6 @@ mkdir -p ../3rdparty
 ../3rdparty/miniconda3/bin/conda config --add channels conda-forge
 ../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MintPy/docs/requirements.txt
 ../3rdparty/miniconda3/bin/pip install git+https://github.com/insarlab/PySolid.git
-../3rdparty/miniconda3/bin/pip install git+https://github.com/tylere/pykml.git
 ../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MiNoPy/docs/requirements.txt
 ../3rdparty/miniconda3/bin/conda install --yes --file ../sources/insarmaps_scripts/docs/requirements.txt
 
@@ -89,12 +88,13 @@ cp -p ../minsar/additions/isce2/topo.py ../sources/isce2/contrib/stack/stripmapS
 #cp -p ../minsar/additions/isce/stackSentinel.py $ISCE_STACK/topsStack
 
 ```
-* #create your `miniconda3.tar`  (removing `pkgs` saves space, could cause problems with environments) (needed for `install_code_to_tmp.bash)
+* #create your `${codedir}_miniconda3.tar`  (removing `pkgs` saves space, could cause problems with environments) (needed for `install_code_to_tmp.bash) ($codedir is the parent directory of rsmas_insar)
 ```
 cd $RSMASINSAR_HOME/3rdparty
 rm -rf miniconda3/pkgs
-tar cf miniconda3.tar miniconda3
-cp miniconda3.tar $SCRATCHDUR
+codedir=$(basename $(dirname $RSMASINSAR_HOME))
+tar cf ${codedir}_miniconda3.tar miniconda3
+cp ${codedir}_miniconda3.tar $SCRATCHDIR
 ```
 
 ### #Orbits and aux files
