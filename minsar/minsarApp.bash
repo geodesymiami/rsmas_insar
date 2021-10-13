@@ -63,7 +63,7 @@ echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` $@ " | tee -a "${WORK_DIR}"/log
 download_flag=1
 dem_flag=1
 jobfiles_flag=1
-select_reference_flag=1
+select_reference_flag=0
 ifgrams_flag=1
 upload_flag=1
 insarmaps_flag=1
@@ -280,15 +280,16 @@ if [[ $str_insarmaps_flag == "False" ]]; then
 fi
 
 #############################################################
-# check weather miniconda3.tar, S1orbits.tar and S1orbits 
-# have not been purged from $SCRATCHDIR
-if  ! test -f "$SCRATCHDIR/miniconda3.tar" ; then
-    echo "No miniconda3.tar found on $SCRATCHDIR. Copying...."
-    cp $RSMASINSAR_HOME/3rdparty/miniconda3.tar $SCRATCHDIR
+# check weather miniconda3.tar, S1orbits.tar and S1orbits exist on $SCRATCHDIR 
+# (might be purged)
+code_dir=$(echo $(basename $(dirname $RSMASINSAR_HOME)))
+if  ! test -f "$SCRATCHDIR/${code_dir}_miniconda3.tar" ; then
+    echo "Copying ${code_dir}_miniconda3.tar to $SCRATCHDIR ..."
+    cp $RSMASINSAR_HOME/3rdparty/miniconda3.tar $SCRATCHDIR/${code_dir}_miniconda3.tar
 fi
 if  ! test -f "$SCRATCHDIR/S1orbits.tar" ; then
-    echo "No S1orbits.tar found on $SCRATCHDIR. Copying...."
-    cp $WORKDIR/S1orbits.tar $SCRATCH
+    echo "Copying S1orbits.tar to $SCRATCHDIR ..."
+    cp $WORKDIR/S1orbits.tar $SCRATCHDIR
 fi
 if [ ! "$(ls -A $SCRATCHDIR/S1orbits)" ]; then
      echo "SCRATCHDIR/S1orbits is empty. Untarring S1orbits.tar ..."
