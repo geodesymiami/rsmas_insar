@@ -106,7 +106,7 @@ fi
 #echo $$
 
 job_file=$1
-step_name=$(echo $job_file | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,}.job)")
+step_name=$(echo $job_file | grep -oP "(?<=run_\d{2}_)(.*)(?=_\d{1,}.job)|smallbaseline_wrapper|insarmaps")
 if [ -z "$step_name" ]; then
     step_name=${job_file%.*}
 fi
