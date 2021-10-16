@@ -291,7 +291,6 @@ for g in "${globlist[@]}"; do
             step_name_long=$(echo $file_pattern | grep -oP "(?<=$run_files_name\/)(.*)(?=_\d{1,})|insarmaps|smallbaseline_wrapper")
             jobnumber=${jobnumbers[$j]}
             state=$(sacct --format="State" -j $jobnumber | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | head -3 | tail -1 )
-
             if [[ $state == *"COMPLETED"* ]]; then
                 num_complete=$(($num_complete+1))
             elif [[ $state == *"RUNNING"* ]]; then
@@ -351,11 +350,11 @@ for g in "${globlist[@]}"; do
     cmd="check_job_outputs.py  ${files[@]}"
     echo "$cmd"
     $cmd
-       exit_status="$?"
-       if [[ $exit_status -ne 0 ]]; then
-            echo "Error in run_workflow.bash: check_job_outputs.py exited with code ($exit_status)."
-            exit 1
-       fi
+    exit_status="$?"
+    if [[ $exit_status -ne 0 ]]; then
+        echo "Error in run_workflow.bash: check_job_outputs.py exited with code ($exit_status)."
+        exit 1
+    fi
     echo
 done
 
