@@ -71,7 +71,6 @@ def main(iargs=None):
     if inps.download_asf:
         online, speed = is_service_online("https://web-services.unavco.org")
         print("{:31s} {:6s} {:4s}".format("downloadASF unavco web-services", "ONLINE" if online else "OFFLINE", speed))
-        #import pdb; pdb.set_trace()
         online, speed = is_service_online("https://datapool.asf.alaska.edu/SLC/SA/S1A_IW_SLC__1SSV_20160605T114943_20160605T115018_011575_011AEF_98EA.zip") 
         print("{:31s} {:6s} {:4s}".format("downloadASF download service is", "ONLINE" if online else "OFFLINE", speed))
 
