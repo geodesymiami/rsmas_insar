@@ -17,6 +17,11 @@ def cmd_line_parser(iargs=None):
 
     parser = argparse.ArgumentParser(description='Check job outputs')
     parser.add_argument('job_files', nargs='+', type=str, help='batch job name:\n')
+    parser.add_argument('--tmp', dest='copy_to_tmp', action='store_true', default=True,
+                            help='modifies jobfiles in run_files_tmp')
+    parser.add_argument('--no_tmp', dest='copy_to_tmp', action='store_false',
+                            help="modifies jobfiles in run_files")
+
     inps = parser.parse_args(args=iargs)
 
     return inps
@@ -28,6 +33,11 @@ def main(iargs=None):
     work_dir = os.path.dirname(os.path.abspath(inps.job_files[0]))
 
     project_dir = os.path.dirname(work_dir)
+    if inps.copy_to_tmp:
+        run_files_dir=project_dir + '/run_files_tmp'
+    else:
+        run_files_dir=project_dir + '/run_files'
+
     if 'minopy' in project_dir:
         project_dir = os.path.dirname(os.path.abspath(project_dir))
 
@@ -100,7 +110,6 @@ def main(iargs=None):
                       #matched_data_problem_strings.append('Warning: \"' + string + '\" found in ' + file + '\n')
                       date = file.split("_")[-2]
                       print( 'WARNING: \"' + string + '\" found in ' + os.path.basename(file) + ': removing ' + date + ' from run_files ')
-                      run_files_dir=project_dir + '/run_files'
                       putils.run_remove_date_from_run_files(run_files_dir=run_files_dir, date=date, start_run_file = 3 )
                       with open(run_files_dir + '/removed_dates.txt', 'a') as rd:
                           rd.writelines('run_02: removing ' + date + ', \"' + string + '\" found in ' + os.path.basename(file) + ' \n')
@@ -119,7 +128,6 @@ def main(iargs=None):
                   if check_words_in_file(file, string):
                       date = file.split("_")[-2]
                       print( 'WARNING: \"' + string + '\" found in ' + os.path.basename(file) + ': removing ' + date + ' from run_files ')
-                      run_files_dir=project_dir + '/run_files'
                       putils.run_remove_date_from_run_files(run_files_dir=run_files_dir, date=date, start_run_file = 5 )
                       secondary_date_dir = project_dir + '/coreg_secondarys/' + date
                       shutil.rmtree(secondary_date_dir)
@@ -149,7 +157,6 @@ def main(iargs=None):
                  problem_dates = list(set(problem_dates))
                  problem_dates = natsorted(problem_dates)
                  for date in problem_dates:
-                      run_files_dir=project_dir + '/run_files'
                       print( 'WARNING: \"' + string + '\" found in ' + os.path.basename(file) + ': removing ' + date + ' from run_files ')
                       putils.run_remove_date_from_run_files(run_files_dir=run_files_dir, date=date, start_run_file = 7 )
                       with open(run_files_dir + '/removed_dates.txt', 'a') as rd:

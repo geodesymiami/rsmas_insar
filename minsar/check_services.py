@@ -10,7 +10,7 @@ def add_common_parser(parser):
     p.add_argument('--demServer',       dest='dem_server',       action='store_true', help='Check DEM server.')
     p.add_argument('--downloadASF',     dest='download_asf',     action='store_true', help='Check ASF download server.')
     p.add_argument('--jetstreamServer', dest='jetstream_server', action='store_true', help='Check jetstream server.')
-    p.add_argument('--workdir',         dest='work_dir',         action='store_true', help='Check $WORK directory.')
+    p.add_argument('--workdir',         dest='work_dir',         action='store_true', help='Check $WORK2 directory.')
     p.add_argument('--insarmaps',       dest='insarmaps',        action='store_true', help='Check insarmaps server.')
     return parser
 
@@ -21,10 +21,12 @@ def check_server_status(server_url, timeout=0.1, extra_options=[]):
     output = str(process.stderr)
 
     online_string="200 OK"
-    offline_string="failed"
+    offline_string1="failed"
+    offline_string2="404 Not Found"
+    #offline_string3="Remote file does not exist -- broken link!"  # try this if previous does not work
     if online_string in str(output):
         return True
-    elif offline_string in str(output):
+    elif offline_string1 in str(output) or offline_string2 in str(output):
         return False
     else:
         return "Unknown"
@@ -68,7 +70,7 @@ def main(iargs=None):
 
     if inps.download_asf:
         online, speed = is_service_online("https://web-services.unavco.org")
-        print("{:31s} {:6s} {:4s}".format("downloadASF list service is", "ONLINE" if online else "OFFLINE", speed))
+        print("{:31s} {:6s} {:4s}".format("downloadASF unavco web-services", "ONLINE" if online else "OFFLINE", speed))
         online, speed = is_service_online("https://datapool.asf.alaska.edu/SLC/SA/S1A_IW_SLC__1SSV_20160605T114943_20160605T115018_011575_011AEF_98EA.zip") 
         print("{:31s} {:6s} {:4s}".format("downloadASF download service is", "ONLINE" if online else "OFFLINE", speed))
 
@@ -81,10 +83,10 @@ def main(iargs=None):
         print("{:31s} {:6s} {:4s}".format("insarmaps server is", "ONLINE" if online else "OFFLINE", speed))
 
     if inps.work_dir:
-        workdir = os.environ['WORK']
+        workdir = os.environ['WORK2']
         command = "timeout {} ls {}".format("{}", workdir)
         online, speed = is_service_online(command)
-        print("{:31s} {:6s} {:4s}".format("$WORK is", "ONLINE" if online else "OFFLINE", speed))
+        print("{:31s} {:6s} {:4s}".format("$WORK2 is", "ONLINE" if online else "OFFLINE", speed))
 
     
 

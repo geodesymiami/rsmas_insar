@@ -37,6 +37,7 @@ def main(iargs=None):
 
     inps.out_dir = inps.work_dir
     inps.num_data = 1
+
     job_obj = JOB_SUBMIT(inps)
     #########################################
     # Submit job
@@ -52,7 +53,12 @@ def main(iargs=None):
         sys.exit(0)
 
     try:
-        dem_file = glob.glob('DEM/*.wgs84')[0]
+       dem_dir = inps.template[inps.prefix + 'Stack.demDir']
+    except:
+       dem_dir = 'DEM'
+
+    try:
+        dem_file = glob.glob(dem_dir + '/*.wgs84')[0]
         inps.template[inps.prefix + 'Stack.demDir'] = dem_file
     except:
         raise SystemExit('DEM does not exist')
@@ -137,6 +143,11 @@ def main(iargs=None):
             job_name = 'smallbaseline_wrapper'
             job_file_name = job_name
             command = ['smallbaselineApp.py', inps.custom_template_file, '--dir', 'mintpy']
+
+            #pre_command = ["""[[ $(ls mintpy/time* | wc -l) -eq 1 ]] && rm mintpy/time*"""]
+            #command=pre_command] + command
+            #import pdb; pdb.set_trace()
+
             job_obj.submit_script(job_name, job_file_name, command, writeOnly='True')
         else:
             job_name = 'minopy_wrapper'

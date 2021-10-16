@@ -39,12 +39,15 @@ if [[ $job_name == *"minopy"* ]]; then
     mkdir -p /tmp/rsmas_insar/sources
     cp -r $RSMASINSAR_HOME/sources/MiNoPy /tmp/rsmas_insar/sources
     cp -r $RSMASINSAR_HOME/sources/MintPy /tmp/rsmas_insar/sources
+    cp -r $RSMASINSAR_HOME/3rdparty/PyAPS /tmp/rsmas_insar/3rdparty
 fi
 
 cp -r $RSMASINSAR_HOME/3rdparty/launcher /tmp/rsmas_insar/3rdparty 
-cp $SCRATCH/miniconda3.tar /tmp
-tar xf /tmp/miniconda3.tar -C /tmp/rsmas_insar/3rdparty
-rm /tmp/miniconda3.tar
+
+code_dir=$(echo $(basename $(dirname $RSMASINSAR_HOME)))
+cp $SCRATCHDIR/${code_dir}_miniconda3.tar /tmp
+tar xf /tmp/${code_dir}_miniconda3.tar -C /tmp/rsmas_insar/3rdparty
+rm /tmp/${code_dir}_miniconda3.tar
 cp -r $RSMASINSAR_HOME/sources/isce2/contrib/stack/*  /tmp/rsmas_insar/3rdparty/miniconda3/share/isce2
 # set environment    
 export RSMASINSAR_HOME=/tmp/rsmas_insar

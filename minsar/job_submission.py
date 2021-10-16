@@ -92,7 +92,7 @@ def parse_arguments(args):
     job_params.work_dir = os.path.join(scratch_dir,
                                        job_params.file.rsplit(os.path.basename(scratch_dir))[1].split('/')[1])
 
-    if job_params.tmp:
+    if job_params.copy_to_tmp:
         job_params.out_dir = job_params.out_dir + "_tmp"
 
     if 'run_files' in job_params.out_dir:
@@ -148,7 +148,7 @@ class JOB_SUBMIT:
 
         try:
             dem_file = glob.glob(self.work_dir + '/DEM/*.wgs84')[0]
-            inps.template[inps.prefix + 'Stack.demDir'] = dem_file
+            inps.template[inps.prefix + 'Stack.demDir'] = os.path.dirname(dem_file)
         except:
             print('DEM does not exist in {}'.format(self.work_dir + '/DEM'))
 
@@ -737,6 +737,7 @@ class JOB_SUBMIT:
             job_file_lines.append("copy_data_to_tmp.bash {} {} {}\n".format(job_file_name, batch_file, self.out_dir))
 
         job_file_lines.append( "# set environment    \n" )
+        job_file_lines.append( "export PATH=/bin\n")
         job_file_lines.append( "export RSMASINSAR_HOME=/tmp/rsmas_insar\n" )
 
         if self.prefix == 'stripmap':
