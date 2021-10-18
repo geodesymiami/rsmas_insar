@@ -65,7 +65,7 @@ def  run_generate_chunk_template_files(inps):
     if inps.download_flag == True:
         minsarApp_option = '--start download'
     else:
-        minsarApp_option = '--start dem'
+        minsarApp_option = '--start jobfiles'
 
     prefix = 'tops'
     bbox_list = inps.template[prefix + 'Stack.boundingBox'].split(' ')
@@ -101,7 +101,9 @@ def  run_generate_chunk_template_files(inps):
         custom_tempObj.options['topsStack.boundingBox'] = ' '.join(chunk_bbox_list)
         
         slcDir = '$SCRATCHDIR/' + project_name + '/SLC'
+        demDir = '$SCRATCHDIR/' + project_name + '/DEM'
         custom_tempObj.options['topsStack.slcDir'] = slcDir
+        custom_tempObj.options['topsStack.demDir'] = demDir
         
         if inps.download_flag in [ True , 'True']:
            del(custom_tempObj.options['topsStack.slcDir'])
