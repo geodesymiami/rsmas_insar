@@ -164,10 +164,10 @@ def main(iargs=None):
 
                  # exit if too many removed dates
                  num_lines = sum(1 for line in open(run_files_dir + '/removed_dates.txt'))
-                 if (num_lines >= 10):
+                 if (num_lines >= 30):
                     #shutil.copy(run_files_dir + '/removed_dates.txt', project_dir + '/out_run_06_removed_dates.txt')
                     shutil.copy(run_files_dir + '/removed_dates.txt', project_dir + '/out_' + os.path.basename(job_name) + '.e')
-                    raise RuntimeError('Too many dates with missing bursts: ', num_lines)
+                    raise RuntimeError('Too many dates with missing bursts (limit is 30): ', num_lines)
 
        for file in error_files + out_files:
            for error_string in error_strings:
