@@ -63,7 +63,8 @@ echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` $@ " | tee -a "${WORK_DIR}"/log
 download_flag=1
 dem_flag=1
 jobfiles_flag=1
-select_reference_flag=0
+select_reference_flag=1
+new_reference_flag=0
 ifgrams_flag=1
 upload_flag=1
 insarmaps_flag=1
@@ -266,8 +267,8 @@ else
     echo "copy_to_tmp is switched OFF"
 fi
 echo "Flags for processing steps:"
-echo "download dem jobfiles select_reference ifgrams mintpy minopy upload insarmaps"
-echo "    $download_flag     $dem_flag      $jobfiles_flag          $select_reference_flag             $ifgrams_flag       $mintpy_flag      $minopy_flag      $upload_flag       $insarmaps_flag"
+echo "download dem jobfiles ifgrams mintpy minopy upload insarmaps select_reference"
+echo "    $download_flag     $dem_flag      $jobfiles_flag       $ifgrams_flag       $mintpy_flag      $minopy_flag      $upload_flag       $insarmaps_flag           $select_reference_flag"
 
 ##################################
 # adjust insarmaps_flag based on $template_file
@@ -370,9 +371,9 @@ if [[ $dem_flag == "1" ]]; then
        rm -rf DEM; eval "cp -r $demDir DEM"
     else   
        # download DEM
-       cmd=" dem_rsmas.py $template_file"
-       echo "Running... $cmd"
-       echo "$cmd" | bash
+       cmd="dem_rsmas.py $template_file"
+       echo "Running... $cmd >out_dem_rsmas.e 1>out_dem_rsmas.o"
+       $cmd 2>out_dem_rsmas.e 1>out_dem_rsmas.o
        exit_status="$?"
        if [[ $exit_status -ne 0 ]]; then
           echo "dem_rsmas.py exited with a non-zero exit code ($exit_status). Exiting."
@@ -404,61 +405,6 @@ if [[ $jobfiles_flag == "1" ]]; then
 
 fi
  
-if [[ $select_reference_flag == "1" ]]  && [[ $template_file == *"Sen"* ]]; then 
-    echo "Unpacking data to select reference image..."
-
-    #modify config_reference so that data are unpacked only
-    sed -i '/Function-2/s/^#\?/#/' $configs_dir/config_reference
-    sed -i '/^topo/s/^#\?/#/' $configs_dir/config_reference
-    sed -i '/^reference/s/^#\?/#/' $configs_dir/config_reference
-    sed -i '/^dem/s/^#\?/#/' $configs_dir/config_reference
-    sed -i '/^geom_referenceDir/s/^#\?/#/' $configs_dir/config_reference
-    sed -i '/^numProcess/s/^#\?/#/' $configs_dir/config_reference
-
-    #unpack all data
-    cmd="run_workflow.bash $template_file --start 1 --stop 2 $copy_to_tmp"
-    echo "Running.... $cmd"
-    $cmd
-    exit_status="$?"
-    if [[ $exit_status -ne 0 ]]; then
-       echo "run_workflow.bash --start 1 --stop 2 exited with a non-zero exit code ($exit_status). Exiting."
-       exit 1;
-    fi
-    reference_date=$(get_reference_date)
-
-    # select new reference date
-    countbursts | sort -k3,3 > number_of_bursts_sorted.txt
-    number_of_dates=$(wc -l < number_of_bursts_sorted.txt)
-    percentile=3    #don't take the date with the lowest number of bursts as it may be corrupt. Allow for 3% dates elimination
-    threshold=$(echo "scale=2; $number_of_dates / 100 * $percentile" | bc | awk '{print int($1+1)}')
-    head -$threshold  number_of_bursts_sorted.txt | tail -1 
-    new_reference_date=$(head -$threshold  number_of_bursts_sorted.txt | tail -1 | awk '{print $1}' | cut -d'/' -f2)
-    echo "#########################################"
-    echo "Original reference date:  $reference_date" | tee -a log
-    echo "Selected reference date (image $threshold after sorting): $new_reference_date" | tee -a log
-    echo "#########################################"
-
-    # insert new reference date into templatefile and save run_files and config fikes
-    rm -rf modified_template
-    mkdir modified_template
-    cp $template_file modified_template
-    template_file=$PWD/modified_template/$(basename $template_file)
-    sed -i  "s|topsStack.subswath.*|&\ntopsStack.referenceDate              = $new_reference_date|" $template_file
-
-    mv $runfiles_dir modified_template
-    mv $configs_dir modified_template
-    rm -rf run_files configs
-
-    cmd="create_runfiles.py $template_file --jobfiles --queue $QUEUENAME $copy_to_tmp"
-    echo "Running.... $cmd >create_jobfiles.e 1>out_create_jobfiles.o"
-    $cmd 2>create_jobfiles.e 1>out_create_jobfiles.o
-    exit_status="$?"
-    if [[ $exit_status -ne 0 ]]; then
-       echo "create_jobfile.py exited with a non-zero exit code ($exit_status). Exiting."
-       exit 1;
-    fi
-fi
-   
 if [[ $ifgrams_flag == "1" ]]; then
     # possibly set local WEATHER_DIR if WORK is slow
     #timeout 2 ls  $WEATHER_DIR/ERA5/* >> /dev/null ; echo $?
@@ -472,13 +418,109 @@ if [[ $ifgrams_flag == "1" ]]; then
     python $cmd >& out_download_ERA5_data.e &
     echo "$(date +"%Y%m%d:%H-%m") * download_ERA5_data.py --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR " >> "${WORK_DIR}"/log
 
-    cmd="run_workflow.bash $template_file --dostep ifgrams $copy_to_tmp"
-    echo "Running.... $cmd"
-    $cmd
-    exit_status="$?"
-    if [[ $exit_status -ne 0 ]]; then
-       echo "run_workflow.bash --dostep ifgrams  exited with a non-zero exit code ($exit_status). Exiting."
-       exit 1;
+    if [[ $template_file != *"Sen"* || $select_reference_flag == "0" ]]; then 
+
+       cmd="run_workflow.bash $template_file --dostep ifgrams $copy_to_tmp"
+       echo "Running.... $cmd"
+       $cmd
+       exit_status="$?"
+       if [[ $exit_status -ne 0 ]]; then
+          echo "run_workflow.bash --dostep ifgrams  exited with a non-zero exit code ($exit_status). Exiting."
+          exit 1;
+       fi
+
+    else
+
+       # run with checking and selecting of reference date
+       echo "### Running step 1 to 5 to check whether reference date has enough bursts"
+       cmd="run_workflow.bash $template_file --start 1 --stop 5 $copy_to_tmp"
+       echo "Running.... $cmd"
+       $cmd
+       exit_status="$?"
+       if [[ $exit_status -ne 0 ]]; then
+          echo "run_workflow.bash --start 1 --stop 5 exited with a non-zero exit code ($exit_status). Exiting."
+          exit 1;
+       fi
+
+       reference_date=$(get_reference_date)
+
+       # determine whether to select new reference date
+       countbursts | tr '/' ' ' | sort -k 1 | sort -k 2 | sort -k 4 -s | sed 's/ /\//' > number_of_bursts_sorted.txt
+       number_of_dates_with_less_or_equal_bursts_than_reference=$(grep -n reference number_of_bursts_sorted.txt | cut -f1 -d:)
+       number_of_dates_with_less_bursts_than_reference=$(( $number_of_dates_with_less_or_equal_bursts_than_reference - 1 ))
+       number_of_dates=$(wc -l < number_of_bursts_sorted.txt)
+       percentage_of_dates_with_less_bursts_than_reference=$(echo "scale=2; $number_of_dates_with_less_bursts_than_reference / $number_of_dates * 100"  | bc)
+       echo "#########################################" | tee -a log | tee -a `ls wor* | tail -1`
+       echo "Number of dates with less bursts than reference: $number_of_dates_with_less_bursts_than_reference" | tee -a log | tee -a  `ls wor* | tail -1`
+       echo "Total umber of dates: $number_of_dates" | tee -a log | tee -a  `ls wor* | tail -1`
+       echo "Percentage of dates with less bursts than reference: $percentage_of_dates_with_less_bursts_than_reference" | tee -a log | tee -a  `ls wor* | tail -1`
+       echo "# head -$number_of_dates_with_less_or_equal_bursts_than_reference  number_of_bursts_sorted.txt:" | tee -a log | tee -a `ls wor* | tail -1`
+       head -"$number_of_dates_with_less_or_equal_bursts_than_reference" number_of_bursts_sorted.txt | tee -a log | tee -a `ls wor* | tail -1`
+       percentage_of_dates_allowed_to_exclude=3
+       tmp=$(echo "$percentage_of_dates_allowed_to_exclude $number_of_dates" | awk '{printf "%f", $1 / 100 * $2}')
+       number_of_dates_allowed_to_exclude="${tmp%.*}"
+       new_reference_date=$(head -$((number_of_dates_allowed_to_exclude+1))  number_of_bursts_sorted.txt | tail -1 | awk '{print $1}' | cut -d'/' -f2)
+
+       if [[ $(echo "$percentage_of_dates_with_less_bursts_than_reference > $percentage_of_dates_allowed_to_exclude"  | bc -l ) -eq 1 ]] && [[ $new_reference_date != $reference_date ]] ; then
+          # insert new reference date into templatefile and rerun from beginning
+          new_reference_flag=1
+          echo "Original reference date:  $reference_date" | tee -a log | tee -a `ls wor* | tail -1`
+          echo "Selected reference date (image $((number_of_dates_allowed_to_exclude+1)) after sorting): $new_reference_date" | tee -a log | tee -a `ls wor* | tail -1`
+          echo "#########################################" | tee -a log | tee -a `ls wor* | tail -1`
+
+          rm -rf modified_template
+          mkdir modified_template
+          cp $template_file modified_template
+          template_file=$PWD/modified_template/$(basename $template_file)
+          sed -i  "s|topsStack.subswath.*|&\ntopsStack.referenceDate              = $new_reference_date|" $template_file
+
+          mv $runfiles_dir modified_template
+          mv $configs_dir modified_template
+          rm -rf run_files configs
+
+          # clean directory for processing
+          cmd="clean_dir.bash $PWD --runfiles --ifgrams"
+          echo "Running.... $cmd"
+          $cmd
+          exit_status="$?"
+          if [[ $exit_status -ne 0 ]]; then
+             echo "clean_dir.bash exited with a non-zero exit code ($exit_status). Exiting."
+             exit 1;
+          fi
+
+          cmd="create_runfiles.py $template_file --jobfiles --queue $QUEUENAME $copy_to_tmp"
+          echo "Running.... $cmd >create_jobfiles.e 1>out_create_jobfiles.o"
+          $cmd 2>create_jobfiles.e 1>out_create_jobfiles.o
+          exit_status="$?"
+          if [[ $exit_status -ne 0 ]]; then
+             echo "create_jobfile.py exited with a non-zero exit code ($exit_status). Exiting."
+             exit 1;
+          fi
+
+          # rerun steps 1 to 5  with new reference
+	  echo "### Re-running step 1 to 5 with reference $new_reference_date"
+          cmd="run_workflow.bash $template_file --start 1 --stop 5 $copy_to_tmp --append"
+          echo "Running.... $cmd"
+          $cmd
+          exit_status="$?"
+          if [[ $exit_status -ne 0 ]]; then
+             echo "run_workflow.bash --start 1 --stop 5 exited with a non-zero exit code ($exit_status). Exiting."
+             exit 1;
+          fi
+       else
+          echo "No new reference date selected. Continue with original date: $reference_date" | tee -a log | tee -a `ls wor* | tail -1`
+          echo "#########################################" | tee -a log | tee -a `ls wor* | tail -1`
+       fi
+
+       # continue running starting step 6
+       cmd="run_workflow.bash $template_file --start 6 --stop 11 $copy_to_tmp --append"
+       echo "Running.... $cmd"
+       $cmd
+       exit_status="$?"
+       if [[ $exit_status -ne 0 ]]; then
+          echo "run_workflow.bash --start 6 --stop 11 exited with a non-zero exit code ($exit_status). Exiting."
+          exit 1;
+       fi
     fi
     # correct *xm and *vrt files
     sed -i "s|/tmp|$PWD|g" */*.xml */*/*.xml  */*/*/*.xml 
@@ -486,7 +528,7 @@ if [[ $ifgrams_flag == "1" ]]; then
 fi
 
 if [[ $mintpy_flag == "1" ]]; then
-    cmd="run_workflow.bash $PWD --append --dostep mintpy $copy_to_tmp"
+    cmd="run_workflow.bash $PWD --append --dostep mintpy $copy_to_tmp --append"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"
