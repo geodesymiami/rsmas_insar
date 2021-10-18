@@ -65,6 +65,8 @@ def main(iargs=None):
     if not exist_valid_dem_dir(dem_dir):
         os.mkdir(dem_dir)
 
+    # FA 10/2021: We probably should check here whether a DEM/*wgs84 file exist and exit if it does
+    # That could save time. On the otehr hand, most step allow to be run even if data exist
     os.chdir(dem_dir)
 
     if inps.flag_ssara:
@@ -102,6 +104,8 @@ def main(iargs=None):
                 if proc.returncode is not 0:
                     raise Exception(
                         'ERROR starting dem.py subprocess')  # FA 8/19: I don't think this happens, errors are is output
+                print(output)
+                print(error, file=sys.stderr)
             except subprocess.CalledProcessError as exc:
                 print("Command failed. Exit code, StdErr:", exc.returncode, exc.output)
                 sys.exit('Error produced by dem.py')
