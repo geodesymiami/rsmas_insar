@@ -68,7 +68,6 @@ export PYTHONPATH=${PYTHONPATH}:${PYTHON3DIR}/lib/python3.8/site-packages:${ISCE
 export PYTHONPATH=${PYTHONPATH}:${MINOPY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${MIMTPY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}
-export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/sources/rsmas_tools
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/3rdparty/PyAPS
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/minsar/utils/ssara_ASF
 #export PYTHONPATH=${PYTHONPATH}:${ISCE_STACK}
@@ -107,6 +106,9 @@ export PATH=${MINOPY_HOME}/snaphu/bin:${PATH}
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH-""}
 export LD_LIBRARY_PATH=${PYTHON3DIR}/lib
 export LD_RUN_PATH=${PYTHON3DIR}/lib
+
+########## bash functions #########
+source $RSMASINSAR_HOME/minsar/utils/minsar_functions.bash
 
 if [ -n "${prompt}" ]
 then
