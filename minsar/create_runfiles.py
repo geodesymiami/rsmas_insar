@@ -104,8 +104,15 @@ def main(iargs=None):
             shutil.rmtree(directory)
 
     inps.Stack_template = pathObj.correct_for_isce_naming_convention(inps)
+    if inps.ignore_stack and os.path.exists(inps.work_dir + '/coreg_secondarys'):
+            shutil.rmtree(inps.work_dir + '/tmp_coreg_secondarys', ignore_errors=True)
+            shutil.move(inps.work_dir + '/coreg_secondarys', inps.work_dir + '/tmp_coreg_secondarys' ) 
+
     runObj = CreateRun(inps)
     runObj.run_stack_workflow()
+
+    if inps.ignore_stack and os.path.exists(inps.work_dir + '/tmp_coreg_secondarys'):
+            shutil.move(inps.work_dir + '/tmp_coreg_secondarys', inps.work_dir + '/coreg_secondarys' ) 
 
     if os.path.isfile(run_dir + '/run_06_extract_stack_valid_region'):
         with open(run_dir + '/run_06_extract_stack_valid_region', 'r') as f:
