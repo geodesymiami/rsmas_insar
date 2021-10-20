@@ -24,6 +24,9 @@ generate_burst_igram             5000    0  -->  7300    0                      
 
 NOTE 20 NOV:  Don't do slope for memory. That was a mistake
 
+fullBurst_geo2rdr        00:08:00 00:01:30  -->  00:08:00  00:02:00                Oct 20  28 burst (KokoxiliSenDT121 this gives 64, time was 63:30))
+
+
 ############################################
 stripmapStack
 igram                            4000 900  --> 4000 950                           9/21      MaunaLoaCskA10
