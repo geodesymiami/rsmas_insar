@@ -58,8 +58,7 @@ def  run_generate_chunk_template_files(inps):
     chunk_templates_dir_string = '$SCRATCHDIR/' + project_name + '/chunk_templates'
     os.makedirs(chunk_templates_dir, exist_ok=True)
 
-    command_list1 = []
-    command_list2 = []
+    command_list = []
     sleep_time = 0
 
     if inps.download_flag == True:
@@ -111,14 +110,9 @@ def  run_generate_chunk_template_files(inps):
         putils.write_template_file(chunk_template_file, custom_tempObj)
         putils.beautify_template_file(chunk_template_file)
 
-        command1 = 'mkdir ' + os.getenv('SCRATCHDIR') + '/' + chunk_name[0] + ' && cd "$_"; minsarApp.bash ' + chunk_template_file + ' ' + minsarApp_option + ' --sleep ' + str(sleep_time)
-        command2 = 'minsarApp.bash ' + chunk_template_file + ' ' + minsarApp_option + ' --sleep ' + str(sleep_time) + ' &'
-        command1 = 'mkdir -p $SCRATCHDIR/' + chunk_name[0] + ' && cd "$_"; minsarApp.bash ' + chunk_templates_dir_string + '/' +  chunk_template_file_base + ' ' +  minsarApp_option + ' --sleep ' + str(sleep_time)
-        command2 = 'minsarApp.bash ' + chunk_templates_dir_string + '/' + chunk_template_file_base + ' ' + minsarApp_option + ' --sleep ' + str(sleep_time) + ' &'
+        command = 'minsarApp.bash ' + chunk_templates_dir_string + '/' + chunk_template_file_base + ' ' + minsarApp_option + ' --sleep ' + str(sleep_time) + ' &'
 
-
-        command_list1.append(command1)
-        command_list2.append(command2)
+        command_list.append(command)
 
         lat = lat + inps.lat_step
         
@@ -127,16 +121,13 @@ def  run_generate_chunk_template_files(inps):
     commands_file = inps.work_dir + '/minsar_commands.txt'
     f = open(commands_file, "w")
 
-    for item in command_list1:
+    for item in command_list:
        print(item)
        f.write(item + '\n')
 
     print()
     f.write( '\n')
 
-    for item in command_list2:
-       print(item)
-       f.write(item + '\n')
     return
 
 ###########################################################################################

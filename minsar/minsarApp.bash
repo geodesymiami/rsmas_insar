@@ -32,8 +32,9 @@ helptext="                                                                      
    --mintpy --minopy    both                                                     \n\
                                                                                  \n\
    --sleep SECS     sleep seconds before running                                 \n\
-   --select_reference     select reference date [default].                      \n\
+   --select_reference     select reference date [default].                       \n\
    --no_select_reference  don't select reference date.                           \n\
+   --chunks         process in form of multiple chunks.                          \n\
    --tmp            copy code and data to local /tmp [default].                  \n\
    --no_tmp         no copying to local /tmp. This can be                        \n 
      "
@@ -62,6 +63,7 @@ echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` $@ " | tee -a "${WORK_DIR}"/log
 
 download_flag=1
 dem_flag=1
+chunks_flag=0
 jobfiles_flag=1
 select_reference_flag=1
 new_reference_flag=0
@@ -126,6 +128,10 @@ do
             ;;
         --no_select_reference)
             select_reference_flag=0
+            shift
+            ;;
+        --chunks)
+            chunks_flag=1
             shift
             ;;
         *)
@@ -267,8 +273,9 @@ else
     echo "copy_to_tmp is switched OFF"
 fi
 echo "Flags for processing steps:"
-echo "download dem jobfiles ifgrams mintpy minopy upload insarmaps select_reference"
-echo "    $download_flag     $dem_flag      $jobfiles_flag       $ifgrams_flag       $mintpy_flag      $minopy_flag      $upload_flag       $insarmaps_flag           $select_reference_flag"
+echo "download dem jobfiles ifgrams mintpy minopy upload insarmaps select_reference chunks"
+echo "    $download_flag     $dem_flag      $jobfiles_flag       $ifgrams_flag       $mintpy_flag      $minopy_flag      $upload_flag       $insarmaps_flag \
+          $select_reference_flag            $chunks_flag"
 
 ##################################
 # adjust insarmaps_flag based on $template_file
@@ -381,6 +388,47 @@ if [[ $dem_flag == "1" ]]; then
        fi
     fi
 fi
+
+if [[ $chunks_flag == "1" ]]; then
+    # generate chunk template files
+    cmd="generate_chunk_template_files.py $template_file"
+       echo "Running... $cmd >out_generate_chunk_template_files.e 1>out_generate_chunk_template_files.o"
+       $cmd 2>out_generate_chunk_template_files.e 1>out_generate_chunk_template_files.o
+       exit_status="$?"
+       if [[ $exit_status -ne 0 ]]; then
+          echo "generate_chunk_template_files.py exited with a non-zero exit code ($exit_status). Exiting."
+          exit 1;
+       fi
+       echo "Submitting chunk jobs:" | tee -a log
+       cat $WORK_DIR/minsar_commands.txt | tee -a log
+       bash $WORK_DIR/minsar_commands.txt
+       exit_status="$?"
+       if [[ $exit_status -ne 0 ]]; then
+          echo "bash $WORK_DIR/minsar_commands.txt exited with a non-zero exit code ($exit_status). Exiting."
+          exit 1;
+       fi
+       echo "Successful submitted minsarApp.bash chunk jobs"
+       exit 0
+fi
+
+if [[ $dem_flag == "1" ]]; then
+    if [[ ! -z $(grep -E "^stripmapStack.demDir|^topsStack.demDir" $template_file) ]];  then
+       # copy DEM if given
+       demDir=$(grep -E "^stripmapStack.demDir|^topsStack.demDir" $template_file | awk -F = '{printf "%s\n",$2}' | sed 's/ //')
+       rm -rf DEM; eval "cp -r $demDir DEM"
+    else   
+       # download DEM
+       cmd="dem_rsmas.py $template_file"
+       echo "Running... $cmd >out_dem_rsmas.e 1>out_dem_rsmas.o"
+       $cmd 2>out_dem_rsmas.e 1>out_dem_rsmas.o
+       exit_status="$?"
+       if [[ $exit_status -ne 0 ]]; then
+          echo "dem_rsmas.py exited with a non-zero exit code ($exit_status). Exiting."
+          exit 1;
+       fi
+    fi
+fi
+
 
 if [[ $jobfiles_flag == "1" ]]; then
     
