@@ -23,6 +23,8 @@ import math
 from minsar.objects import message_rsmas
 from minsar.download_data import add_polygon_to_ssaraopt
 from minsar.utils.process_utilities import cmd_line_parse
+from minsar.utils import get_boundingBox_from_kml
+
 #from minsar.download_rsmas import ssh_with_commands
 
 EXAMPLE = '''
@@ -77,10 +79,18 @@ def main(iargs=None):
         cmd = 'fixImageXml.py -f -i {}'.format(glob.glob(dem_dir + '/dem*.wgs84')[0])
         os.system(cmd)
 
-    elif inps.flag_boundingBox:
+    elif inps.flag_boundingBox or inps.flag_ssara_kml:
         print('DEM generation using ISCE')
-        bbox = inps.template[inps.prefix + 'Stack.boundingBox'].strip("'")
+        if inps.flag_boundingBox:
+           bbox = inps.template[inps.prefix + 'Stack.boundingBox'].strip("'")
+        if inps.flag_ssara_kml:
+           ssara_kml_file=sorted( glob.glob(inps.work_dir + '/SLC/ssara_search_*.kml') )[-1]
+           bbox = get_boundingBox_from_kml.main( [ssara_kml_file, '--delta_lon' , '0'] )
+           bbox = bbox.split('SNWE:')[1]
+
+        print('bbox:',bbox)
         bbox = [val for val in bbox.split()]
+
         south = bbox[0]
         north = bbox[1]
         west = bbox[2]
@@ -101,6 +111,7 @@ def main(iargs=None):
                 proc = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True,
                                         universal_newlines=True)
                 output, error = proc.communicate()
+                print(error)
                 if proc.returncode is not 0:
                     raise Exception(
                         'ERROR starting dem.py subprocess')  # FA 8/19: I don't think this happens, errors are is output

@@ -378,7 +378,7 @@ if [[ $dem_flag == "1" ]]; then
        rm -rf DEM; eval "cp -r $demDir DEM"
     else   
        # download DEM
-       cmd="dem_rsmas.py $template_file"
+       cmd="dem_rsmas.py $template_file --ssara_kml"
        echo "Running... $cmd >out_dem_rsmas.e 1>out_dem_rsmas.o"
        $cmd 2>out_dem_rsmas.e 1>out_dem_rsmas.o
        exit_status="$?"
@@ -392,43 +392,24 @@ fi
 if [[ $chunks_flag == "1" ]]; then
     # generate chunk template files
     cmd="generate_chunk_template_files.py $template_file"
-       echo "Running... $cmd >out_generate_chunk_template_files.e 1>out_generate_chunk_template_files.o"
-       $cmd 2>out_generate_chunk_template_files.e 1>out_generate_chunk_template_files.o
-       exit_status="$?"
-       if [[ $exit_status -ne 0 ]]; then
-          echo "generate_chunk_template_files.py exited with a non-zero exit code ($exit_status). Exiting."
-          exit 1;
-       fi
-       echo "Submitting chunk jobs:" | tee -a log
-       cat $WORK_DIR/minsar_commands.txt | tee -a log
-       bash $WORK_DIR/minsar_commands.txt
-       exit_status="$?"
-       if [[ $exit_status -ne 0 ]]; then
-          echo "bash $WORK_DIR/minsar_commands.txt exited with a non-zero exit code ($exit_status). Exiting."
-          exit 1;
-       fi
-       echo "Successful submitted minsarApp.bash chunk jobs"
-       exit 0
-fi
-
-if [[ $dem_flag == "1" ]]; then
-    if [[ ! -z $(grep -E "^stripmapStack.demDir|^topsStack.demDir" $template_file) ]];  then
-       # copy DEM if given
-       demDir=$(grep -E "^stripmapStack.demDir|^topsStack.demDir" $template_file | awk -F = '{printf "%s\n",$2}' | sed 's/ //')
-       rm -rf DEM; eval "cp -r $demDir DEM"
-    else   
-       # download DEM
-       cmd="dem_rsmas.py $template_file"
-       echo "Running... $cmd >out_dem_rsmas.e 1>out_dem_rsmas.o"
-       $cmd 2>out_dem_rsmas.e 1>out_dem_rsmas.o
-       exit_status="$?"
-       if [[ $exit_status -ne 0 ]]; then
-          echo "dem_rsmas.py exited with a non-zero exit code ($exit_status). Exiting."
-          exit 1;
-       fi
+    echo "Running... $cmd >out_generate_chunk_template_files.e 1>out_generate_chunk_template_files.o"
+    $cmd 2>out_generate_chunk_template_files.e 1>out_generate_chunk_template_files.o
+    exit_status="$?"
+    if [[ $exit_status -ne 0 ]]; then
+       echo "generate_chunk_template_files.py exited with a non-zero exit code ($exit_status). Exiting."
+       exit 1;
     fi
+    echo "Submitting chunk jobs:" | tee -a log
+    cat $WORK_DIR/minsar_commands.txt | tee -a log
+    bash $WORK_DIR/minsar_commands.txt
+    exit_status="$?"
+    if [[ $exit_status -ne 0 ]]; then
+       echo "bash $WORK_DIR/minsar_commands.txt exited with a non-zero exit code ($exit_status). Exiting."
+       exit 1;
+    fi
+    echo "Successful submitted minsarApp.bash chunk jobs"
+    exit 0
 fi
-
 
 if [[ $jobfiles_flag == "1" ]]; then
     
@@ -491,6 +472,7 @@ if [[ $ifgrams_flag == "1" ]]; then
        fi
 
        reference_date=$(get_reference_date)
+       echo "Reference date: $reference_date" | tee reference_date_isce.txt
 
        # determine whether to select new reference date
        countbursts | tr '/' ' ' | sort -k 1 | sort -k 2 | sort -k 4 -s | sed 's/ /\//' > number_of_bursts_sorted.txt
@@ -512,8 +494,8 @@ if [[ $ifgrams_flag == "1" ]]; then
        if [[ $(echo "$percentage_of_dates_with_less_bursts_than_reference > $percentage_of_dates_allowed_to_exclude"  | bc -l ) -eq 1 ]] && [[ $new_reference_date != $reference_date ]] ; then
           # insert new reference date into templatefile and rerun from beginning
           new_reference_flag=1
-          echo "Original reference date:  $reference_date" | tee -a log | tee -a `ls wor* | tail -1`
-          echo "Selected reference date (image $((number_of_dates_allowed_to_exclude+1)) after sorting): $new_reference_date" | tee -a log | tee -a `ls wor* | tail -1`
+          echo "Original reference date:  $reference_date" | tee -a log | tee -a `ls wor* | tail -1` | tee reference_date_isce.txt
+          echo "Selected reference date (image $((number_of_dates_allowed_to_exclude+1)) after sorting): $new_reference_date" | tee -a log | tee -a `ls wor* | tail -1` | tee -a tee reference_date_isce.txt
           echo "#########################################" | tee -a log | tee -a `ls wor* | tail -1`
 
           rm -rf modified_template
