@@ -67,6 +67,15 @@ def main(iargs=None):
     if not exist_valid_dem_dir(dem_dir):
         os.mkdir(dem_dir)
 
+    try:
+       inps.slc_dir = inps.template['topsStack.slcDir']
+    except:
+       inps.slc_dir = os.path.join(inps.work_dir, 'SLC')
+
+    # 10/21: inps.template['topsStack.slcDir'] may contain ./SLC  (it would be better to change where topsStack.slcDir is assigned)
+    if '.' in inps.slc_dir:
+       inps.slc_dir = inps.slc_dir.replace(".",os.getcwd())
+
     # FA 10/2021: We probably should check here whether a DEM/*wgs84 file exist and exit if it does
     # That could save time. On the otehr hand, most step allow to be run even if data exist
     os.chdir(dem_dir)
@@ -84,7 +93,8 @@ def main(iargs=None):
         if inps.flag_boundingBox:
            bbox = inps.template[inps.prefix + 'Stack.boundingBox'].strip("'")
         if inps.flag_ssara_kml:
-           ssara_kml_file=sorted( glob.glob(inps.work_dir + '/SLC/ssara_search_*.kml') )[-1]
+           #ssara_kml_file=sorted( glob.glob(inps.work_dir + '/SLC/ssara_search_*.kml') )[-1]
+           ssara_kml_file=sorted( glob.glob(inps.slc_dir + '/ssara_search_*.kml') )[-1]
            bbox = get_boundingBox_from_kml.main( [ssara_kml_file, '--delta_lon' , '0'] )
            bbox = bbox.split('SNWE:')[1]
 
