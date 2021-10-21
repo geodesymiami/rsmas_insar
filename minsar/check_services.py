@@ -17,6 +17,7 @@ def add_common_parser(parser):
 def check_server_status(server_url, timeout=0.1, extra_options=[]):
     option_str = ' '.join(extra_options)
     command = "wget --spider {} --connect-timeout={} --tries=3 {} ".format(server_url, timeout, option_str)
+    command = "wget {} --connect-timeout={} --tries=3 {} ".format(server_url, timeout, option_str)
     process = subprocess.run(command.split(), capture_output=True)
     output = str(process.stderr)
 
@@ -33,6 +34,7 @@ def check_server_status(server_url, timeout=0.1, extra_options=[]):
 
 def is_service_online(command, extra_options=[]):
 
+    print('                                testing: ',command)
     timeout_vals=[0.1, 1, 5]
     speed=["(fast)", "(slow)", ""]
 
