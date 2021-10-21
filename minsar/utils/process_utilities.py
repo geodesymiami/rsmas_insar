@@ -146,6 +146,11 @@ def add_download_dem(parser):
                              action='store_true',
                              default=False,
                              help='run dem.py from isce using boundingBox as lat/long bounding box [option for dem_rsmas.py]')
+    flag_parser.add_argument('--ssara_kml',
+                             dest='flag_ssara_kml',
+                             action='store_true',
+                             default=False,
+                             help='get boundingBox from ssara_*.kml file [option for dem_rsmas.py]')
 
     return parser
 
