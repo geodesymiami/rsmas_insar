@@ -151,9 +151,9 @@ def main(iargs=None):
             job_file_name = job_name
             command = ['smallbaselineApp.py', inps.custom_template_file, '--dir', 'mintpy']
 
-            #pre_command = ["""[[ $(ls mintpy/time* | wc -l) -eq 1 ]] && rm mintpy/time*"""]
-            #command=pre_command] + command
-            #import pdb; pdb.set_trace()
+            # pre_command = ["""[[ $(ls mintpy/time* | wc -l) -eq 1 ]] && rm mintpy/time*"""]
+            pre_command = ["clean_mintpy_dir.bash;"]
+            command = pre_command + command
 
             job_obj.submit_script(job_name, job_file_name, command, writeOnly='True')
         else:

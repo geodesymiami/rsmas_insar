@@ -171,8 +171,8 @@ class JOB_SUBMIT:
         if not email_notif is None:
             self.email_notif = email_notif
 
-        command_line = os.path.basename(argv[0]) + " "
-        command_line += " ".join(flag for flag in argv[1:] if flag != "--submit")
+        #command_line = os.path.basename(argv[0]) + " "                           # 10/21 FA: removed so that can add clean_mintpy_dir.bash prefix
+        command_line = " ".join(flag for flag in argv[0:] if flag != "--submit")
 
         self.get_memory_walltime(job_file_name, job_type='script')
 
