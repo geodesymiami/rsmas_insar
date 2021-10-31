@@ -61,10 +61,17 @@ def  run_generate_chunk_template_files(inps):
     command_list = []
     sleep_time = 0
 
-    if inps.download_flag == True:
-        minsarApp_option = '--start download'
+    command_options = ''
+    if inps.start_step is None and inps.do_step is None:
+       inps.start_step = 'jobfiles'
+
+    if inps.do_step is not None:
+        command_options =  command_options + ' --dostep ' + inps.do_step
     else:
-        minsarApp_option = '--start jobfiles'
+        if inps.start_step is not None:
+            command_options =  command_options + ' --start ' + inps.start_step
+        if inps.end_step is not None:
+            command_options =  command_options + ' --end ' + inps.end_step
 
     prefix = 'tops'
     bbox_list = inps.template[prefix + 'Stack.boundingBox'].split(' ')
@@ -104,23 +111,28 @@ def  run_generate_chunk_template_files(inps):
         custom_tempObj.options['topsStack.slcDir'] = slcDir
         custom_tempObj.options['topsStack.demDir'] = demDir
         
-        if inps.download_flag in [ True , 'True']:
+        #if inps.download_flag in [ True , 'True']:
+        #   del(custom_tempObj.options['topsStack.slcDir'])
+          
+        if 'download' in command_options :
            del(custom_tempObj.options['topsStack.slcDir'])
           
         putils.write_template_file(chunk_template_file, custom_tempObj)
         putils.beautify_template_file(chunk_template_file)
 
-        command = 'minsarApp.bash ' + chunk_templates_dir_string + '/' + chunk_template_file_base + ' ' + minsarApp_option + ' --sleep ' + str(sleep_time) + ' &'
+        #command = 'minsarApp.bash ' + chunk_templates_dir_string + '/' + chunk_template_file_base + ' ' + command_options + ' --sleep ' + str(sleep_time) + ' &'
+        command = inps.bash_script + ' ' + chunk_templates_dir_string + '/' + chunk_template_file_base +  command_options + ' --sleep ' + str(sleep_time) + ' &'
 
         command_list.append(command)
 
         lat = lat + inps.lat_step
         
-        sleep_time = sleep_time + 180
+        sleep_time = sleep_time +inps.wait_time
     
     commands_file = inps.work_dir + '/minsar_commands.txt'
     f = open(commands_file, "w")
 
+    print()
     for item in command_list:
        print(item)
        f.write(item + '\n')

@@ -72,8 +72,8 @@ def add_common_parser(parser):
                          help='walltime for submitting the script as a job')
     commonp.add_argument("--queue", dest="queue", metavar="QUEUE", help="Name of queue to submit job to")
     commonp.add_argument('--reserveNode', dest='reserve_node', type=int, default=1, help='number of nodes to reserve')
-    commonp.add_argument('--wait', dest='wait_time', default='00:00', metavar="Wait time (hh:mm)",
-                         help="wait time to submit a job")
+    #commonp.add_argument('--wait', dest='wait_time', default='00:00', metavar="Wait time (hh:mm)",
+    #                     help="wait time to submit a job")
     commonp.add_argument('--remora', dest='remora', action='store_true', help='use remora to get job information')
 
     return parser
@@ -201,12 +201,20 @@ def add_email_args(parser):
 
 def add_generate_chunk_template_files_args(parser):
     arg = parser.add_argument_group('Options for generating  template file chunks.')
-    arg.add_argument('--download', action='store_true', dest='download_flag', default=False,
-                    help='download data for each chunk')
+    arg.add_argument('--script', dest='bash_script', default='minsarApp.bash',
+                      help='bash script for command creation [minsarApp.bash|run_workflow_bash] (default: %(default)s)')
     arg.add_argument('--latStep', dest='lat_step', type=float,  default=1.0,
-                          help='chunk size in latitude [degrees] (default = 1.0).\n.')
+                      help='chunk size in latitude [degrees] (default = 1.0)\n')
     arg.add_argument('--latMargin', dest='lat_margin', type=float,  default=0.1,
-                          help='margin to latStep [degrees] (default = 0.1).\n')
+                          help='margin to latStep [degrees] (default = 0.1)\n')
+    arg.add_argument('--start', dest='start_step', metavar='STEP',
+                      help='start processing at the named step (default: %(default)s)')
+    arg.add_argument('--end', dest='end_step', metavar='STEP',
+                      help='end processing at the named step (default: %(default)s)')
+    arg.add_argument('--dostep', dest='do_step', metavar='STEP',
+                      help='run processing at the named step only')
+    arg.add_argument('--wait', dest='wait_time', type=int,  default=60,
+                      help='wait time between job submission [secs] (default: %(default)s)\n')
     return parser
 
 

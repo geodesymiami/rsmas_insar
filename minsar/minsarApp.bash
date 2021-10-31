@@ -76,6 +76,9 @@ copy_to_tmp="--tmp"
 runfiles_dir="run_files_tmp"
 configs_dir="configs_tmp"
 
+
+args=( "$@" )    # copy of command line arguments
+
 while [[ $# -gt 0 ]]
 do
     key="$1"
@@ -390,8 +393,46 @@ if [[ $dem_flag == "1" ]]; then
 fi
 
 if [[ $chunks_flag == "1" ]]; then
+# create string with minsar command options
+set -- "${args[@]}"
+options=""
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+
+    case $key in
+        --start)
+            options="$options --start $2"
+            shift # past argument
+            shift # past value
+            ;;
+	--stop)
+            options="$options --stop $2"
+            shift
+            shift
+            ;;
+	--dostep)
+            options="$options --dostep $2"
+            shift
+            shift
+            ;;
+        --mintpy)
+            options="$options --mintpy"
+            shift
+            ;;
+        --minopy)
+            options="$options --minopy"
+            shift
+            ;;
+        *)
+            #POSITIONAL+=("$1") # save it in an array for later
+            shift # past argument
+            ;;
+esac
+done
+
     # generate chunk template files
-    cmd="generate_chunk_template_files.py $template_file"
+    cmd="generate_chunk_template_files.py $template_file $options"
     echo "Running... $cmd >out_generate_chunk_template_files.e 1>out_generate_chunk_template_files.o"
     $cmd 2>out_generate_chunk_template_files.e 1>out_generate_chunk_template_files.o
     exit_status="$?"
@@ -399,7 +440,8 @@ if [[ $chunks_flag == "1" ]]; then
        echo "generate_chunk_template_files.py exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
-    echo "Submitting chunk jobs:" | tee -a log
+
+    echo "Submitting chunk minsar jobs:" | tee -a log
     cat $WORK_DIR/minsar_commands.txt | tee -a log
     bash $WORK_DIR/minsar_commands.txt
     exit_status="$?"
@@ -407,7 +449,7 @@ if [[ $chunks_flag == "1" ]]; then
        echo "bash $WORK_DIR/minsar_commands.txt exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
-    echo "Successful submitted minsarApp.bash chunk jobs"
+    echo "Successfully submitted minsarApp.bash chunk jobs"
     exit 0
 fi
 
