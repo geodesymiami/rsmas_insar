@@ -33,7 +33,7 @@ def main(iargs=None):
 
     os.chdir(inps.work_dir)
 
-    time.sleep(putils.pause_seconds(inps.wait_time))
+    #time.sleep(putils.pause_seconds(inps.wait_time))
 
     inps.out_dir = inps.work_dir
     inps.num_data = 1
