@@ -16,7 +16,7 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 [ -z ${JOBSHEDULER_PROJECTNAME} ] && export JOBSHEDULER_PROJECTNAME=insarlab
 [ -z ${SENTINEL_ORBITS} ] && export SENTINEL_ORBITS=${SCRATCHDIR}/S1orbits
 [ -z ${SENTINEL_AUX} ] && export SENTINEL_AUX=${SCRATCHDIR}/S1aux
-[ -z ${WEATHER_DIR} ] && export WEATHER_DIR=${SCRATCHDIR}/WEATHER
+[ -z ${WEATHER_DIR} ] && export WEATHER_DIR=${WORKDIR}/WEATHER
 [ -z ${TESTDATA_ISCE} ] && export TESTDATA_ISCE=${WORKDIR}/TESTDATA_ISCE
 
 ############ FOR PROCESSING  #########
@@ -63,13 +63,13 @@ export GDAL_DATA=${PYTHON3DIR}/share/gdal
 
 export PYTHONPATH=${PYTHONPATH-""}
 export PYTHONPATH=${PYTHONPATH}:${MINTPY_HOME}
-export PYTHONPATH=${PYTHONPATH}:${INT_SCR}
 export PYTHONPATH=${PYTHONPATH}:${PYTHON3DIR}/lib/python3.8/site-packages:${ISCE_HOME}:${ISCE_HOME}/components
 export PYTHONPATH=${PYTHONPATH}:${MINOPY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${MIMTPY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/3rdparty/PyAPS
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/minsar/utils/ssara_ASF
+export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/sources/PySolid
 #export PYTHONPATH=${PYTHONPATH}:${ISCE_STACK}
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/sources      # needed for mimt. Need to talk to Sara on how to do this smarter
 export PYTHONPATH_RSMAS=${PYTHONPATH}
