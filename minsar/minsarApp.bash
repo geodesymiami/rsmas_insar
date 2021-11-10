@@ -1,7 +1,5 @@
-#! /bin/bash
 ##################################################################################
 source $RSMASINSAR_HOME/minsar/utils/minsar_functions.bash
-#set -x
 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 helptext="                                                                       \n\
@@ -34,6 +32,8 @@ helptext="                                                                      
    --sleep SECS     sleep seconds before running                                 \n\
    --select_reference     select reference date [default].                       \n\
    --no_select_reference  don't select reference date.                           \n\
+   --download_ECMWF       download from ECMWF during ISCE processing             \n\
+   --no_download_ECMWF    don't download while processing                        \n\
    --chunks         process in form of multiple chunks.                          \n\
    --tmp            copy code and data to local /tmp [default].                  \n\
    --no_tmp         no copying to local /tmp. This can be                        \n 
@@ -61,12 +61,16 @@ cd $WORK_DIR
 
 echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` $@ " | tee -a "${WORK_DIR}"/log
 
-download_flag=1
-dem_flag=1
+#Switches
 chunks_flag=0
 jobfiles_flag=1
 select_reference_flag=1
 new_reference_flag=0
+download_ECMWF_flag=1
+
+#Steps
+download_flag=1
+dem_flag=1
 ifgrams_flag=1
 upload_flag=1
 insarmaps_flag=1
@@ -75,7 +79,6 @@ finishup_flag=1
 copy_to_tmp="--tmp"
 runfiles_dir="run_files_tmp"
 configs_dir="configs_tmp"
-
 
 args=( "$@" )    # copy of command line arguments
 
@@ -131,6 +134,14 @@ do
             ;;
         --no_select_reference)
             select_reference_flag=0
+            shift
+            ;;
+        --download_ECMWF)
+            download_ECMWF_flag=1
+            shift
+            ;;
+        --no_download_ECMWF)
+            download_ECMWF_flag=0
             shift
             ;;
         --chunks)
@@ -271,14 +282,14 @@ elif [[ $stopstep != "" ]]; then
 fi
 
 if [[ $copy_to_tmp == "--tmp" ]]; then
-    echo "copy_to_tmp  is switched ON"
+    echo "copy_to_tmp  is ON"
 else
-    echo "copy_to_tmp is switched OFF"
+    echo "copy_to_tmp is OFF"
 fi
+echo "Switches: select_reference: $select_reference_flag   download_ECMWF: $download_ECMWF_flag  chunks: $chunks_flag"
 echo "Flags for processing steps:"
-echo "download dem jobfiles ifgrams mintpy minopy upload insarmaps select_reference chunks"
-echo "    $download_flag     $dem_flag      $jobfiles_flag       $ifgrams_flag       $mintpy_flag      $minopy_flag      $upload_flag       $insarmaps_flag \
-          $select_reference_flag            $chunks_flag"
+echo "download dem jobfiles ifgrams mintpy minopy upload insarmaps"
+echo "    $download_flag     $dem_flag      $jobfiles_flag       $ifgrams_flag       $mintpy_flag      $minopy_flag      $upload_flag       $insarmaps_flag"
 
 ##################################
 # adjust insarmaps_flag based on $template_file
@@ -291,7 +302,7 @@ if [[ $str_insarmaps_flag == "False" ]]; then
 fi
 
 #############################################################
-# check weather miniconda3.tar, S1orbits.tar and S1orbits exist on $SCRATCHDIR 
+# check wether miniconda3.tar, S1orbits.tar and S1orbits exist on $SCRATCHDIR 
 # (might be purged)
 code_dir=$(echo $(basename $(dirname $RSMASINSAR_HOME)))
 if  ! test -f "$SCRATCHDIR/${code_dir}_miniconda3.tar" ; then
@@ -325,6 +336,8 @@ if [[ $platform_str == *"COSMO-SKYMED"* ]]; then
    download_dir=$WORK_DIR/RAW_data
 fi
 echo download_dir: $download_dir
+####################################
+###       Processing Steps       ###
 ####################################
 if [[ $download_flag == "1" ]]; then
 
@@ -393,43 +406,43 @@ if [[ $dem_flag == "1" ]]; then
 fi
 
 if [[ $chunks_flag == "1" ]]; then
-# create string with minsar command options
-set -- "${args[@]}"
-options=""
-while [[ $# -gt 0 ]]
-do
-    key="$1"
+    # create string with minsar command options (could save options at beginning)
+    set -- "${args[@]}"
+    options=""
+    while [[ $# -gt 0 ]]
+    do
+        key="$1"
 
-    case $key in
-        --start)
-            options="$options --start $2"
-            shift # past argument
-            shift # past value
-            ;;
-	--stop)
-            options="$options --stop $2"
-            shift
-            shift
-            ;;
-	--dostep)
-            options="$options --dostep $2"
-            shift
-            shift
-            ;;
-        --mintpy)
-            options="$options --mintpy"
-            shift
-            ;;
-        --minopy)
-            options="$options --minopy"
-            shift
-            ;;
-        *)
-            #POSITIONAL+=("$1") # save it in an array for later
-            shift # past argument
-            ;;
-esac
-done
+        case $key in
+            --start)
+                options="$options --start $2"
+                shift # past argument
+                shift # past value
+                ;;
+            --stop)
+                options="$options --stop $2"
+                shift
+                shift
+                ;;
+            --dostep)
+                options="$options --dostep $2"
+                shift
+                shift
+                ;;
+            --mintpy)
+                options="$options --mintpy"
+                shift
+                ;;
+            --minopy)
+                options="$options --minopy"
+                shift
+                ;;
+            *)
+                #POSITIONAL+=("$1") # save it in an array for later
+                shift # past argument
+                ;;
+    esac
+    done
 
     # generate chunk template files
     cmd="generate_chunk_template_files.py $template_file $options"
@@ -600,7 +613,20 @@ if [[ $ifgrams_flag == "1" ]]; then
 fi
 
 if [[ $mintpy_flag == "1" ]]; then
-    cmd="run_workflow.bash $PWD --append --dostep mintpy $copy_to_tmp --append"
+
+    if [[ $download_ECMWF_flag == "1" ]]; then
+        #download weather models - run mintpy after downnload is completed
+        cmd="download_ERA5_data.py --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR"
+        echo "Running.... $cmd"
+        $cmd 2>out_download_ERA52.e 1>out_download_ERA52.o
+        exit_status="$?"
+        if [[ $exit_status -ne 0 ]]; then
+           echo "download_ERA5_data.py exited with a non-zero exit code ($exit_status). Exiting."
+           exit 1;
+        fi
+    fi
+
+    cmd="run_workflow.bash $PWD --append --dostep mintpy $copy_to_tmp"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"
@@ -668,4 +694,6 @@ if [[ $finishup_flag == "1" ]]; then
     echo "Last processed image date: $last_date"
     unset IFS
 fi
+
+echo "Yup! That's all from minsarApp.bash."
 
