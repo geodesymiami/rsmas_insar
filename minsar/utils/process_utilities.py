@@ -213,7 +213,7 @@ def add_generate_chunk_template_files_args(parser):
                       help='end processing at the named step (default: %(default)s)')
     arg.add_argument('--dostep', dest='do_step', metavar='STEP',
                       help='run processing at the named step only')
-    arg.add_argument('--wait', dest='wait_time', type=int,  default=60,
+    arg.add_argument('--wait', dest='wait_time', type=int,  default=30,
                       help='wait time between job submission [secs] (default: %(default)s)\n')
     return parser
 
