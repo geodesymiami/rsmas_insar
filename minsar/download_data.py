@@ -148,7 +148,10 @@ def add_polygon_to_ssaraopt(dataset_template, ssaraopt, delta_lat):
     else:
         prefix = dataset_template['acquisition_mode']
 
-    bbox_list = dataset_template[prefix + 'Stack.boundingBox'].split(' ')
+    # removing double whitespaces, FA 10/21: should be done where *tenplate inpput is examined
+    string = dataset_template[prefix + 'Stack.boundingBox'] 
+    string =  ' '.join(string.split())
+    bbox_list = string.split(' ')
 
     bbox_list[0] = bbox_list[0].replace("\'", '')   # this does ["'-8.75", '-7.8', '115.0', "115.7'"] (needed for run_operations.py, run_operations
     bbox_list[1] = bbox_list[1].replace("\'", '')   # -->       ['-8.75',  '-7.8', '115.0', '115.7']  (should be modified so that this is not needed)
