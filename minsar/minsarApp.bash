@@ -305,10 +305,12 @@ fi
 # check wether miniconda3.tar, S1orbits.tar and S1orbits exist on $SCRATCHDIR 
 # (might be purged)
 code_dir=$(echo $(basename $(dirname $RSMASINSAR_HOME)))
-if  ! test -f "$SCRATCHDIR/${code_dir}_miniconda3.tar" ; then
+#if  ! test -f "$SCRATCHDIR/${code_dir}_miniconda3.tar" ; then
+if  ! test -f "$SCRATCHDIR/${code_dir}_miniconda3.tar" || [[ "$RSMASINSAR_HOME/3rdparty/miniconda3.tar" -nt "$SCRATCHDIR/${code_dir}_miniconda3.tar" ]]; then
     echo "Copying ${code_dir}_miniconda3.tar to $SCRATCHDIR ..."
     cp $RSMASINSAR_HOME/3rdparty/miniconda3.tar $SCRATCHDIR/${code_dir}_miniconda3.tar
 fi
+
 if  ! test -f "$SCRATCHDIR/S1orbits.tar" ; then
     echo "Copying S1orbits.tar to $SCRATCHDIR ..."
     cp $WORKDIR/S1orbits.tar $SCRATCHDIR
