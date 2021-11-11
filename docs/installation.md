@@ -21,9 +21,9 @@ cd ~/test/test1
 ```
 bash
 module purge
+export PATH=/bin
 git clone https://github.com/geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
-export RSMASINSAR_HOME=`pwd`
 
 git clone https://github.com/insarlab/MintPy.git sources/MintPy ;
 git clone https://github.com/isce-framework/isce2.git sources/isce2
@@ -55,45 +55,43 @@ mkdir -p ../3rdparty
 ../3rdparty/miniconda3/bin/conda install --yes --file ../sources/insarmaps_scripts/docs/requirements.txt
 
 ```
-* #Source the environment and create aux directories. Install credential files for data download:
-```
-install_credential_files.csh;
-cp -p ../minsar/additions/isce/logging.conf ../3rdparty/miniconda3/lib/python3.*/site-packages/isce/defaults/logging/logging.conf
-
-source ~/accounts/platforms_defaults.bash;
-source environment.bash;
-mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
-
-```
 * #Compile [MiNoPy](https://github.com/geodesymiami/MiNoPy) and install [SNAPHU](https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/) (if required):
 ```
-bash $MINOPY_HOME/docs/install
+bash ../sources/minopy/docs/install
 ```
-
-* #Adding HPC support for MintPy (parallel plotting and defaults to use dask Local Cluster) and latest isce version plus fixes
+* #Adding ISCE fixes and copying latest version into miniconda directory
 ```
-#cp -p ../minsar/additions/mintpy/plot_smallbaselineApp.sh ../sources/MintPy/mintpy/sh/
-
+cp -p ../minsar/additions/isce/logging.conf ../3rdparty/miniconda3/lib/python3.*/site-packages/isce/defaults/logging/logging.conf
 cp -p ../minsar/additions/isce2/topsStack/FilterAndCoherence.py ../sources/isce2/contrib/stack/topsStack
 cp -p ../minsar/additions/isce2/topsStack/fetchOrbit.py ../sources/isce2/contrib/stack/topsStack
 cp -p ../minsar/additions/isce2/stripmapStack/prepRawCSK.py ../sources/isce2/contrib/stack/stripmapStack
+cp -p ../minsar/additions/isce2/topo.py ../sources/isce2/contrib/stack/stripmapStack    #(uses method isce instead of gdal)
 
-cp -r ../sources/isce2/contrib/stack/* $ISCE_STACK 
+cp -r ../sources/isce2/contrib/stack/* ../3rdparty/miniconda3/share/isce2 
 
-cp -p ../minsar/additions/isce2/topo.py ../sources/isce2/contrib/stack/stripmapStack
-#( uses method isce instead of gdal)
-
+#cp -p ../minsar/additions/mintpy/plot_smallbaselineApp.sh ../sources/MintPy/mintpy/sh/
 #cp -p ../minsar/additions/isce/invertMisreg.py ../sources/isce2/contrib/stack/stripmapStack
 #cp -p ../minsar/additions/stackStripMap.py $ISCE_STACK/stripmapStack
 #cp -p ../minsar/additions/isce/stackSentinel.py $ISCE_STACK/topsStack
 
 ```
-* #create your `$miniconda3.tar`  (removing `pkgs` saves space, could cause problems with environments) (needed for `install_code_to_tmp.bash)
+* #create your `miniconda3.tar`  (removing `pkgs` saves space, could cause problems with environments) (needed for `install_code_to_tmp.bash)
 ```
-cd $RSMASINSAR_HOME/3rdparty
-rm -rf miniconda3/pkgs
-tar cf miniconda3.tar miniconda3
+rm -rf ../3rdparty/miniconda3/pkgs
+tar cf ../3rdprty/miniconda3.tar ../3rdparty/miniconda3 &
 ```
+
+* #Source the environment and create aux directories. Install credential files for data download:
+```
+install_credential_files.csh;
+
+source ~/accounts/platforms_defaults.bash;
+export RSMASINSAR_HOME=$(dirname $PWD)
+source environment.bash;
+mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
+
+```
+
 
 ### #Orbits and aux files
 This has created directories for the orbits for Sentinel-1 (`$SENTINEL_ORBITS`), which The can be downloaded using `dloadOrbits.py`. The IPF calibration files (`SENTINEL_AUX`) are downloaded from: https://qc.sentinel1.eo.esa.int/aux_cal/ .
