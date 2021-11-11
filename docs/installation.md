@@ -78,7 +78,7 @@ cp -r ../sources/isce2/contrib/stack/* ../3rdparty/miniconda3/share/isce2
 * #create your `miniconda3.tar`  (removing `pkgs` saves space, could cause problems with environments) (needed for `install_code_to_tmp.bash)
 ```
 rm -rf ../3rdparty/miniconda3/pkgs
-tar cf ../3rdprty/miniconda3.tar ../3rdparty/miniconda3 &
+tar cv ../3rdparty/miniconda3.tar -C ../3rdparty/ miniconda3 &
 ```
 
 * #Source the environment and create aux directories. Install credential files for data download:
