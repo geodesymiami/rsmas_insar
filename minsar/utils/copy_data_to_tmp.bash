@@ -1,4 +1,5 @@
 ##! /bin/bash
+#trap "set +x; sleep 1; set -x" DEBUG
 
 function distribute_secondarys {
     batch_file="$1"
@@ -31,6 +32,8 @@ out_dir="$3"
 if [[ $4 ]]; then
     distribute_file="$4"
 fi
+
+module load TACC
 # ------------------
 
 if [[ $job_name != *"unpack_topo_reference"* && $job_name != *"unpack_secondary_slc"* ]]; then
