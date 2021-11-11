@@ -40,6 +40,7 @@ def main(iargs=None):
     parser.add_argument('custom_template_file', metavar="FILE", default='None', nargs='?', help='template file to use [default: working directory]')
     parser.add_argument('--local', dest='local_flag', action='store_true', default=False, help='for current (local) directory')
     parser.add_argument('--tmp', dest='tmp', action='store_true', default=False, help='process run_files in run_files_tmp directory')
+    parser.add_argument('--no_tmp', dest='tmp', action='store_false', default=False, help='process run_files in run_files directory')
 
     inps = parser.parse_args(args=iargs)
 
