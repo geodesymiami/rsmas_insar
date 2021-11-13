@@ -33,7 +33,7 @@ def main(iargs=None):
 
     message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
 
-    time.sleep(putils.pause_seconds(inps.wait_time))
+    #time.sleep(putils.pause_seconds(inps.wait_time))
 
     #########################################
     # Submit job
