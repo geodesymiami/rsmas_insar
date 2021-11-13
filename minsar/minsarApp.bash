@@ -80,6 +80,18 @@ copy_to_tmp="--tmp"
 runfiles_dir="run_files_tmp"
 configs_dir="configs_tmp"
 
+# adjust some switches according to template options
+if [[ ! -z $(grep "^topsStack.referenceDate" $template_file) ]];  then
+   select_reference_flag=0
+fi
+if [[ ! -z $(grep "^mintpy.troposphericDelay.method" $template_file) ]];  then
+   tropo_correction_method=$(grep -E "^mintpy.troposphericDelay.method" $template_file | awk -F = '{printf "%s\n",$2}' | sed 's/ //' | awk -F ' '  '{print $1}')
+   if [[ $tropo_correction_method == "height_correlation" || $tropo_correction_method == "no" ]]; then
+      download_ECMWF_flag=0
+   fi
+fi
+
+
 args=( "$@" )    # copy of command line arguments
 
 while [[ $# -gt 0 ]]
@@ -489,6 +501,15 @@ if [[ $jobfiles_flag == "1" ]]; then
        exit 1;
     fi
 
+    if [[ "$template_file" == *"SenAT"* || "$template_file" == *"SenDT"* ]]; then
+        # need to use differnt date_list file for CSK
+        download_ERA5_cmd=`which download_ERA5_data.py`
+        cmd="$download_ERA5_cmd --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR "
+        echo " Running.... python $cmd >& out_download_ERA5_data.e &"
+        python $cmd >& out_download_ERA5_data.e &
+        echo "$(date +"%Y%m%d:%H-%m") * download_ERA5_data.py --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR " >> "${WORK_DIR}"/log
+    fi
+
 fi
  
 if [[ $ifgrams_flag == "1" ]]; then
@@ -496,13 +517,6 @@ if [[ $ifgrams_flag == "1" ]]; then
     #timeout 2 ls  $WEATHER_DIR/ERA5/* >> /dev/null ; echo $?
     #timeout 0.1 ls  $WEATHER_DIR/ERA5/* >> /dev/null ; echo $?
     #cmd_try="download_ERA5_data.py --date_list SAFE_files.txt $template_file"
-
-    # need to use differnt date_list file for CSK
-    download_ERA5_cmd=`which download_ERA5_data.py`
-    cmd="$download_ERA5_cmd --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR "
-    echo " Running.... python $cmd >& out_download_ERA5_data.e &"
-    python $cmd >& out_download_ERA5_data.e &
-    echo "$(date +"%Y%m%d:%H-%m") * download_ERA5_data.py --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR " >> "${WORK_DIR}"/log
 
     if [[ $template_file != *"Sen"* || $select_reference_flag == "0" ]]; then 
 
@@ -616,10 +630,10 @@ fi
 
 if [[ $mintpy_flag == "1" ]]; then
 
-    if [[ $download_ECMWF_flag == "1" ]]; then
+    if [[ $download_ECMWF_flag == "1" ]]  && [[ "$template_file" == *"SenAT"* || "$template_file" == *"SenDT"* ]]; then
         #download weather models - run mintpy after downnload is completed
         cmd="download_ERA5_data.py --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR"
-        echo "Running.... $cmd"
+        echo "Running.... $cmd" | tee -a log
         $cmd 2>out_download_ERA52.e 1>out_download_ERA52.o
         exit_status="$?"
         if [[ $exit_status -ne 0 ]]; then
