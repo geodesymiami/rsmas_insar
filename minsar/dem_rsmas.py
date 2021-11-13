@@ -76,8 +76,11 @@ def main(iargs=None):
     if '.' in inps.slc_dir:
        inps.slc_dir = inps.slc_dir.replace(".",os.getcwd())
 
-    # FA 10/2021: We probably should check here whether a DEM/*wgs84 file exist and exit if it does
-    # That could save time. On the otehr hand, most step allow to be run even if data exist
+    if 'COSMO-SKYMED' in inps.ssaraopt:
+       inps.slc_dir = inps.slc_dir.replace('SLC','RAW_data')
+      
+    # FA 10/2021: We probably should check here whether a DEM/*wgs84 file exist and exit if it does.
+    # That could save time. On the other hand, most steps allow to be run even if data exist
     os.chdir(dem_dir)
 
     if inps.flag_ssara:
