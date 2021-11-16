@@ -114,7 +114,6 @@ def main(iargs=None):
        if 'unpack_secondary_slc' in job_name:               
           for file in out_files:
               for string in data_problems_strings_out_files:
-                  print('TRYING: ' + os.path.basename(file) + ' ' + string)
                   if check_words_in_file(file, string):
                       date = file.split("_")[-2]
                       print( 'WARNING: \"' + string + '\" found in ' + os.path.basename(file) + ': removing ' + date + ' from run_files ')
@@ -124,7 +123,6 @@ def main(iargs=None):
                       num_lines = sum(1 for line in open(run_files_dir + '/removed_dates.txt'))
           for file in error_files:
               for string in data_problems_strings_error_files:
-                  print('TRYING: ' + os.path.basename(file) + ' ' + string)
                   if check_words_in_file(file, string):
                       date = file.split("_")[-2]
                       print( 'WARNING: \"' + string + '\" found in ' + os.path.basename(file) + ': removing ' + date + ' from run_files ')
