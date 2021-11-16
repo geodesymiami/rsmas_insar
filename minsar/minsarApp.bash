@@ -67,6 +67,7 @@ jobfiles_flag=1
 select_reference_flag=1
 new_reference_flag=0
 download_ECMWF_flag=1
+download_ECMWF_before_mintpy_flag=1
 
 #Steps
 download_flag=1
@@ -630,7 +631,7 @@ fi
 
 if [[ $mintpy_flag == "1" ]]; then
 
-    if [[ $download_ECMWF_flag == "1" ]]  && [[ "$template_file" == *"SenAT"* || "$template_file" == *"SenDT"* ]]; then
+    if [[ $download_ECMWF_before_mintpy_flag == "1" ]]  && [[ "$template_file" == *"SenAT"* || "$template_file" == *"SenDT"* ]]; then
         #download weather models - run mintpy after downnload is completed
         cmd="download_ERA5_data.py --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR"
         echo "Running.... $cmd" | tee -a log
