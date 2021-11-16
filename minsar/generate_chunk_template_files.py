@@ -89,6 +89,7 @@ def  run_generate_chunk_template_files(inps):
   
     lat = min_lat
     
+    chunk_number = 0
     while lat < max_lat:
         tmp_min_lat = lat
         tmp_max_lat = lat + inps.lat_step
@@ -120,14 +121,17 @@ def  run_generate_chunk_template_files(inps):
         putils.write_template_file(chunk_template_file, custom_tempObj)
         putils.beautify_template_file(chunk_template_file)
 
-        #command = 'minsarApp.bash ' + chunk_templates_dir_string + '/' + chunk_template_file_base + ' ' + command_options + ' --sleep ' + str(sleep_time) + ' &'
-        command = inps.bash_script + ' ' + chunk_templates_dir_string + '/' + chunk_template_file_base +  command_options + ' --sleep ' + str(sleep_time) + ' &'
+        chunk_number = chunk_number + 1
+        if chunk_number == 1 and inps.bash_script == 'minsarApp.bash':
+           chunk1_option = ' --download_ECMWF '
+
+        command = inps.bash_script + ' ' + chunk_templates_dir_string + '/' + chunk_template_file_base +  command_options + chunk1_option + ' --sleep ' + str(sleep_time) + ' &'
 
         command_list.append(command)
 
         lat = lat + inps.lat_step
-        
         sleep_time = sleep_time +inps.wait_time
+        chunk1_option = ''
     
     commands_file = inps.work_dir + '/minsar_commands.txt'
     f = open(commands_file, "w")
