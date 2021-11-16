@@ -44,24 +44,14 @@ def main(iargs=None):
     known_issues_file = os.path.join(os.getenv('RSMASINSAR_HOME'), 'docs/known_issues.md')
 
     error_happened = False
-    error_strings = [
-                    'no element found: line',
-                    'Segmentation fault',
-                    'Bus',
-                    'Aborted',
-                    'ERROR',
-                    'Error',
-                    'FileNotFoundError',
-                    'IOErr',
-                    'Traceback'
-                    ]
-                    #'Exiting ...',                # remove if above works fine (5/21)
-                    #'FileNotFoundError: [Errno 2] No such file or directory: '/tmp/secondarys/20190917/IW2.xml'
-    data_problems_strings = [
+    data_problems_strings_out_files = [
                     'There appears to be a gap between slices. Cannot stitch them successfully',
                     'SLCs are sliced differently with different versions of the processor',
                     'No annotation xml file found in zip file',
                     'mismatched tag: line 77, column 6',
+                    ]
+    data_problems_strings_error_files = [
+                    'does not exist in the file system, and is not recognized as a supported dataset name'
                     ]
     data_problems_strings_run_04 = [
                     'FileNotFoundError: [Errno 2] No such file or directory:'
@@ -69,6 +59,24 @@ def main(iargs=None):
     different_number_of_bursts_string = [
                     'has different number of bursts',
                     ]
+    error_strings = [
+                    'no element found: line',
+                    'Segmentation fault',
+                    'Bus',
+                    'Aborted',
+                    #'ERROR',          FA 11/21:  commented because
+                    'Error',
+                    'FileNotFoundError',
+                    'IOErr',
+                    'Traceback'
+                    ]
+                    #'Exiting ...',                # remove if above works fine (5/21)
+                    #'FileNotFoundError: [Errno 2] No such file or directory: '/tmp/secondarys/20190917/IW2.xml'
+# Explanation 11/2021 for 'ERROR' removal from error_strings
+# The data problem error message below appeared in a run_02*.e file.  I therefore separated into  data_problems_strings_out_files and data_problems_strings_error_files.
+# I had to remove 'ERROR' as `ERROR 4` remains in an run_*.e file it still raises an exception. 
+# If `ERROR` needs to be in `error_strings` an alternative could be to remove the problem run_02*.e file 
+# ERROR 4: `/vsizip/S1A_IW_SLC__1SDV_20161115T141647_20161115T141714_013954_016796_D68D.zip/S1A_IW_SLC__1SDV_20161115T141647_20161115T141714_013954_016796_D68D.SAFE/measurement/s1a-iw2-slc-vv-20161115t141647-20161115t141712-013954-016796-005.tiff' does not exist in the file system, and is not recognized as a supported dataset name.
 
     job_names=[]
     for job_file in inps.job_files:
@@ -105,21 +113,32 @@ def main(iargs=None):
 
        if 'unpack_secondary_slc' in job_name:               
           for file in out_files:
-              for string in data_problems_strings:
+              for string in data_problems_strings_out_files:
+                  print('TRYING: ' + os.path.basename(file) + ' ' + string)
                   if check_words_in_file(file, string):
-                      #matched_data_problem_strings.append('Warning: \"' + string + '\" found in ' + file + '\n')
                       date = file.split("_")[-2]
                       print( 'WARNING: \"' + string + '\" found in ' + os.path.basename(file) + ': removing ' + date + ' from run_files ')
                       putils.run_remove_date_from_run_files(run_files_dir=run_files_dir, date=date, start_run_file = 3 )
                       with open(run_files_dir + '/removed_dates.txt', 'a') as rd:
                           rd.writelines('run_02: removing ' + date + ', \"' + string + '\" found in ' + os.path.basename(file) + ' \n')
-                      # exit if too many removed dates
                       num_lines = sum(1 for line in open(run_files_dir + '/removed_dates.txt'))
-                      if (num_lines >= 10):
-                         #shutil.copy(run_files_dir + '/removed_dates.txt', project_dir + '/out_run_02_removed_dates.txt')
-                         shutil.copy(run_files_dir + '/removed_dates.txt', project_dir + '/out_' + os.path.basename(job_name) + '.e')
-                         raise RuntimeError('Too many bad data: ', num_lines)
+          for file in error_files:
+              for string in data_problems_strings_error_files:
+                  print('TRYING: ' + os.path.basename(file) + ' ' + string)
+                  if check_words_in_file(file, string):
+                      date = file.split("_")[-2]
+                      print( 'WARNING: \"' + string + '\" found in ' + os.path.basename(file) + ': removing ' + date + ' from run_files ')
+                      putils.run_remove_date_from_run_files(run_files_dir=run_files_dir, date=date, start_run_file = 3 )
+                      with open(run_files_dir + '/removed_dates.txt', 'a') as rd:
+                          rd.writelines('run_02: removing ' + date + ', \"' + string + '\" found in ' + os.path.basename(file) + ' \n')
 
+          try: 
+              num_lines = sum(1 for line in open(run_files_dir + '/removed_dates.txt'))
+              if (num_lines >= 10):
+                 shutil.copy(run_files_dir + '/removed_dates.txt', project_dir + '/out_' + os.path.basename(job_name) + '.e')
+                 raise RuntimeError('Too many bad data: ', num_lines)
+          except:
+               pass
 
        # this covers missing frames: run_files are generated although a frame in the middle is missing
        if 'fullBurst_geo2rdr' in job_name:               
