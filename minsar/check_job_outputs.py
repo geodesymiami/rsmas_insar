@@ -147,7 +147,10 @@ def main(iargs=None):
                       print( 'WARNING: \"' + string + '\" found in ' + os.path.basename(file) + ': removing ' + date + ' from run_files ')
                       putils.run_remove_date_from_run_files(run_files_dir=run_files_dir, date=date, start_run_file = 5 )
                       secondary_date_dir = project_dir + '/coreg_secondarys/' + date
-                      shutil.rmtree(secondary_date_dir)
+                      try:
+                         shutil.rmtree(secondary_date_dir)
+                      except:
+                         pass
                       with open(run_files_dir + '/removed_dates.txt', 'a') as rd:
                           rd.writelines('run_04: removing ' + date + ', \"' + string + '\" found in ' + os.path.basename(file) + ' \n')
                           rd.writelines('run_04: removing directory ' + secondary_date_dir + ' \n')
