@@ -57,7 +57,9 @@ mkdir -p ../3rdparty
 ```
 * #Compile [MiNoPy](https://github.com/geodesymiami/MiNoPy) and install [SNAPHU](https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/) (if required):
 ```
-bash ../sources/minopy/docs/install
+export MINOPY_HOME="${PWD%/*}/sources/MiNoPy"
+export PATH="${PWD%/*}/3rdparty/miniconda3/bin:/bin"
+bash +x $MINOPY_HOME/docs/install
 ```
 * #Adding ISCE fixes and copying latest version into miniconda directory
 ```
