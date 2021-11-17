@@ -90,6 +90,8 @@ def  run_generate_chunk_template_files(inps):
     lat = min_lat
     
     chunk_number = 0
+    chunk1_option = ''
+
     while lat < max_lat:
         tmp_min_lat = lat
         tmp_max_lat = lat + inps.lat_step
@@ -122,8 +124,8 @@ def  run_generate_chunk_template_files(inps):
         putils.beautify_template_file(chunk_template_file)
 
         chunk_number = chunk_number + 1
-        if chunk_number == 1 and inps.bash_script == 'minsarApp.bash':
-           chunk1_option = ' --download_ECMWF '
+        if chunk_number > 1 and inps.bash_script == 'minsarApp.bash':
+           chunk1_option = ' --no_download_ECMWF '
 
         command = inps.bash_script + ' ' + chunk_templates_dir_string + '/' + chunk_template_file_base +  command_options + chunk1_option + ' --sleep ' + str(sleep_time) + ' &'
 
