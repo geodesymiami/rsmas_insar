@@ -75,6 +75,7 @@ def main(iargs=None):
     lat_min2, lat_max2, lon_min2, lon_max2 = process_kml(kml_file, delta_lat, delta_lon)
 
     str = 'SNWE: {} {} {} {}'.format(lat_min2, lat_max2, lon_min2, lon_max2)
+    print(str)
     return str 
 ######################################################################################
 if __name__ == '__main__':
