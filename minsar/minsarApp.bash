@@ -81,7 +81,15 @@ copy_to_tmp="--tmp"
 runfiles_dir="run_files_tmp"
 configs_dir="configs_tmp"
 
+##################################
 # adjust some switches according to template options
+str_insarmaps_flag=($(grep ^insarmaps $template_file | cut -d "=" -f 2 | xargs))
+length_str_insarmaps_flag=$(wc -w <<< $str_insarmaps_flag)
+[[ $length_str_insarmaps_flag == '0' ]] && str_insarmaps_flag=False 
+str_insarmaps_flag=${str_insarmaps_flag[-1]}
+if [[ $str_insarmaps_flag == "False" ]]; then
+   insarmaps_flag=0
+fi
 if [[ ! -z $(grep "^topsStack.referenceDate" $template_file) ]];  then
    select_reference_flag=0
 fi
@@ -91,7 +99,7 @@ if [[ ! -z $(grep "^mintpy.troposphericDelay.method" $template_file) ]];  then
       download_ECMWF_flag=0
    fi
 fi
-
+##################################
 
 args=( "$@" )    # copy of command line arguments
 
@@ -303,16 +311,6 @@ echo "Switches: select_reference: $select_reference_flag   download_ECMWF: $down
 echo "Flags for processing steps:"
 echo "download dem jobfiles ifgrams mintpy minopy upload insarmaps"
 echo "    $download_flag     $dem_flag      $jobfiles_flag       $ifgrams_flag       $mintpy_flag      $minopy_flag      $upload_flag       $insarmaps_flag"
-
-##################################
-# adjust insarmaps_flag based on $template_file
-str_insarmaps_flag=($(grep ^insarmaps $template_file | cut -d "=" -f 2 | xargs))
-length_str_insarmaps_flag=$(wc -w <<< $str_insarmaps_flag)
-[[ $length_str_insarmaps_flag == '0' ]] && str_insarmaps_flag=False 
-str_insarmaps_flag=${str_insarmaps_flag[-1]}
-if [[ $str_insarmaps_flag == "False" ]]; then
-   insarmaps_flag=0
-fi
 
 #############################################################
 # check wether miniconda3.tar, S1orbits.tar and S1orbits exist on $SCRATCHDIR 
@@ -624,7 +622,7 @@ if [[ $ifgrams_flag == "1" ]]; then
           exit 1;
        fi
     fi
-    # correct *xm and *vrt files
+    # correct *xml and *vrt files
     sed -i "s|/tmp|$PWD|g" */*.xml */*/*.xml  */*/*/*.xml 
     sed -i "s|/tmp|$PWD|g" */*.vrt */*/*.vrt  */*/*/*.vrt 
 fi
@@ -654,6 +652,11 @@ if [[ $mintpy_flag == "1" ]]; then
 fi
 
 if [[ $minopy_flag == "1" ]]; then
+
+    # correct *xml and *vrt files (if skipped in ifgram step because of unwrap problems) 
+    sed -i "s|/tmp|$PWD|g" */*.xml */*/*.xml  */*/*/*.xml 
+    sed -i "s|/tmp|$PWD|g" */*.vrt */*/*.vrt  */*/*/*.vrt 
+
     cmd="minopyApp.py $template_file --dir minopy --jobfiles"
     echo "Running.... $cmd"
     $cmd
