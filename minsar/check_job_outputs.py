@@ -97,7 +97,7 @@ def main(iargs=None):
        print('checking *.e, *.o from ' + job_name + '.job')
 
        # preprocess *.e files
-       if 'filter_coherence' in job_name or 'run_09_igram' in job_name:               # run_09_igram is for stripmap
+       if 'filter_coherence' in job_name or 'run_09_igram' in job_name or 'minopy_generate_ifgram' in job_name:               # run_09_igram is for stripmap
            putils.remove_line_counter_lines_from_error_files(run_file=job_name)
 
        # 5/21: sometimes not working. Move before loop using run_file_base ??
