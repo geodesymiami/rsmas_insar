@@ -348,7 +348,7 @@ platform_str=$(grep platform $template_file | cut -d'=' -f2)
 if [[ $platform_str == *"COSMO-SKYMED"* ]]; then
    download_dir=$WORK_DIR/RAW_data
 fi
-echo download_dir: $download_dir
+#echo download_dir: $download_dir
 ####################################
 ###       Processing Steps       ###
 ####################################
@@ -657,8 +657,9 @@ if [[ $minopy_flag == "1" ]]; then
     sed -i "s|/tmp|$PWD|g" */*.xml */*/*.xml  */*/*/*.xml 
     sed -i "s|/tmp|$PWD|g" */*.vrt */*/*.vrt  */*/*/*.vrt 
 
-    cmd="minopyApp.py $template_file --dir minopy --jobfiles"
+    cmd="minopyApp.py $template_file --dir minopy --jobfiles --tmp"
     echo "Running.... $cmd"
+    echo "$cmd" | tee -a log
     $cmd
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
