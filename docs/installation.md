@@ -77,10 +77,11 @@ cp -r ../sources/isce2/contrib/stack/* ../3rdparty/miniconda3/share/isce2
 #cp -p ../minsar/additions/isce/stackSentinel.py $ISCE_STACK/topsStack
 
 ```
-* #create your `miniconda3.tar`  (removing `pkgs` saves space, could cause problems with environments) (needed for `install_code_to_tmp.bash)
+* #create your `miniconda3.tar` and `minsar.tar`  (removing `pkgs` saves space, could cause problems with environments) (needed for `install_code_to_tmp.bash)
 ```
 rm -rf ../3rdparty/miniconda3/pkgs
 tar cf ../3rdparty/miniconda3.tar -C ../3rdparty/ miniconda3 &
+tar cf ../minsar.tar ../3rdparty/launcher ../3rdparty/PyAPS ../minsar ../setup ../sources/MintPy/mintpy ../sources/MimtPy/mimtpy ../sources/MiNoPy/minopy ../sources/MiNoPy/snaphu/bin ../sources/insarmaps_scripts ../sources/isce2/contrib/stack
 ```
 
 * #Source the environment and create aux directories. Install credential files for data download:
