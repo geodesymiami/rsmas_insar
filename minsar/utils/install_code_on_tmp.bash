@@ -1,79 +1,49 @@
 ##! /bin/bash
 
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+helptext="                                                                              \n\
+  Examples:                                                                             \n\
+      install_code_on_tmp.bash                                                          \n\
+      install_code_on_tmp.bash smallbaseline_wrapper.job                                \n\
+      install_code_on_tmp.bash mintpy                                                   \n\
+      install_code_on_tmp.bash minopy.job                                               \n\
+      install_code_on_tmp.bash minopy                                                   \n\
+      install_code_on_tmp.bash insarmaps                                                \n\
+                                                                                        \n\
+  Installs code on /tmp (includes MintPy, MinoPy, insarmaps_ingest depending on options)\n                                                          \n
+     "
+printf "$helptext"
+exit 0;
+fi
+
+###########################################
 job_name="$1"
-prefix=""
 
-while [[ $# -gt 0 ]]
-do
-    key="$1"
-    case $key in
-        --prefix)
-            prefix="$2"
-            shift
-            ;;
-        *)
-            POSITIONAL+=("$1") # save it in an array for later
-            shift # past argument
-            ;;
-esac
-done
-set -- "${POSITIONAL[@]}" # restore positional parameters
+module load TACC
+if [[ $PLATFORM_NAME == *"stampede2"* ]]; then
+    export CDTOOL=/scratch/01255/siliu/collect_distribute
+elif [[ $PLATFORM_NAME == *"frontera"* ]]; then
+    export CDTOOL=/scratch1/01255/siliu/collect_distribute
+fi
+module load intel/19.1.1 2> /dev/null
+export PATH=${PATH}:${CDTOOL}/bin
 
-# ------------------
-
-df -h /tmp
+#df -h /tmp
 rm -rf /tmp/rsmas_insar
 mkdir -p /tmp/rsmas_insar
-cp -r $RSMASINSAR_HOME/minsar /tmp/rsmas_insar
-cp -r $RSMASINSAR_HOME/setup  /tmp/rsmas_insar
 mkdir -p /tmp/rsmas_insar/3rdparty ;
-
-if [[ $job_name == *"smallbaseline_wrapper"* || $job_name == *"insarmaps"* || $job_name == *"mintpy"* ]]; then
-    mkdir -p /tmp/rsmas_insar/sources
-    cp -r $RSMASINSAR_HOME/sources/MintPy /tmp/rsmas_insar/sources
-    cp -r $RSMASINSAR_HOME/3rdparty/PyAPS /tmp/rsmas_insar/3rdparty
-    cp -r $RSMASINSAR_HOME/sources/insarmaps_scripts /tmp/rsmas_insar/sources
-fi
-
-if [[ $job_name == *"minopy"* ]]; then
-    mkdir -p /tmp/rsmas_insar/sources
-    cp -r $RSMASINSAR_HOME/sources/MiNoPy /tmp/rsmas_insar/sources
-    cp -r $RSMASINSAR_HOME/sources/MintPy /tmp/rsmas_insar/sources
-    cp -r $RSMASINSAR_HOME/3rdparty/PyAPS /tmp/rsmas_insar/3rdparty
-fi
-
-cp -r $RSMASINSAR_HOME/3rdparty/launcher /tmp/rsmas_insar/3rdparty 
+mkdir -p /tmp/rsmas_insar/sources ;
 
 code_dir=$(echo $(basename $(dirname $RSMASINSAR_HOME)))
-cp $SCRATCHDIR/${code_dir}_miniconda3.tar /tmp
+distribute.bash $SCRATCHDIR/${code_dir}_miniconda3.tar
+distribute.bash $SCRATCHDIR/${code_dir}_minsar.tar
 tar xf /tmp/${code_dir}_miniconda3.tar -C /tmp/rsmas_insar/3rdparty
+tar xf /tmp/${code_dir}_minsar.tar -C /tmp/rsmas_insar
 rm /tmp/${code_dir}_miniconda3.tar
-cp -r $RSMASINSAR_HOME/sources/isce2/contrib/stack/*  /tmp/rsmas_insar/3rdparty/miniconda3/share/isce2
-# set environment    
-export RSMASINSAR_HOME=/tmp/rsmas_insar
+rm /tmp/${code_dir}_minsar.tar
 
-if [[ $prefix == *"stripmap"* ]]; then
-    cd $RSMASINSAR_HOME
-    source ~/accounts/platforms_defaults.bash
-    source setup/environment.bash
-    export PATH=$ISCE_STACK/stripmapStack:$PATH;
-    cd -
-else
-    cd $RSMASINSAR_HOME
-    source ~/accounts/platforms_defaults.bash
-    source setup/environment.bash
-    export PATH=$ISCE_STACK/topsStack:$PATH
-    cd -
-fi
+echo After copy-to-tmp: `df -h /tmp`
 
-cd $RSMASINSAR_HOME; source ~/accounts/platforms_defaults.bash; source setup/environment.bash; export PATH=$ISCE_STACK/topsStack:$PATH; cd -;
-# remove /scratch and /work from PATH
-export PATH=`echo ${PATH} | awk -v RS=: -v ORS=: '/scratch/ {next} {print}' | sed 's/:*$//'` 
-export PATH=`echo ${PATH} | awk -v RS=: -v ORS=: '/work/ {next} {print}' | sed 's/:*$//'` 
-export PATH=`echo ${PATH} | awk -v RS=: -v ORS=: '/home/ {next} {print}' | sed 's/:*$//'` 
-export PYTHONPATH=`echo ${PYTHONPATH} | awk -v RS=: -v ORS=: '/scratch/ {next} {print}' | sed 's/:*$//'` 
-export PYTHONPATH=`echo ${PYTHONPATH} | awk -v RS=: -v ORS=: '/home/ {next} {print}' | sed 's/:*$//'` 
-export PYTHONPATH_RSMAS=`echo ${PYTHONPATH_RSMAS} | awk -v RS=: -v ORS=: '/scratch/ {next} {print}' | sed 's/:*$//'` 
-export PYTHONPATH_RSMAS=`echo ${PYTHONPATH_RSMAS} | awk -v RS=: -v ORS=: '/home/ {next} {print}' | sed 's/:*$//'`
+echo "#### To set environment: ####"
+echo "export PATH=/bin; export RSMASINSAR_HOME=/tmp/rsmas_insar; cd \$RSMASINSAR_HOME; source ~/accounts/platforms_defaults.bash; source setup/environment.bash; export PATH=\$ISCE_STACK/topsStack:\$PATH; cd -;"
 
-echo After copy-to-tmp: `df -h /tmp`cat
