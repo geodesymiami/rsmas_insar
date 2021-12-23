@@ -65,7 +65,7 @@ def main(iargs=None):
                     'Bus',
                     'Aborted',
                     #'ERROR',          FA 11/21:  commented because
-                    'Error',
+                    ' Error',
                     'FileNotFoundError',
                     'IOErr',
                     'Traceback'
