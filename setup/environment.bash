@@ -72,7 +72,7 @@ export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/minsar/utils/ssara_ASF
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/sources/PySolid
 #export PYTHONPATH=${PYTHONPATH}:${ISCE_STACK}
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/sources      # needed for mimt. Need to talk to Sara on how to do this smarter
-export PYTHONPATH_RSMAS=${PYTHONPATH}
+#export PYTHONPATH_RSMAS=${PYTHONPATH}
 
 ######### Ignore warnings ############
 #export PYTHONWARNINGS="ignore:Unverified HTTPS request"   (FA 6/20: Deprecation and VisibleDepreciation dis not work) 
