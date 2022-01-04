@@ -738,6 +738,7 @@ class JOB_SUBMIT:
 
         job_file_lines.append( "# set environment    \n" )
         job_file_lines.append( "export PATH=/bin\n")
+        job_file_lines.append( "unset PYTHONPATH\n")
         job_file_lines.append( "export RSMASINSAR_HOME=/tmp/rsmas_insar\n" )
 
         if self.prefix == 'stripmap':
