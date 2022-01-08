@@ -209,11 +209,17 @@ class JOB_SUBMIT:
                self.num_bursts = 8
 
             self.get_memory_walltime(batch_file, job_type='batch')
+            
+            log_args = 'job_submission.py --template {t} {a} --outdir {b} ' \
+                       '--numBursts {c} --writeonly'.format(t=self.custom_template_file,
+                                                            a=batch_file, b=self.out_dir,
+                                                            c=self.num_bursts)
 
-            message_rsmas.log(self.work_dir, 'job_submission.py --template {t} {a} --outdir {b} '
-                                                 '--numBursts {c} --writeonly'.format(t=self.custom_template_file,
-                                                                                      a=batch_file, b=self.out_dir,
-                                                                                      c=self.num_bursts))
+            if self.copy_to_tmp:
+                log_args += ' --tmp'
+
+            message_rsmas.log(self.work_dir, log_args)
+
 
             with open(batch_file, 'r') as f:
                 tasks = f.readlines()
