@@ -67,6 +67,8 @@ def create_argument_parser():
                             help='number of bursts to calculate walltime')
     group.add_argument('--numData', dest='num_data', type=int, default=1, metavar='number of data',
                        help='number of data (interferogram or slc) to calculate walltime')
+    group.add_argument('--distribute', dest='distribute', type=str, nargs='+', default=None,
+                       help='Files to be copied to /tmp')
     group.add_argument('--writeonly', dest='writeonly', action='store_true', help='Write job files without submitting')
     group.add_argument('--remora', dest='remora', action='store_true', help='use remora to get job information')
     group.add_argument('--tmp', dest='copy_to_tmp', action='store_true', help='write to run_files_tmp/ directory')
@@ -218,8 +220,13 @@ class JOB_SUBMIT:
             if self.copy_to_tmp:
                 log_args += ' --tmp'
 
-            message_rsmas.log(self.work_dir, log_args)
+            if not distribute is None:
+                distribute = distribute + [' ']
+                log_args += ' --distribute' # {}'.format(distribute)
+                for item in distribute:
+                    log_args += ' {}'.format(item)
 
+            message_rsmas.log(self.work_dir, log_args)
 
             with open(batch_file, 'r') as f:
                 tasks = f.readlines()
@@ -333,7 +340,7 @@ class JOB_SUBMIT:
         job_file_lines.append("\nfree\n")
 
         if self.scheduler == 'SLURM':
-            job_file_lines = self.add_slurm_commands(job_file_lines, job_file_name, hostname, distribute = distribute)
+            job_file_lines = self.add_slurm_commands(job_file_lines, job_file_name, hostname, distribute=distribute)
 
         if self.remora:
             job_file_lines.append('\nmodule load remora')
@@ -738,7 +745,12 @@ class JOB_SUBMIT:
         job_file_lines.append("install_code_on_tmp.bash {} --prefix {}\n".format(job_file_name, self.prefix))
 
         if not distribute is None:
-            job_file_lines.append("copy_data_to_tmp.bash {} {} {} {}\n".format(job_file_name, batch_file, self.out_dir, distribute))
+            distribute += ['\n']
+            job_cmd = "copy_data_to_tmp.bash {} {} {}".format(job_file_name, batch_file, self.out_dir)
+            for item in distribute:
+                job_cmd += ' {}'.format(item)
+            job_file_lines.append(job_cmd)
+            #job_file_lines.append("copy_data_to_tmp.bash {} {} {} {}\n".format(job_file_name, batch_file, self.out_dir, distribute))
         else:
             job_file_lines.append("copy_data_to_tmp.bash {} {} {}\n".format(job_file_name, batch_file, self.out_dir))
 
@@ -1423,6 +1435,6 @@ if __name__ == "__main__":
     PARAMS = parse_arguments(sys.argv[1::])
 
     job_obj = JOB_SUBMIT(PARAMS)
-    job_obj.write_batch_jobs()
+    job_obj.write_batch_jobs(distribute=PARAMS.distribute)
     if PARAMS.writeonly is False:
         status = job_obj.submit_batch_jobs()
