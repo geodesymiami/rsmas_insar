@@ -221,10 +221,12 @@ class JOB_SUBMIT:
                 log_args += ' --tmp'
 
             if not distribute is None:
-                distribute = distribute + [' ']
                 log_args += ' --distribute' # {}'.format(distribute)
-                for item in distribute:
-                    log_args += ' {}'.format(item)
+                if isinstance(distribute, list):
+                    for item in distribute:
+                        log_args += ' {}'.format(item)
+                else:
+                    log_args += ' {}'.format(distribute)
 
             message_rsmas.log(self.work_dir, log_args)
 
@@ -745,10 +747,13 @@ class JOB_SUBMIT:
         job_file_lines.append("install_code_on_tmp.bash {} --prefix {}\n".format(job_file_name, self.prefix))
 
         if not distribute is None:
-            distribute += ['\n']
             job_cmd = "copy_data_to_tmp.bash {} {} {}".format(job_file_name, batch_file, self.out_dir)
-            for item in distribute:
-                job_cmd += ' {}'.format(item)
+            if isinstance(distribute, list):
+                for item in distribute:
+                    job_cmd += ' {}'.format(item)
+            else:
+                job_cmd += ' {}'.format(distribute)
+            job_cmd += '\n'
             job_file_lines.append(job_cmd)
             #job_file_lines.append("copy_data_to_tmp.bash {} {} {} {}\n".format(job_file_name, batch_file, self.out_dir, distribute))
         else:
