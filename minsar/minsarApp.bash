@@ -313,13 +313,17 @@ echo "download dem jobfiles ifgrams mintpy minopy upload insarmaps"
 echo "    $download_flag     $dem_flag      $jobfiles_flag       $ifgrams_flag       $mintpy_flag      $minopy_flag      $upload_flag       $insarmaps_flag"
 
 #############################################################
-# check wether miniconda3.tar, S1orbits.tar and S1orbits exist on $SCRATCHDIR 
-# (might be purged)
+# check weather newest miniconda3.tar, minsar.tar,  S1orbits.tar and S1orbits exist on $SCRATCHDIR (might be purged) (partly only needed for --tmp)
+# code_dir from RSMASINSAR_HOME directory is prepended to distingiush different minsar.tar versions
+
 code_dir=$(echo $(basename $(dirname $RSMASINSAR_HOME)))
-#if  ! test -f "$SCRATCHDIR/${code_dir}_miniconda3.tar" ; then
 if  ! test -f "$SCRATCHDIR/${code_dir}_miniconda3.tar" || [[ "$RSMASINSAR_HOME/3rdparty/miniconda3.tar" -nt "$SCRATCHDIR/${code_dir}_miniconda3.tar" ]]; then
-    echo "Copying ${code_dir}_miniconda3.tar to $SCRATCHDIR ..."
+    echo "Copying $RSMASINSAR_HOME/3rdparty/miniconda3.tar to $SCRATCHDIR/${code_dir}_miniconda3.tar ..."
     cp $RSMASINSAR_HOME/3rdparty/miniconda3.tar $SCRATCHDIR/${code_dir}_miniconda3.tar
+fi
+if  ! test -f "$SCRATCHDIR/${code_dir}_minsar.tar" || [[ "$RSMASINSAR_HOME/minsar.tar" -nt "$SCRATCHDIR/${code_dir}_minsar.tar" ]]; then
+    echo "Copying $RSMASINSAR_HOME/minsar.tar to $SCRATCHDIR/${code_dir}_minsar.tar ..."
+    cp $RSMASINSAR_HOME/minsar.tar $SCRATCHDIR/${code_dir}_minsar.tar
 fi
 
 if  ! test -f "$SCRATCHDIR/S1orbits.tar" ; then
