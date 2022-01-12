@@ -13,6 +13,8 @@ helptext="                                                                     \
     exit 0;
 fi
 
+test -f mintpy/timeseries.h5 || exit 0
+
 [[ $(ls mintpy/timeseries* | wc -l) -eq 1 ]] && rm -f mintpy/timeseries*
 ! test -f mintpy/rms_timeseriesResidual_ramp.txt  &&  rm -f mintpy/*demErr*
 
