@@ -21,10 +21,20 @@ if (! -f ~/.netrc) then
   cp ~/accounts/netrc ~/.netrc
 endif
 
+## for pyaps 
+#if (! -f 3rdparty/PyAPS/pyaps3/model.cfg) then
+#      echo Copying default model.cfg for ECMWF download with PyAPS into ../3rdparty/PyAPS/pyaps3
+#      cp ~/accounts/model.cfg ../3rdparty/PyAPS/pyaps3
+#   else
+#      echo File model.cfg exists already - kept unchanged
+#endif
+
 # for pyaps 
-if (! -f 3rdparty/PyAPS/pyaps3/model.cfg) then
-      echo Copying default model.cfg for ECMWF download with PyAPS into ../3rdparty/PyAPS/pyaps3
-      cp ~/accounts/model.cfg ../3rdparty/PyAPS/pyaps3
+
+set model_cfg_file="../3rdparty/miniconda3/lib/python3.8/site-packages/pyaps3/model.cfg"
+if (! -f $model_cfg_file) then
+      echo Copying default model.cfg for ECMWF download with PyAPS into ../3rdparty/miniconda3/lib/python3.8/site-packages/pyaps3/
+      cp ~/accounts/model.cfg $model_cfg_file
    else
       echo File model.cfg exists already - kept unchanged
 endif
