@@ -1,4 +1,5 @@
 #! /bin/bash
+###########################################
 function changequeuenormal() { 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
    echo "  Usage: changequeuenormal run_10*.job"; return
@@ -12,6 +13,7 @@ elif [[ $PLATFORM_NAME == "stampede2" ]] ; then
 fi 
 }
 
+###########################################
 function changequeuedev() { 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
    echo "  Usage: changequeuedev run_10*.job"; return
@@ -25,6 +27,7 @@ elif [[ $PLATFORM_NAME == "stampede2" ]] ; then
 fi 
 }
 
+###########################################
 function changequeueflex() { 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
    echo "  Usage: changequeueflex run_10*.job"; return
@@ -72,3 +75,17 @@ function countbursts(){
                        echo "$date #of_bursts: `ls $date/IW*/burst*xml | wc -l`   ${array[@]}"
                    done;
                    }
+###########################################
+function check_matplotlib_pyplot(){ 
+   #set -x
+   timeout 20 python -c "import matplotlib.pyplot"
+   exit_status=$?
+   if [[ $exit_status -ne 0 ]]; then
+      echo "Can't import. Reason unknown. Try a new shell (exit_status: $exit_status)"
+      return 1;
+   fi
+   #echo Continue ... python -c \"import matplotlib.pyplot\" was successful within 6 secs
+   echo "        ... successful, continue ... "
+   return 0
+}
+
