@@ -49,6 +49,7 @@ else
     fi
 fi
 
+#set -xv
 template_file=$1
 if [[ $1 == $PWD ]]; then
    template_file=$TEMPLATES/$PROJECT_NAME.template
@@ -97,6 +98,7 @@ if [[ ! -z $(grep "^mintpy.troposphericDelay.method" $template_file) ]];  then
    tropo_correction_method=$(grep -E "^mintpy.troposphericDelay.method" $template_file | awk -F = '{printf "%s\n",$2}' | sed 's/ //' | awk -F ' '  '{print $1}')
    if [[ $tropo_correction_method == "height_correlation" || $tropo_correction_method == "no" ]]; then
       download_ECMWF_flag=0
+      download_ECMWF_before_mintpy_flag=0
    fi
 fi
 ##################################
@@ -313,6 +315,16 @@ echo "download dem jobfiles ifgrams mintpy minopy upload insarmaps"
 echo "    $download_flag     $dem_flag      $jobfiles_flag       $ifgrams_flag       $mintpy_flag      $minopy_flag      $upload_flag       $insarmaps_flag"
 
 #############################################################
+# check weather python can load matplotlib.pyplot which occasionaly does not work for unknown reasons
+
+echo Testing ... python -c \"import matplotlib.pyplot\" using check_matplotlib_pyplot
+check_matplotlib_pyplot;
+exit_status="$?"
+if [[ $exit_status -ne 0 ]]; then
+   echo "Exit code ($exit_status). Exiting."
+   exit 1;
+fi
+#############################################################
 # check weather newest miniconda3.tar, minsar.tar,  S1orbits.tar and S1orbits exist on $SCRATCHDIR (might be purged) (partly only needed for --tmp)
 # code_dir from RSMASINSAR_HOME directory is prepended to distingiush different minsar.tar versions
 
@@ -326,25 +338,14 @@ if  ! test -f "$SCRATCHDIR/${code_dir}_minsar.tar" || [[ "$RSMASINSAR_HOME/minsa
     cp $RSMASINSAR_HOME/minsar.tar $SCRATCHDIR/${code_dir}_minsar.tar
 fi
 
-if  ! test -f "$SCRATCHDIR/S1orbits.tar" ; then
-    echo "Copying S1orbits.tar to $SCRATCHDIR ..."
-    cp $WORKDIR/S1orbits.tar $SCRATCHDIR
-fi
-if [ ! "$(ls -A $SCRATCHDIR/S1orbits)" ]; then
-     echo "SCRATCHDIR/S1orbits is empty. Untarring S1orbits.tar ..."
-     tar xf $SCRATCHDIR/S1orbits.tar -C $SCRATCHDIR
-fi
-#############################################################
-# download latest orbits from ASF mirror
-cd $SCRATCHDIR/S1orbits
-curl --ftp-ssl --silent --use-ascii --ftp-method nocwd --list-only https://s1qc.asf.alaska.edu/aux_poeorb/ > ASF_poeorb.txt
-curl --ftp-ssl --silent --use-ascii --ftp-method nocwd --list-only https://s1qc.asf.alaska.edu/aux_resorb/ > ASF_resorb.txt
-cat ASF_poeorb.txt | awk '{printf "! test -f %s && wget -c https://s1qc.asf.alaska.edu/aux_poeorb/%s\n", substr($0,10,77), substr($0,10,77)}' | grep 20210[4-9] > ASF_poeorb_latest.txt
-cat ASF_resorb.txt | awk '{printf "! test -f %s && wget -c https://s1qc.asf.alaska.edu/aux_resorb/%s\n", substr($0,10,77), substr($0,10,77)}' | grep 20210[4-9] > ASF_resorb_latest.txt
-bash ASF_poeorb_latest.txt
-#bash ASF_resorb_latest.txt
-
-cd -
+#if  ! test -f "$SCRATCHDIR/S1orbits.tar" ; then
+#    echo "Copying S1orbits.tar to $SCRATCHDIR ..."
+#    cp $WORKDIR/S1orbits.tar $SCRATCHDIR
+#fi
+#if [ ! "$(ls -A $SCRATCHDIR/S1orbits)" ]; then
+#     echo "SCRATCHDIR/S1orbits is empty. Untarring S1orbits.tar ..."
+#     tar xf $SCRATCHDIR/S1orbits.tar -C $SCRATCHDIR
+#fi
 ####################################
 download_dir=$WORK_DIR/SLC
 
@@ -521,6 +522,19 @@ if [[ $ifgrams_flag == "1" ]]; then
     #timeout 0.1 ls  $WEATHER_DIR/ERA5/* >> /dev/null ; echo $?
     #cmd_try="download_ERA5_data.py --date_list SAFE_files.txt $template_file"
 
+#############################################################
+# download latest orbits from ASF mirror
+    if [[ $template_file == *"Sen"*  ]]; then 
+       echo "Downloading latest orbits from ASF..."
+       cd $WORKDIR/S1orbits
+       curl --ftp-ssl --silent --use-ascii --ftp-method nocwd --list-only https://s1qc.asf.alaska.edu/aux_poeorb/ > ASF_poeorb.txt
+       curl --ftp-ssl --silent --use-ascii --ftp-method nocwd --list-only https://s1qc.asf.alaska.edu/aux_resorb/ > ASF_resorb.txt
+       cat ASF_poeorb.txt | awk '{printf "! test -f %s && wget -c https://s1qc.asf.alaska.edu/aux_poeorb/%s\n", substr($0,10,77), substr($0,10,77)}' | grep 20210[4-9] > ASF_poeorb_latest.txt
+       cat ASF_resorb.txt | awk '{printf "! test -f %s && wget -c https://s1qc.asf.alaska.edu/aux_resorb/%s\n", substr($0,10,77), substr($0,10,77)}' | grep 20210[4-9] > ASF_resorb_latest.txt
+       bash ASF_poeorb_latest.txt
+       cd -
+    fi
+
     if [[ $template_file != *"Sen"* || $select_reference_flag == "0" ]]; then 
 
        cmd="run_workflow.bash $template_file --dostep ifgrams $copy_to_tmp"
@@ -637,7 +651,7 @@ if [[ $mintpy_flag == "1" ]]; then
         #download weather models - run mintpy after downnload is completed
         cmd="download_ERA5_data.py --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR"
         echo "Running.... $cmd" | tee -a log
-        $cmd 2>out_download_ERA52.e 1>out_download_ERA52.o
+        $cmd 2>out_download_ERA5_2.e 1>out_download_ERA5_2.o
         exit_status="$?"
         if [[ $exit_status -ne 0 ]]; then
            echo "download_ERA5_data.py exited with a non-zero exit code ($exit_status). Exiting."
@@ -658,8 +672,8 @@ fi
 if [[ $minopy_flag == "1" ]]; then
 
     # correct *xml and *vrt files (if skipped in ifgram step because of unwrap problems) 
-    sed -i "s|/tmp|$PWD|g" */*.xml */*/*.xml  */*/*/*.xml 
-    sed -i "s|/tmp|$PWD|g" */*.vrt */*/*.vrt  */*/*/*.vrt 
+    #FA sed -i "s|/tmp|$PWD|g" */*.xml */*/*.xml  */*/*/*.xml   #FA 1/22: commented out because it takes too long
+    #FA sed -i "s|/tmp|$PWD|g" */*.vrt */*/*.vrt  */*/*/*.vrt 
 
     cmd="minopyApp.py $template_file --dir minopy --jobfiles --tmp"
     echo "Running.... $cmd"
