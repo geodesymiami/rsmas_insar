@@ -49,6 +49,7 @@ def main(iargs=None):
                     'SLCs are sliced differently with different versions of the processor',
                     'No annotation xml file found in zip file',
                     'mismatched tag: line 77, column 6',
+                    'not well-formed (invalid token)'
                     ]
     data_problems_strings_error_files = [
                     'does not exist in the file system, and is not recognized as a supported dataset name'
