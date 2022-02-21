@@ -88,4 +88,49 @@ function check_matplotlib_pyplot(){
    echo "        ... successful, continue ... "
    return 0
 }
+###########################################
+function listc() { 
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+helptext="                                       \n\
+  Examples:                                      \n\
+      listc ChamanChunk24SenAT144                \n\
+      listc ChamanBigSenAT144                    \n\
+      listc ChamanChunksSenAT144                 \n\
+      listc SenAT144                             \n\
+      listc C*SenAT144                           \n\
+                                                 \n\
+  List progress of chunk-wise processing.        \n\n\
+  Lists S1* files (if exist) or out_* files. Unnecessary string  \n\
+  (e.g. Chunk24, Big, Chunks) are stripped from argument. \n\
+  Run in \$SCRATCHDIR.  \n
+    "
+    printf "$helptext"
+    return
+fi
+
+not_finished=()
+arg=$1
+arg_mod=*$arg
+# modify argument if it contains Chunk or Big
+[[ $arg == *"Chunk"* ]] && arg_mod=$(echo $arg | sed -e s/Chunk.\*Sen/\*Sen/)
+[[ $arg == *"Big"* ]] && arg_mod=$(echo $arg | sed -e s/Big.\*Sen/\*Sen/)
+[[ $arg == *"Chunks"* ]] && arg_mod=$(echo $arg | sed -e s/Chunks.\*Sen/\*Sen/)
+#echo Original_argument: $arg 
+#echo Modified_argument: ${arg_mod} 
+
+dir_list=$(ls -d $arg_mod)
+for dir in $dir_list; do
+   if test -f $dir/mintpy/S1* ; then
+      ls -lh $dir/mintpy/S1* | awk  '{print $5,$6,$7,$8,$9}'
+   else
+      not_finished+=($dir)
+   fi
+done; 
+for dir in ${not_finished[@]}; do
+    if [[ $dir != *Big* ]] && [[ $dir != *ChunksS* ]]; then
+       ls -lvd $dir/{,out_run*.e}  | awk  '{print $5,$6,$7,$8,$9}'
+    fi
+done
+}
+
 
