@@ -61,8 +61,17 @@ def main(iargs=None):
             inps.project_name = os.path.basename(inps.work_dir)
             run_files_dir = cwd + '/run_files'
 
+    try: 
+        if inps.tmp:
+            minopy_run_files_dir = inps.work_dir + '/minopy/run_files'
+        else:
+            minopy_run_files_dir = inps.work_dir + '/minopy/run_files'
+        minopy_run_stdout_files = glob.glob(minopy_run_files_dir + '/run_*_*_[0-9][0-9][0-9][0-9]*.o') + glob.glob(minopy_run_files_dir + '/*/run_*_*_[0-9][0-9][0-9][0-9]*.o')
+    except:
+        pass
+    minopy_run_stdout_files = natsorted(minopy_run_stdout_files)
+
     run_stdout_files = glob.glob(run_files_dir + '/run_*_*_[0-9][0-9][0-9][0-9]*.o') + glob.glob(run_files_dir + '/*/run_*_*_[0-9][0-9][0-9][0-9]*.o')
-    #run_stdout_files = natsorted(run_stdout_files)
     
     #run_stdout_files2 = glob.glob(run_files_dir + '/stdout_run_*/run_*.o')
     #run_stdout_files2 = natsorted(run_stdout_files2)
@@ -71,11 +80,18 @@ def main(iargs=None):
     if len(run_stdout_files) == 0:
         run_stdout_files = glob.glob(run_files_dir + '/stdout_run_*/run_*.o')
         run_stdout_files = natsorted(run_stdout_files)
-   
+
     run_stdout_files_base=[]
     for f in run_stdout_files:
         run_stdout_files_base.append(os.path.basename(f))
     run_stdout_files = natsorted(run_stdout_files_base)
+
+    minopy_run_stdout_files_base=[]
+    for f in minopy_run_stdout_files:
+        minopy_run_stdout_files_base.append(os.path.basename(f))
+    minopy_run_stdout_files = natsorted(minopy_run_stdout_files_base)
+
+    run_stdout_files = run_stdout_files +  minopy_run_stdout_files
 
     bursts = glob.glob(inps.work_dir + '/geom_reference/*/hgt*rdr')
     number_of_bursts = len(bursts)
