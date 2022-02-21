@@ -76,6 +76,7 @@ wait_time=30
 
 startstep=1
 stopstep="insarmaps"
+stopstep="mintpy"
 
 start_datetime=$(date +"%Y%m%d:%H-%m")
 echo "${start_datetime} * run_workflow.bash ${WORKDIR} ${@:2}" >> "${WORKDIR}"/log
