@@ -121,14 +121,16 @@ arg_mod=*$arg
 dir_list=$(ls -d $arg_mod)
 for dir in $dir_list; do
    if test -f $dir/mintpy/S1* ; then
-      ls -lh $dir/mintpy/S1* | awk  '{print $5,$6,$7,$8,$9}'
+      #ls -lh $dir/mintpy/S1* | awk  '{print $5,$6,$7,$8,$9}'
+      ls -lh $dir/mintpy/S1* | awk  '{printf "%5s %s %2s %s %s\n", $5,$6,$7,$8,$9}'
    else
       not_finished+=($dir)
    fi
 done; 
 for dir in ${not_finished[@]}; do
     if [[ $dir != *Big* ]] && [[ $dir != *ChunksS* ]]; then
-       ls -lvd $dir/{,out_run*.e}  | awk  '{print $5,$6,$7,$8,$9}'
+       #ls -lvd $dir/{,out_run*.e}  | awk  '{print $5,$6,$7,$8,$9}'
+       ls -lvd $dir/{,out_run*.e}  | awk  '{printf "%5s %s %2s %s %s\n", $5,$6,$7,$8,$9}'
     fi
 done
 }
