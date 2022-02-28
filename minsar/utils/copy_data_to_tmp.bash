@@ -298,3 +298,6 @@ elif [[ $distribute_file ]]; then
     distribute.bash $distribute_file
 
 fi
+
+echo -e "\ncopy_data_to_tmp.bash: after copy-to-tmp:\n `df -h /tmp`"
+

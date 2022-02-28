@@ -29,6 +29,7 @@ module load intel/19.1.1 2> /dev/null
 export PATH=${PATH}:${CDTOOL}/bin
 
 #df -h /tmp
+echo -e "\ninstall_code_on_tmp.bash: before copy-to-tmp:\n `df -h /tmp`"
 rm -rf /tmp/rsmas_insar
 mkdir -p /tmp/rsmas_insar
 mkdir -p /tmp/rsmas_insar/3rdparty ;
@@ -42,7 +43,8 @@ tar xf /tmp/${code_dir}_minsar.tar -C /tmp/rsmas_insar
 rm /tmp/${code_dir}_miniconda3.tar
 rm /tmp/${code_dir}_minsar.tar
 
-echo After copy-to-tmp: `df -h /tmp`
+#echo -e "install_code_on_tmp.bash: after copy-to-tmp:\n `df -h /tmp`"
+
 
 echo "#### To set environment: ####"
 echo "export PATH=/bin; export RSMASINSAR_HOME=/tmp/rsmas_insar; cd \$RSMASINSAR_HOME; source ~/accounts/platforms_defaults.bash; source setup/environment.bash; export PATH=\$ISCE_STACK/topsStack:\$PATH; cd -;"
