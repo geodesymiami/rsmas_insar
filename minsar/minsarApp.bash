@@ -353,7 +353,8 @@ platform_str=$(grep platform $template_file | cut -d'=' -f2)
 if [[ $platform_str == *"COSMO-SKYMED"* ]]; then
    download_dir=$WORK_DIR/RAW_data
 fi
-#echo download_dir: $download_dir
+####################################
+srun_cmd="srun -n1 -N1 -t 00:07:00 -A $JOBSHEDULER_PROJECTNAME -p $QUEUENAME"
 ####################################
 ###       Processing Steps       ###
 ####################################
@@ -498,7 +499,7 @@ if [[ $jobfiles_flag == "1" ]]; then
 
     cmd="create_runfiles.py $template_file --jobfiles --queue $QUEUENAME $copy_to_tmp"
     echo "Running.... $cmd >create_jobfiles.e 1>out_create_jobfiles.o"
-    $cmd 2>create_jobfiles.e 1>out_create_jobfiles.o
+    $srun_cmd $cmd 2>create_jobfiles.e 1>out_create_jobfiles.o
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
        echo "create_jobfile.py exited with a non-zero exit code ($exit_status). Exiting."
