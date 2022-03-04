@@ -49,6 +49,7 @@ def main(iargs=None):
                     'SLCs are sliced differently with different versions of the processor',
                     'No annotation xml file found in zip file',
                     'mismatched tag: line 77, column 6',
+                    'no element found: line',
                     'not well-formed (invalid token)'
                     ]
     data_problems_strings_error_files = [
@@ -61,7 +62,6 @@ def main(iargs=None):
                     'has different number of bursts',
                     ]
     error_strings = [
-                    'no element found: line',
                     'Segmentation fault',
                     'Bus',
                     'Aborted',
