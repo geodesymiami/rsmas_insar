@@ -354,7 +354,7 @@ if [[ $platform_str == *"COSMO-SKYMED"* ]]; then
    download_dir=$WORK_DIR/RAW_data
 fi
 ####################################
-srun_cmd="srun -n1 -N1 -t 00:07:00 -A $JOBSHEDULER_PROJECTNAME -p $QUEUENAME"
+srun_cmd="srun -n1 -N1 -A $JOBSHEDULER_PROJECTNAME -p $QUEUENAME  -t 00:07:00 "
 ####################################
 ###       Processing Steps       ###
 ####################################
@@ -413,7 +413,10 @@ if [[ $dem_flag == "1" ]]; then
        rm -rf DEM; eval "cp -r $demDir DEM"
     else   
        # download DEM
-       cmd="dem_rsmas.py $template_file --ssara_kml"
+       delta_lat=$(grep -E "^topsStack.boundingBox" $template_file | tail -1 | awk '{ printf "%d\n",$4-$3}')
+       job_minutes=$(echo $delta_lat  | awk '{ print int($1 + 1)*4.2}')
+       echo "delta_lat, job_minutes: $delta_lat, $job_minutes"
+       cmd="$srun_cmd -t 00:$job_minutes:00 dem_rsmas.py $template_file --ssara_kml"
        echo "Running... $cmd >out_dem_rsmas.e 1>out_dem_rsmas.o"
        $cmd 2>out_dem_rsmas.e 1>out_dem_rsmas.o
        exit_status="$?"
