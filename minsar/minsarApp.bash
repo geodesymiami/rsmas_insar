@@ -91,9 +91,9 @@ str_insarmaps_flag=${str_insarmaps_flag[-1]}
 if [[ $str_insarmaps_flag == "False" ]]; then
    insarmaps_flag=0
 fi
-if [[ ! -z $(grep "^topsStack.referenceDate" $template_file) ]];  then
-   select_reference_flag=0
-fi
+#if [[ ! -z $(grep "^topsStack.referenceDate" $template_file) ]];  then
+#   select_reference_flag=0
+#fi
 if [[ ! -z $(grep "^mintpy.troposphericDelay.method" $template_file) ]];  then
    tropo_correction_method=$(grep -E "^mintpy.troposphericDelay.method" $template_file | awk -F = '{printf "%s\n",$2}' | sed 's/ //' | awk -F ' '  '{print $1}')
    if [[ $tropo_correction_method == "height_correlation" || $tropo_correction_method == "no" ]]; then
@@ -413,8 +413,8 @@ if [[ $dem_flag == "1" ]]; then
        rm -rf DEM; eval "cp -r $demDir DEM"
     else   
        # download DEM
-       delta_lat=$(grep -E "^topsStack.boundingBox" $template_file | tail -1 | awk '{ printf "%d\n",$4-$3}')
-       job_minutes=$(echo $delta_lat  | awk '{ print int($1 + 1)*4.2}')
+       delta_lat=$(grep -E "^topsStack.boundingBox" $template_file | tail -1 | awk '{ printf "%f\n",$4-$3}')
+       job_minutes=$(echo $delta_lat  | awk '{ printf "%d\n",int($1 + 1)*4.2}')
        echo "delta_lat, job_minutes: $delta_lat, $job_minutes"
        cmd="$srun_cmd -t 00:$job_minutes:00 dem_rsmas.py $template_file --ssara_kml"
        echo "Running... $cmd >out_dem_rsmas.e 1>out_dem_rsmas.o"
@@ -540,13 +540,12 @@ if [[ $ifgrams_flag == "1" ]]; then
     fi
 
     if [[ $template_file != *"Sen"* || $select_reference_flag == "0" ]]; then 
-
        cmd="run_workflow.bash $template_file --dostep ifgrams $copy_to_tmp"
        echo "Running.... $cmd"
        $cmd
        exit_status="$?"
        if [[ $exit_status -ne 0 ]]; then
-          echo "run_workflow.bash --dostep ifgrams  exited with a non-zero exit code ($exit_status). Exiting."
+          echo "run_workflow.bash $template_file --dostep ifgrams  exited with a non-zero exit code ($exit_status). Exiting."
           exit 1;
        fi
 
@@ -559,7 +558,7 @@ if [[ $ifgrams_flag == "1" ]]; then
        $cmd
        exit_status="$?"
        if [[ $exit_status -ne 0 ]]; then
-          echo "run_workflow.bash --start 1 --stop 5 exited with a non-zero exit code ($exit_status). Exiting."
+          echo "run_workflow.bash $template_file --start 1 --stop 5 exited with a non-zero exit code ($exit_status). Exiting."
           exit 1;
        fi
 
@@ -574,11 +573,12 @@ if [[ $ifgrams_flag == "1" ]]; then
        percentage_of_dates_with_less_bursts_than_reference=$(echo "scale=2; $number_of_dates_with_less_bursts_than_reference / $number_of_dates * 100"  | bc)
        echo "#########################################" | tee -a log | tee -a `ls wor* | tail -1`
        echo "Number of dates with less bursts than reference: $number_of_dates_with_less_bursts_than_reference" | tee -a log | tee -a  `ls wor* | tail -1`
-       echo "Total umber of dates: $number_of_dates" | tee -a log | tee -a  `ls wor* | tail -1`
+       echo "Total number of dates: $number_of_dates" | tee -a log | tee -a  `ls wor* | tail -1`
        echo "Percentage of dates with less bursts than reference: $percentage_of_dates_with_less_bursts_than_reference" | tee -a log | tee -a  `ls wor* | tail -1`
        echo "# head -$number_of_dates_with_less_or_equal_bursts_than_reference  number_of_bursts_sorted.txt:" | tee -a log | tee -a `ls wor* | tail -1`
        head -"$number_of_dates_with_less_or_equal_bursts_than_reference" number_of_bursts_sorted.txt | tee -a log | tee -a `ls wor* | tail -1`
-       percentage_of_dates_allowed_to_exclude=3
+       percentage_of_dates_allowed_to_exclude=3  # FA 12 Mar 2022: changed to 1 %
+       percentage_of_dates_allowed_to_exclude=1
        tmp=$(echo "$percentage_of_dates_allowed_to_exclude $number_of_dates" | awk '{printf "%f", $1 / 100 * $2}')
        number_of_dates_allowed_to_exclude="${tmp%.*}"
        new_reference_date=$(head -$((number_of_dates_allowed_to_exclude+1))  number_of_bursts_sorted.txt | tail -1 | awk '{print $1}' | cut -d'/' -f2)
@@ -612,7 +612,7 @@ if [[ $ifgrams_flag == "1" ]]; then
 
           cmd="create_runfiles.py $template_file --jobfiles --queue $QUEUENAME $copy_to_tmp"
           echo "Running.... $cmd >create_jobfiles.e 1>out_create_jobfiles.o"
-          $cmd 2>create_jobfiles.e 1>out_create_jobfiles.o
+          $srun_cmd $cmd 2>create_jobfiles.e 1>out_create_jobfiles.o
           exit_status="$?"
           if [[ $exit_status -ne 0 ]]; then
              echo "create_jobfile.py exited with a non-zero exit code ($exit_status). Exiting."
@@ -626,7 +626,7 @@ if [[ $ifgrams_flag == "1" ]]; then
           $cmd
           exit_status="$?"
           if [[ $exit_status -ne 0 ]]; then
-             echo "run_workflow.bash --start 1 --stop 5 exited with a non-zero exit code ($exit_status). Exiting."
+             echo "run_workflow.bash $template_file --start 1 --stop 5 exited with a non-zero exit code ($exit_status). Exiting."
              exit 1;
           fi
        else
@@ -640,7 +640,7 @@ if [[ $ifgrams_flag == "1" ]]; then
        $cmd
        exit_status="$?"
        if [[ $exit_status -ne 0 ]]; then
-          echo "run_workflow.bash --start 6 --stop 11 exited with a non-zero exit code ($exit_status). Exiting."
+          echo "run_workflow.bash $template_file --start 6 --stop 11 exited with a non-zero exit code ($exit_status). Exiting."
           exit 1;
        fi
     fi
@@ -663,12 +663,12 @@ if [[ $mintpy_flag == "1" ]]; then
         fi
     fi
 
-    cmd="run_workflow.bash $PWD --append --dostep mintpy $copy_to_tmp"
+    cmd="run_workflow.bash $template_file --append --dostep mintpy $copy_to_tmp"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
-       echo "run_workflow.bash --start mintpy exited with a non-zero exit code ($exit_status). Exiting."
+       echo "run_workflow.bash $template_file --start mintpy exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
 fi
@@ -682,7 +682,7 @@ if [[ $minopy_flag == "1" ]]; then
     cmd="minopyApp.py $template_file --dir minopy --jobfiles --tmp"
     echo "Running.... $cmd"
     echo "$cmd" | tee -a log
-    $cmd
+    $srun_cmd $cmd
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
        echo "$cmd exited with a non-zero exit code ($exit_status). Exiting."
@@ -694,7 +694,7 @@ if [[ $minopy_flag == "1" ]]; then
     $cmd
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
-       echo "run_workflow.bash --start minopy exited with a non-zero exit code ($exit_status). Exiting."
+       echo "run_workflow.bash $template_file --start minopy exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
 fi
