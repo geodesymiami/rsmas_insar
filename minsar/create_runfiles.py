@@ -152,7 +152,7 @@ def main(iargs=None):
             command = ['smallbaselineApp.py', inps.custom_template_file, '--dir', 'mintpy']
 
             # pre_command = ["""[[ $(ls mintpy/time* | wc -l) -eq 1 ]] && rm mintpy/time*"""]
-            pre_command = ["clean_mintpy_dir.bash;"]
+            pre_command = ["check_timeseries_file.bash --dir mintpy;"]
             command = pre_command + command
 
             job_obj.submit_script(job_name, job_file_name, command, writeOnly='True')
