@@ -120,8 +120,13 @@ arg_mod=*$arg
 
 dir_list=$(ls -d $arg_mod)
 for dir in $dir_list; do
-   if test -f $dir/mintpy/S1* ; then
-      #ls -lh $dir/mintpy/S1* | awk  '{print $5,$6,$7,$8,$9}'
+   S1_files=( $dir/mintpy/S1* )
+   if [[  ${#S1_files[@]} -ne 1 ]]; then
+      echo "Too many S1* files: ${S1_files[@]}"
+      return
+   fi
+
+   if  test -f $dir/mintpy/S1*  ; then
       ls -lh $dir/mintpy/S1* | awk  '{printf "%5s %s %2s %s %s\n", $5,$6,$7,$8,$9}'
    else
       not_finished+=($dir)
