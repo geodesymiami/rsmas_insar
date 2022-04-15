@@ -414,7 +414,7 @@ if [[ $dem_flag == "1" ]]; then
     else   
        # download DEM
        delta_lat=$(grep -E "^topsStack.boundingBox" $template_file | tail -1 | awk '{ printf "%f\n",$4-$3}')
-       job_minutes=$(echo $delta_lat  | awk '{ printf "%d\n",int($1 + 1)*4.2}')
+       job_minutes=$(echo $delta_lat  | awk '{ printf "%d\n",int($1 + 1)*4.5}')
        echo "delta_lat, job_minutes: $delta_lat, $job_minutes"
        cmd="$srun_cmd -t 00:$job_minutes:00 dem_rsmas.py $template_file --ssara_kml"
        echo "Running... $cmd >out_dem_rsmas.e 1>out_dem_rsmas.o"
@@ -509,14 +509,14 @@ if [[ $jobfiles_flag == "1" ]]; then
        exit 1;
     fi
 
-    if [[ "$template_file" == *"SenAT"* || "$template_file" == *"SenDT"* ]]; then
-        # need to use differnt date_list file for CSK
-        download_ERA5_cmd=`which download_ERA5_data.py`
-        cmd="$download_ERA5_cmd --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR "
-        echo " Running.... python $cmd >& out_download_ERA5_data.e &"
-        python $cmd >& out_download_ERA5_data.e &
-        echo "$(date +"%Y%m%d:%H-%m") * download_ERA5_data.py --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR " >> "${WORK_DIR}"/log
-    fi
+#    if [[ "$template_file" == *"SenAT"* || "$template_file" == *"SenDT"* ]]; then
+#        # need to use differnt date_list file for CSK
+#        download_ERA5_cmd=`which download_ERA5_data.py`
+#        cmd="$download_ERA5_cmd --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR "
+#        echo " Running.... python $cmd >& out_download_ERA5_data.e &"
+#        python $cmd >& out_download_ERA5_data.e &
+#        echo "$(date +"%Y%m%d:%H-%m") * download_ERA5_data.py --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR " >> "${WORK_DIR}"/log
+#    fi
 
 fi
  
@@ -700,7 +700,7 @@ if [[ $minopy_flag == "1" ]]; then
 fi
 
 if [[ $upload_flag == "1" ]]; then
-    cmd="upload_data_products.py $template_file --mintpyProducts"
+    cmd="upload_data_products.py $template_file --mintpy"
     echo "Running.... $cmd"
     $cmd 2>out_upload_data_products.e 1>out_upload_data_products.o & 
     exit_status="$?"
