@@ -50,8 +50,6 @@ def cmd_line_parse(iargs=None, script=None):
         parser = add_export_amplitude(parser)
     if script == 'email_results':
         parser = add_email_args(parser)
-    if script == 'upload_data_products':
-        parser = add_upload_data_products(parser)
     if script == 'generate_chunk_template_files':
         parser = add_generate_chunk_template_files_args(parser)
     if script == 'smallbaseline_wrapper' or script == 'ingest_insarmaps' or script == 'minopy_wrapper':
@@ -106,33 +104,6 @@ def add_download_data(parser):
                              help='specifies number of processes for the parallel download, if no value is provided then the number of processors from os.cpu_count() is used')
 
     return parser
-
-
-def add_upload_data_products(parser):
-    flag_parser = parser.add_argument_group('upload data products flags')
-    flag_parser.add_argument('--mintpyProducts',
-                             dest='mintpy_products_flag',
-                             action='store_true',
-                             default=True,
-                             help='uploads mintpy and minopy data products to data portal')
-    flag_parser.add_argument('--minopyProducts',
-                             dest='minopy_products_flag',
-                             action='store_true',
-                             default=True,
-                             help='uploads minopy and mintpy data products to data portal')
-    flag_parser.add_argument('--all',
-                             dest='mintpy_products_all_flag',
-                             action='store_true',
-                             default=False,
-                             help='uploads full mintpy dir')
-    flag_parser.add_argument('--imageProducts',
-                             dest='image_products_flag',
-                             action='store_true',
-                             default=False,
-                             help='uploads image data products to data portal')
-
-    return parser
-
 
 def add_download_dem(parser):
     flag_parser = parser.add_argument_group('Download DEM flags:')
