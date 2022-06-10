@@ -63,8 +63,8 @@ def create_argument_parser():
     group.add_argument("--queue", dest="queue", metavar="QUEUE", help="Name of queue to submit job to")
     group.add_argument("--outdir", dest="out_dir", default='run_files', metavar="OUTDIR",
                        help="output directory for run files")
-    group.add_argument('--numBursts', dest='num_bursts', type=int, metavar='number of bursts',
-                            help='number of bursts to calculate walltime')
+    group.add_argument('--numMemoryUnits', dest='num_memory_units', type=int, metavar='number of memory units',
+                            help='number of memory units to calculate walltime, for ISCE workflow:number of bursts, for Miaplpy workflow:number of patches')
     group.add_argument('--numData', dest='num_data', type=int, default=1, metavar='number of data',
                        help='number of data (interferogram or slc) to calculate walltime')
     group.add_argument('--distribute', dest='distribute', type=str, nargs='+', default=None,
@@ -123,8 +123,8 @@ class JOB_SUBMIT:
         self.max_memory_per_node, self.wall_time_factor = set_job_queue_values(inps)
         self.number_of_parallel_tasks_per_node = 1
 
-        if not 'num_bursts' in inps or not inps.num_bursts:
-            self.num_bursts = None
+        if not 'num_memory_units' in inps or not inps.num_memory_units:
+            self.num_memory_units = None
         if not 'wall_time' in inps or not inps.wall_time:
             self.wall_time = None
         if not 'memory' in inps or not inps.memory:
@@ -177,13 +177,13 @@ class JOB_SUBMIT:
         command_line = " ".join(flag for flag in argv[0:] if flag != "--submit")
 
         self.get_memory_walltime(job_file_name, job_type='script')
-
-        self.job_files = []
+        
+        self.job_files = [os.path.join(self.work_dir, "{0}.job".format(job_file_name))]
 
         self.write_single_job_file(job_name, job_file_name, command_line, work_dir=self.work_dir,
                                    number_of_nodes=self.reserve_node)
         if writeOnly == 'False':
-            self.submit_and_check_job_status(self.job_files, work_dir=self.work_dir)
+            self.submit_and_check_job_status(self.job_files, work_dir=self.work_dir, wait_flag=False)
 
         return
 
@@ -208,14 +208,14 @@ class JOB_SUBMIT:
 
             # assume stripmap size corredponds to 8 busts
             if self.prefix == 'stripmap':       
-               self.num_bursts = 8
+               self.num_memory_units = 8
 
             self.get_memory_walltime(batch_file, job_type='batch')
             
             log_args = 'job_submission.py --template {t} {a} --outdir {b} ' \
-                       '--numBursts {c} --writeonly'.format(t=self.custom_template_file,
+                       '--numMemoryUnits {c} --writeonly'.format(t=self.custom_template_file,
                                                             a=batch_file, b=self.out_dir,
-                                                            c=self.num_bursts)
+                                                            c=self.num_memory_units)
 
             if self.copy_to_tmp:
                 log_args += ' --tmp'
@@ -377,7 +377,7 @@ class JOB_SUBMIT:
 
         return
 
-    def submit_and_check_job_status(self, job_files, work_dir=None):
+    def submit_and_check_job_status(self, job_files, work_dir=None, wait_flag=True):
         """
         Writes a single job file for launcher to submit as array. This is used to submit jobs in slurm or sge where launcher
         is available (compare to submit_jobs_individually used on pegasus with LSF)
@@ -385,7 +385,7 @@ class JOB_SUBMIT:
         :param batch_file: File containing tasks that we are submitting.
         :param work_dir: the directory to check outputs and error files of job
         """
-
+        
         job_numbers = []
         jobs_out = []
         jobs_err = []
@@ -398,72 +398,73 @@ class JOB_SUBMIT:
             job_numbers.append(job_num)
             jobs_out.append(out)
             jobs_err.append(err)
+         
+        if wait_flag:
+            i = 0
+            wait_time_sec = 60
+            total_wait_time_min = 0
+            time.sleep(2)
 
-        i = 0
-        wait_time_sec = 60
-        total_wait_time_min = 0
-        time.sleep(2)
-
-        if self.scheduler == 'SLURM':
-            rerun_job_files = []
-            job_status_file = os.path.join(work_dir, 'job_status')
-            for job_number, job_file_name in zip(job_numbers, job_files):
-                if not job_number == 'None':
-                    job_stat = 'wait'
-                    while job_stat == 'wait':
-                        os.system('sacct --format="State" -j {} > {}'.format(job_number, job_status_file))
-                        time.sleep(2)
-                        with open(job_status_file, 'r') as stat_file:
-                            status = stat_file.readlines()
-                            if len(status) < 3:
-                                continue
-                        if 'PENDING' in status[2] or 'RUNNING' in status[2]:
-                            print("Waiting for job {} output file after {} minutes".format(job_file_name,
-                                                                                           total_wait_time_min))
+            if self.scheduler == 'SLURM':
+                rerun_job_files = []
+                job_status_file = os.path.join(work_dir, 'job_status')
+                for job_number, job_file_name in zip(job_numbers, job_files):
+                    if not job_number == 'None':
+                        job_stat = 'wait'
+                        while job_stat == 'wait':
+                            os.system('sacct --format="State" -j {} > {}'.format(job_number, job_status_file))
+                            time.sleep(2)
+                            with open(job_status_file, 'r') as stat_file:
+                                status = stat_file.readlines()
+                                if len(status) < 3:
+                                    continue
+                            if 'PENDING' in status[2] or 'RUNNING' in status[2]:
+                                print("Waiting for job {} output file after {} minutes".format(job_file_name,
+                                                                                               total_wait_time_min))
+                                total_wait_time_min += wait_time_sec / 60
+                                time.sleep(wait_time_sec - 2)
+                                i += 1
+                            elif 'COMPLETED' in status[2]:
+                                job_stat = 'complete'
+                            elif 'TIMEOUT' in status[2]:
+                                job_stat = 'timeout'
+                                rerun_job_files.append(job_file_name)
+                            else:
+                                job_stat = 'failed'
+                                raise RuntimeError('Error: {} job was terminated with Error'.format(job_file_name))
+    
+                if len(rerun_job_files) > 0:
+                   for job_file_name in rerun_job_files:
+                       wall_time = putils.extract_walltime_from_job_file(job_file_name)
+                       new_wall_time = putils.multiply_walltime(wall_time, factor=1.2)
+                       putils.replace_walltime_in_job_file(job_file_name, new_wall_time)
+    
+                       dateStr=datetime.strftime(datetime.now(), '%Y%m%d:%H-%M')
+                       string = dateStr + ': re-running: ' + os.path.basename(job_file_name) + ': ' + wall_time + ' --> ' + new_wall_time
+    
+                       with open(self.out_dir + '/rerun.log', 'a') as rerun:
+                          rerun.writelines(string)
+    
+                   self.submit_and_check_job_status(rerun_job_files, work_dir=self.work_dir)
+    
+            else:
+                for out, job_file_name in zip(jobs_out, job_files):
+                    if not 'None' in out:
+                        while not os.path.exists(out):
+                            print("Waiting for job {} output file after {} minutes".format(job_file_name, total_wait_time_min))
                             total_wait_time_min += wait_time_sec / 60
-                            time.sleep(wait_time_sec - 2)
-                            i += 1
-                        elif 'COMPLETED' in status[2]:
-                            job_stat = 'complete'
-                        elif 'TIMEOUT' in status[2]:
-                            job_stat = 'timeout'
-                            rerun_job_files.append(job_file_name)
-                        else:
-                            job_stat = 'failed'
-                            raise RuntimeError('Error: {} job was terminated with Error'.format(job_file_name))
-
-            if len(rerun_job_files) > 0:
-               for job_file_name in rerun_job_files:
-                   wall_time = putils.extract_walltime_from_job_file(job_file_name)
-                   new_wall_time = putils.multiply_walltime(wall_time, factor=1.2)
-                   putils.replace_walltime_in_job_file(job_file_name, new_wall_time)
-
-                   dateStr=datetime.strftime(datetime.now(), '%Y%m%d:%H-%M')
-                   string = dateStr + ': re-running: ' + os.path.basename(job_file_name) + ': ' + wall_time + ' --> ' + new_wall_time
-
-                   with open(self.out_dir + '/rerun.log', 'a') as rerun:
-                      rerun.writelines(string)
-
-               self.submit_and_check_job_status(rerun_job_files, work_dir=self.work_dir)
-
-        else:
-            for out, job_file_name in zip(jobs_out, job_files):
-                if not 'None' in out:
-                    while not os.path.exists(out):
-                        print("Waiting for job {} output file after {} minutes".format(job_file_name, total_wait_time_min))
-                        total_wait_time_min += wait_time_sec / 60
-                        time.sleep(wait_time_sec)
-                        # i += 1
-
-        for job_file_name in job_files:
-            error_files = glob.glob(job_file_name.split('.')[0] + '*.e')
-            for errfile in error_files:
-                job_exit = [check_words_in_file(errfile, 'Segmentation fault'),
-                            check_words_in_file(errfile, 'Aborted'),
-                            check_words_in_file(errfile, 'ERROR'),
-                            check_words_in_file(errfile, 'Error')]
-                if np.array(job_exit).any():
-                    raise RuntimeError('Error terminating job: {}'.format(job_file_name))
+                            time.sleep(wait_time_sec)
+                            # i += 1
+    
+            for job_file_name in job_files:
+                error_files = glob.glob(job_file_name.split('.')[0] + '*.e')
+                for errfile in error_files:
+                    job_exit = [check_words_in_file(errfile, 'Segmentation fault'),
+                                check_words_in_file(errfile, 'Aborted'),
+                                check_words_in_file(errfile, 'ERROR'),
+                                check_words_in_file(errfile, 'Error')]
+                    if np.array(job_exit).any():
+                        raise RuntimeError('Error terminating job: {}'.format(job_file_name))
                     
         return
 
@@ -494,7 +495,6 @@ class JOB_SUBMIT:
         number_of_parallel_tasks = int(np.ceil(len(tasks) / number_of_jobs))
         number_of_limited_memory_tasks = int(self.max_memory_per_node*number_of_nodes_per_job/self.default_memory)
         #if ( "run_15_filter_coherence" in batch_file) :
-        #    import pdb; pdb.set_trace()
 
         while number_of_limited_memory_tasks < number_of_parallel_tasks:
             #if number_of_jobs < int(self.max_jobs_per_workflow):
@@ -546,8 +546,7 @@ class JOB_SUBMIT:
         :param job_type: 'batch' or 'script'
         """
         config = putils.get_config_defaults(config_file='job_defaults.cfg')
-        #import pdb; pdb.set_trace()
-
+        
         if job_type == 'batch':
             step_name = '_'
             step_name = step_name.join(job_name.split('/')[-1].split('_')[2::])
@@ -555,13 +554,13 @@ class JOB_SUBMIT:
             step_name = job_name
 
         if self.prefix == 'tops' and job_type == 'batch':
-            if self.num_bursts is None:
-                self.num_bursts = putils.get_number_of_bursts(self.inps)
+            if self.num_memory_units is None:
+                self.num_memory_units = putils.get_number_of_bursts(self.inps)
 
-        if self.num_bursts:
-            number_of_bursts = self.num_bursts
+        if self.num_memory_units:
+            number_of_memory_units = self.num_memory_units
         else:
-            number_of_bursts = 1
+            number_of_memory_units = 1
 
         if self.memory in [None, 'None']:
             if step_name in config:
@@ -571,7 +570,7 @@ class JOB_SUBMIT:
                 c_memory = config['default']['c_memory']
                 s_memory = config['default']['s_memory']
 
-            self.default_memory = putils.scale_memory(number_of_bursts, c_memory, s_memory)
+            self.default_memory = putils.scale_memory(number_of_memory_units, c_memory, s_memory)
         else:
             self.default_memory = self.memory
 
@@ -579,21 +578,22 @@ class JOB_SUBMIT:
             if step_name in config:
                 c_walltime = config[step_name]['c_walltime']
                 s_walltime = config[step_name]['s_walltime']
-                extra_seconds = float(config[step_name]['extra_seconds']) * self.num_data
+                extra_seconds = float(config[step_name]['seconds_factor']) * self.num_data
 
             else:
                 c_walltime = config['default']['c_walltime']
                 s_walltime = config['default']['s_walltime']
-                extra_seconds = float(config['default']['extra_seconds']) * self.num_data
-
-            self.default_wall_time = putils.scale_walltime(number_of_bursts, self.wall_time_factor,
-                                                           c_walltime, s_walltime, extra_seconds, self.scheduler)
+                extra_seconds = float(config['default']['seconds_factor']) * self.num_data
+            
+            if extra_seconds == 0:
+                extra_seconds = 1
         else:
             #self.default_wall_time = self.wall_time
             c_walltime = self.wall_time
             s_walltime = '0'
+            extra_seconds = 1
 
-        self.default_wall_time = putils.scale_walltime(number_of_bursts, self.wall_time_factor,
+        self.default_wall_time = putils.scale_walltime(number_of_memory_units, self.wall_time_factor,
                                                        c_walltime, s_walltime, extra_seconds, self.scheduler)
 
         if step_name in config:
@@ -1195,7 +1195,6 @@ class JOB_SUBMIT:
         # tmp3 = []
         # for item in tmp2:
         #     job_file_lines.append( item[12:] + '\n')
-        #import pdb; pdb.set_trace()
 
         # check space after copy-to-tmp
         #job_file_lines.append( """echo After copy-to-tmp: `df -h /tmp`\n""" )
