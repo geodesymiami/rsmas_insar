@@ -464,7 +464,7 @@ def get_config_defaults(config_file='job_defaults.cfg'):
 
     if os.path.basename(config_file) in ['job_defaults.cfg']:
 
-        fields = ['c_walltime', 's_walltime', 'extra_seconds', 'c_memory', 's_memory', 'num_threads','copy_to_tmp','io_load']
+        fields = ['c_walltime', 's_walltime', 'seconds_factor', 'c_memory', 's_memory', 'num_threads','copy_to_tmp','io_load']
         with open(config_file, 'r') as f:
             lines = f.readlines()
 
@@ -1037,10 +1037,10 @@ def get_number_of_bursts(inps_dict):
 ############################################################################
 
 
-def scale_walltime(number_of_bursts, walltime_factor, c_walltime, s_walltime, extra_seconds=0, scheduler='SLURM'):
+def scale_walltime(number_of_memory_units, walltime_factor, c_walltime, s_walltime, extra_seconds=0, scheduler='SLURM'):
     """
     scales default walltime by number of bursts
-    scaled_walltime = c_walltime + number_of_bursts * s_walltime
+    scaled_walltime = c_walltime + (number_of_memory_units * s_walltime)*extra_seconds
     """
     # s_walltime
     if not s_walltime == '0':
@@ -1068,7 +1068,7 @@ def scale_walltime(number_of_bursts, walltime_factor, c_walltime, s_walltime, ex
     else:
         c_time_seconds = 0
 
-    time_seconds = float(c_time_seconds) + float(number_of_bursts) * float(s_time_seconds) + extra_seconds
+    time_seconds = float(c_time_seconds) + (float(number_of_memory_units) * float(s_time_seconds)) * extra_seconds
 
     time_seconds *= walltime_factor
 
@@ -1085,14 +1085,14 @@ def scale_walltime(number_of_bursts, walltime_factor, c_walltime, s_walltime, ex
 ############################################################################
 
 
-def scale_memory(number_of_bursts, c_memory, s_memory):
+def scale_memory(number_of_memory_units, c_memory, s_memory):
     """
     scales default memory by number of bursts
-    scaled_memory = c_memory + number_of_bursts * s_memory
+    scaled_memory = c_memory + number_of_memory_units * s_memory
     """
 
     if not c_memory == 'all':
-        scaled_memory = float(c_memory) + float(number_of_bursts) * float(s_memory)
+        scaled_memory = float(c_memory) + float(number_of_memory_units) * float(s_memory)
     else:
         scaled_memory = os.getenv('MAX_MEMORY_PER_NODE')
 
