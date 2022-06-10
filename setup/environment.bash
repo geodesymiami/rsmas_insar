@@ -24,7 +24,7 @@ export SSARAHOME=${RSMASINSAR_HOME}/3rdparty/SSARA
 export ISCE_HOME=${RSMASINSAR_HOME}/3rdparty/miniconda3/lib/python3.8/site-packages/isce
 export ISCE_STACK=${RSMASINSAR_HOME}/3rdparty/miniconda3/share/isce2
 export MINTPY_HOME=${RSMASINSAR_HOME}/sources/MintPy
-export MINOPY_HOME=${RSMASINSAR_HOME}/sources/MiNoPy
+export MIAPLPY_HOME=${RSMASINSAR_HOME}/sources/MiaplPy
 export MIMTPY_HOME=${RSMASINSAR_HOME}/sources/MimtPy
 export JOBDIR=${WORKDIR}/JOBS
 export OPERATIONS=${WORKDIR}/OPERATIONS
@@ -63,7 +63,7 @@ export GDAL_DATA=${PYTHON3DIR}/share/gdal
 
 export PYTHONPATH=${PYTHONPATH-""}
 export PYTHONPATH=${PYTHONPATH}:${MINTPY_HOME}
-export PYTHONPATH=${PYTHONPATH}:${MINOPY_HOME}
+export PYTHONPATH=${PYTHONPATH}:${MIAPLPY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${MIMTPY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${ISCE_HOME}:${ISCE_HOME}/components
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}
@@ -83,7 +83,7 @@ export PYTHONWARNINGS="ignore"
 #####################################
 export PATH=${PATH}:${SSARAHOME}
 export PATH=${PATH}:${SSARA_ASF}
-export PATH=${PATH}:${MINOPY_HOME}/minopy
+export PATH=${PATH}:${MIAPLPY_HOME}/miaplpy
 export PATH=${PATH}:${MIMTPY_HOME}/mimtpy
 export PATH=${PATH}:${SNAPHU_HOME}/bin
 export PATH=${PATH}:${RSMASINSAR_HOME}/minsar:${RSMASINSAR_HOME}/minsar/utils
@@ -99,7 +99,7 @@ export PATH=${PATH}:${PROJ_LIB}
 export PATH=${PATH}:${RSMASINSAR_HOME}/3rdparty/tippecanoe
 export PATH=${PATH}:${RSMASINSAR_HOME}/sources/insarmaps_scripts
 export PATH=${PATH}:${DASK_CONFIG}
-export PATH=${MINOPY_HOME}/snaphu/bin:${PATH}
+export PATH=${MIAPLPY_HOME}/snaphu/bin:${PATH}
 
 [ -n ${MATLAB_HOME} ] && export PATH=${PATH}:${MATLAB_HOME}/bin
 
