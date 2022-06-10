@@ -31,12 +31,12 @@ def main(iargs=None):
     logfile_name = inps.work_dir + '/gep_download.log'
     logger = RsmasLogger(file_name=logfile_name)
 
-    if not inps.template['raw_image_dir'] is None:
-        inps.slc_dir = inps.template['raw_image_dir']
-    else:
+    if  inps.template['raw_image_dir'] in [None, 'None']:
         inps.slc_dir = os.path.join(inps.work_dir, 'raw')
-
-    project_slc_dir = os.path.join(inps.work_dir, 'raw')
+    else:
+        inps.slc_dir = inps.template['raw_image_dir']
+    
+    os.makedirs(inps.slc_dir, exist_ok=True)
     #########################################
     # Submit job
     #########################################
@@ -50,8 +50,6 @@ def main(iargs=None):
         job_obj.submit_script(job_name, job_file_name, command)
         sys.exit(0)
 
-    if not os.path.isdir(project_slc_dir):
-        os.makedirs(project_slc_dir)
     os.chdir(inps.slc_dir)
 
     logger.log(loglevel.INFO, "DATASET: %s", str(inps.custom_template_file.split('/')[-1].split(".")[0]))
