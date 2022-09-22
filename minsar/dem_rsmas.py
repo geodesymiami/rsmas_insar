@@ -24,6 +24,7 @@ from minsar.objects import message_rsmas
 from minsar.download_data import add_polygon_to_ssaraopt
 from minsar.utils.process_utilities import cmd_line_parse
 from minsar.utils import get_boundingBox_from_kml
+from minsar.job_submission import JOB_SUBMIT
 
 #from minsar.download_rsmas import ssh_with_commands
 
@@ -49,6 +50,23 @@ def main(iargs=None):
         input_arguments = sys.argv[1::]
 
     message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
+
+    inps.out_dir = inps.work_dir
+    inps.num_data = 1
+
+    job_obj = JOB_SUBMIT(inps)
+    #########################################
+    # Submit job
+    #########################################
+
+    if inps.submit_flag:
+        job_name = 'dem_rsmas'
+        job_file_name = job_name
+        if '--submit' in input_arguments:
+            input_arguments.remove('--submit')
+        command = [os.path.abspath(__file__)] + input_arguments
+        job_obj.submit_script(job_name, job_file_name, command)
+        sys.exit(0)
 
     if not inps.flag_boundingBox and not inps.flag_ssara:
         if 'demMethod' in list(inps.template.keys()):
