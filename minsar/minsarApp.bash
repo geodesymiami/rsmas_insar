@@ -354,7 +354,7 @@ if [[ $platform_str == *"COSMO-SKYMED"* ]]; then
    download_dir=$WORK_DIR/RAW_data
 fi
 ####################################
-srun_cmd="srun -n1 -N1 -A $JOBSHEDULER_PROJECTNAME -p $QUEUENAME  -t 00:14:00 "
+srun_cmd="srun -n1 -N1 -A $JOBSHEDULER_PROJECTNAME -p $QUEUENAME  -t 00:07:00 "
 ####################################
 ###       Processing Steps       ###
 ####################################
