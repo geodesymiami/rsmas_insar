@@ -78,7 +78,7 @@ function countbursts(){
 ###########################################
 function check_matplotlib_pyplot(){ 
    #set -x
-   timeout 60 python -c "import matplotlib.pyplot"
+   timeout 120 python -c "import matplotlib.pyplot"
    exit_status=$?
    if [[ $exit_status -ne 0 ]]; then
       echo "Can't import. Reason unknown. Try a new shell (exit_status: $exit_status)"
