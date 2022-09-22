@@ -94,8 +94,9 @@ def parse_arguments(args):
     job_params.work_dir = os.path.join(scratch_dir,
                                        job_params.file.rsplit(os.path.basename(scratch_dir))[1].split('/')[1])
 
-    if job_params.copy_to_tmp:
-        job_params.out_dir = job_params.out_dir + "_tmp"
+    # 9/22  I don't remember why this was commented out
+    #if job_params.copy_to_tmp:
+    #    job_params.out_dir = job_params.out_dir + "_tmp"
 
     if 'run_files' in job_params.out_dir:
         job_params.out_dir = os.path.join(job_params.work_dir, job_params.out_dir)
