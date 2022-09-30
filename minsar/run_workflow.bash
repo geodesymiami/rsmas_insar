@@ -40,13 +40,13 @@ usage: run_workflow.bash custom_template_file [--start] [--stop] [--dostep] [--h
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --stop 8     \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --start mintpy \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep insarmaps \n\
-      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep minopy    \n\
-      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --minopy    \n\
+      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep miaplpy    \n\
+      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --miaplpy    \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --append    \n\
                                                                                    \n\
  Processing steps (start/end/dostep): \n\
                                                                                  \n\
-   ['1-16', 'mintpy', 'minopy', 'insarmaps' ]                                          \n\
+   ['1-16', 'mintpy', 'miaplpy', 'insarmaps' ]                                          \n\
                                                                                  \n\
    In order to use either --start or --dostep, it is necessary that a            \n\
    previous run was done using one of the steps options to process at least      \n\
@@ -115,8 +115,8 @@ do
             append=true
             shift
             ;;
-        --minopy)
-            minopy_flag=true
+        --miaplpy)
+            miaplpy_flag=true
             shift
             ;;
         --tmp)
@@ -139,8 +139,8 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-if [[ $startstep == "minopy" ]]; then
-   minopy_flag=true
+if [[ $startstep == "miaplpy" ]]; then
+   miaplpy_flag=true
 fi
 
 # IO load for each step. For step_io_load=1 the maximum tasks allowed is step_max_tasks_unit
@@ -168,12 +168,12 @@ fi
 #     [smallbaseline_wrapper]=1
 #     [insarmaps]=1
 
-#     [minopy_crop]=1
-#     [minopy_inversion]=1
-#     [minopy_ifgrams]=1
-#     [minopy_unwrap]=1
-#     [minopy_un-wrap]=1
-#     [minopy_mintpy_corrections]=1
+#     [miaplpy_crop]=1
+#     [miaplpy_inversion]=1
+#     [miaplpy_ifgrams]=1
+#     [miaplpy_unwrap]=1
+#     [miaplpy_un-wrap]=1
+#     [miaplpy_mintpy_corrections]=1
 
     
 # )
@@ -191,8 +191,9 @@ exec 1>>$logfile_name 2>>$logfile_name
 
 RUNFILES_DIR=$WORKDIR"/"$run_files_name
 
-if [[ $minopy_flag == "true" ]]; then
-   RUNFILES_DIR=$WORKDIR"/minopy/run_files"
+if [[ $miaplpy_flag == "true" ]]; then
+   RUNFILES_DIR=$WORKDIR"/miaplpy/run_files"
+   RUNFILES_DIR=$WORKDIR"/miaplpy/network_single_reference/run_files"
 fi
 
 #find the last job (11 for 'geometry' and 16 for 'NESD', 9 for stripmap) and remove leading zero
@@ -203,7 +204,7 @@ last_job_file_number=${last_job_file:4:2}
 #last_job_file_number=$( echo $last_job_file_number | sed 's/^0*// ')     # FA 9/21 sed command did not always work well
 last_job_file_number=$(echo $((10#${last_job_file_number})))
 
-if [[ $startstep == "ifgrams" || $startstep == "minopy" ]]; then
+if [[ $startstep == "ifgrams" || $startstep == "miaplpy" ]]; then
     startstep=1
 elif [[ $startstep == "mintpy" ]]; then
     startstep=$((last_job_file_number+1))
@@ -211,7 +212,7 @@ elif [[ $startstep == "insarmaps" ]]; then
     startstep=$((last_job_file_number+2))
 fi
 
-if [[ $stopstep == "ifgrams" || $stopstep == "minopy" ]]; then
+if [[ $stopstep == "ifgrams" || $stopstep == "miaplpy" ]]; then
     stopstep=$last_job_file_number
 elif [[ $stopstep == "mintpy" ]]; then
     stopstep=$((last_job_file_number+1))

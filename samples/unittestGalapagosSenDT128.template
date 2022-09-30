@@ -35,10 +35,10 @@ mintpy.load.autoPath              = yes
 
 ######################################################
 
-minopy.load.processor      = isce  
-minopy.load.autoPath       = yes
-minopy.compute.num_workers = 46
-minopy.subset.lalo         = -0.86:-0.81,-91.19:-91.13    #[31.5:32.5,130.5:131.0 / no], auto for no
-minopy.interferograms.type = sequential     # [single_reference, sequential, combine, list] default: single_reference
+miaplpy.load.processor      = isce  
+miaplpy.load.autoPath       = yes
+miaplpy.compute.num_workers = 46
+miaplpy.subset.lalo         = -0.86:-0.81,-91.19:-91.13    #[31.5:32.5,130.5:131.0 / no], auto for no
+miaplpy.interferograms.type = sequential     # [single_reference, sequential, combine, list] default: single_reference
 
 

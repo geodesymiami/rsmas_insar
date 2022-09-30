@@ -12,10 +12,10 @@ helptext="                                                                     \
                                                                                \n\
    clean working directory for processing                                      \n\
                                                                                \n\
-   --process           processed data including mintpy and minopy [default]    \n\
-                       (same as --runfiles  --ifgrams --mintpy --minopy)       \n\
-   --no_mintpy         keep mintpy and minopy folders                          \n\
-   --no_minopy         same                                                    \n\
+   --process           processed data including mintpy and miaplpy [default]    \n\
+                       (same as --runfiles  --ifgrams --mintpy --miaplpy)       \n\
+   --no_mintpy         keep mintpy and miaplpy folders                          \n\
+   --no_miaplpy         same                                                    \n\
    --no_runfiles       keep run_files and config directories                   \n\
                                                                                \n\
    --download          removes SLC, RAW_data [default: no]                     \n\
@@ -23,7 +23,7 @@ helptext="                                                                     \
    --runfiles          removes DEM [default: no]                               \n\
    --ifgrams           removes ISCE-produced directories                       \n\
    --mintpy            removes mintpy directory                                \n\
-   --minopy            removes minopy directory                                \n 
+   --miaplpy            removes miaplpy directory                                \n 
      "
     printf "$helptext"
     exit 0;
@@ -51,7 +51,7 @@ dem_flag=0
 runfiles_flag=0
 ifgrams_flag=0
 mintpy_flag=0
-minopy_flag=0
+miaplpy_flag=0
 
 while [[ $# -gt 0 ]]
 do
@@ -62,7 +62,7 @@ do
             runfiles_flag=1
             ifgrams_flag=1
             mintpy_flag=1
-            minopy_flag=1
+            miaplpy_flag=1
             shift # past argument
             ;;
 	--download)
@@ -85,8 +85,8 @@ do
             mintpy_flag=1
             shift
             ;;
-	--minopy)
-            minopy_flag=1
+	--miaplpy)
+            miaplpy_flag=1
             shift
             ;;
         --no_runfiles )
@@ -101,8 +101,8 @@ do
             mintpy_flag=0
             shift
             ;;
-	--no_minopy)
-            minopy_flag=0
+	--no_miaplpy)
+            miaplpy_flag=0
             shift
             ;;
 	--all)
@@ -111,7 +111,7 @@ do
             runfiles_flag=1
             ifgrams_flag=1
             mintpy_flag=1
-            minopy_flag=1
+            miaplpy_flag=1
             shift
             ;;
         *)
@@ -125,8 +125,8 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 ####################################
 #echo "Flags for cleaning:"
 #echo "Directory: $PWD:"
-#echo "download dem runfiles ifgrams mintpy minopy" 
-#echo "    $download_flag     $dem_flag      $runfiles_flag      $ifgrams_flag        $mintpy_flag     $minopy_flag"
+#echo "download dem runfiles ifgrams mintpy miaplpy" 
+#echo "    $download_flag     $dem_flag      $runfiles_flag      $ifgrams_flag        $mintpy_flag     $miaplpy_flag"
 
 if [[ $download_flag == "1" ]]; then
     rm -rf SLC RAW_data
@@ -149,8 +149,8 @@ if [[ $mintpy_flag == "1" ]]; then
     rm -rf mintpy 
 fi
 
-if [[ $minopy_flag == "1" ]]; then
-    rm -rf minopy 
+if [[ $miaplpy_flag == "1" ]]; then
+    rm -rf miaplpy 
 fi
 
 

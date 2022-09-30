@@ -174,7 +174,7 @@ elif [[ $job_name == *"filter_coherence"* ]]; then
     old=$out_dir
     sed -i "s|$old|/tmp|g" $files1
 
-elif [[ $job_name == *"unwrap"* && $job_name != *"minopy"* ]]; then
+elif [[ $job_name == *"unwrap"* && $job_name != *"miaplpy"* ]]; then
 
     # reference
     distribute_reference $out_dir

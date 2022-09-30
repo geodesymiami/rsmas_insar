@@ -6,8 +6,8 @@ helptext="                                                                      
       install_code_on_tmp.bash                                                          \n\
       install_code_on_tmp.bash smallbaseline_wrapper.job                                \n\
       install_code_on_tmp.bash mintpy                                                   \n\
-      install_code_on_tmp.bash minopy.job                                               \n\
-      install_code_on_tmp.bash minopy                                                   \n\
+      install_code_on_tmp.bash miaplpy.job                                               \n\
+      install_code_on_tmp.bash miaplpy                                                   \n\
       install_code_on_tmp.bash insarmaps                                                \n\
                                                                                         \n\
   Installs code on /tmp (includes MintPy, MinoPy, insarmaps_ingest depending on options)\n                                                          \n
