@@ -1,0 +1,8 @@
+# MinSAR dependencies
+git
+natsort
+bokeh
+qt
+boto3
+botocore
+pdbpp
