@@ -34,13 +34,13 @@ def create_parser():
                          action='store_true',
                          default=False,
                          help='uploads mintpy data products to data portal')
-    parser.add_argument('--minopy',
-                         dest='minopy_flag',
+    parser.add_argument('--miaplpy',
+                         dest='miaplpy_flag',
                          action='store_true',
                          default=False,
-                         help='uploads minopy/*_network data products to data portal')
+                         help='uploads miaplpy/*_network data products to data portal')
     parser.add_argument('--dir', dest='data_dir',  metavar="DIRECTORY",
-                         help='upload specific mintpy/minopy directory')
+                         help='upload specific mintpy/miaplpy directory')
     parser.add_argument('--all',
                          dest='mintpy_all_flag',
                          action='store_true',
@@ -99,7 +99,7 @@ def main(iargs=None):
 
     scp_list = []
 
-    if inps.mintpy_flag or inps.minopy_flag or inps.data_dir:
+    if inps.mintpy_flag or inps.miaplpy_flag or inps.data_dir:
 
         if inps.mintpy_flag:
             data_dir = '/mintpy/'
@@ -113,8 +113,8 @@ def main(iargs=None):
             if inps.mintpy_all_flag:
                 scp_list = [ '/mintpy' ]
 
-        if inps.minopy_flag:
-            dir_list = glob.glob('minopy/*_network')
+        if inps.miaplpy_flag:
+            dir_list = glob.glob('miaplpy/*_network')
             for data_dir in dir_list:
                 if os.path.exists(inps.work_dir +'/'+ data_dir):
                     scp_list.extend([

@@ -33,7 +33,7 @@ __all__ = [
     'ingest_insarmaps',
     'job_submission',
     'smallbaseline_wrapper',
-    'minopy_wrapper',
+    'miaplpy_wrapper',
     'process_rsmas',
     'version',
 ]

@@ -18,7 +18,7 @@ class PathFind:
         self.orbitdir = os.path.expandvars('$SENTINEL_ORBITS')
         self.auxdir = os.path.expandvars('$SENTINEL_AUX')
         self.georeferencedir = 'merged/geom_reference'
-        self.minopydir = 'minopy'
+        self.miaplpydir = 'miaplpy'
         self.mintpydir = 'mintpy'
         self.rundir = 'run_files'
         self.configdir = 'configs'

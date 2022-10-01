@@ -47,8 +47,8 @@ def main(iargs=None):
         email_mintpy_results(email_address, 'mintpy')
         return
 
-    if inps.email_minopy_flag:
-        email_mintpy_results(email_address, 'minopy')
+    if inps.email_miaplpy_flag:
+        email_mintpy_results(email_address, 'miaplpy')
         return
 
     return

@@ -63,13 +63,13 @@ def main(iargs=None):
 
     try: 
         if inps.tmp:
-            minopy_run_files_dir = inps.work_dir + '/minopy/run_files'
+            miaplpy_run_files_dir = inps.work_dir + '/miaplpy/run_files'
         else:
-            minopy_run_files_dir = inps.work_dir + '/minopy/run_files'
-        minopy_run_stdout_files = glob.glob(minopy_run_files_dir + '/run_*_*_[0-9][0-9][0-9][0-9]*.o') + glob.glob(minopy_run_files_dir + '/*/run_*_*_[0-9][0-9][0-9][0-9]*.o')
+            miaplpy_run_files_dir = inps.work_dir + '/miaplpy/run_files'
+        miaplpy_run_stdout_files = glob.glob(miaplpy_run_files_dir + '/run_*_*_[0-9][0-9][0-9][0-9]*.o') + glob.glob(miaplpy_run_files_dir + '/*/run_*_*_[0-9][0-9][0-9][0-9]*.o')
     except:
         pass
-    minopy_run_stdout_files = natsorted(minopy_run_stdout_files)
+    miaplpy_run_stdout_files = natsorted(miaplpy_run_stdout_files)
 
     run_stdout_files = glob.glob(run_files_dir + '/run_*_*_[0-9][0-9][0-9][0-9]*.o') + glob.glob(run_files_dir + '/*/run_*_*_[0-9][0-9][0-9][0-9]*.o')
     
@@ -86,12 +86,12 @@ def main(iargs=None):
         run_stdout_files_base.append(os.path.basename(f))
     run_stdout_files = natsorted(run_stdout_files_base)
 
-    minopy_run_stdout_files_base=[]
-    for f in minopy_run_stdout_files:
-        minopy_run_stdout_files_base.append(os.path.basename(f))
-    minopy_run_stdout_files = natsorted(minopy_run_stdout_files_base)
+    miaplpy_run_stdout_files_base=[]
+    for f in miaplpy_run_stdout_files:
+        miaplpy_run_stdout_files_base.append(os.path.basename(f))
+    miaplpy_run_stdout_files = natsorted(miaplpy_run_stdout_files_base)
 
-    run_stdout_files = run_stdout_files +  minopy_run_stdout_files
+    run_stdout_files = run_stdout_files +  miaplpy_run_stdout_files
 
     bursts = glob.glob(inps.work_dir + '/geom_reference/*/hgt*rdr')
     number_of_bursts = len(bursts)

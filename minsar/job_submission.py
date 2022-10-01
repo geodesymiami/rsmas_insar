@@ -723,7 +723,7 @@ class JOB_SUBMIT:
         #     job_file_lines.append( "cp -r $RSMASINSAR_HOME/3rdparty/PyAPS /tmp/rsmas_insar/3rdparty\n" )
         #     job_file_lines.append( "cp -r $RSMASINSAR_HOME/sources/insarmaps_scripts /tmp/rsmas_insar/sources\n" )
 
-        # if 'minopy' in job_file_name:
+        # if 'miaplpy' in job_file_name:
         #     job_file_lines.append("mkdir -p /tmp/rsmas_insar/sources\n")
         #     job_file_lines.append("cp -r $RSMASINSAR_HOME/sources/MiNoPy /tmp/rsmas_insar/sources\n")
         #     job_file_lines.append("cp -r $RSMASINSAR_HOME/sources/MintPy /tmp/rsmas_insar/sources\n")
@@ -1008,7 +1008,7 @@ class JOB_SUBMIT:
         #         """)
 
         #     # run_11_unwrap
-        #     if 'unwrap' in job_file_name and not batch_file is None and not 'minopy' in job_file_name:
+        #     if 'unwrap' in job_file_name and not batch_file is None and not 'miaplpy' in job_file_name:
         #         job_file_lines.append("""
 
         #         # reference

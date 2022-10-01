@@ -29,7 +29,7 @@ mintpy.save.kml                     = yes                                       
 insarmaps_flag                      = no
 
 ######################################################
-processingMethod                           = minopy
+processingMethod                           = miaplpy
 mintpy.inversion.patch_size                = 200         # patch size to divide the image for parallel processing, auto for 100
 mintpy.inversion.range_window              = 15         # range window size for synthetic multilook, auto for 15
 mintpy.inversion.azimuth_window            = 11         # azimuth window size for synthetic multilook, auto for 11

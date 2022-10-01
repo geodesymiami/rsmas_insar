@@ -14,14 +14,14 @@ topsStack.coregistration              = geometry
 #
 
 # MiNoPy options
-minopy.load.processor      = isce
-minopy.load.autoPath       = yes
-minopy.compute.numWorker   = 40
-minopy.inversion.patch_size                = 200
-minopy.inversion.range_window              = 11
-minopy.inversion.azimuth_window            = 5
-minopy.inversion.shp_test                  = ks
-minopy.inversion.plmethod                  = sequential_EMI
+miaplpy.load.processor      = isce
+miaplpy.load.autoPath       = yes
+miaplpy.compute.numWorker   = 40
+miaplpy.inversion.patch_size                = 200
+miaplpy.inversion.range_window              = 11
+miaplpy.inversion.azimuth_window            = 5
+miaplpy.inversion.shp_test                  = ks
+miaplpy.inversion.plmethod                  = sequential_EMI
 
 ## Mintpy options
 mintpy.load.autoPath       = yes

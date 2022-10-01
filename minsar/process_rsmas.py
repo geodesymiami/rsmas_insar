@@ -169,7 +169,7 @@ class RsmasInsar:
         if inps.template['processingMethod'] in ['smallbaseline', None, 'None']:
             self.method = 'mintpy'
         else:
-            self.method = 'minopy'
+            self.method = 'miaplpy'
 
         return
 
@@ -225,7 +225,7 @@ class RsmasInsar:
         if self.method == 'mintpy':
             minsar.smallbaseline_wrapper.main(scp_args)
         else:
-            minsar.minopy_wrapper.main(scp_args)
+            minsar.miaplpy_wrapper.main(scp_args)
 
         return
 

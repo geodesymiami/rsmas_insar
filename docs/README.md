@@ -2,7 +2,7 @@
 
 The Miami INterferometric SAR software  (MinSAR) is an open-source python package for Interferometric Synthetic Aperture Radar processing and time series analysis written at the Geodesy Lab of the University of Miami at the Rosenstiel School of Marine and Atmospheric Science (RSMAS). MinSAR uses the following packages:
 
-[ISCE](https://github.com/isce-framework/isce2), [MintPy](https://github.com/insarlab/MintPy), [PyAPS](https://github.com/yunjunz/pyaps3), [MiNoPy](https://github.com/geodesymiami/minopy)
+[ISCE](https://github.com/isce-framework/isce2), [MintPy](https://github.com/insarlab/MintPy), [PyAPS](https://github.com/yunjunz/pyaps3), [MiNoPy](https://github.com/geodesymiami/miaplpy)
 
 The main Developers are Sara Mirzaee and Falk Amelung with contributions of many University of Miami graduate and undergraduate students.
 
@@ -53,7 +53,7 @@ dem_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template
 create_runfiles.py $SAMPLESDIR/GalapagosSenDT128.template
 execute_runfiles.py $SAMPLESDIR/GalapagosSenDT128.template
 smallbaseline_wrapper.py $SAMPLESDIR/GalapagosSenDT128.template
-minopy_wrapper.py $SAMPLESDIR/GalapagosSenDT128.template
+miaplpy_wrapper.py $SAMPLESDIR/GalapagosSenDT128.template
 ingest_insarmaps.py $SAMPLESDIR/GalapagosSenDT128.template
 export_ortho_geo.py $SAMPLESDIR/GalapagosSenDT128.template
 ````

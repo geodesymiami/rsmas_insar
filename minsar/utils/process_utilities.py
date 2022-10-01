@@ -52,7 +52,7 @@ def cmd_line_parse(iargs=None, script=None):
         parser = add_email_args(parser)
     if script == 'generate_chunk_template_files':
         parser = add_generate_chunk_template_files_args(parser)
-    if script == 'smallbaseline_wrapper' or script == 'ingest_insarmaps' or script == 'minopy_wrapper':
+    if script == 'smallbaseline_wrapper' or script == 'ingest_insarmaps' or script == 'miaplpy_wrapper':
         parser = add_notification(parser)
 
     inps = parser.parse_args(args=iargs)
@@ -164,8 +164,8 @@ def add_email_args(parser):
     em = parser.add_argument_group('Option for emailing insarmaps result.')
     em.add_argument('--mintpy', action='store_true', dest='email_mintpy_flag', default=False,
                     help='Email mintpy results')
-    em.add_argument('--minopy', action='store_true', dest='email_minopy_flag', default=False,
-                    help='Email minopy results')
+    em.add_argument('--miaplpy', action='store_true', dest='email_miaplpy_flag', default=False,
+                    help='Email miaplpy results')
     em.add_argument('--insarmaps', action='store_true', dest='email_insarmaps_flag', default=False,
                     help='Email insarmaps results')
     return parser

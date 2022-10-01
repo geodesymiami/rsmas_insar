@@ -157,9 +157,9 @@ def main(iargs=None):
 
             job_obj.submit_script(job_name, job_file_name, command, writeOnly='True')
         else:
-            job_name = 'minopy_wrapper'
+            job_name = 'miaplpy_wrapper'
             job_file_name = job_name
-            command = ['minopyApp.py', inps.custom_template_file, '--dir', 'minopy']
+            command = ['miaplpyApp.py', inps.custom_template_file, '--dir', 'miaplpy']
             job_obj.submit_script(job_name, job_file_name, command, writeOnly='True')
 
         job_name = 'insarmaps'

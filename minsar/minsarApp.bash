@@ -8,13 +8,13 @@ helptext="                                                                      
       minsarApp.bash  $TE/GalapagosSenDT128.template --dostep dem                \n\
       minsarApp.bash  $TE/GalapagosSenDT128.template --start  ifgrams            \n\
       minsarApp.bash  $TE/GalapagosSenDT128.template --dostep upload             \n\
-      minsarApp.bash  $TE/GalapagosSenDT128.template --start jobfiles --mintpy --minopy\n\
+      minsarApp.bash  $TE/GalapagosSenDT128.template --start jobfiles --mintpy --miaplpy\n\
       minsarApp.bash  $TE/GalapagosSenDT128.template                             \n\
                                                                                  \n\
   Processing steps (start/end/dostep): \n\
    Command line options for steps processing with names are chosen from the following list: \n\
                                                                                  \n\
-   ['download', 'dem', 'jobfiles', 'ifgrams', 'mintpy', 'minopy', 'insarmaps', 'upload']             \n\
+   ['download', 'dem', 'jobfiles', 'ifgrams', 'mintpy', 'miaplpy', 'insarmaps', 'upload']             \n\
                                                                                  \n\
    In order to use either --start or --dostep, it is necessary that a            \n\
    previous run was done using one of the steps options to process at least      \n\
@@ -26,8 +26,8 @@ helptext="                                                                      
    --dostep STEP    run processing at the named step only                        \n\
                                                                                  \n\
    --mintpy         use smallbaselineApp.py for time series [default]            \n\
-   --minopy         use minopyApp.py                                             \n\
-   --mintpy --minopy    both                                                     \n\
+   --miaplpy         use miaplpyApp.py                                             \n\
+   --mintpy --miaplpy    both                                                     \n\
                                                                                  \n\
    --sleep SECS     sleep seconds before running                                 \n\
    --select_reference     select reference date [default].                       \n\
@@ -130,8 +130,8 @@ do
             mintpy_flag=1
             shift
             ;;
-        --minopy)
-            minopy_flag=1
+        --miaplpy)
+            miaplpy_flag=1
             shift
             ;;
 	--sleep)
@@ -191,15 +191,15 @@ fi
 
 if [[ -v mintpy_flag ]]; then lock_mintpy_flag=1; fi
 mintpy_flag=1
-if [[ -v minopy_flag ]]; then  
-    minopy_flag=1;
+if [[ -v miaplpy_flag ]]; then  
+    miaplpy_flag=1;
    if [[ -v lock_mintpy_flag ]]; then
       mintpy_flag=1; 
    else
       mintpy_flag=0; 
    fi
 else
-    minopy_flag=0;
+    miaplpy_flag=0;
 fi
 
 if [[ $startstep == "download" ]]; then
@@ -219,27 +219,27 @@ elif [[ $startstep == "mintpy" ]]; then
     dem_flag=0
     jobfiles_flag=0
     ifgrams_flag=0
-elif [[ $startstep == "minopy" ]]; then
+elif [[ $startstep == "miaplpy" ]]; then
     download_flag=0
     dem_flag=0
     jobfiles_flag=0
     ifgrams_flag=0
     mintpy_flag=0
-    minopy_flag=1
+    miaplpy_flag=1
 elif [[ $startstep == "upload" ]]; then
     download_flag=0
     dem_flag=0
     jobfiles_flag=0
     ifgrams_flag=0
     mintpy_flag=0
-    minopy_flag=0
+    miaplpy_flag=0
 elif [[ $startstep == "insarmaps" ]]; then
     download_flag=0
     dem_flag=0
     jobfiles_flag=0
     ifgrams_flag=0
     mintpy_flag=0
-    minopy_flag=0
+    miaplpy_flag=0
     upload_flag=0
 elif [[ $startstep == "finishup" ]]; then
     download_flag=0
@@ -247,7 +247,7 @@ elif [[ $startstep == "finishup" ]]; then
     jobfiles_flag=0
     ifgrams_flag=0
     mintpy_flag=0
-    minopy_flag=0
+    miaplpy_flag=0
     upload_flag=0
     insarmaps_flag=0
 elif [[ $startstep != "" ]]; then
@@ -268,29 +268,29 @@ elif [[ $stopstep == "dem" ]]; then
     jobfiles_flag=0
     ifgrams_flag=0
     mintpy_flag=0
-    minopy_flag=0
+    miaplpy_flag=0
     upload_flag=0
     insarmaps_flag=0
     finishup_flag=0
 elif [[ $stopstep == "jobfiles" ]]; then
     ifgrams_flag=0
     mintpy_flag=0
-    minopy_flag=0
+    miaplpy_flag=0
     upload_flag=0
     insarmaps_flag=0
     finishup_flag=0
 elif [[ $stopstep == "ifgrams" ]]; then
     mintpy_flag=0
-    minopy_flag=0
+    miaplpy_flag=0
     upload_flag=0
     insarmaps_flag=0
     finishup_flag=0
 elif [[ $stopstep == "mintpy" ]]; then
-    minopy_flag=0
+    miaplpy_flag=0
     upload_flag=0
     insarmaps_flag=0
     finishup_flag=0
-elif [[ $stopstep == "minopy" ]]; then
+elif [[ $stopstep == "miaplpy" ]]; then
     upload_flag=0
     insarmaps_flag=0
     finishup_flag=0
@@ -311,8 +311,8 @@ else
 fi
 echo "Switches: select_reference: $select_reference_flag   download_ECMWF: $download_ECMWF_flag  chunks: $chunks_flag"
 echo "Flags for processing steps:"
-echo "download dem jobfiles ifgrams mintpy minopy upload insarmaps"
-echo "    $download_flag     $dem_flag      $jobfiles_flag       $ifgrams_flag       $mintpy_flag      $minopy_flag      $upload_flag       $insarmaps_flag"
+echo "download dem jobfiles ifgrams mintpy miaplpy upload insarmaps"
+echo "    $download_flag     $dem_flag      $jobfiles_flag       $ifgrams_flag       $mintpy_flag      $miaplpy_flag      $upload_flag       $insarmaps_flag"
 
 #############################################################
 # check weather python can load matplotlib.pyplot which occasionaly does not work for unknown reasons
@@ -455,8 +455,8 @@ if [[ $chunks_flag == "1" ]]; then
                 options="$options --mintpy"
                 shift
                 ;;
-            --minopy)
-                options="$options --minopy"
+            --miaplpy)
+                options="$options --miaplpy"
                 shift
                 ;;
             *)
@@ -491,7 +491,7 @@ fi
 if [[ $jobfiles_flag == "1" ]]; then
     
     # clean directory for processing
-    cmd="clean_dir.bash $PWD --runfiles --ifgrams --mintpy --minopy"
+    cmd="clean_dir.bash $PWD --runfiles --ifgrams --mintpy --miaplpy"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"
@@ -673,13 +673,13 @@ if [[ $mintpy_flag == "1" ]]; then
     fi
 fi
 
-if [[ $minopy_flag == "1" ]]; then
+if [[ $miaplpy_flag == "1" ]]; then
 
     # correct *xml and *vrt files (if skipped in ifgram step because of unwrap problems) 
     #FA sed -i "s|/tmp|$PWD|g" */*.xml */*/*.xml  */*/*/*.xml   #FA 1/22: commented out because it takes too long
     #FA sed -i "s|/tmp|$PWD|g" */*.vrt */*/*.vrt  */*/*/*.vrt 
 
-    cmd="minopyApp.py $template_file --dir minopy --jobfiles --tmp"
+    cmd="miaplpyApp.py $template_file --dir miaplpy --jobfiles --tmp"
     echo "Running.... $cmd"
     echo "$cmd" | tee -a log
     $srun_cmd $cmd
@@ -689,12 +689,12 @@ if [[ $minopy_flag == "1" ]]; then
        exit 1;
     fi
 
-    cmd="run_workflow.bash $template_file --append --dostep minopy $copy_to_tmp"
+    cmd="run_workflow.bash $template_file --append --dostep miaplpy $copy_to_tmp"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
-       echo "run_workflow.bash $template_file --start minopy exited with a non-zero exit code ($exit_status). Exiting."
+       echo "run_workflow.bash $template_file --start miaplpy exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
 fi

@@ -38,7 +38,7 @@ def main(iargs=None):
     else:
         run_files_dir=project_dir + '/run_files'
 
-    if 'minopy' in project_dir:
+    if 'miaplpy' in project_dir:
         project_dir = os.path.dirname(os.path.abspath(project_dir))
 
     known_issues_file = os.path.join(os.getenv('RSMASINSAR_HOME'), 'docs/known_issues.md')
@@ -98,7 +98,7 @@ def main(iargs=None):
        print('checking *.e, *.o from ' + job_name + '.job')
 
        # preprocess *.e files
-       if 'filter_coherence' in job_name or 'run_09_igram' in job_name or 'minopy_generate_ifgram' in job_name:               # run_09_igram is for stripmap
+       if 'filter_coherence' in job_name or 'run_09_igram' in job_name or 'miaplpy_generate_ifgram' in job_name:               # run_09_igram is for stripmap
            putils.remove_line_counter_lines_from_error_files(run_file=job_name)
 
        # 5/21: sometimes not working. Move before loop using run_file_base ??
