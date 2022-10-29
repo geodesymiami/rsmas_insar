@@ -77,7 +77,11 @@ def main(iargs=None):
 
     if inps.image_products_flag:
        inps.mintpy_flag = False
-    
+
+    if inps.data_dir:
+        inps.mintpy_flag = False
+        inps.miaplpy_flag = False
+
     os.chdir(inps.work_dir)
 
     if not iargs is None:
@@ -93,7 +97,7 @@ def main(iargs=None):
     #except:
     #    return
 
-    DATA_SERVER = 'centos@129.114.104.223'
+    DATA_SERVER = 'exouser@149.165.154.65'
     REMOTE_DIR = '/data/HDF5EOS/'
     destination = DATA_SERVER + ':' + REMOTE_DIR
 
@@ -102,7 +106,7 @@ def main(iargs=None):
     if inps.mintpy_flag or inps.miaplpy_flag or inps.data_dir:
 
         if inps.mintpy_flag:
-            data_dir = '/mintpy/'
+            data_dir = 'mintpy'
             if os.path.exists(inps.work_dir + '/mintpy'):
                 scp_list.extend([
                     '/'+ data_dir +'/*.he5',
@@ -114,7 +118,7 @@ def main(iargs=None):
                 scp_list = [ '/mintpy' ]
 
         if inps.miaplpy_flag:
-            dir_list = glob.glob('miaplpy/*_network')
+            dir_list = glob.glob('miaplpy/network_*')
             for data_dir in dir_list:
                 if os.path.exists(inps.work_dir +'/'+ data_dir):
                     scp_list.extend([
@@ -128,18 +132,29 @@ def main(iargs=None):
                 if os.path.exists(inps.work_dir +'/'+ data_dir):
                     scp_list.extend([
                         '/'+ data_dir +'/*.he5',
-                        '/'+ data_dir +'/pic' 
+                        '/'+ data_dir +'/pic', 
+                        '/'+ data_dir +'/network_*/*.he5',
+                        '/'+ data_dir +'/network_*/pic' 
                         ])
                         #'/'+ data_dir +'/inputs'
 
         for pattern in scp_list:
             if ( len(glob.glob(inps.work_dir + '/' + pattern)) >= 1 ):
-                # create remote directory
-                print ('\nCreating remote directory:')
-                if not pattern.endswith('.he5'):
-                   command = 'ssh ' + DATA_SERVER + ' mkdir -p ' + REMOTE_DIR + project_name +'/'+ pattern
+                #files=glob.glob(inps.work_dir + '/' + pattern)
+                files=glob.glob(inps.work_dir + pattern)
+
+                if os.path.isfile(files[0]):
+                   full_dir_name = os.path.dirname(files[0])
+                elif os.path.isdir(files[0]):
+                   full_dir_name = os.path.dirname(files[0])
                 else:
-                   command = 'ssh ' + DATA_SERVER + ' mkdir -p ' + REMOTE_DIR + project_name +'/'+ pattern.replace('*.he5','')
+                    raise Exception('ERROR finding directory in pattern in upload_data_products.py')
+
+                dir_name = full_dir_name.removeprefix(inps.work_dir +'/')
+                   
+                # create remote directory
+                print ('\nCreating remote directory:',dir_name)
+                command = 'ssh ' + DATA_SERVER + ' mkdir -p ' + REMOTE_DIR + project_name + '/' + dir_name
                 print (command)
                 status = subprocess.Popen(command, shell=True).wait()
                 if status is not 0:
