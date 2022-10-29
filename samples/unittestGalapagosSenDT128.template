@@ -18,7 +18,7 @@ topsStack.azimuthLooks            = 5    # comment
 topsStack.rangeLooks              = 15   # comment
 topsStack.filtStrength            = 0.2  # comment
 topsStack.unwMethod               = snaphu  # comment
-topsStack.coregistration          = auto  # [NESD geometry], auto for NESD
+topsStack.coregistration          = geometry  # [NESD geometry], auto for NESD
 topsStack.slcDir                  = $TESTDATA_ISCE/unittestGalapagosSenDT128/SLC
 
 ######################################################
@@ -30,6 +30,7 @@ mintpy.networkInversion.parallel  = yes  #[yes / no], auto for no, parallel proc
 mintpy.troposphericDelay.method   = no    # pyaps  #[pyaps / height_correlation / base_trop_cor / no], auto for pyaps
 mintpy.save.hdfEos5               = yes   #[yes / update / no], auto for no, save timeseries to UNAVCO InSAR Archive format
 mintpy.save.hdfEos5.update        = yes   #[yes / no], auto for no, put XXXXXXXX as endDate in output filename
+mintpy.save.hdfEos5.subset        = yes   #[yes / no], auto for no, put XXXXXXXX as endDate in output filename
 mintpy.save.kmz                   = yes  #[yes / no], auto for yes, save geocoded velocity to Google Earth KMZ file
 mintpy.load.autoPath              = yes
 
@@ -38,7 +39,7 @@ mintpy.load.autoPath              = yes
 miaplpy.load.processor      = isce  
 miaplpy.load.autoPath       = yes
 miaplpy.compute.num_workers = 46
-miaplpy.subset.lalo         = -0.86:-0.81,-91.19:-91.13    #[31.5:32.5,130.5:131.0 / no], auto for no
-miaplpy.interferograms.type = sequential     # [single_reference, sequential, combine, list] default: single_reference
+miaplpy.subset.lalo        = -0.86:-0.81,-91.19:-91.13    #[31.5:32.5,130.5:131.0 / no], auto for no
+miaplpy.interferograms.networkType = sequential     # [single_reference, sequential, combine, list] default: single_reference
 
 
