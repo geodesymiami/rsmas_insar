@@ -95,7 +95,7 @@ cp -r ../sources/isce2/contrib/stack/* ../3rdparty/miniconda3/share/isce2
 ```
 rm -rf ../3rdparty/miniconda3/pkgs
 tar cf ../3rdparty/miniconda3.tar -C ../3rdparty/ miniconda3 &
-tar cf ../minsar.tar ../3rdparty/launcher ../minsar ../setup ../sources/MintPy/mintpy ../sources/MimtPy/mimtpy ../sources/MiNoPy/minopy ../sources/MiNoPy/snaphu/bin ../sources/insarmaps_scripts ../sources/isce2/contrib/stack
+tar cf ../minsar.tar ../3rdparty/launcher ../minsar ../setup ../sources/MintPy/mintpy ../sources/MimtPy/mimtpy ../sources/MiaplPy/miaplpy ../sources/MiaplPy/snaphu/bin ../sources/insarmaps_scripts ../sources/isce2/contrib/stack
 ```
 
 * #Source the environment and create aux directories. Install credential files for data download:
