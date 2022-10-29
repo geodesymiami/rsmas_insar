@@ -72,6 +72,7 @@ mv snaphu-v2.0.4 snaphu;
 rm snaphu-v2.0.4.tar.gz;
 sed -i 's/\/usr\/local/$(MIAPLPY_HOME)\/snaphu/g' snaphu/src/Makefile
 cd snaphu/src; make
+cd ../../../../setup/
 ```
 * #Adding ISCE fixes and copying latest version into miniconda directory
 ```
