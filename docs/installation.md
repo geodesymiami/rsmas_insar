@@ -56,6 +56,7 @@ sed -i "s|isce2|#isce2|g" ../sources/MiaplPy/docs/requirements.txt
 
 #../3rdparty/miniconda3/bin/pip install git+https://github.com/insarlab/PySolid.git
 ../3rdparty/miniconda3/bin/mamba install isce2 -c conda-forge --yes 
+../3rdparty/miniconda3/bin/conda install --yes --file ../minsar/requirements.txt
 ../3rdparty/miniconda3/bin/conda install --yes --file ../sources/insarmaps_scripts/docs/requirements.txt
 
 ```
