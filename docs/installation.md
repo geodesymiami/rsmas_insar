@@ -90,6 +90,7 @@ cp -r ../sources/isce2/contrib/stack/* ../3rdparty/miniconda3/share/isce2
 #cp -p ../minsar/additions/isce/invertMisreg.py ../sources/isce2/contrib/stack/stripmapStack
 #cp -p ../minsar/additions/stackStripMap.py $ISCE_STACK/stripmapStack
 #cp -p ../minsar/additions/isce/stackSentinel.py $ISCE_STACK/topsStack
+```
 
 * #Source the environment and create aux directories. Install credential files for data download:
 ```
@@ -101,24 +102,12 @@ source environment.bash;
 mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 ```
 
-```
 * #create your `miniconda3.tar` and `minsar.tar`  (removing `pkgs` saves space, could cause problems with environments) (needed for `install_code_to_tmp.bash)
 ```
 rm -rf ../3rdparty/miniconda3/pkgs
 tar cf ../3rdparty/miniconda3.tar -C ../3rdparty/ miniconda3 &
 tar cf ../minsar.tar ../3rdparty/launcher ../minsar ../setup ../sources/MintPy/mintpy ../sources/MimtPy/mimtpy ../sources/MiaplPy/miaplpy ../sources/MiaplPy/snaphu/bin ../sources/insarmaps_scripts ../sources/isce2/contrib/stack
 ```
-
-* #Source the environment and create aux directories. Install credential files for data download:
-```
-./install_credential_files.csh;
-
-source ~/accounts/platforms_defaults.bash;
-export RSMASINSAR_HOME=$(dirname $PWD)
-source environment.bash;
-mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
-```
-
 
 ### #Orbits and aux files
 This has created directories for the orbits for Sentinel-1 (`$SENTINEL_ORBITS`), which The can be downloaded using `dloadOrbits.py`. The IPF calibration files (`SENTINEL_AUX`) are downloaded from: https://qc.sentinel1.eo.esa.int/aux_cal/ .
