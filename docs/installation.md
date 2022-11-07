@@ -64,8 +64,8 @@ sed -i "s|isce2|#isce2|g" ../sources/MiaplPy/docs/requirements.txt
 ```
 export MIAPLPY_HOME="${PWD%/*}/sources/MiaplPy"
 cd $MIAPLPY_HOME/miaplpy/lib;
-python setup.py
-
+ ../../../../3rdparty/miniconda3/bin/python  setup.py
+ 
 cd $MIAPLPY_HOME;
 wget --no-check-certificate  https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/snaphu-v2.0.4.tar.gz
 tar -xvf snaphu-v2.0.4.tar.gz
@@ -91,6 +91,16 @@ cp -r ../sources/isce2/contrib/stack/* ../3rdparty/miniconda3/share/isce2
 #cp -p ../minsar/additions/stackStripMap.py $ISCE_STACK/stripmapStack
 #cp -p ../minsar/additions/isce/stackSentinel.py $ISCE_STACK/topsStack
 
+* #Source the environment and create aux directories. Install credential files for data download:
+```
+./install_credential_files.csh;
+
+source ~/accounts/platforms_defaults.bash;
+export RSMASINSAR_HOME=$(dirname $PWD)
+source environment.bash;
+mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
+```
+
 ```
 * #create your `miniconda3.tar` and `minsar.tar`  (removing `pkgs` saves space, could cause problems with environments) (needed for `install_code_to_tmp.bash)
 ```
@@ -107,7 +117,6 @@ source ~/accounts/platforms_defaults.bash;
 export RSMASINSAR_HOME=$(dirname $PWD)
 source environment.bash;
 mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
-
 ```
 
 
