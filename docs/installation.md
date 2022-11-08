@@ -7,7 +7,7 @@ and [.bash_profile](./bash_profile.md).  You may want to set your variables in a
 * Create an ~/accounts directory with your data download credentials (for contents see [here](./accounts_info.md)). If you have access to the RSMAS accounts repo clone it into your /home or `$WORK2` directory 
 
 ```
-git clone https://github.com/geodesymiami/accounts.git $WORK2/accounts ;
+git clone https://github.com/geodesymiami/accounts.git ~/accounts ;
 ```
 
 * Go to the area where you want to install the code:
