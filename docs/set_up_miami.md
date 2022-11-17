@@ -5,7 +5,7 @@ cd $RSMASINSAR_HOME
 git clone https://github.com/geodesymiami/GBIS.git sources/GBIS;
 ```
 
-* In order to facilitate  switching between  platforms (e.g. between pegasus, stampede and your mac), it is recommended to keep all your control files (minsar, geodmod, gbis) in your infiles directory and share via github, followinhg the following convention. the directory name is set using the customizable USERPREFERRED environment variable.
+* In order to facilitate  switching between  platforms (e.g. between pegasus, stampede and your mac), it is recommended to keep all your control files (minsar, geodmod, gbis) in your infiles directory and share via github, followinhg the following convention. the directory name is set using the customizable USER_PREFERRED environment variable.
 ```
 $WORKDIR/infiles_famelung/TEMPLATES
 $WORKDIR/infiles_famelung/GEODMOD_INFILES
