@@ -82,6 +82,7 @@ cp -p ../minsar/additions/isce/logging.conf ../3rdparty/miniconda3/lib/python3.*
 cp -p ../minsar/additions/isce2/topsStack/FilterAndCoherence.py ../sources/isce2/contrib/stack/topsStack
 cp -p ../minsar/additions/isce2/topsStack/fetchOrbit.py ../sources/isce2/contrib/stack/topsStack
 cp -p ../minsar/additions/isce2/stripmapStack/prepRawCSK.py ../sources/isce2/contrib/stack/stripmapStack
+cp -p ../minsar/additions/isce2/stripmapStack/unpackFrame_TSX.py ../sources/isce2/contrib/stack/stripmapStack
 cp -p ../minsar/additions/isce2/topo.py ../sources/isce2/contrib/stack/stripmapStack    #(uses method isce instead of gdal)
 
 cp -r ../sources/isce2/contrib/stack/* ../3rdparty/miniconda3/share/isce2 
