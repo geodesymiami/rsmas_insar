@@ -64,7 +64,7 @@ export GDAL_DATA=${PYTHON3DIR}/share/gdal
 export PYTHONPATH=${PYTHONPATH-""}
 export PYTHONPATH=${PYTHONPATH}:${MINTPY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${MIAPLPY_HOME}
-export PYTHONPATH=${PYTHONPATH}:${MIMTPY_HOME}
+export PYTHONPATH=${PYTHONPATH}:${MINTPY_HOME}/src
 export PYTHONPATH=${PYTHONPATH}:${ISCE_HOME}:${ISCE_HOME}/components
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/3rdparty/PyAPS
@@ -93,7 +93,7 @@ export PATH=${PATH}:${RSMASINSAR_HOME}/setup/accounts
 export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${ISCE_STACK}:${PATH}
 export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${PATH}
 export PATH=${PATH}:${RSMASINSAR_HOME}/sources/MimtPy
-export PATH=${PATH}:${MINTPY_HOME}/mintpy/cli
+export PATH=${PATH}:${MINTPY_HOME}/src/mintpy/cli
 
 export PATH=${PYTHON3DIR}/bin:${PATH}
 export PATH=${PATH}:${PROJ_LIB}
