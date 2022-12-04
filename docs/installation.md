@@ -80,7 +80,7 @@ cd ../../../../setup/
 ```
 cp -p ../minsar/additions/isce/logging.conf ../3rdparty/miniconda3/lib/python3.*/site-packages/isce/defaults/logging/logging.conf
 cp -p ../minsar/additions/isce2/topsStack/FilterAndCoherence.py ../sources/isce2/contrib/stack/topsStack
-cp -p ../minsar/additions/isce2/topsStack/fetchOrbit.py ../sources/isce2/contrib/stack/topsStack
+#cp -p ../minsar/additions/isce2/topsStack/fetchOrbit.py ../sources/isce2/contrib/stack/topsStack
 cp -p ../minsar/additions/isce2/stripmapStack/prepRawCSK.py ../sources/isce2/contrib/stack/stripmapStack
 cp -p ../minsar/additions/isce2/stripmapStack/unpackFrame_TSX.py ../sources/isce2/contrib/stack/stripmapStack
 cp -p ../minsar/additions/isce2/topo.py ../sources/isce2/contrib/stack/stripmapStack    #(uses method isce instead of gdal)
@@ -105,7 +105,7 @@ mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 
 * #create your `miniconda3.tar` and `minsar.tar`  (removing `pkgs` saves space, could cause problems with environments) (needed for `install_code_to_tmp.bash)
 ```
-tar cf ../minsar.tar ../3rdparty/launcher ../minsar ../setup ../sources/MintPy/mintpy ../sources/MimtPy/mimtpy ../sources/MiaplPy/miaplpy ../sources/MiaplPy/snaphu/bin ../sources/insarmaps_scripts ../sources/isce2/contrib/stack
+tar cf ../minsar.tar ../3rdparty/launcher ../minsar ../setup ../sources/MintPy/src ../sources/MimtPy/mimtpy ../sources/MiaplPy/miaplpy ../sources/MiaplPy/snaphu/bin ../sources/insarmaps_scripts ../sources/isce2/contrib/stack
 rm -rf ../3rdparty/miniconda3/pkgs
 tar cf ../3rdparty/miniconda3.tar -C ../3rdparty/ miniconda3 
 echo "Installation DONE"
