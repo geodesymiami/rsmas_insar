@@ -123,20 +123,21 @@ def main(iargs=None):
                 if os.path.exists(inps.work_dir +'/'+ data_dir):
                     scp_list.extend([
                         '/'+ data_dir +'/*.he5',
+                        '/'+ data_dir +'/demErr.h5',
                         '/'+ data_dir +'/pic' 
                         ])
                         #'/'+ data_dir +'/inputs'
 
         if inps.data_dir:
-                data_dir = inps.data_dir
-                if os.path.exists(inps.work_dir +'/'+ data_dir):
-                    scp_list.extend([
-                        '/'+ data_dir +'/*.he5',
-                        '/'+ data_dir +'/pic', 
-                        '/'+ data_dir +'/network_*/*.he5',
-                        '/'+ data_dir +'/network_*/pic' 
-                        ])
-                        #'/'+ data_dir +'/inputs'
+                dir_list = glob.glob(inps.data_dir + '/network_*')
+                for data_dir in dir_list:
+                    if os.path.exists(inps.work_dir +'/'+ data_dir):
+                        scp_list.extend([
+                            '/'+ data_dir +'/*.he5',
+                            '/'+ data_dir +'/demErr.h5',
+                            '/'+ data_dir +'/pic' 
+                            ])
+                            #'/'+ data_dir +'/inputs'
 
         for pattern in scp_list:
             if ( len(glob.glob(inps.work_dir + '/' + pattern)) >= 1 ):
