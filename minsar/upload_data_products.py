@@ -59,6 +59,8 @@ def cmd_line_parse(iargs=None):
     parser = create_parser()
     inps = parser.parse_args(args=iargs)
 
+    inps.miaplpy_all_flag = inps.mintpy_all_flag
+
     return inps
 
 ##############################################################################
@@ -131,13 +133,31 @@ def main(iargs=None):
         if inps.data_dir:
                 dir_list = glob.glob(inps.data_dir + '/network_*')
                 for data_dir in dir_list:
-                    if os.path.exists(inps.work_dir +'/'+ data_dir):
-                        scp_list.extend([
-                            '/'+ data_dir +'/*.he5',
-                            '/'+ data_dir +'/demErr.h5',
-                            '/'+ data_dir +'/pic' 
-                            ])
-                            #'/'+ data_dir +'/inputs'
+                     #if os.path.exists(inps.work_dir +'/'+ data_dir):
+                     if not inps.miaplpy_all_flag:
+                         scp_list.extend([
+                             '/'+ data_dir +'/*.he5',
+                             '/'+ data_dir +'/demErr.h5',
+                             '/'+ data_dir +'/pic' 
+                             ])
+                     else:
+                         scp_list.extend([
+                             '/'+ data_dir +'/*.he5',
+                             '/'+ data_dir +'/*.h5',
+                             '/'+ data_dir +'/*.cfg',
+                             '/'+ data_dir +'/*.txt',
+                             '/'+ data_dir +'/inputs/geometryRadar.h5',
+                             '/'+ data_dir +'/inputs/smallbaselineApp.cfg',
+                             '/'+ data_dir +'/inputs/*template',
+                             '/'+ data_dir +'/pic' 
+                             ])
+                             #'/'+ data_dir +'../inputs/*',
+                             #'/'+ data_dir +'/inputs'
+
+                scp_list.extend([
+                    '/'+ os.path.dirname(data_dir) +'/inputs/slcStack.h5',
+                    '/'+ os.path.dirname(data_dir) +'/inputs/geometryRadar.h5' 
+                    ])
 
         for pattern in scp_list:
             if ( len(glob.glob(inps.work_dir + '/' + pattern)) >= 1 ):
