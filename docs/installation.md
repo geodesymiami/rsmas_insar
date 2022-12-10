@@ -84,6 +84,7 @@ cp -p ../minsar/additions/isce2/topsStack/FilterAndCoherence.py ../sources/isce2
 cp -p ../minsar/additions/isce2/stripmapStack/prepRawCSK.py ../sources/isce2/contrib/stack/stripmapStack
 cp -p ../minsar/additions/isce2/stripmapStack/unpackFrame_TSX.py ../sources/isce2/contrib/stack/stripmapStack
 cp -p ../minsar/additions/isce2/topo.py ../sources/isce2/contrib/stack/stripmapStack    #(uses method isce instead of gdal)
+cp -p ../minsar/additions/mintpy/dem_error.py ../sources/MintPy/src/mintpy 
 
 cp -r ../sources/isce2/contrib/stack/* ../3rdparty/miniconda3/share/isce2 
 
