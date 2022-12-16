@@ -42,6 +42,7 @@ usage: run_workflow.bash custom_template_file [--start] [--stop] [--dostep] [--h
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep insarmaps \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep miaplpy    \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --miaplpy    \n\
+      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dir miaplpy/sequential-3  \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --append    \n\
                                                                                    \n\
  Processing steps (start/end/dostep): \n\
@@ -55,13 +56,17 @@ usage: run_workflow.bash custom_template_file [--start] [--stop] [--dostep] [--h
    --start STEP          start processing at the named step [default: load_data].\n\
    --end STEP, --stop STEP                                                       \n\
                          end processing at the named step [default: upload]      \n\
-   --dostep STEP         run processing at the named step only                   \n 
+   --dostep STEP         run processing at the named step only                   \n\
+                                                                                 \n\
+   for --miaplpy the run_files directory is determined by the *template file     \n\
+   option --dir works only for miaplpy                                           \n 
      "
     printf "$helptext"
     exit 0;
 else
     PROJECT_NAME=$(basename "$1" | cut -d. -f1)
     PROJECT_NAME=$(basename "$1" | awk -F ".template" '{print $1}')
+    template_file=$1
 fi
 WORKDIR=$SCRATCHDIR/$PROJECT_NAME
 cd $WORKDIR
@@ -77,6 +82,7 @@ wait_time=30
 startstep=1
 stopstep="insarmaps"
 stopstep="mintpy"
+dir_flag=false
 
 start_datetime=$(date +"%Y%m%d:%H-%m")
 echo "${start_datetime} * run_workflow.bash ${WORKDIR} ${@:2}" >> "${WORKDIR}"/log
@@ -117,6 +123,13 @@ do
             ;;
         --miaplpy)
             miaplpy_flag=true
+            shift
+            ;;
+        --dir)
+            miaplpy_flag=true
+            dir_flag=true
+            dir_miaplpy="$2"
+            shift
             shift
             ;;
         --tmp)
@@ -184,16 +197,46 @@ test -f $WORKDIR/workflow.0.log  || touch workflow.0.log
 if $append; then num_logfiles=$(($num_logfiles-1)); fi
 logfile_name="${WORKDIR}/workflow.${num_logfiles}.log"
 #printf '' > $logfile_name
-tail -f $logfile_name & 
-trap "pkill -P $$" EXIT
-exec 1>>$logfile_name 2>>$logfile_name
+#tail -f $logfile_name & 
+#trap "pkill -P $$" EXIT
+#exec 1>>$logfile_name 2>>$logfile_name
+# FA 12/22  for debugging comment previous line out so that STDOUT goes to STDOUT
 ######################################################
 
 RUNFILES_DIR=$WORKDIR"/"$run_files_name
 
 if [[ $miaplpy_flag == "true" ]]; then
-   RUNFILES_DIR=$WORKDIR"/miaplpy/run_files"
-   RUNFILES_DIR=$WORKDIR"/miaplpy/network_single_reference/run_files"
+   # get miaplpy run_files directory name
+   if [[  $dir_flag == "true"   ]];  then
+      RUNFILES_DIR=$WORKDIR"/${dir_miaplpy}/run_files"
+   else
+      if [[ ! -z $(grep "^miaplpy.interferograms.networkType" $template_file) ]];  then
+         network_type=$(grep -E "^miaplpy.interferograms.networkType" $template_file | awk -F= '{print $2}' |  awk -F# '{print $1}' | tail -1 | xargs  )
+         if [[ $network_type == "auto" ]];  then
+            network_type=single_reference                  # default of MiaplPy
+         fi
+      else
+         network_type=single_reference                     # default of MiaplPy
+      fi
+
+      if [[ $network_type == "sequential" ]];  then
+         if [[ ! -z $(grep "^miaplpy.interferograms.connNum" $template_file) ]];  then
+            connection_number=$(grep -E "^miaplpy.interferograms.connNum" $template_file | awk -F= '{print $2}' |  awk -F# '{print $1}' | xargs  )
+         else
+            connection_number=3                            # default of MiaplPy
+         fi
+         network_type=${network_type}_${connection_number}
+      fi
+      RUNFILES_DIR=$WORKDIR"/miaplpy/network_${network_type}/run_files"
+      echo "DIR: $RUNFILES_DIR"
+   fi
+
+   if [ ! -d $RUNFILES_DIR ]; then
+       echo "run_files directory $RUNFILES_DIR does not exist -- exiting."
+       exit 1;
+   fi
+      
+   echo "Running miaplpy jobs in ${RUNFILES_DIR}"
 fi
 
 #find the last job (11 for 'geometry' and 16 for 'NESD', 9 for stripmap) and remove leading zero
