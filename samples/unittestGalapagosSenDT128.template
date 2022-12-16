@@ -33,13 +33,12 @@ mintpy.save.hdfEos5.update        = yes   #[yes / no], auto for no, put XXXXXXXX
 mintpy.save.hdfEos5.subset        = yes   #[yes / no], auto for no, put XXXXXXXX as endDate in output filename
 mintpy.save.kmz                   = yes  #[yes / no], auto for yes, save geocoded velocity to Google Earth KMZ file
 mintpy.load.autoPath              = yes
+mintpy.subset.lalo        = -0.86:-0.81,-91.19:-91.13    #[31.5:32.5,130.5:131.0 / no], auto for no
 
 ######################################################
 
 miaplpy.load.processor      = isce  
 miaplpy.load.autoPath       = yes
-miaplpy.compute.num_workers = 46
+miaplpy.multiprocessing.numProcessor = 40
 miaplpy.subset.lalo        = -0.86:-0.81,-91.19:-91.13    #[31.5:32.5,130.5:131.0 / no], auto for no
-miaplpy.interferograms.networkType = sequential     # [single_reference, sequential, combine, list] default: single_reference
-
-
+miaplpy.interferograms.networkType = single_reference     # [single_reference, sequential, combine, list] default: single_reference
