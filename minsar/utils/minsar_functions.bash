@@ -25,6 +25,8 @@ if [[ $PLATFORM_NAME == "frontera" ]] ; then
 elif [[ $PLATFORM_NAME == "stampede2" ]] ; then 
           sed -i "s|skx-normal|skx-dev|g" "$@" ;
 fi 
+sed -i "s|SBATCH -t .:..:|SBATCH -t 1:59:|g" "$@" ; 
+sed -i "s|SBATCH -t ..:..:|SBATCH -t 01:59:|g" "$@" ;
 }
 
 ###########################################
