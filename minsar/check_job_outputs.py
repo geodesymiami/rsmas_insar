@@ -78,6 +78,10 @@ def main(iargs=None):
 # I had to remove 'ERROR' as `ERROR 4` remains in an run_*.e file it still raises an exception. 
 # If `ERROR` needs to be in `error_strings` an alternative could be to remove the problem run_02*.e file 
 # ERROR 4: `/vsizip/S1A_IW_SLC__1SDV_20161115T141647_20161115T141714_013954_016796_D68D.zip/S1A_IW_SLC__1SDV_20161115T141647_20161115T141714_013954_016796_D68D.SAFE/measurement/s1a-iw2-slc-vv-20161115t141647-20161115t141712-013954-016796-005.tiff' does not exist in the file system, and is not recognized as a supported dataset name.
+    miaplpy_error_strings = [
+                    'NaN or infinity found in input float data',
+                    'Traceback'
+                    ]
 
     job_names=[]
     for job_file in inps.job_files:
@@ -197,6 +201,15 @@ def main(iargs=None):
                        break
                    matched_error_strings.append('Error: \"' + error_string + '\" found in ' + file + '\n')
                    print( 'Error: \"' + error_string + '\" found in ' + file )
+
+       if 'miaplpy' in job_name:
+           for file in error_files + out_files:
+               for error_string in miaplpy_error_strings:          # FA 12/22  We need to do this check only for run_05_miaplpy_unwrap_ifgram
+                   if check_words_in_file(file, error_string):
+                       if skip_error(file, error_string):
+                           break
+                       matched_error_strings.append('Error: \"' + error_string + '\" found in ' + file + '\n')
+                       print( 'Error: \"' + error_string + '\" found in ' + file )
 
     if len(matched_data_problem_strings) != 0:
         with open(run_file_base + '_data_problem_matches.e', 'w') as f:
