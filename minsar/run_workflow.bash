@@ -42,7 +42,7 @@ usage: run_workflow.bash custom_template_file [--start] [--stop] [--dostep] [--h
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep insarmaps \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep miaplpy    \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --miaplpy    \n\
-      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dir miaplpy/sequential-3  \n\
+      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dir miaplpy_2015_2021  \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --append    \n\
                                                                                    \n\
  Processing steps (start/end/dostep): \n\
@@ -59,7 +59,7 @@ usage: run_workflow.bash custom_template_file [--start] [--stop] [--dostep] [--h
    --dostep STEP         run processing at the named step only                   \n\
                                                                                  \n\
    for --miaplpy the run_files directory is determined by the *template file     \n\
-   option --dir works only for miaplpy                                           \n 
+   --dir option is for miaplpy only following miaplpyApp.py                      \n 
      "
     printf "$helptext"
     exit 0;
@@ -77,6 +77,7 @@ append=false
 tmp=true
 tmp_flag_str="--tmp"
 run_files_name="run_files_tmp"
+dir_miaplpy="miaplpy"
 wait_time=30
 
 startstep=1
@@ -207,29 +208,26 @@ RUNFILES_DIR=$WORKDIR"/"$run_files_name
 
 if [[ $miaplpy_flag == "true" ]]; then
    # get miaplpy run_files directory name
-   if [[  $dir_flag == "true"   ]];  then
-      RUNFILES_DIR=$WORKDIR"/${dir_miaplpy}/run_files"
+   if [[ ! -z $(grep "^miaplpy.interferograms.networkType" $template_file) ]];  then
+      network_type=$(grep -E "^miaplpy.interferograms.networkType" $template_file | awk -F= '{print $2}' |  awk -F# '{print $1}' | tail -1 | xargs  )
+      if [[ $network_type == "auto" ]];  then
+         network_type=single_reference                  # default of MiaplPy
+      fi
    else
-      if [[ ! -z $(grep "^miaplpy.interferograms.networkType" $template_file) ]];  then
-         network_type=$(grep -E "^miaplpy.interferograms.networkType" $template_file | awk -F= '{print $2}' |  awk -F# '{print $1}' | tail -1 | xargs  )
-         if [[ $network_type == "auto" ]];  then
-            network_type=single_reference                  # default of MiaplPy
-         fi
-      else
-         network_type=single_reference                     # default of MiaplPy
-      fi
-
-      if [[ $network_type == "sequential" ]];  then
-         if [[ ! -z $(grep "^miaplpy.interferograms.connNum" $template_file) ]];  then
-            connection_number=$(grep -E "^miaplpy.interferograms.connNum" $template_file | awk -F= '{print $2}' |  awk -F# '{print $1}' | xargs  )
-         else
-            connection_number=3                            # default of MiaplPy
-         fi
-         network_type=${network_type}_${connection_number}
-      fi
-      RUNFILES_DIR=$WORKDIR"/miaplpy/network_${network_type}/run_files"
-      echo "DIR: $RUNFILES_DIR"
+      network_type=single_reference                     # default of MiaplPy
    fi
+
+   if [[ $network_type == "sequential" ]];  then
+      if [[ ! -z $(grep "^miaplpy.interferograms.connNum" $template_file) ]];  then
+         connection_number=$(grep -E "^miaplpy.interferograms.connNum" $template_file | awk -F= '{print $2}' |  awk -F# '{print $1}' | xargs  )
+      else
+         connection_number=3                            # default of MiaplPy
+      fi
+      network_type=${network_type}_${connection_number}
+   fi
+
+   RUNFILES_DIR=$WORKDIR"/${dir_miaplpy}/network_${network_type}/run_files"
+   echo "RUNFILES_DIR: $RUNFILES_DIR"
 
    if [ ! -d $RUNFILES_DIR ]; then
        echo "run_files directory $RUNFILES_DIR does not exist -- exiting."
