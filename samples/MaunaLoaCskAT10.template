@@ -7,8 +7,8 @@ ssaraopt.relativeOrbit  = 10
 relative_orbit          = 10
 ssaraopt.intersectsWithPoint = -155.6 19.45
 ssaraopt.collectionName = "Supersites CSK Hawaii"
-ssaraopt.startDate      = 20141001
-ssaraopt.endDate        = 20141220
+ssaraopt.startDate      = 20201001
+ssaraopt.endDate        = 20210531
 ##################### ISCE OPTIONS ####################
 stripmapStack.boundingBox    = 19.1 19.7 -155.5 -154.9                           # '-1 0.15 -91.6 -90.9'                           
 stripmapStack.azimuthLooks         = 16
@@ -28,8 +28,16 @@ stripmapStack.sensor               = csk
 mintpy.compute.cluster            = local #[local / slurm / pbs / lsf / none], auto for none, cluster type
 mintpy.compute.numWorker          = 6 #[int > 1 / all], auto for 4 (local) or 40 (non-local), num of workers
 mintpy.load.autoPath              = yes
+mintpy.subset.lalo                = 19.43:19.51,-155.65:-155.54    #[S:N,W:E / no], auto for no
 mintpy.reference.lalo             = 19.5310, -155.4812
+mintpy.reference.lalo             = 19.52,-155.51
 mintpy.troposphericDelay.method   = height_correlation    # pyaps  #[pyaps / height_correlation / base_trop_cor / no], auto for pyaps
 mintpy.geocode.laloStep           = auto  #[-0.000555556,0.000555556 / None], auto for None, output resolution in degree
 mintpy.save.hdfEos5               = yes   #[yes / update / no], auto for no, save timeseries to UNAVCO InSAR Archive format
+
+
+miaplpy.load.processor      = isce  
+miaplpy.load.autoPath       = yes
+miaplpy.multiprocessing.numProcessor = 40
+
 
