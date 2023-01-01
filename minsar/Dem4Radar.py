@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Author: Farzaneh Aziz Zanjani               
 # This script plot velocity, DEM error, and estimated elevation on the backscatter.
 ############################################################
@@ -31,6 +32,9 @@ import matplotlib.ticker as mticker
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
 ####
+# @Fari: This should be done in function cmd_line_parser
+# @Fari: also there should be a main() function.
+# @Fari: and all arrays/variables that are used by get_data() should be given in the function call. Same for the otehr functions
 parser = argparse.ArgumentParser(description='plots velocity, DEM error, and estimated elevation on the backscatter')
 parser.add_argument('project_dir', metavar='project_dir', type=str, help='enter your data address that includes input files for either sequential network or single reference defined as ../../dsm_reprojected_wgs84.tif, demErr.h5, velocity.h5, ../inputs/geometryRadar.h5, /../inputs/slcStack.h5, timeseries_demErr.h5, maskPS.h5, maskTempCoh.h5')
 parser.add_argument('lat1', metavar='lat1', type=float, help='low latitude of the box')
@@ -64,8 +68,10 @@ lon2=args.lon2
 outfile=args.outfile
 ####
 #### Input files
-out_dir = './out_figures'
+#out_dir = './out_figures'
+out_dir = '.'
 out_amplitude = project_dir + '/mean_amplitude.npy'
+geom_dsm = '/work2/05861/tg851601/stampede2/insarlab/DEM/Miami_DSM/dsm_reprojected_wgs84.tif'   
 geom_dsm = project_dir + '/../../dsm_reprojected_wgs84.tif'
 demError_file = project_dir + '/demErr.h5'
 ##demError_std_file = project_dir + '/demErr_std.h5'
@@ -74,8 +80,8 @@ geo_file = project_dir + '/../inputs/geometryRadar.h5'
 mask_file_t = project_dir + '/maskTempCoh.h5'
 mask_file_ps = project_dir + '/../maskPS.h5'
 #mask_file_w = project_dir + '/waterMask.h5'
-tsStack_minopy = project_dir + '/timeseries_demErr.h5'
-#tsStack_minopy = project_dir + '/timeseries_ERA5_demErr.h5'
+tsStack = project_dir + '/timeseries_demErr.h5'
+#tsStack = project_dir + '/timeseries_ERA5_demErr.h5'
 slcStack = project_dir + '/../inputs/slcStack.h5'
 ##### 
 def calculate_mean_amplitude(slcStack, out_amplitude):
@@ -97,28 +103,66 @@ def calculate_mean_amplitude(slcStack, out_amplitude):
 
 def get_data(ymin, ymax, xmin, xmax, ps, out_amplitude, shift=0):
  
-    #mask_w = np.flipud(readfile.read(mask_file_w, datasetName='mask')[0][ymin:ymax, xmin:xmax])
-    mask_t = np.flipud(readfile.read(mask_file_t, datasetName='mask')[0][ymin:ymax, xmin:xmax])
-    mask_p = np.flipud(readfile.read(mask_file_ps, datasetName='mask')[0][ymin:ymax, xmin:xmax])
-    #
-    
-    if ps:
-        mask = mask_p
-    else:
-        mask=mask_t
-
-    DEM = np.flipud(readfile.read(geo_file, datasetName='height')[0][ymin:ymax, xmin:xmax]) + shift
-
-    demError = np.flipud(readfile.read(demError_file, datasetName='dem')[0][ymin:ymax, xmin:xmax])
-    #demError_std = np.flipud(readfile.read(demError_std_file, datasetName='dem')[0][ymin:ymax, xmin:xmax]) 
-
     velocity, atr = readfile.read(vel_file, datasetName='velocity')
-    velocity = np.flipud(velocity[ymin:ymax, xmin:xmax])
+
+    if ymin >= ymax:
+       tmp_ymin = ymin
+       tmp_ymax = ymax
+       ymin = tmp_ymax 
+       ymax = tmp_ymin 
+    if xmin >= xmax:
+       tmp_xmin = xmin
+       tmp_xmax = xmax
+       xmin = tmp_xmax 
+       xmax = tmp_xmin 
+
+    # needed as for Tsx there is no ORBIT_DIRECTION attribute
+    try:
+        orbit_direction = attr['ORBIT_DIRECTION']
+    except:
+        result_list = []
+        for x in ['TsxSMAT','TsxSLAT','TsxHSAT','CskAT']:
+            result_list.append(x in project_dir )
+        if any(result_list):
+            orbit_direction = 'ASCENDING'
+
+        for x in ['TsxSMDT','TsxSLDT','TsxHSDT','TsxSMD','CskDT']:
+            result_list.append(x in project_dir )
+        if any(result_list):
+            orbit_direction = 'DESCENDING'
+
+    if orbit_direction == 'ASCENDING':
+        flipud_flag = True
+        fliplr_flag = False
+    if orbit_direction == 'DESCENDING':
+        flipud_flag = False
+        fliplr_flag = True
+
+    # need to check in view.py how Yunjun is doing the flipping and whetehr it works for TSX (does he has the ORBIT_DIRECTION attribute?)
+    if flipud_flag:
+       DEM = np.flipud(readfile.read(geo_file, datasetName='height')[0][ymin:ymax, xmin:xmax]) + shift
+       demError = np.flipud(readfile.read(demError_file, datasetName='dem')[0][ymin:ymax, xmin:xmax])
+       amplitude = np.flipud(np.load(out_amplitude)[ymin:ymax, xmin:xmax]) 
+       mask_t = np.flipud(readfile.read(mask_file_t, datasetName='mask')[0][ymin:ymax, xmin:xmax])
+       mask_p = np.flipud(readfile.read(mask_file_ps, datasetName='mask')[0][ymin:ymax, xmin:xmax])
+       if ps:
+           mask = mask_p
+       else:
+           mask=mask_t
+       velocity = np.flipud(velocity[ymin:ymax, xmin:xmax])
+    if fliplr_flag:
+       DEM = np.fliplr(readfile.read(geo_file, datasetName='height')[0][ymin:ymax, xmin:xmax]) + shift
+       demError = np.fliplr(readfile.read(demError_file, datasetName='dem')[0][ymin:ymax, xmin:xmax])
+       amplitude = np.fliplr(np.load(out_amplitude)[ymin:ymax, xmin:xmax]) 
+       mask_t = np.fliplr(readfile.read(mask_file_t, datasetName='mask')[0][ymin:ymax, xmin:xmax])
+       mask_p = np.fliplr(readfile.read(mask_file_ps, datasetName='mask')[0][ymin:ymax, xmin:xmax])
+       if ps:
+           mask = mask_p
+       else:
+           mask=mask_t
+       velocity = np.fliplr(velocity[ymin:ymax, xmin:xmax])
   
-    amplitude = np.flipud(np.load(out_amplitude)[ymin:ymax, xmin:xmax]) 
-    
     vel = velocity[mask==1]*1000
-   
     demerr = demError[mask==1]
     dem = DEM[mask==1]
    # demerror_std = demError_std[mask==1]
@@ -130,12 +174,12 @@ def get_data(ymin, ymax, xmin, xmax, ps, out_amplitude, shift=0):
     xv = x[mask==1]
     yv = y[mask==1]
    
-  
     return amplitude, xv, yv, vel, demerr, dem, DEM, atr
     
 
 def plot_subset(ymin, ymax, xmin, xmax, ps, vel_range, amplitude_im, dem_offset, dem_name, out_name, out_dir, size=200):
     
+    #import pdb; pdb.set_trace()
     amplitude, xv, yv, vel, demerr, dem, DEM, atr = get_data(ymin, ymax, xmin, xmax, ps, amplitude_im, dem_offset)
 
     if args.figsizey and args.figsizex is not None:
@@ -205,9 +249,6 @@ def plot_subset(ymin, ymax, xmin, xmax, ps, vel_range, amplitude_im, dem_offset,
         psds = 'ds'
     plt.savefig(out_dir + '/{}_{}_{}.png'.format(out_name, dem_name, psds), bbox_inches='tight', dpi=300)
 
-
-
-
 ######
 
 if args.fontsize is not None:
@@ -227,17 +268,32 @@ points_lalo = np.array([[lat1, lon1],
                   [lat2, lon2]])
 print (points_lalo)
 
+attr = readfile.read_attribute(tsStack)
+coord = ut.coordinate(attr, geo_file)
+yg1, xg1 = coord.geo2radar(points_lalo[0][0], points_lalo[0][1])[0:2]
+yg2, xg2 = coord.geo2radar(points_lalo[1][0], points_lalo[1][1])[0:2]
+print (yg1, xg1, yg2, xg2)
 
-attr_minopy = readfile.read_attribute(tsStack_minopy)
-coord_minopy = ut.coordinate(attr_minopy, geo_file)
-yg_minopy1, xg_minopy1 = coord_minopy.geo2radar(points_lalo[0][0], points_lalo[0][1])[0:2]
-yg_minopy2, xg_minopy2 = coord_minopy.geo2radar(points_lalo[1][0], points_lalo[1][1])[0:2]
-print (yg_minopy1, xg_minopy1, yg_minopy2, xg_minopy2)
+yg1, xg1 = coord.geo2radar(points_lalo[0][0], points_lalo[0][1])[0:2]
+yg2, xg2 = coord.geo2radar(points_lalo[0][0], points_lalo[1][1])[0:2]
+yg3, xg3 = coord.geo2radar(points_lalo[1][0], points_lalo[0][1])[0:2]
+yg4, xg4 = coord.geo2radar(points_lalo[1][0], points_lalo[1][1])[0:2]
+print("Lat, Lon, y, x: ",points_lalo[0][0], points_lalo[0][1], yg1, xg1)
+print("Lat, Lon, y, x: ",points_lalo[0][0], points_lalo[1][1], yg2, xg2)
+print("Lat, Lon, y, x: ",points_lalo[1][0], points_lalo[0][1], yg3, xg3)
+print("Lat, Lon, y, x: ",points_lalo[1][0], points_lalo[1][1], yg4, xg4)
+print (yg1, xg1, yg2, xg2, yg3, xg3, yg4, xg4)
+ymin = min(yg1, yg2, yg3, yg4)
+ymax = max(yg1, yg2, yg3, yg4)
+xmin = min(xg1, xg2, xg3, xg4)
+xmax = max(xg1, xg2, xg3, xg4)
+print (ymin, xmin, ymax, xmax)
+#import pdb; pdb.set_trace()
 
 if args.psize is not None:
-        s=args.psize
+        size=args.psize
 else:
-        s=10
+        size=10
 
 if args.vrange is not None:
         vel=args.vrange
@@ -249,6 +305,6 @@ if args.offset is not None:
 else:
         doff=26
 
-plot_subset(ymin=yg_minopy1, ymax=yg_minopy2, xmin=xg_minopy1, xmax=xg_minopy2, ps=True, vel_range=vel,
+plot_subset(ymin=ymin, ymax=ymax, xmin=xmin, xmax=xmax, ps=True, vel_range=vel,
             amplitude_im=out_amplitude, dem_offset=doff, dem_name='dem', 
-            out_name=outfile, out_dir=out_dir, size=s)
+            out_name=outfile, out_dir=out_dir, size=size)
