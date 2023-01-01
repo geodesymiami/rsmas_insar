@@ -78,7 +78,9 @@ def main(iargs=None):
 # I had to remove 'ERROR' as `ERROR 4` remains in an run_*.e file it still raises an exception. 
 # If `ERROR` needs to be in `error_strings` an alternative could be to remove the problem run_02*.e file 
 # ERROR 4: `/vsizip/S1A_IW_SLC__1SDV_20161115T141647_20161115T141714_013954_016796_D68D.zip/S1A_IW_SLC__1SDV_20161115T141647_20161115T141714_013954_016796_D68D.SAFE/measurement/s1a-iw2-slc-vv-20161115t141647-20161115t141712-013954-016796-005.tiff' does not exist in the file system, and is not recognized as a supported dataset name.
+# FA 12/22: same error message ca be productde by miaplpy_load_data (changed to "if 'unpack_secondary_slc' in job_name or or 'miaplpy_generate_ifgram' in job_name:")
     miaplpy_error_strings = [
+                    'ERROR 4: ',
                     'NaN or infinity found in input float data',
                     'Traceback'
                     ]
@@ -116,6 +118,8 @@ def main(iargs=None):
        error_files = natsorted( glob.glob(job_name + '*.e') )
        out_files = natsorted( glob.glob(job_name + '*.o') )
 
+       # FA 12/22:  add miaplpy_load_data here (and remove below) once miaplpyApp.py supports run_files_tmp`
+       #if 'unpack_secondary_slc' in job_name or 'miaplpy_load_data' in job_name:               
        if 'unpack_secondary_slc' in job_name:               
           for file in out_files:
               for string in data_problems_strings_out_files:
@@ -202,6 +206,9 @@ def main(iargs=None):
                    matched_error_strings.append('Error: \"' + error_string + '\" found in ' + file + '\n')
                    print( 'Error: \"' + error_string + '\" found in ' + file )
 
+       # FA 12/22: this covers the following data problem error (move to run_02 above once miaplpyApp supports run_files_tmp)
+       # ERROR 4: `/vsizip//scratch/05861/tg851601/MiamiSenAT48/SLC/S1A_IW_SLC__1SDV_20150921T232737_20150921T232806_007820_00AE3B_0A60.zip/S1A_IW_SLC__1SDV_20150921T232737_20150921T232806_007820_00AE3B_0A60.SAFE/
+       # measurement/s1a-iw3-slc-vv-20150921t232739-20150921t232806-007820-00ae3b-006.tiff' does not exist in the file system, and is not recognized as a supported dataset name.
        if 'miaplpy' in job_name:
            for file in error_files + out_files:
                for error_string in miaplpy_error_strings:          # FA 12/22  We need to do this check only for run_05_miaplpy_unwrap_ifgram
