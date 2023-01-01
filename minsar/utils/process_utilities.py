@@ -356,6 +356,7 @@ def create_default_template(temp_inps):
     if not os.path.exists(inps.template_file):
         shutil.copyfile(inps.custom_template_file, inps.template_file)
     else:
+        # FA 12/22  I wonder why updating the template file here. This causes an error in `download_data.py if a *template file exist 
         update_template_file(inps.template_file, custom_tempObj)
 
     inps.cropbox = pathObj.grab_cropbox(inps)
