@@ -675,9 +675,9 @@ fi
 
 if [[ $miaplpy_flag == "1" ]]; then
 
-    # correct *xml and *vrt files (if skipped in ifgram step because of unwrap problems) 
-    #FA sed -i "s|/tmp|$PWD|g" */*.xml */*/*.xml  */*/*/*.xml   #FA 1/22: commented out because it takes too long
-    #FA sed -i "s|/tmp|$PWD|g" */*.vrt */*/*.vrt  */*/*/*.vrt 
+    # correct *xml and *vrt files (if skipped in ifgram step because of unwrap problems) (skipping merged/interferograms because it takes long)
+    sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.vrt merged/SLC/*/*.vrt  
+    sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.xml merged/SLC/*/*.xml  
 
     cmd="miaplpyApp.py $template_file --dir miaplpy --jobfiles --tmp"
     echo "Running.... $cmd"
