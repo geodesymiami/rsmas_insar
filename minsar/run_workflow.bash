@@ -85,8 +85,14 @@ stopstep="insarmaps"
 stopstep="mintpy"
 dir_flag=false
 
-start_datetime=$(date +"%Y%m%d:%H-%m")
-echo "${start_datetime} * run_workflow.bash ${WORKDIR} ${@:2}" >> "${WORKDIR}"/log
+start_datetime=$(date +"%Y%m%d:%H-%M")
+template_file_dir=$(dirname "$1")          # create name including $TE for concise log file
+if  [[ $template_file_dir == $TE ]]; then
+    template_print_name="\$TE/$(basename $template_file)"
+else
+    template_print_name="$template_file"
+fi
+echo "${start_datetime} * run_workflow.bash $template_print_name ${@:2}" >> "${WORKDIR}"/log
 
 while [[ $# -gt 0 ]]
 do
