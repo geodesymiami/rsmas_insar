@@ -353,6 +353,10 @@ platform_str=$(grep platform $template_file | cut -d'=' -f2)
 if [[ $platform_str == *"COSMO-SKYMED"* ]]; then
    download_dir=$WORK_DIR/RAW_data
 fi
+collectionName_str=$(grep collectionName $template_file | cut -d'=' -f2)
+if [[ $collectionName_str == *"TSX"* ]]; then
+   download_dir=$WORK_DIR/SLC_ORIG
+fi
 ####################################
 srun_cmd="srun -n1 -N1 -A $JOBSHEDULER_PROJECTNAME -p $QUEUENAME  -t 00:07:00 "
 ####################################
@@ -360,11 +364,11 @@ srun_cmd="srun -n1 -N1 -A $JOBSHEDULER_PROJECTNAME -p $QUEUENAME  -t 00:07:00 "
 ####################################
 if [[ $download_flag == "1" ]]; then
 
-    echo "Running.... download_data.py $template_file"
-    download_data.py $template_file
+    echo "Running.... generate_download_command.py $template_file"
+    generate_download_command.py $template_file
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
-       echo "download_data.py exited with a non-zero exit code ($exit_status). Exiting."
+       echo "generate_download_command.py exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
     cd $download_dir
