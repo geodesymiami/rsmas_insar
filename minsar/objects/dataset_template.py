@@ -108,7 +108,8 @@ class Template:
         # utilizes the general ssaraopt option or throws an exception
         # (likely an invalid template file in that case).
 
-        ssaraopt_keys = ['ssaraopt.platform', 'ssaraopt.relativeOrbit']
+        #ssaraopt_keys = ['ssaraopt.platform', 'ssaraopt.relativeOrbit']
+        ssaraopt_keys = ['ssaraopt.relativeOrbit']                          # FA 12/2022  removed because ssaraopt.platform="TERRASAR-X 1" or similar did not work
 
         bad_key = False
         for key in ssaraopt_keys:
@@ -117,19 +118,26 @@ class Template:
                 if 'ssaraopt' in self.options:
                     ssaraopt = self.options['ssaraopt']
                 else:
-                    raise Exception('no ssaraopt or ssaraopt.platform, relativeOrbit found')
+                    raise Exception('no ssaraopt, relativeOrbit found')
 
         # If all of the keys are present go ahead and generate the ssaraopt string as normal.
         if not bad_key:
-            platform = self.options['ssaraopt.platform']
             relativeOrbit = self.options['ssaraopt.relativeOrbit']
-            ssaraopt = '--platform={} --relativeOrbit={}'.format(platform, relativeOrbit)
+            ssaraopt = ' --relativeOrbit={}'.format(relativeOrbit)
+            #platform = self.options['ssaraopt.platform']
+            #ssaraopt = '--platform={} --relativeOrbit={}'.format(platform, relativeOrbit)
+            if 'ssaraopt.platform' in self.options.keys():
+                platform = self.options['ssaraopt.platform']
+                ssaraopt += ' --platform={}'.format(platform)
             if 'ssaraopt.collectionName' in self.options.keys():
                 collectionName = self.options['ssaraopt.collectionName']
                 ssaraopt += ' --collectionName={}'.format(collectionName)
             if 'ssaraopt.beamMode' in self.options.keys():
                 beamMode = self.options['ssaraopt.beamMode']
                 ssaraopt += ' --beamMode={}'.format(beamMode)
+            if 'ssaraopt.beamSwath' in self.options.keys():
+                beamSwath = self.options['ssaraopt.beamSwath']
+                ssaraopt += ' --beamSwath={}'.format(beamSwath)
             if 'ssaraopt.frame' in self.options.keys():
                 frame = self.options['ssaraopt.frame']
                 ssaraopt += ' --frame={}'.format(frame)
