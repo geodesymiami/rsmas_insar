@@ -38,8 +38,8 @@ def cmd_line_parse(iargs=None, script=None):
     parser = argparse.ArgumentParser(description='MinSAR scripts parser')
     parser = add_common_parser(parser)
 
-    if script == 'download_rsmas':
-        parser = add_download_data(parser)
+    if script == 'generate_download_command':
+        parser = add_generate_download_command(parser)
     if script == 'create_runfiles':
         parser = add_create_runfiles(parser)
     if script == 'dem_rsmas':
@@ -90,7 +90,7 @@ def add_create_runfiles(parser):
     return parser
 
 
-def add_download_data(parser):
+def add_generate_download_command(parser):
     flag_parser = parser.add_argument_group('Download data options:')
     flag_parser.add_argument('--delta_lat', dest='delta_lat', default='0.0', type=float,
                              help='delta to add to latitude from boundingBox field, default is 0.0')
