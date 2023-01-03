@@ -35,6 +35,7 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 # @Fari: This should be done in function cmd_line_parser
 # @Fari: also there should be a main() function.
 # @Fari: and all arrays/variables that are used by get_data() should be given in the function call. Same for the otehr functions
+# use 26 as default for offset?
 parser = argparse.ArgumentParser(description='plots velocity, DEM error, and estimated elevation on the backscatter')
 parser.add_argument('project_dir', metavar='project_dir', type=str, help='enter your data address that includes input files for either sequential network or single reference defined as ../../dsm_reprojected_wgs84.tif, demErr.h5, velocity.h5, ../inputs/geometryRadar.h5, /../inputs/slcStack.h5, timeseries_demErr.h5, maskPS.h5, maskTempCoh.h5')
 parser.add_argument('lat1', metavar='lat1', type=float, help='low latitude of the box')
