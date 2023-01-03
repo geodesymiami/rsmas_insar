@@ -19,7 +19,7 @@ inps = None
 
 def main(iargs=None):
 
-    inps = putils.cmd_line_parse(iargs, script='download_rsmas')
+    inps = putils.cmd_line_parse(iargs, script='generate_download_command')
 
     if not iargs is None:
         input_arguments = iargs
@@ -37,6 +37,8 @@ def main(iargs=None):
 
     if 'COSMO' in inps.template['ssaraopt.platform']:
         inps.download_dir = os.path.join(inps.work_dir, 'RAW_data')
+    elif 'TSX' in inps.template['ssaraopt.collectionName']:
+        inps.download_dir = os.path.join(inps.work_dir, 'SLC_ORIG')
     else:
         inps.download_dir = os.path.join(inps.work_dir, 'SLC')
 
