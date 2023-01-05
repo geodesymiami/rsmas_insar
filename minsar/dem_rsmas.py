@@ -21,7 +21,7 @@ import re
 import subprocess
 import math
 from minsar.objects import message_rsmas
-from minsar.download_data import add_polygon_to_ssaraopt
+from minsar.generate_download_command import add_polygon_to_ssaraopt
 from minsar.utils.process_utilities import cmd_line_parse
 from minsar.utils import get_boundingBox_from_kml
 from minsar.job_submission import JOB_SUBMIT
@@ -97,6 +97,8 @@ def main(iargs=None):
 
     if 'COSMO-SKYMED' in inps.ssaraopt:
        inps.slc_dir = inps.slc_dir.replace('SLC','RAW_data')
+    if 'TSX' in inps.ssaraopt:
+       inps.slc_dir = inps.slc_dir.replace('SLC','SLC_ORIG')
       
     # FA 10/2021: We probably should check here whether a DEM/*wgs84 file exist and exit if it does.
     # That could save time. On the other hand, most steps allow to be run even if data exist
