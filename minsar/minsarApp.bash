@@ -60,7 +60,16 @@ WORK_DIR=$SCRATCHDIR/$PROJECT_NAME
 mkdir -p $WORK_DIR
 cd $WORK_DIR
 
-echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` $@ " | tee -a "${WORK_DIR}"/log
+#echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` $@ " | tee -a "${WORK_DIR}"/log
+# create name including $TE for concise log file
+start_datetime=$(date +"%Y%m%d:%H-%M")
+template_file_dir=$(dirname "$template_file")          # create name including $TE for concise log file
+if  [[ $template_file_dir == $TE ]]; then
+    template_print_name="\$TE/$(basename $template_file)"
+else
+    template_print_name="$template_file"
+fi
+echo "${start_datetime} * minsarApp.bash $template_print_name ${@:2}" | tee -a "${WORK_DIR}"/log
 
 #Switches
 chunks_flag=0
@@ -420,7 +429,8 @@ if [[ $dem_flag == "1" ]]; then
        delta_lat=$(grep -E "^topsStack.boundingBox" $template_file | tail -1 | awk '{ printf "%f\n",$4-$3}')
        job_minutes=$(echo $delta_lat  | awk '{ printf "%d\n",int($1 + 1)*4.5}')
        echo "delta_lat, job_minutes: $delta_lat, $job_minutes"
-       cmd="$srun_cmd -t 00:$job_minutes:00 dem_rsmas.py $template_file --ssara_kml"
+       cmd="dem_rsmas.py $template_file --ssara_kml"
+       #cmd="$srun_cmd -t 00:$job_minutes:00 $cmd"    # 1/23 swicthed off 
        echo "Running... $cmd >out_dem_rsmas.e 1>out_dem_rsmas.o"
        $cmd 2>out_dem_rsmas.e 1>out_dem_rsmas.o
        exit_status="$?"
@@ -505,8 +515,9 @@ if [[ $jobfiles_flag == "1" ]]; then
     fi
 
     cmd="create_runfiles.py $template_file --jobfiles --queue $QUEUENAME $copy_to_tmp"
-    echo "Running.... $cmd >create_jobfiles.e 1>out_create_jobfiles.o"
-    $srun_cmd $cmd 2>create_jobfiles.e 1>out_create_jobfiles.o
+    echo "Running.... $cmd >out_create_jobfiles.e 1>out_create_jobfiles.o"
+    #$srun_cmd $cmd 2>create_jobfiles.e 1>out_create_jobfiles.o   # FA 1/23:  the 2 pipes more output to terminal (I think)
+    $cmd 2>out_create_jobfiles.e 1>out_create_jobfiles.o
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
        echo "create_jobfile.py exited with a non-zero exit code ($exit_status). Exiting."
