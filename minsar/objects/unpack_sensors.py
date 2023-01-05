@@ -51,11 +51,14 @@ class Sensors:
         ALOS2_str = '00*ALOS2*'       # ALOS-2, zip files and extracted files
         CSK_str = 'EL*'             # CSK, zip files
         CSK_str2 = 'CSK*'           # CSK, zip files
-        TSX_TDX_str = 'dims_op*'    # TSX zip files
-        RSAT2_str = 'RS2*SLC*'      # RSAT2 zip files
+        TSX_TDX_DLR_str = 'dims_op*' # TSX zip files
+        TSX_TDX_str = 'T*X1*'          # TSX/TDX zip files
+        RSAT2_str = 'RS2*SLC*'       # RSAT2 zip files
 
-        sensor_str_list = (ENV_str, ERS_CEOS_str, ERS_ENV_str, ALOS1_str, ALOS2_str, CSK_str, CSK_str2, TSX_TDX_str, RSAT2_str)
-        sensor_list = ('Envisat', 'ERS_CEOS', 'ERS_ENV', 'ALOS1', 'ALOS2', 'CSK', 'CSK', 'TSX/TDX', 'RSAT2')
+        sensor_str_list = (ENV_str, ERS_CEOS_str, ERS_ENV_str, ALOS1_str, ALOS2_str, CSK_str, CSK_str2, TSX_TDX_DLR_str, TSX_TDX_str, RSAT2_str)
+        sensor_list = ('Envisat', 'ERS_CEOS', 'ERS_ENV', 'ALOS1', 'ALOS2', 'CSK', 'CSK', 'TSX/TDX', 'TSX/TDX', 'RSAT2')
+        #sensor_str_list = (TSX_TDX_DLR_str, TSX_TDX_str, RSAT2_str)
+        #sensor_list = ('TSX/TDX', 'TSX/TDX', 'RSAT2')
 
         # print('Supported sensors: ' + sensor_list[:])
 
@@ -294,7 +297,6 @@ class Sensors:
             #if sensor_list_affix[self.sensor] is 'CSK':
             #self.output_dir = self.input_dir.replace('RAW_data','SLC')   # FA 4/2021: replaces ./SLC by full path. SM suggests to change defaults to None
             self.output_dir = os.path.dirname(self.input_dir) + '/SLC'    # FA 12/2022   Above did not work for TSX. I should do SM's suggestion above
-            #import pdb; pdb.set_trace()
             for dateDir in dateDirs:
                 acquisitionDate = os.path.basename(dateDir)
                 slcDir = os.path.join(self.output_dir, acquisitionDate)
