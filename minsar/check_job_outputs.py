@@ -69,7 +69,8 @@ def main(iargs=None):
                     ' Error',
                     'FileNotFoundError',
                     'IOErr',
-                    'Traceback'
+                    'Traceback',
+                    'stripmapWrapper.py: command not found'
                     ]
                     #'Exiting ...',                # remove if above works fine (5/21)
                     #'FileNotFoundError: [Errno 2] No such file or directory: '/tmp/secondarys/20190917/IW2.xml'
