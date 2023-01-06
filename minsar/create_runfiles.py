@@ -70,7 +70,8 @@ def main(iargs=None):
 
         # Unpack Raw data:
         if not inps.template['raw_image_dir'] in [None, 'None']:
-            raw_image_dir = inps.template['raw_image_dir']
+            #raw_image_dir = inps.template['raw_image_dir']               # FA 1/23: it would be better to have ORIG_DATA set in defaults for both CSK and TSX
+            raw_image_dir = os.path.join(inps.work_dir, inps.template['raw_image_dir'])
         else:
             raw_image_dir = os.path.join(inps.work_dir, 'RAW_data')
 
