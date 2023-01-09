@@ -43,6 +43,8 @@ usage: run_workflow.bash custom_template_file [--start] [--stop] [--dostep] [--h
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep miaplpy    \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --miaplpy    \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dir miaplpy_2015_2021  \n\
+      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --miaplpy --start load_ifgram    \n\
+      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --miaplpy --dostep generate_ifgram    \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --append    \n\
                                                                                    \n\
  Processing steps (start/end/dostep): \n\
@@ -58,9 +60,13 @@ usage: run_workflow.bash custom_template_file [--start] [--stop] [--dostep] [--h
                          end processing at the named step [default: upload]      \n\
    --dostep STEP         run processing at the named step only                   \n\
                                                                                  \n\
-   for --miaplpy the run_files directory is determined by the *template file     \n\
-   --dir option is for miaplpy only following miaplpyApp.py                      \n 
-     "
+   
+   --miaplpy:  the run_files directory is determined by the *template file       \n\
+   --dir:      for --miaplpy only (see  miaplpyApp.py --help)                    \n\
+   --miaplpy --start --end options:                                               \n\
+              'load_data', 'phase_linking', 'concatenate_patches', 'generate_ifgram'                         \n\
+              'unwrap_ifgram', 'load_ifgram', 'ifgram_correction', 'invert_network', 'timeseries_correction' \n
+   "
     printf "$helptext"
     exit 0;
 else
@@ -161,6 +167,37 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 if [[ $startstep == "miaplpy" ]]; then
    miaplpy_flag=true
+fi
+# set startstep, stopstep if miaplpy options are given
+if [[ $miaplpy_flag == "true" ]]; then 
+    if [[ $startstep == "load_data" ]]; then               startstep=1
+    elif [[ $startstep == "phase_linking" ]]; then         startstep=2
+    elif [[ $startstep == "concatenate_patches" ]]; then   startstep=3
+    elif [[ $startstep == "generate_ifgram" ]]; then       startstep=4
+    elif [[ $startstep == "unwrap_ifgram" ]]; then         startstep=5
+    elif [[ $startstep == "load_ifgram" ]]; then           startstep=6
+    elif [[ $startstep == "ifgram_correction" ]]; then     startstep=7
+    elif [[ $startstep == "invert_network" ]]; then        startstep=8
+    elif [[ $startstep == "timeseries_correction" ]]; then startstep=9
+    elif [[ $startstep != "1" ]]; then 
+        echo "ERROR: $startstep -- not a valid startstep. Exiting."
+        exit 1
+    fi
+
+    echo QQQ $stopstep
+    if [[ $stopstep == "load_data" ]]; then               stopstep=1
+    elif [[ $stopstep == "phase_linking" ]]; then         stopstep=2
+    elif [[ $stopstep == "concatenate_patches" ]]; then   stopstep=3
+    elif [[ $stopstep == "generate_ifgram" ]]; then       stopstep=4
+    elif [[ $stopstep == "unwrap_ifgram" ]]; then         stopstep=5
+    elif [[ $stopstep == "load_ifgram" ]]; then           stopstep=6
+    elif [[ $stopstep == "ifgram_correction" ]]; then     stopstep=7
+    elif [[ $stopstep == "invert_network" ]]; then        stopstep=8
+    elif [[ $stopstep == "timeseries_correction" ]]; then stopstep=9
+    elif [[ $stopstep != "mintpy" ]]; then 
+        echo "ERROR: $stopstep -- not a valid stopstep. Exiting."
+        exit 1
+    fi
 fi
 
 # IO load for each step. For step_io_load=1 the maximum tasks allowed is step_max_tasks_unit
