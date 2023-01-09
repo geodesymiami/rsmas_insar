@@ -180,6 +180,7 @@ def get_data(ymin, ymax, xmin, xmax, ps, out_amplitude, shift=0):
 
 def plot_subset(ymin, ymax, xmin, xmax, ps, vel_range, amplitude_im, dem_offset, dem_name, out_name, out_dir, size=200):
     
+    plt.switch_backend('Agg')
     #import pdb; pdb.set_trace()
     amplitude, xv, yv, vel, demerr, dem, DEM, atr = get_data(ymin, ymax, xmin, xmax, ps, amplitude_im, dem_offset)
 
