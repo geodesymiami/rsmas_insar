@@ -89,6 +89,9 @@ cp -p ../minsar/additions/mintpy/dem_error.py ../sources/MintPy/src/mintpy
 
 cp -r ../sources/isce2/contrib/stack/* ../3rdparty/miniconda3/share/isce2 
 
+cp -p ../minsar/additions/mintpy/save_hdfeos5.py ../sources/MintPy/src/mintpy/
+cp -p ../minsar/additions/mintpy/cli/save_hdfeos5.py ../sources/MintPy/src/mintpy/cli/
+
 #cp -p ../minsar/additions/mintpy/plot_smallbaselineApp.sh ../sources/MintPy/mintpy/sh/
 #cp -p ../minsar/additions/isce/invertMisreg.py ../sources/isce2/contrib/stack/stripmapStack
 #cp -p ../minsar/additions/stackStripMap.py $ISCE_STACK/stripmapStack
