@@ -20,8 +20,9 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 [ -z ${TESTDATA_ISCE} ] && export TESTDATA_ISCE=${WORKDIR}/TESTDATA_ISCE
 
 ############ FOR PROCESSING  #########
+python_version=$(echo "python3.$(python --version | cut -d. -f2)")        # e.g. python3.10
 export SSARAHOME=${RSMASINSAR_HOME}/3rdparty/SSARA
-export ISCE_HOME=${RSMASINSAR_HOME}/3rdparty/miniconda3/lib/python3.9/site-packages/isce
+export ISCE_HOME=${RSMASINSAR_HOME}/3rdparty/miniconda3/lib/$python_version/site-packages/isce
 export ISCE_STACK=${RSMASINSAR_HOME}/3rdparty/miniconda3/share/isce2
 export MINTPY_HOME=${RSMASINSAR_HOME}/sources/MintPy
 export MIAPLPY_HOME=${RSMASINSAR_HOME}/sources/MiaplPy
@@ -73,7 +74,7 @@ export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/sources/PySolid
 export PYTHONPATH=${PYTHONPATH}:${ISCE_STACK}
 #export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/sources      # needed for mimt. Need to talk to Sara on how to do this smarter
 #export PYTHONPATH_RSMAS=${PYTHONPATH}
-export MPLBACKEND='Agg'
+#export MPLBACKEND='Agg'
 
 ######### Ignore warnings ############
 #export PYTHONWARNINGS="ignore:Unverified HTTPS request"   (FA 6/20: Deprecation and VisibleDepreciation dis not work) 
