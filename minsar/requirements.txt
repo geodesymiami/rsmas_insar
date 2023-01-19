@@ -1,2 +1,3 @@
 # MinSAR dependencies
 opencv
+imageMagick
