@@ -100,7 +100,7 @@ cp -p ../minsar/additions/mintpy/cli/save_hdfeos5.py ../sources/MintPy/src/mintp
 
 * #Source the environment and create aux directories. Install credential files for data download:
 ```
-./install_credential_files.csh;
+./install_credential_files.bash;
 
 source ~/accounts/platforms_defaults.bash;
 export RSMASINSAR_HOME=$(dirname $PWD)
