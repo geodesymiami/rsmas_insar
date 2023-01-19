@@ -47,23 +47,23 @@ wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificat
 chmod 755 $miniconda_version
 #./$miniconda_version -b -p ../tools/miniconda3.        # did not work on jetstream
 bash ./$miniconda_version -b -p ../tools/miniconda3
-../3rdparty/miniconda3/bin/conda config --add channels conda-forge
-../3rdparty/miniconda3/bin/conda install mamba --yes
-../3rdparty/miniconda3/bin/conda install --yes --file ../tools/MintPy/requirements.txt
+../tools/miniconda3/bin/conda config --add channels conda-forge
+../tools/miniconda3/bin/conda install mamba --yes
+../tools/miniconda3/bin/conda install --yes --file ../tools/MintPy/requirements.txt
 sed -i "s|isce2|#isce2|g" ../tools/MiaplPy/docs/requirements.txt
-../3rdparty/miniconda3/bin/conda install --yes --file ../tools/MiaplPy/docs/requirements.txt
+../tools/miniconda3/bin/conda install --yes --file ../tools/MiaplPy/docs/requirements.txt
 
-#../3rdparty/miniconda3/bin/pip install git+https://github.com/insarlab/PySolid.git
-../3rdparty/miniconda3/bin/mamba install isce2 -c conda-forge --yes 
-../3rdparty/miniconda3/bin/conda install --yes --file ../minsar/requirements.txt
-../3rdparty/miniconda3/bin/conda install --yes --file ../tools/insarmaps_scripts/docs/requirements.txt
+#../tools/miniconda3/bin/pip install git+https://github.com/insarlab/PySolid.git
+../tools/miniconda3/bin/mamba install isce2 -c conda-forge --yes 
+../tools/miniconda3/bin/conda install --yes --file ../minsar/requirements.txt
+../tools/miniconda3/bin/conda install --yes --file ../tools/insarmaps_scripts/docs/requirements.txt
 
 ```
 * #Compile [MiaplPy](https://github.com/geodesymiami/MiaplPy) and install [SNAPHU](https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/) (if required):
 ```
 export MIAPLPY_HOME="${PWD%/*}/tools/MiaplPy"
 cd $MIAPLPY_HOME/miaplpy/lib;
- ../../../../3rdparty/miniconda3/bin/python  setup.py
+ ../../../../tools/miniconda3/bin/python  setup.py
  
 cd $MIAPLPY_HOME;
 wget --no-check-certificate  https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/snaphu-v2.0.4.tar.gz
@@ -110,9 +110,9 @@ mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 
 * #create your `miniconda3.tar` and `minsar.tar`  (removing `pkgs` saves space, could cause problems with environments) (needed for `install_code_to_tmp.bash)
 ```
-tar cf ../minsar.tar ../3rdparty/launcher ../minsar ../setup ../tools/MintPy/src ../tools/MimtPy/mimtpy ../tools/MiaplPy/miaplpy ../tools/MiaplPy/snaphu/bin ../tools/insarmaps_scripts ../tools/isce2/contrib/stack
-rm -rf ../3rdparty/miniconda3/pkgs
-tar cf ../3rdparty/miniconda3.tar -C ../3rdparty/ miniconda3 
+tar cf ../minsar.tar ../tools/launcher ../minsar ../setup ../tools/MintPy/src ../tools/MimtPy/mimtpy ../tools/MiaplPy/miaplpy ../tools/MiaplPy/snaphu/bin ../tools/insarmaps_scripts ../tools/isce2/contrib/stack
+rm -rf ../tools/miniconda3/pkgs
+tar cf ../tools/miniconda3.tar -C ../tools/ miniconda3 
 echo "Installation DONE"
 
 ```
@@ -121,7 +121,7 @@ echo "Installation DONE"
 This has created directories for the orbits for Sentinel-1 (`$SENTINEL_ORBITS`), which The can be downloaded using `dloadOrbits.py`. The IPF calibration files (`SENTINEL_AUX`) are downloaded from: https://qc.sentinel1.eo.esa.int/aux_cal/ .
 
 ### #Keep copys in the case your `$SCRATCHDIR` gets purged
-The `$SENTINEL_ORBITS` and `miniconda3.tar` are located on `$SCRATCHDIR` which  gets purged every couple of weeks. `minsarApp.bash uses `$RSMASINSAR_HOME/3rdparty/miniconda3.tar` and  `$WORKDIR/S1orbits.tar`  if files have been purged`.
+The `$SENTINEL_ORBITS` and `miniconda3.tar` are located on `$SCRATCHDIR` which  gets purged every couple of weeks. `minsarApp.bash uses `$RSMASINSAR_HOME/tools/miniconda3.tar` and  `$WORKDIR/S1orbits.tar`  if files have been purged`.
 
 ### Next steps and possible problems
 * To check your installation, run the testdata as explained [here](https://github.com/geodesymiami/rsmas_insar/wiki/Testing-the-code). You need to have the testdata in your `$TESTDATA_ISCE` directory.
