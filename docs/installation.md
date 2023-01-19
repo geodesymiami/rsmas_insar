@@ -25,45 +25,43 @@ export PATH=/bin
 git clone https://github.com/geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
 
-git clone https://github.com/insarlab/MintPy.git sources/MintPy ;
-git clone https://github.com/isce-framework/isce2.git sources/isce2
-git clone https://github.com/insarlab/MiaplPy.git sources/MiaplPy 
-git clone https://github.com/geodesymiami/geodmod.git sources/geodmod ;
-git clone https://github.com/geodesymiami/insarmaps_scripts.git sources/insarmaps_scripts ;
-git clone https://github.com/geodesymiami/SSARA.git 3rdparty/SSARA ;
-git clone https://github.com/geodesymiami/MimtPy.git sources/MimtPy ;
-git clone https://github.com/TACC/launcher.git 3rdparty/launcher ;
+git clone https://github.com/insarlab/MintPy.git tools/MintPy ;
+git clone https://github.com/isce-framework/isce2.git tools/isce2
+git clone https://github.com/insarlab/MiaplPy.git tools/MiaplPy 
+git clone https://github.com/geodesymiami/geodmod.git tools/geodmod ;
+git clone https://github.com/geodesymiami/insarmaps_scripts.git tools/insarmaps_scripts ;
+git clone https://github.com/geodesymiami/SSARA.git tools/SSARA ;
+git clone https://github.com/geodesymiami/MimtPy.git tools/MimtPy ;
+git clone https://github.com/TACC/launcher.git tools/launcher ;
 
 ########  Done with critical code.  ########
 ```
 * #Install your python environment:
 ```
 cd setup
-rm -rf ../3rdparty/miniconda3
+rm -rf ../tools/miniconda3
 #miniconda_version=Miniconda3-latest-MacOSX-x86_64.sh    # python 3.8  - does not seem to work
 miniconda_version=Miniconda3-py38_4.9.2-Linux-x86_64.sh
 miniconda_version=Miniconda3-latest-Linux-x86_64.sh
 wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate -O $miniconda_version #; if ($? != 0) exit; 
 chmod 755 $miniconda_version
-mkdir -p ../3rdparty
-mkdir -p ../3rdparty
-#./$miniconda_version -b -p ../3rdparty/miniconda3.        # did not work on jetstream
-bash ./$miniconda_version -b -p ../3rdparty/miniconda3
+#./$miniconda_version -b -p ../tools/miniconda3.        # did not work on jetstream
+bash ./$miniconda_version -b -p ../tools/miniconda3
 ../3rdparty/miniconda3/bin/conda config --add channels conda-forge
 ../3rdparty/miniconda3/bin/conda install mamba --yes
-../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MintPy/requirements.txt
-sed -i "s|isce2|#isce2|g" ../sources/MiaplPy/docs/requirements.txt
-../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MiaplPy/docs/requirements.txt
+../3rdparty/miniconda3/bin/conda install --yes --file ../tools/MintPy/requirements.txt
+sed -i "s|isce2|#isce2|g" ../tools/MiaplPy/docs/requirements.txt
+../3rdparty/miniconda3/bin/conda install --yes --file ../tools/MiaplPy/docs/requirements.txt
 
 #../3rdparty/miniconda3/bin/pip install git+https://github.com/insarlab/PySolid.git
 ../3rdparty/miniconda3/bin/mamba install isce2 -c conda-forge --yes 
 ../3rdparty/miniconda3/bin/conda install --yes --file ../minsar/requirements.txt
-../3rdparty/miniconda3/bin/conda install --yes --file ../sources/insarmaps_scripts/docs/requirements.txt
+../3rdparty/miniconda3/bin/conda install --yes --file ../tools/insarmaps_scripts/docs/requirements.txt
 
 ```
 * #Compile [MiaplPy](https://github.com/geodesymiami/MiaplPy) and install [SNAPHU](https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/) (if required):
 ```
-export MIAPLPY_HOME="${PWD%/*}/sources/MiaplPy"
+export MIAPLPY_HOME="${PWD%/*}/tools/MiaplPy"
 cd $MIAPLPY_HOME/miaplpy/lib;
  ../../../../3rdparty/miniconda3/bin/python  setup.py
  
@@ -79,23 +77,23 @@ cd ../../../../setup/
 ```
 * #Adding ISCE fixes and copying latest version into miniconda directory
 ```
-cp -p ../minsar/additions/isce/logging.conf ../3rdparty/miniconda3/lib/python3.*/site-packages/isce/defaults/logging/logging.conf
-cp -p ../minsar/additions/isce2/topsStack/FilterAndCoherence.py ../sources/isce2/contrib/stack/topsStack
-#cp -p ../minsar/additions/isce2/topsStack/fetchOrbit.py ../sources/isce2/contrib/stack/topsStack
-cp -p ../minsar/additions/isce2/stripmapStack/prepRawCSK.py ../sources/isce2/contrib/stack/stripmapStack
-cp -p ../minsar/additions/isce2/stripmapStack/unpackFrame_TSX.py ../sources/isce2/contrib/stack/stripmapStack
-cp -p ../minsar/additions/isce2/topo.py ../sources/isce2/contrib/stack/stripmapStack    #(uses method isce instead of gdal)
-cp -p ../minsar/additions/mintpy/dem_error.py ../sources/MintPy/src/mintpy 
+cp -p ../minsar/additions/isce/logging.conf ../tools/miniconda3/lib/python3.*/site-packages/isce/defaults/logging/logging.conf
+cp -p ../minsar/additions/isce2/topsStack/FilterAndCoherence.py ../tools/isce2/contrib/stack/topsStack
+#cp -p ../minsar/additions/isce2/topsStack/fetchOrbit.py ../tools/isce2/contrib/stack/topsStack
+cp -p ../minsar/additions/isce2/stripmapStack/prepRawCSK.py ../tools/isce2/contrib/stack/stripmapStack
+cp -p ../minsar/additions/isce2/stripmapStack/unpackFrame_TSX.py ../tools/isce2/contrib/stack/stripmapStack
+cp -p ../minsar/additions/isce2/topo.py ../tools/isce2/contrib/stack/stripmapStack    #(uses method isce instead of gdal)
+cp -p ../minsar/additions/mintpy/dem_error.py ../tools/MintPy/src/mintpy 
 
-cp -r ../sources/isce2/contrib/stack/* ../3rdparty/miniconda3/share/isce2 
+cp -r ../tools/isce2/contrib/stack/* ../tools/miniconda3/share/isce2 
 
-cp -p ../minsar/additions/mintpy/save_hdfeos5.py ../sources/MintPy/src/mintpy/
-cp -p ../minsar/additions/mintpy/cli/save_hdfeos5.py ../sources/MintPy/src/mintpy/cli/
+cp -p ../minsar/additions/mintpy/save_hdfeos5.py ../tools/MintPy/src/mintpy/
+cp -p ../minsar/additions/mintpy/cli/save_hdfeos5.py ../tools/MintPy/src/mintpy/cli/
 
-cp -p ../minsar/additions/miaplpy/find_short_baselines.py  ../sources/MiaplPy/miaplpy/
+cp -p ../minsar/additions/miaplpy/find_short_baselines.py  ../tools/MiaplPy/miaplpy/
 
-#cp -p ../minsar/additions/mintpy/plot_smallbaselineApp.sh ../sources/MintPy/mintpy/sh/
-#cp -p ../minsar/additions/isce/invertMisreg.py ../sources/isce2/contrib/stack/stripmapStack
+#cp -p ../minsar/additions/mintpy/plot_smallbaselineApp.sh ../tools/MintPy/mintpy/sh/
+#cp -p ../minsar/additions/isce/invertMisreg.py ../tools/isce2/contrib/stack/stripmapStack
 #cp -p ../minsar/additions/stackStripMap.py $ISCE_STACK/stripmapStack
 #cp -p ../minsar/additions/isce/stackSentinel.py $ISCE_STACK/topsStack
 ```
@@ -112,7 +110,7 @@ mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 
 * #create your `miniconda3.tar` and `minsar.tar`  (removing `pkgs` saves space, could cause problems with environments) (needed for `install_code_to_tmp.bash)
 ```
-tar cf ../minsar.tar ../3rdparty/launcher ../minsar ../setup ../sources/MintPy/src ../sources/MimtPy/mimtpy ../sources/MiaplPy/miaplpy ../sources/MiaplPy/snaphu/bin ../sources/insarmaps_scripts ../sources/isce2/contrib/stack
+tar cf ../minsar.tar ../3rdparty/launcher ../minsar ../setup ../tools/MintPy/src ../tools/MimtPy/mimtpy ../tools/MiaplPy/miaplpy ../tools/MiaplPy/snaphu/bin ../tools/insarmaps_scripts ../tools/isce2/contrib/stack
 rm -rf ../3rdparty/miniconda3/pkgs
 tar cf ../3rdparty/miniconda3.tar -C ../3rdparty/ miniconda3 
 echo "Installation DONE"
