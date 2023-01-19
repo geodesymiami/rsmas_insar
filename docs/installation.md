@@ -47,7 +47,8 @@ wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificat
 chmod 755 $miniconda_version
 mkdir -p ../3rdparty
 mkdir -p ../3rdparty
-./$miniconda_version -b -p ../3rdparty/miniconda3
+#./$miniconda_version -b -p ../3rdparty/miniconda3.        # did not work on jetstream
+bash ./$miniconda_version -b -p ../3rdparty/miniconda3
 ../3rdparty/miniconda3/bin/conda config --add channels conda-forge
 ../3rdparty/miniconda3/bin/conda install mamba --yes
 ../3rdparty/miniconda3/bin/conda install --yes --file ../sources/MintPy/requirements.txt
