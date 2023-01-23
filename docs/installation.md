@@ -90,8 +90,9 @@ cp -p ../minsar/additions/isce2/stripmapStack/cropFrame.py ../tools/isce2/contri
 
 # cp -p ../minsar/additions/mintpy/dem_error.py ../tools/MintPy/src/mintpy 
 
-cp -r ../tools/isce2/contrib/stack/* ../tools/miniconda3/share/isce2 
 cp ../tools/isce2/components/isceobj/Sensor/TOPS/TOPSSwathSLCProduct.py ../tools/miniconda3/lib/python3.1?/site-packages/isce/components/isceobj/Sensor/TOPS
+
+cp -r ../tools/isce2/contrib/stack/* ../tools/miniconda3/share/isce2 
 cp -r ../tools/isce2/components/isceobj/Sensor/TOPS ../tools/miniconda3/share/isce2 
 
 cp -p ../minsar/additions/mintpy/save_hdfeos5.py ../tools/MintPy/src/mintpy/
