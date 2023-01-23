@@ -87,8 +87,8 @@ dir_miaplpy="miaplpy"
 wait_time=30
 
 startstep=1
-stopstep="insarmaps"
-stopstep="mintpy"
+#stopstep="insarmaps"
+#stopstep="mintpy"
 dir_flag=false
 
 start_datetime=$(date +"%Y%m%d:%H-%M")
@@ -169,6 +169,7 @@ if [[ $startstep == "miaplpy" ]]; then
    miaplpy_flag=true
 fi
 # set startstep, stopstep if miaplpy options are given
+echo "startstep, stopstep:<$startstep> <$stopstep>"
 if [[ $miaplpy_flag == "true" ]]; then 
     if [[ $startstep == "load_data" ]]; then               startstep=1
     elif [[ $startstep == "phase_linking" ]]; then         startstep=2
@@ -179,12 +180,11 @@ if [[ $miaplpy_flag == "true" ]]; then
     elif [[ $startstep == "ifgram_correction" ]]; then     startstep=7
     elif [[ $startstep == "invert_network" ]]; then        startstep=8
     elif [[ $startstep == "timeseries_correction" ]]; then startstep=9
-    elif [[ $startstep != "1" ]]; then 
+    elif [[ $startstep != "1" ]] && [[ $startstep != "mintpy" ]] && [[ $startstep != "miaplpy" ]]; then 
         echo "ERROR: $startstep -- not a valid startstep. Exiting."
         exit 1
     fi
 
-    echo QQQ $stopstep
     if [[ $stopstep == "load_data" ]]; then               stopstep=1
     elif [[ $stopstep == "phase_linking" ]]; then         stopstep=2
     elif [[ $stopstep == "concatenate_patches" ]]; then   stopstep=3
@@ -194,7 +194,7 @@ if [[ $miaplpy_flag == "true" ]]; then
     elif [[ $stopstep == "ifgram_correction" ]]; then     stopstep=7
     elif [[ $stopstep == "invert_network" ]]; then        stopstep=8
     elif [[ $stopstep == "timeseries_correction" ]]; then stopstep=9
-    elif [[ $stopstep != "mintpy" ]]; then 
+    elif [[ $stopstep != "mintpy" ]] && [[ $stopstep != "miaplpy" ]]; then 
         echo "ERROR: $stopstep -- not a valid stopstep. Exiting."
         exit 1
     fi
@@ -280,13 +280,16 @@ if [[ $miaplpy_flag == "true" ]]; then
    echo "Running miaplpy jobs in ${RUNFILES_DIR}"
 fi
 
+#set -xv
 #find the last job (11 for 'geometry' and 16 for 'NESD', 9 for stripmap) and remove leading zero
-job_file_arr=( $RUNFILES_DIR/run_*_0.job )
-last_job_file="${job_file_arr[-1]}"
+job_file_arr=(ls $RUNFILES_DIR/run_*_0.job)
+last_job_file=${job_file_arr[-1]}
 last_job_file=${last_job_file##*/}
 last_job_file_number=${last_job_file:4:2}
 #last_job_file_number=$( echo $last_job_file_number | sed 's/^0*// ')     # FA 9/21 sed command did not always work well
 last_job_file_number=$(echo $((10#${last_job_file_number})))
+echo last_job_file_number: $last_job_file_number
+
 
 if [[ $startstep == "ifgrams" || $startstep == "miaplpy" ]]; then
     startstep=1
@@ -296,7 +299,7 @@ elif [[ $startstep == "insarmaps" ]]; then
     startstep=$((last_job_file_number+2))
 fi
 
-if [[ $stopstep == "ifgrams" || $stopstep == "miaplpy" ]]; then
+if [[ $stopstep == "ifgrams" || $stopstep == "miaplpy" || -z ${stopstep+x}  ]]; then
     stopstep=$last_job_file_number
 elif [[ $stopstep == "mintpy" ]]; then
     stopstep=$((last_job_file_number+1))
@@ -304,6 +307,7 @@ elif [[ $stopstep == "insarmaps" ]]; then
     stopstep=$((last_job_file_number+2))
 fi
 
+echo "WWQWQW last_job_file_number: $last_job_file_number, startstep: $startstep, stopstep: $stopstep"
 for (( i=$startstep; i<=$stopstep; i++ )) do
     stepnum="$(printf "%02d" ${i})"
     if [[ $i -le $last_job_file_number ]]; then
