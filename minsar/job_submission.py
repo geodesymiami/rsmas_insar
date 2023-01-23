@@ -235,7 +235,7 @@ class JOB_SUBMIT:
                 tasks = f.readlines()
                 number_of_tasks = len(tasks)
 
-            number_of_nodes = np.int(np.ceil(number_of_tasks * float(self.default_num_threads) / (
+            number_of_nodes = int(np.ceil(number_of_tasks * float(self.default_num_threads) / (
                     self.number_of_cores_per_node * self.number_of_threads_per_core)))
 
             if not num_cores_per_task is None:
