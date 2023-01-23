@@ -338,9 +338,9 @@ fi
 # code_dir from RSMASINSAR_HOME directory is prepended to distingiush different minsar.tar versions
 
 code_dir=$(echo $(basename $(dirname $RSMASINSAR_HOME)))
-if  ! test -f "$SCRATCHDIR/${code_dir}_miniconda3.tar" || [[ "$RSMASINSAR_HOME/3rdparty/miniconda3.tar" -nt "$SCRATCHDIR/${code_dir}_miniconda3.tar" ]]; then
-    echo "Copying $RSMASINSAR_HOME/3rdparty/miniconda3.tar to $SCRATCHDIR/${code_dir}_miniconda3.tar ..."
-    cp $RSMASINSAR_HOME/3rdparty/miniconda3.tar $SCRATCHDIR/${code_dir}_miniconda3.tar
+if  ! test -f "$SCRATCHDIR/${code_dir}_miniconda3.tar" || [[ "$RSMASINSAR_HOME/tools/miniconda3.tar" -nt "$SCRATCHDIR/${code_dir}_miniconda3.tar" ]]; then
+    echo "Copying $RSMASINSAR_HOME/tools/miniconda3.tar to $SCRATCHDIR/${code_dir}_miniconda3.tar ..."
+    cp $RSMASINSAR_HOME/tools/miniconda3.tar $SCRATCHDIR/${code_dir}_miniconda3.tar
 fi
 if  ! test -f "$SCRATCHDIR/${code_dir}_minsar.tar" || [[ "$RSMASINSAR_HOME/minsar.tar" -nt "$SCRATCHDIR/${code_dir}_minsar.tar" ]]; then
     echo "Copying $RSMASINSAR_HOME/minsar.tar to $SCRATCHDIR/${code_dir}_minsar.tar ..."
@@ -683,7 +683,7 @@ if [[ $mintpy_flag == "1" ]]; then
     $cmd
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
-       echo "run_workflow.bash $template_file --start mintpy exited with a non-zero exit code ($exit_status). Exiting."
+       echo "$cmd exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
 fi
@@ -704,12 +704,12 @@ if [[ $miaplpy_flag == "1" ]]; then
        exit 1;
     fi
 
-    cmd="run_workflow.bash $template_file --append --dostep miaplpy $copy_to_tmp"
+    cmd="run_workflow.bash $template_file --append --dostep miaplpy -dir miaplpy $copy_to_tmp"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
-       echo "run_workflow.bash $template_file --start miaplpy exited with a non-zero exit code ($exit_status). Exiting."
+       echo "$cmd with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
 fi
