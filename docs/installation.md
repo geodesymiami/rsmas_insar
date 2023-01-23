@@ -94,6 +94,7 @@ cp -p ../minsar/additions/mintpy/save_hdfeos5.py ../tools/MintPy/src/mintpy/
 cp -p ../minsar/additions/mintpy/cli/save_hdfeos5.py ../tools/MintPy/src/mintpy/cli/
 
 cp -p ../minsar/additions/miaplpy/find_short_baselines.py  ../tools/MiaplPy/miaplpy/
+cp -p ../minsar/additions/miaplpy/prep_slc_isce.py  ../tools/MiaplPy/miaplpy/
 
 #cp -p ../minsar/additions/mintpy/plot_smallbaselineApp.sh ../tools/MintPy/mintpy/sh/
 #cp -p ../minsar/additions/isce/invertMisreg.py ../tools/isce2/contrib/stack/stripmapStack
