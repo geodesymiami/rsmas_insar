@@ -39,7 +39,7 @@ def main(iargs=None):
         run_files_dir=project_dir + '/run_files'
 
     if 'miaplpy' in project_dir:
-        project_dir = os.path.dirname(os.path.abspath(project_dir))
+        project_dir = os.path.dirname(os.path.dirname(os.path.abspath(project_dir)))
 
     known_issues_file = os.path.join(os.getenv('RSMASINSAR_HOME'), 'docs/known_issues.md')
 
@@ -231,7 +231,7 @@ def main(iargs=None):
     if 'run_' in job_name:
        putils.concatenate_error_files(run_file=run_file_base, work_dir=project_dir)
     else:
-       out_error_file = work_dir + '/out_' + os.path.basename(job_name) + '.e'
+       out_error_file = project_dir + '/out_' + os.path.basename(job_name) + '.e'
        if len(error_files) == 0:
            Path(out_error_file).touch()
        else:
