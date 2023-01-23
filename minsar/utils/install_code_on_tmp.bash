@@ -32,13 +32,13 @@ export PATH=${PATH}:${CDTOOL}/bin
 echo -e "\ninstall_code_on_tmp.bash: before copy-to-tmp:\n `df -h /tmp`"
 rm -rf /tmp/rsmas_insar
 mkdir -p /tmp/rsmas_insar
-mkdir -p /tmp/rsmas_insar/3rdparty ;
+mkdir -p /tmp/rsmas_insar/tools ;
 mkdir -p /tmp/rsmas_insar/sources ;
 
 code_dir=$(echo $(basename $(dirname $RSMASINSAR_HOME)))
 distribute.bash $SCRATCHDIR/${code_dir}_miniconda3.tar
 distribute.bash $SCRATCHDIR/${code_dir}_minsar.tar
-tar xf /tmp/${code_dir}_miniconda3.tar -C /tmp/rsmas_insar/3rdparty
+tar xf /tmp/${code_dir}_miniconda3.tar -C /tmp/rsmas_insar/tools
 tar xf /tmp/${code_dir}_minsar.tar -C /tmp/rsmas_insar
 rm /tmp/${code_dir}_miniconda3.tar
 rm /tmp/${code_dir}_minsar.tar
