@@ -49,11 +49,76 @@ else
     fi
 fi
 
+###########################################
+function create_array_from_template_minsar() {
+mapfile -t array < <(grep ^minsar $1)
+declare -A minsar
+for item in "${array[@]}"; do
+  #echo "item: <$item>"
+  IFS='=' ; read -a arr1 <<< "$item"
+  #echo "Separated by =: <${arr1[0]}> <${arr1[1]}>"
+  item="${arr1[1]}"
+  IFS='#' ; read -a arr2 <<< "$item"
+  #echo "Separated by #: <${arr2[0]}> <${arr2[1]}>"
+  tmptmp="${arr1[0]}"
+  key="${tmptmp#minsar.}"
+  key=$(echo $key | tr -d ' ')
+  value="${arr2[0]}"
+     shopt -s extglob
+     value="${value##*( )}"          # Trim leading whitespaces
+     value="${value%%*( )}"          # Trim trailing whitespaces
+     shopt -u extglob
+  echo "key, value: <$key> <$value>"
+  #echo
+  minsar[$key]="$value"
+done
+#echo minsar keys: ${!minsar[@]}
+#for key in "${!minsar[@]}"; do
+#    echo "key, value: <$key> <${minsar[$key]}>"
+#done
+#echo "minsar.insarmapsFlag:  ${minsar[insarmapsFlag]}"
+#echo "minsar.imageProductsFlag.answer:  ${minsar[imageProductsFlag.answer]}" 
+}
+###########################################
+#qfunction create_array_from_template() {
+#qmapfile -t array < $1
+#qdeclare -A minsar
+#qfor item in "${array[@]}"; do
+#q  #echo "item: <$item>"
+#q  IFS='=' ; read -a arr1 <<< "$item"
+#q  #echo "Separated by =: <${arr1[0]}> <${arr1[1]}>"
+#q  item="${arr1[1]}"
+#q  IFS='#' ; read -a arr2 <<< "$item"
+#q  #echo "Separated by #: <${arr2[0]}> <${arr2[1]}>"
+#q  #tmptmp="${arr1[0]}"
+#q  $key="${arr1[0]}"
+#q  #key="${tmptmp#minsar.}"
+#q  key=$(echo $key | tr -d ' ')
+#q  value="${arr2[0]}"
+#q     shopt -s extglob
+#q     value="${value##*( )}"          # Trim leading whitespaces
+#q     value="${value%%*( )}"          # Trim trailing whitespaces
+#q     shopt -u extglob
+#q  echo "key, value: <$key> <$value>"
+#q  #echo
+#q  minsar[$key]="$value"
+#qdone
+#echo minsar keys: ${!minsar[@]}
+#for key in "${!minsar[@]}"; do
+#    echo "key, value: <$key> <${minsar[$key]}>"
+#done
+#echo "minsar.insarmapsFlag:  ${minsar[insarmapsFlag]}"
+#echo "minsar.imageProductsFlag.answer:  ${minsar[imageProductsFlag.answer]}" 
+#q}
+###########################################
+
 #set -xv
 template_file=$1
 if [[ $1 == $PWD ]]; then
    template_file=$TEMPLATES/$PROJECT_NAME.template
 fi
+
+create_array_from_template $template_file
 
 WORK_DIR=$SCRATCHDIR/$PROJECT_NAME
 
