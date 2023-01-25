@@ -307,7 +307,7 @@ elif [[ $stopstep == "insarmaps" ]]; then
     stopstep=$((last_job_file_number+2))
 fi
 
-echo "WWQWQW last_job_file_number: $last_job_file_number, startstep: $startstep, stopstep: $stopstep"
+echo "last_job_file_number: $last_job_file_number, startstep: $startstep, stopstep: $stopstep"
 for (( i=$startstep; i<=$stopstep; i++ )) do
     stepnum="$(printf "%02d" ${i})"
     if [[ $i -le $last_job_file_number ]]; then
