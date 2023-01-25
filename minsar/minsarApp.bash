@@ -1,3 +1,4 @@
+##! /bin/bash
 ##################################################################################
 source $RSMASINSAR_HOME/minsar/utils/minsar_functions.bash
 
@@ -50,80 +51,90 @@ else
 fi
 
 ###########################################
-function create_array_from_template_minsar() {
-mapfile -t array < <(grep ^minsar $1)
-declare -A minsar
+function create_template_array() {
+mapfile -t array < <(grep -e ^minsar -e ^mintpy -e ^miaplpy $1)
+declare -gA template
 for item in "${array[@]}"; do
   #echo "item: <$item>"
   IFS='=' ; read -a arr1 <<< "$item"
-  #echo "Separated by =: <${arr1[0]}> <${arr1[1]}>"
   item="${arr1[1]}"
   IFS='#' ; read -a arr2 <<< "$item"
-  #echo "Separated by #: <${arr2[0]}> <${arr2[1]}>"
-  tmptmp="${arr1[0]}"
-  key="${tmptmp#minsar.}"
+  key="${arr1[0]}"
   key=$(echo $key | tr -d ' ')
   value="${arr2[0]}"
-     shopt -s extglob
-     value="${value##*( )}"          # Trim leading whitespaces
-     value="${value%%*( )}"          # Trim trailing whitespaces
-     shopt -u extglob
-  echo "key, value: <$key> <$value>"
-  #echo
-  minsar[$key]="$value"
+  shopt -s extglob
+  value="${value##*( )}"          # Trim leading whitespaces
+  value="${value%%*( )}"          # Trim trailing whitespaces
+  shopt -u extglob
+  #echo "key, value: <$key> <$value>"
+  if [ ! -z "$key"  ]; then
+     template[$key]="$value"
+  fi
+unset IFS
 done
-#echo minsar keys: ${!minsar[@]}
-#for key in "${!minsar[@]}"; do
-#    echo "key, value: <$key> <${minsar[$key]}>"
-#done
-#echo "minsar.insarmapsFlag:  ${minsar[insarmapsFlag]}"
-#echo "minsar.imageProductsFlag.answer:  ${minsar[imageProductsFlag.answer]}" 
+}
+
+###########################################
+function get_date_str() {
+# get string with start and end date
+if  [ ! -z ${template[miaplpy.load.startDate]} ]; then
+    start_date=${template[miaplpy.load.startDate]} 
+else
+    start_date=$(ls merged/SLC | head -1)
+fi
+if  [ ! -z ${template[miaplpy.load.endDate]} ]; then
+    end_date=${template[miaplpy.load.endDate]} 
+else
+    end_date=$(ls merged/SLC | tail -1)
+fi
+date_str="${start_date:0:6}_${end_date:0:6}"
+echo $date_str
+}
+
+###########################################
+function get_miaplpy_dir_name() {
+# assign miaplpyDir.Addition  lalo,dirname or 'miaplpy' for 'auto'
+date_str=$(get_date_str)
+if [ -z ${template[minsar.miaplpyDir.addition]} ] || [ ${template[minsar.miaplpyDir.addition]} == "auto" ]; then
+   miaply_dir_name="miaplpy"
+elif [ ${template[minsar.miaplpyDir.addition]} == "lalo" ]; then
+   if  [ ! -z ${template[miaplpy.subset.lalo]} ]; then
+       subset_lalo="${template[miaplpy.subset.lalo]}"
+   elif [ ! -z ${template[mintpy.subset.lalo]} ]; then
+       subset_lalo="${template[mintpy.subset.lalo]}"
+   else
+       echo "ERROR: No subset.lalo given -- Exiting"
+   fi
+   IFS=',' ; read -a lalo_array <<< "$subset_lalo"
+   IFS=':' ; read -a lat_array <<< "${lalo_array[0]}"
+   IFS=':' ; read -a lon_array <<< "${lalo_array[1]}"
+   lat_min=${lat_array[0]}
+   lat_max=${lat_array[1]}
+   lon_min=${lon_array[0]}
+   lon_max=${lon_array[1]}
+   lalo_str=$(printf "%.2f_%.2f_%.2f_%.2f\n" "$lat_min" "$lat_max" "$lon_min" "$lon_max")
+   miaply_dir_name="miaplpy_${lalo_str}_$date_str"
+else
+   miaply_dir_name=miaplpy_"${template[minsar.miaplpyDir.addition]}"_${date_str}
+fi
+unset IFS
+echo $miaply_dir_name
 }
 ###########################################
-#qfunction create_array_from_template() {
-#qmapfile -t array < $1
-#qdeclare -A minsar
-#qfor item in "${array[@]}"; do
-#q  #echo "item: <$item>"
-#q  IFS='=' ; read -a arr1 <<< "$item"
-#q  #echo "Separated by =: <${arr1[0]}> <${arr1[1]}>"
-#q  item="${arr1[1]}"
-#q  IFS='#' ; read -a arr2 <<< "$item"
-#q  #echo "Separated by #: <${arr2[0]}> <${arr2[1]}>"
-#q  #tmptmp="${arr1[0]}"
-#q  $key="${arr1[0]}"
-#q  #key="${tmptmp#minsar.}"
-#q  key=$(echo $key | tr -d ' ')
-#q  value="${arr2[0]}"
-#q     shopt -s extglob
-#q     value="${value##*( )}"          # Trim leading whitespaces
-#q     value="${value%%*( )}"          # Trim trailing whitespaces
-#q     shopt -u extglob
-#q  echo "key, value: <$key> <$value>"
-#q  #echo
-#q  minsar[$key]="$value"
-#qdone
-#echo minsar keys: ${!minsar[@]}
-#for key in "${!minsar[@]}"; do
-#    echo "key, value: <$key> <${minsar[$key]}>"
-#done
-#echo "minsar.insarmapsFlag:  ${minsar[insarmapsFlag]}"
-#echo "minsar.imageProductsFlag.answer:  ${minsar[imageProductsFlag.answer]}" 
-#q}
+###########################################
 ###########################################
 
-#set -xv
 template_file=$1
 if [[ $1 == $PWD ]]; then
    template_file=$TEMPLATES/$PROJECT_NAME.template
 fi
-
-create_array_from_template $template_file
-
+export template_file
 WORK_DIR=$SCRATCHDIR/$PROJECT_NAME
-
 mkdir -p $WORK_DIR
 cd $WORK_DIR
+
+create_template_array $template_file
+#echo template keys: ${!template[@]}
 
 #echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` $@ " | tee -a "${WORK_DIR}"/log
 # create name including $TE for concise log file
@@ -570,6 +581,7 @@ fi
 if [[ $jobfiles_flag == "1" ]]; then
     
     # clean directory for processing
+    pwd=`pwd`; echo "DIR: $pwd"
     cmd="clean_dir.bash $PWD --runfiles --ifgrams --mintpy --miaplpy"
     echo "Running.... $cmd"
     $cmd
@@ -759,17 +771,20 @@ if [[ $miaplpy_flag == "1" ]]; then
     sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.vrt merged/SLC/*/*.vrt  
     sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.xml merged/SLC/*/*.xml  
 
-    cmd="miaplpyApp.py $template_file --dir miaplpy --jobfiles --tmp"
+    miaplpy_dir_name=$(get_miaplpy_dir_name)
+    #echo "miaplpy_dir_name: $miaplpy_dir_name"
+
+    cmd="miaplpyApp.py $template_file --dir $miaplpy_dir_name --jobfiles --tmp"
     echo "Running.... $cmd"
     echo "$cmd" | tee -a log
     $srun_cmd $cmd
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
-       echo "$cmd exited with a non-zero exit code ($exit_status). Exiting."
+       echo "$srun_cmd $cmd exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
 
-    cmd="run_workflow.bash $template_file --append --dostep miaplpy -dir miaplpy $copy_to_tmp"
+    cmd="run_workflow.bash $template_file --append --dostep miaplpy -dir $miaplpy_dir_name $copy_to_tmp"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"
