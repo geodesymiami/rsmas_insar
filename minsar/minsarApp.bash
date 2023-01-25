@@ -1,56 +1,5 @@
 ##! /bin/bash
 ##################################################################################
-source $RSMASINSAR_HOME/minsar/utils/minsar_functions.bash
-
-if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-helptext="                                                                       \n\
-  Examples:                                                                      \n\
-      minsarApp.bash  $TE/GalapagosSenDT128.template                             \n\
-      minsarApp.bash  $TE/GalapagosSenDT128.template --dostep dem                \n\
-      minsarApp.bash  $TE/GalapagosSenDT128.template --start  ifgrams            \n\
-      minsarApp.bash  $TE/GalapagosSenDT128.template --dostep upload             \n\
-      minsarApp.bash  $TE/GalapagosSenDT128.template --start jobfiles --mintpy --miaplpy\n\
-      minsarApp.bash  $TE/GalapagosSenDT128.template                             \n\
-                                                                                 \n\
-  Processing steps (start/end/dostep): \n\
-   Command line options for steps processing with names are chosen from the following list: \n\
-                                                                                 \n\
-   ['download', 'dem', 'jobfiles', 'ifgrams', 'mintpy', 'miaplpy', 'insarmaps', 'upload']             \n\
-                                                                                 \n\
-   In order to use either --start or --dostep, it is necessary that a            \n\
-   previous run was done using one of the steps options to process at least      \n\
-   through the step immediately preceding the starting step of the current run.  \n\
-                                                                                 \n\
-   --start STEP     start processing at the named step [default: download].      \n\
-   --end STEP, --stop STEP                                                       \n\
-                    end processing at the named step [default: upload]           \n\
-   --dostep STEP    run processing at the named step only                        \n\
-                                                                                 \n\
-   --mintpy         use smallbaselineApp.py for time series [default]            \n\
-   --miaplpy         use miaplpyApp.py                                             \n\
-   --mintpy --miaplpy    both                                                     \n\
-                                                                                 \n\
-   --sleep SECS     sleep seconds before running                                 \n\
-   --select_reference     select reference date [default].                       \n\
-   --no_select_reference  don't select reference date.                           \n\
-   --download_ECMWF       download from ECMWF during ISCE processing             \n\
-   --no_download_ECMWF    don't download while processing                        \n\
-   --chunks         process in form of multiple chunks.                          \n\
-   --tmp            copy code and data to local /tmp [default].                  \n\
-   --no_tmp         no copying to local /tmp. This can be                        \n 
-     "
-    printf "$helptext"
-    exit 0;
-else
-    PROJECT_NAME=$(basename "$1" | awk -F ".template" '{print $1}')
-    exit_status="$?"
-    if [[ $PROJECT_NAME == "" ]]; then
-       echo "Could not compute basename for that file. Exiting. Make sure you have specified an input file as the first argument."
-       exit 1;
-    fi
-fi
-
-###########################################
 function create_template_array() {
 mapfile -t array < <(grep -e ^minsar -e ^mintpy -e ^miaplpy $1)
 declare -gA template
@@ -120,9 +69,58 @@ fi
 unset IFS
 echo $miaply_dir_name
 }
-###########################################
-###########################################
-###########################################
+##################################################################################
+##################################################################################
+##################################################################################
+source $RSMASINSAR_HOME/minsar/utils/minsar_functions.bash
+
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+helptext="                                                                       \n\
+  Examples:                                                                      \n\
+      minsarApp.bash  $TE/GalapagosSenDT128.template                             \n\
+      minsarApp.bash  $TE/GalapagosSenDT128.template --dostep dem                \n\
+      minsarApp.bash  $TE/GalapagosSenDT128.template --start  ifgrams            \n\
+      minsarApp.bash  $TE/GalapagosSenDT128.template --dostep upload             \n\
+      minsarApp.bash  $TE/GalapagosSenDT128.template --start jobfiles --mintpy --miaplpy\n\
+      minsarApp.bash  $TE/GalapagosSenDT128.template                             \n\
+                                                                                 \n\
+  Processing steps (start/end/dostep): \n\
+   Command line options for steps processing with names are chosen from the following list: \n\
+                                                                                 \n\
+   ['download', 'dem', 'jobfiles', 'ifgrams', 'mintpy', 'miaplpy', 'insarmaps', 'upload']             \n\
+                                                                                 \n\
+   In order to use either --start or --dostep, it is necessary that a            \n\
+   previous run was done using one of the steps options to process at least      \n\
+   through the step immediately preceding the starting step of the current run.  \n\
+                                                                                 \n\
+   --start STEP     start processing at the named step [default: download].      \n\
+   --end STEP, --stop STEP                                                       \n\
+                    end processing at the named step [default: upload]           \n\
+   --dostep STEP    run processing at the named step only                        \n\
+                                                                                 \n\
+   --mintpy         use smallbaselineApp.py for time series [default]            \n\
+   --miaplpy         use miaplpyApp.py                                           \n\
+   --mintpy --miaplpy    both                                                    \n\
+                                                                                 \n\
+   --sleep SECS     sleep seconds before running                                 \n\
+   --select_reference     select reference date [default].                       \n\
+   --no_select_reference  don't select reference date.                           \n\
+   --download_ECMWF       download from ECMWF during ISCE processing             \n\
+   --no_download_ECMWF    don't download while processing                        \n\
+   --chunks         process in form of multiple chunks.                          \n\
+   --tmp            copy code and data to local /tmp [default].                  \n\
+   --no_tmp         no copying to local /tmp. This can be                        \n 
+     "
+    printf "$helptext"
+    exit 0;
+else
+    PROJECT_NAME=$(basename "$1" | awk -F ".template" '{print $1}')
+    exit_status="$?"
+    if [[ $PROJECT_NAME == "" ]]; then
+       echo "Could not compute basename for that file. Exiting. Make sure you have specified an input file as the first argument."
+       exit 1;
+    fi
+fi
 
 template_file=$1
 if [[ $1 == $PWD ]]; then
@@ -263,6 +261,14 @@ do
 esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
+
+# always use --no_tmp on srampede2
+if [[ $HOSTNAME == *"stampede2"* ]] && [[ $copy_to_tmp == "--tmp" ]]; then
+   copy_to_tmp="--no_tmp"
+   runfiles_dir="run_files"
+   configs_dir="configs"
+   echo "Running on stampede2: switched from --tmp to --no_tmp because of too slow copying to /tmp"
+fi
 
 if [[ ${#POSITIONAL[@]} -gt 1 ]]; then
     echo "Unknown parameters provided."
@@ -737,8 +743,10 @@ if [[ $ifgrams_flag == "1" ]]; then
        fi
     fi
     # correct *xml and *vrt files
-    sed -i "s|/tmp|$PWD|g" */*.xml */*/*.xml  */*/*/*.xml 
-    sed -i "s|/tmp|$PWD|g" */*.vrt */*/*.vrt  */*/*/*.vrt 
+    #sed -i "s|/tmp|$PWD|g" */*.xml */*/*.xml  */*/*/*.xml 
+    #sed -i "s|/tmp|$PWD|g" */*.vrt */*/*.vrt  */*/*/*.vrt 
+    sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.vrt merged/SLC/*/*.vrt   merged/interferograms/*/*vrt
+    sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.xml merged/SLC/*/*.xml   merged/interferograms/*/*xml
 fi
 
 if [[ $mintpy_flag == "1" ]]; then
@@ -784,7 +792,8 @@ if [[ $miaplpy_flag == "1" ]]; then
        exit 1;
     fi
 
-    cmd="run_workflow.bash $template_file --append --dostep miaplpy -dir $miaplpy_dir_name $copy_to_tmp"
+    #cmd="run_workflow.bash $template_file --append --dostep miaplpy --dir $miaplpy_dir_name $copy_to_tmp"
+    cmd="run_workflow.bash $template_file --append --dostep miaplpy --dir $miaplpy_dir_name"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"
