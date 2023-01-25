@@ -79,7 +79,7 @@ helptext="                                                                      
   Examples:                                                                      \n\
       minsarApp.bash  $TE/GalapagosSenDT128.template                             \n\
       minsarApp.bash  $TE/GalapagosSenDT128.template --dostep dem                \n\
-      minsarApp.bash  $TE/GalapagosSenDT128.template --start  ifgrams            \n\
+      minsarApp.bash  $TE/GalapagosSenDT128.template --start  ifgram            \n\
       minsarApp.bash  $TE/GalapagosSenDT128.template --dostep upload             \n\
       minsarApp.bash  $TE/GalapagosSenDT128.template --start jobfiles --mintpy --miaplpy\n\
       minsarApp.bash  $TE/GalapagosSenDT128.template                             \n\
@@ -87,7 +87,7 @@ helptext="                                                                      
   Processing steps (start/end/dostep): \n\
    Command line options for steps processing with names are chosen from the following list: \n\
                                                                                  \n\
-   ['download', 'dem', 'jobfiles', 'ifgrams', 'mintpy', 'miaplpy', 'insarmaps', 'upload']             \n\
+   ['download', 'dem', 'jobfiles', 'ifgram', 'mintpy', 'miaplpy', 'insarmaps', 'upload']             \n\
                                                                                  \n\
    In order to use either --start or --dostep, it is necessary that a            \n\
    previous run was done using one of the steps options to process at least      \n\
@@ -156,7 +156,7 @@ download_ECMWF_before_mintpy_flag=1
 #Steps
 download_flag=1
 dem_flag=1
-ifgrams_flag=1
+ifgram_flag=1
 upload_flag=1
 insarmaps_flag=1
 finishup_flag=1
@@ -301,7 +301,7 @@ elif [[ $startstep == "dem" ]]; then
 elif [[ $startstep == "jobfiles" ]]; then
     download_flag=0
     dem_flag=0
-elif [[ $startstep == "ifgrams" ]]; then
+elif [[ $startstep == "ifgram" ]]; then
     download_flag=0
     dem_flag=0
     jobfiles_flag=0
@@ -309,26 +309,26 @@ elif [[ $startstep == "mintpy" ]]; then
     download_flag=0
     dem_flag=0
     jobfiles_flag=0
-    ifgrams_flag=0
+    ifgram_flag=0
 elif [[ $startstep == "miaplpy" ]]; then
     download_flag=0
     dem_flag=0
     jobfiles_flag=0
-    ifgrams_flag=0
+    ifgram_flag=0
     mintpy_flag=0
     miaplpy_flag=1
 elif [[ $startstep == "upload" ]]; then
     download_flag=0
     dem_flag=0
     jobfiles_flag=0
-    ifgrams_flag=0
+    ifgram_flag=0
     mintpy_flag=0
     miaplpy_flag=0
 elif [[ $startstep == "insarmaps" ]]; then
     download_flag=0
     dem_flag=0
     jobfiles_flag=0
-    ifgrams_flag=0
+    ifgram_flag=0
     mintpy_flag=0
     miaplpy_flag=0
     upload_flag=0
@@ -336,7 +336,7 @@ elif [[ $startstep == "finishup" ]]; then
     download_flag=0
     dem_flag=0
     jobfiles_flag=0
-    ifgrams_flag=0
+    ifgram_flag=0
     mintpy_flag=0
     miaplpy_flag=0
     upload_flag=0
@@ -349,7 +349,7 @@ fi
 if [[ $stopstep == "download" ]]; then
     dem_flag=0
     jobfiles_flag=0
-    ifgrams_flag=0
+    ifgram_flag=0
     mintpy_flag=0
     minooy_flag=0
     upload_flag=0
@@ -357,20 +357,20 @@ if [[ $stopstep == "download" ]]; then
     finishup_flag=0
 elif [[ $stopstep == "dem" ]]; then
     jobfiles_flag=0
-    ifgrams_flag=0
+    ifgram_flag=0
     mintpy_flag=0
     miaplpy_flag=0
     upload_flag=0
     insarmaps_flag=0
     finishup_flag=0
 elif [[ $stopstep == "jobfiles" ]]; then
-    ifgrams_flag=0
+    ifgram_flag=0
     mintpy_flag=0
     miaplpy_flag=0
     upload_flag=0
     insarmaps_flag=0
     finishup_flag=0
-elif [[ $stopstep == "ifgrams" ]]; then
+elif [[ $stopstep == "ifgram" ]]; then
     mintpy_flag=0
     miaplpy_flag=0
     upload_flag=0
@@ -402,8 +402,8 @@ else
 fi
 echo "Switches: select_reference: $select_reference_flag   download_ECMWF: $download_ECMWF_flag  chunks: $chunks_flag"
 echo "Flags for processing steps:"
-echo "download dem jobfiles ifgrams mintpy miaplpy upload insarmaps"
-echo "    $download_flag     $dem_flag      $jobfiles_flag       $ifgrams_flag       $mintpy_flag      $miaplpy_flag      $upload_flag       $insarmaps_flag"
+echo "download dem jobfiles ifgram mintpy miaplpy upload insarmaps"
+echo "    $download_flag     $dem_flag      $jobfiles_flag       $ifgram_flag       $mintpy_flag      $miaplpy_flag      $upload_flag       $insarmaps_flag"
 
 #############################################################
 # check weather python can load matplotlib.pyplot which occasionaly does not work for unknown reasons
@@ -588,7 +588,7 @@ if [[ $jobfiles_flag == "1" ]]; then
     
     # clean directory for processing
     pwd=`pwd`; echo "DIR: $pwd"
-    cmd="clean_dir.bash $PWD --runfiles --ifgrams --mintpy --miaplpy"
+    cmd="clean_dir.bash $PWD --runfiles --ifgram --mintpy --miaplpy"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"
@@ -618,7 +618,7 @@ if [[ $jobfiles_flag == "1" ]]; then
 
 fi
  
-if [[ $ifgrams_flag == "1" ]]; then
+if [[ $ifgram_flag == "1" ]]; then
     # possibly set local WEATHER_DIR if WORK is slow
     #timeout 2 ls  $WEATHER_DIR/ERA5/* >> /dev/null ; echo $?
     #timeout 0.1 ls  $WEATHER_DIR/ERA5/* >> /dev/null ; echo $?
@@ -638,12 +638,12 @@ if [[ $ifgrams_flag == "1" ]]; then
     fi
 
     if [[ $template_file != *"Sen"* || $select_reference_flag == "0" ]]; then 
-       cmd="run_workflow.bash $template_file --dostep ifgrams $copy_to_tmp"
+       cmd="run_workflow.bash $template_file --dostep ifgram $copy_to_tmp"
        echo "Running.... $cmd"
        $cmd
        exit_status="$?"
        if [[ $exit_status -ne 0 ]]; then
-          echo "run_workflow.bash $template_file --dostep ifgrams  exited with a non-zero exit code ($exit_status). Exiting."
+          echo "run_workflow.bash $template_file --dostep ifgram  exited with a non-zero exit code ($exit_status). Exiting."
           exit 1;
        fi
 
@@ -699,7 +699,7 @@ if [[ $ifgrams_flag == "1" ]]; then
           rm -rf run_files configs
 
           # clean directory for processing
-          cmd="clean_dir.bash $PWD --runfiles --ifgrams"
+          cmd="clean_dir.bash $PWD --runfiles --ifgram"
           echo "Running.... $cmd"
           $cmd
           exit_status="$?"

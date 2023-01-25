@@ -13,7 +13,7 @@ helptext="                                                                     \
    clean working directory for processing                                      \n\
                                                                                \n\
    --process           processed data including mintpy and miaplpy [default]    \n\
-                       (same as --runfiles  --ifgrams --mintpy --miaplpy)       \n\
+                       (same as --runfiles  --ifgram --mintpy --miaplpy)       \n\
    --no_mintpy         keep mintpy and miaplpy folders                          \n\
    --no_miaplpy         same                                                    \n\
    --no_runfiles       keep run_files and config directories                   \n\
@@ -21,7 +21,7 @@ helptext="                                                                     \
    --download          removes SLC, RAW_data [default: no]                     \n\
    --dem               removes DEM [default: no]                               \n\
    --runfiles          removes DEM [default: no]                               \n\
-   --ifgrams           removes ISCE-produced directories                       \n\
+   --ifgram           removes ISCE-produced directories                       \n\
    --mintpy            removes mintpy directory                                \n\
    --miaplpy            removes miaplpy directory                                \n 
      "
@@ -49,7 +49,7 @@ fi
 download_flag=0
 dem_flag=0
 runfiles_flag=0
-ifgrams_flag=0
+ifgram_flag=0
 mintpy_flag=0
 miaplpy_flag=0
 
@@ -60,7 +60,7 @@ do
     case $key in
         --process)
             runfiles_flag=1
-            ifgrams_flag=1
+            ifgram_flag=1
             mintpy_flag=1
             miaplpy_flag=1
             shift # past argument
@@ -77,8 +77,8 @@ do
             runfiles_flag=1
             shift
             ;;
-	--ifgrams)
-            ifgrams_flag=1
+	--ifgram)
+            ifgram_flag=1
             shift
             ;;
 	--mintpy)
@@ -93,8 +93,8 @@ do
             runfiles_flag=0
             shift # past argument
             ;;
-        --no_ifgrams )
-            ifgrams_flag=0
+        --no_ifgram )
+            ifgram_flag=0
             shift # past argument
             ;;
 	--no_mintpy)
@@ -109,7 +109,7 @@ do
             download_flag=1
             dem_flag=1
             runfiles_flag=1
-            ifgrams_flag=1
+            ifgram_flag=1
             mintpy_flag=1
             miaplpy_flag=1
             shift
@@ -125,8 +125,8 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 ####################################
 #echo "Flags for cleaning:"
 #echo "Directory: $PWD:"
-#echo "download dem runfiles ifgrams mintpy miaplpy" 
-#echo "    $download_flag     $dem_flag      $runfiles_flag      $ifgrams_flag        $mintpy_flag     $miaplpy_flag"
+#echo "download dem runfiles ifgram mintpy miaplpy" 
+#echo "    $download_flag     $dem_flag      $runfiles_flag      $ifgram_flag        $mintpy_flag     $miaplpy_flag"
 
 if [[ $download_flag == "1" ]]; then
     rm -rf SLC RAW_data
@@ -140,7 +140,7 @@ if [[ $runfiles_flag == "1" ]]; then
     rm -rf run_files run_files_tmp configs configs_tmp
 fi
 
-if [[ $ifgrams_flag == "1" ]]; then
+if [[ $ifgram_flag == "1" ]]; then
    rm -rf coreg_secondarys baselines coarse_interferograms secondarys geom_reference interferograms reference merged misreg stack hazard_products geom_reference_noDEM ESD *.{o,e} stdout_* remora_*'
    rm -rf baselines coregSLC geom_master Igrams merged offsets refineSecondaryTiming  SLC_crop stdout_* *.{o,e}'
 fi

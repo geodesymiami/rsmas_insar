@@ -174,7 +174,7 @@ class PathFind:
         STEP_LIST = [
             'download',
             'dem',
-            'ifgrams',
+            'ifgram',
             'timeseries',
             'upload',
             'insarmaps',
