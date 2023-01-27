@@ -91,14 +91,15 @@ startstep=1
 #stopstep="mintpy"
 dir_flag=false
 
-start_datetime=$(date +"%Y%m%d:%H-%M")
 template_file_dir=$(dirname "$1")          # create name including $TE for concise log file
 if  [[ $template_file_dir == $TE ]]; then
     template_print_name="\$TE/$(basename $template_file)"
+elif [[ $template_file_dir == $SAMPLESDIR ]]; then
+    template_print_name="\$SAMPLESDIR/$(basename $template_file)"
 else
     template_print_name="$template_file"
 fi
-echo "${start_datetime} * run_workflow.bash $template_print_name ${@:2}" >> "${WORKDIR}"/log
+echo "$(date +"%Y%m%d:%H-%M") * run_workflow.bash $template_print_name ${@:2}" >> "${WORKDIR}"/log
 
 while [[ $# -gt 0 ]]
 do
@@ -151,9 +152,9 @@ do
             run_files_name="run_files_tmp"
             shift
             ;;
-        --no_tmp)
+        --no-tmp)
             tmp=false
-            tmp_flag_str="--no_tmp"
+            tmp_flag_str="--no-tmp"
             run_files_name="run_files"
             shift
             ;;
@@ -180,7 +181,8 @@ if [[ $miaplpy_flag == "true" ]]; then
     elif [[ $startstep == "ifgram_correction" ]]; then     startstep=7
     elif [[ $startstep == "invert_network" ]]; then        startstep=8
     elif [[ $startstep == "timeseries_correction" ]]; then startstep=9
-    elif [[ $startstep != "1" ]] && [[ $startstep != "mintpy" ]] && [[ $startstep != "miaplpy" ]]; then 
+    #elif [[ $startstep != "1" ]] && [[ $startstep != "mintpy" ]] && [[ $startstep != "miaplpy" ]]; then 
+    elif [[ $startstep != *[1-9]* ]] && [[ $startstep != "mintpy" ]] && [[ $startstep != "miaplpy" ]]; then 
         echo "ERROR: $startstep -- not a valid startstep. Exiting."
         exit 1
     fi
@@ -194,11 +196,12 @@ if [[ $miaplpy_flag == "true" ]]; then
     elif [[ $stopstep == "ifgram_correction" ]]; then     stopstep=7
     elif [[ $stopstep == "invert_network" ]]; then        stopstep=8
     elif [[ $stopstep == "timeseries_correction" ]]; then stopstep=9
-    elif [[ $stopstep != "mintpy" ]] && [[ $stopstep != "miaplpy" ]]; then 
+    elif [[ $startstep != *[1-9]* ]] && [[ $stopstep != "mintpy" ]] && [[ $stopstep != "miaplpy" ]]; then 
         echo "ERROR: $stopstep -- not a valid stopstep. Exiting."
         exit 1
     fi
 fi
+#echo "startstep, stopstep:<$startstep> <$stopstep>"
 
 # IO load for each step. For step_io_load=1 the maximum tasks allowed is step_max_tasks_unit
 # for step_io_load=2 the maximum tasks allowed is step_max_tasks_unit/2
@@ -227,7 +230,7 @@ fi
 
 #     [miaplpy_crop]=1
 #     [miaplpy_inversion]=1
-#     [miaplpy_ifgrams]=1
+#     [miaplpy_ifgram]=1
 #     [miaplpy_unwrap]=1
 #     [miaplpy_un-wrap]=1
 #     [miaplpy_mintpy_corrections]=1
@@ -291,7 +294,7 @@ last_job_file_number=$(echo $((10#${last_job_file_number})))
 echo last_job_file_number: $last_job_file_number
 
 
-if [[ $startstep == "ifgrams" || $startstep == "miaplpy" ]]; then
+if [[ $startstep == "ifgram" || $startstep == "miaplpy" ]]; then
     startstep=1
 elif [[ $startstep == "mintpy" ]]; then
     startstep=$((last_job_file_number+1))
@@ -299,7 +302,7 @@ elif [[ $startstep == "insarmaps" ]]; then
     startstep=$((last_job_file_number+2))
 fi
 
-if [[ $stopstep == "ifgrams" || $stopstep == "miaplpy" || -z ${stopstep+x}  ]]; then
+if [[ $stopstep == "ifgram" || $stopstep == "miaplpy" || -z ${stopstep+x}  ]]; then
     stopstep=$last_job_file_number
 elif [[ $stopstep == "mintpy" ]]; then
     stopstep=$((last_job_file_number+1))
