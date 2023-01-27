@@ -19,7 +19,7 @@ def cmd_line_parser(iargs=None):
     parser.add_argument('job_files', nargs='+', type=str, help='batch job name:\n')
     parser.add_argument('--tmp', dest='copy_to_tmp', action='store_true', default=True,
                             help='modifies jobfiles in run_files_tmp')
-    parser.add_argument('--no_tmp', dest='copy_to_tmp', action='store_false',
+    parser.add_argument('--no-tmp', dest='copy_to_tmp', action='store_false',
                             help="modifies jobfiles in run_files")
 
     inps = parser.parse_args(args=iargs)
