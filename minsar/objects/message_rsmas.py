@@ -36,6 +36,7 @@ def log(logdir, msg):
     callingFunction  = os.path.basename(inspect.stack()[1][1])
     dateStr=datetime.datetime.strftime(datetime.datetime.now(), '%Y%m%d:%H%M%S') 
     #dateStr=datetime.datetime.now() 
+    msg = insert_environment_variables_into_path( msg )
     string = dateStr + " * " + msg
     print(string)
     f.write(string + "\n")
@@ -52,6 +53,17 @@ def Status(arg1,arg2):
     # eCode=os.system("test2.py qw1")
     # if (eCode != 0): message_rsmas.Message("failed in test2.py"); sys.exit(1)
 
+def insert_environment_variables_into_path( msg ):
+    toks = msg.split(' ')
+    toks_mod = []
+    for token in toks:
+        if os.getenv('SAMPLESDIR') in token:
+            token = token.replace(os.getenv('SAMPLESDIR'),"$SAMPLESDIR")
+        if os.getenv('TEMPLATES') in token:
+            token = token.replace(os.getenv('TEMPLATES'),"$TEMPLATES")
+        toks_mod.append(token)
+    msg_mod = ' '.join(toks_mod)
+    return msg_mod
 
 # perl code that got translated
 
