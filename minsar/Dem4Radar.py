@@ -122,12 +122,12 @@ def get_data(ymin, ymax, xmin, xmax, ps, out_amplitude, shift=0):
         orbit_direction = attr['ORBIT_DIRECTION']
     except:
         result_list = []
-        for x in ['TsxSMAT','TsxSLAT','TsxHSAT','CskAT']:
+        for x in ['TsxSMAT','TsxSLAT','TsxSTAT''TsxHSAT','CskAT']:
             result_list.append(x in project_dir )
         if any(result_list):
             orbit_direction = 'ASCENDING'
 
-        for x in ['TsxSMDT','TsxSLDT','TsxHSDT','TsxSMD','CskDT']:
+        for x in ['TsxSMDT','TsxSLDT','TsxSTDT','TsxHSDT','TsxSMD','CskDT']:
             result_list.append(x in project_dir )
         if any(result_list):
             orbit_direction = 'DESCENDING'
