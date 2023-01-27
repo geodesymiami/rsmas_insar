@@ -109,7 +109,7 @@ helptext="                                                                      
    --no_download_ECMWF    don't download while processing                        \n\
    --chunks         process in form of multiple chunks.                          \n\
    --tmp            copy code and data to local /tmp [default].                  \n\
-   --no_tmp         no copying to local /tmp. This can be                        \n 
+   --no-tmp         no copying to local /tmp. This can be                        \n 
      "
     printf "$helptext"
     exit 0;
@@ -134,16 +134,16 @@ cd $WORK_DIR
 create_template_array $template_file
 #echo template keys: ${!template[@]}
 
-#echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` $@ " | tee -a "${WORK_DIR}"/log
 # create name including $TE for concise log file
-start_datetime=$(date +"%Y%m%d:%H-%M")
 template_file_dir=$(dirname "$template_file")          # create name including $TE for concise log file
-if  [[ $template_file_dir == $TE ]]; then
+if   [[ $template_file_dir == $TEMPLATES ]]; then
     template_print_name="\$TE/$(basename $template_file)"
+elif [[ $template_file_dir == $SAMPLESDIR ]]; then
+    template_print_name="\$SAMPLESDIR/$(basename $template_file)"
 else
     template_print_name="$template_file"
 fi
-echo "${start_datetime} * minsarApp.bash $template_print_name ${@:2}" | tee -a "${WORK_DIR}"/log
+echo "$(date +"%Y%m%d:%H-%M") * minsarApp.bash $template_print_name ${@:2}" | tee -a "${WORK_DIR}"/log
 
 #Switches
 chunks_flag=0
@@ -228,8 +228,8 @@ do
             configs_dir="configs_tmp"
             shift
             ;;
-        --no_tmp)
-            copy_to_tmp="--no_tmp"
+        --no-tmp)
+            copy_to_tmp="--no-tmp"
             runfiles_dir="run_files"
             configs_dir="configs"
             shift
@@ -262,12 +262,12 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-# always use --no_tmp on srampede2
+# always use --no-tmp on srampede2
 if [[ $HOSTNAME == *"stampede2"* ]] && [[ $copy_to_tmp == "--tmp" ]]; then
-   copy_to_tmp="--no_tmp"
+   copy_to_tmp="--no-tmp"
    runfiles_dir="run_files"
    configs_dir="configs"
-   echo "Running on stampede2: switched from --tmp to --no_tmp because of too slow copying to /tmp"
+   echo "Running on stampede2: switched from --tmp to --no-tmp because of too slow copying to /tmp"
 fi
 
 if [[ ${#POSITIONAL[@]} -gt 1 ]]; then
@@ -784,7 +784,7 @@ if [[ $miaplpy_flag == "1" ]]; then
 
     cmd="miaplpyApp.py $template_file --dir $miaplpy_dir_name --jobfiles --tmp"
     echo "Running.... $cmd"
-    echo "$cmd" | tee -a log
+    echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
     $srun_cmd $cmd
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
