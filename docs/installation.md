@@ -86,6 +86,7 @@ cp -p ../minsar/additions/isce2/topo.py ../tools/isce2/contrib/stack/stripmapSta
 
 cp -p ../minsar/additions/isce2/VRTManager.py ../tools/isce2/contrib/stack/topsStack                          # 1/23 np.int issue
 cp -p ../minsar/additions/isce2/TOPSSwathSLCProduct.py ../tools/isce2/components/isceobj/Sensor/TOPS          # 1/23 np.int issue
+cp -p ../minsar/additions/isce2/Sentinel1.py  ../tools/isce2/components/isceobj/Sensor/TOPS                   # 2/23 np.int issue
 cp -p ../minsar/additions/isce2/stripmapStack/cropFrame.py ../tools/isce2/contrib/stack/stripmapStack         # 1/23 np.int issue
 
 # cp -p ../minsar/additions/mintpy/dem_error.py ../tools/MintPy/src/mintpy 
