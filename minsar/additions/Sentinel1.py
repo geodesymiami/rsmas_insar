@@ -486,17 +486,18 @@ class Sentinel1(Component):
                             'Integer shift between bursts cannot be guaranteed\n'+
                             'Exiting .......')
 
+
         for index in indices:
             aslice = slices[index]
 
-            offset = np.int(np.rint((aslice.product.bursts[0].burstStartUTC - t0).total_seconds() / burstStartInterval.total_seconds()))
+            offset = int(np.rint((aslice.product.bursts[0].burstStartUTC - t0).total_seconds() / burstStartInterval.total_seconds()))
 
             for kk in range(aslice.product.numberOfBursts):
                 #####Skip appending if burst also exists from previous scene
-                if (offset + kk) < len(self.product.bursts):
+                if (offset+kk) < len(self.product.bursts):
                     continue
 
-                elif (offset + kk) == len(self.product.bursts):
+                elif (offset+kk) == len(self.product.bursts):
                     self.product.bursts.append(aslice.product.bursts[kk])
                     if len(self.tiff):
                         self._tiffSrc.append(aslice.tiff[0])
@@ -597,7 +598,14 @@ class Sentinel1(Component):
             burst.numberOfSamples = samples
             burst.numberOfLines = lines
             burst.startingRange = startingRange
-            burst.trackNumber = (orbitnumber-73)%175 + 1  ###Appears to be standard for S1A
+
+            if mission == 'S1A':
+                burst.trackNumber = (orbitnumber-73)%175 + 1
+            elif mission == 'S1B':
+                burst.trackNumber = (orbitnumber-27)%175 + 1
+            else:
+                raise ValueError('Encountered unknown mission id {0}'.format(mission))
+
             burst.orbitNumber = orbitnumber 
             burst.frameNumber = 1  #S1A doesnt appear to have a frame system
             burst.polarization = polarization
@@ -627,7 +635,7 @@ class Sentinel1(Component):
         '''
         
         burstList = self.getxmlelement('swathTiming/burstList')
-        for index, burst in enumerate(burstList.getchildren()):
+        for index, burst in enumerate(burstList):
             bb = self.product.bursts[index]
             bb.sensingStart = self.convertToDateTime(burst.find('azimuthTime').text)
             deltaT = datetime.timedelta(seconds=(bb.numberOfLines - 1)*bb.azimuthTimeInterval)
@@ -662,7 +670,7 @@ class Sentinel1(Component):
         ####Read in fm rates separately
         fmrateList = self.getxmlelement('generalAnnotation/azimuthFmRateList')
         fmRates = []
-        for index, burst in enumerate(fmrateList.getchildren()):
+        for index, burst in enumerate(fmrateList):
             r0 = 0.5 * Const.c * float(burst.find('t0').text)
             try:
                 c0 = float(burst.find('c0').text)
@@ -694,7 +702,7 @@ class Sentinel1(Component):
 
         dcList = self.getxmlelement('dopplerCentroid/dcEstimateList')
         dops = [ ]
-        for index, burst in enumerate(dcList.getchildren()):
+        for index, burst in enumerate(dcList):
 
             r0 = 0.5 * Const.c* float(burst.find('t0').text)
             refTime = self.convertToDateTime(burst.find('azimuthTime').text)
@@ -721,7 +729,7 @@ class Sentinel1(Component):
             eapList = self.getxmlelement('antennaPattern/antennaPatternList')
             eaps = []
             
-            for index, burst in enumerate(eapList.getchildren()):
+            for index, burst in enumerate(eapList):
                 refTime = self.convertToDateTime(burst.find('azimuthTime').text)
                 taus = [float(val) for val in burst.find('slantRangeTime').text.split()]
                 angs = [float(val) for val in burst.find('elevationAngle').text.split()]
@@ -793,7 +801,7 @@ class Sentinel1(Component):
         frameOrbit = Orbit()
         frameOrbit.configure()
 
-        for child in node.getchildren():
+        for child in node:
             timestamp = self.convertToDateTime(child.find('time').text)
             pos = []
             vel = []
@@ -839,7 +847,7 @@ class Sentinel1(Component):
         tstart = self.product.bursts[0].sensingStart - margin
         tend = self.product.bursts[-1].sensingStop + margin
 
-        for child in node.getchildren():
+        for child in node:
             timestamp = self.convertToDateTime(child.find('UTC').text[4:])
 
             if (timestamp >= tstart) and (timestamp < tend):
@@ -881,7 +889,7 @@ class Sentinel1(Component):
         xml_root = ET.ElementTree(file=fp).getroot()
         res = xml_root.find('calibrationParamsList/calibrationParams')
         paramsList = xml_root.find('calibrationParamsList')
-        for par in (paramsList.getchildren()):
+        for par in paramsList:
             if (par.find('swath').text.strip() == ('IW'+str(burst.swathNumber))) and (par.find('polarisation').text == burst.polarization):
               self._delta_theta = float(par.find('elevationAntennaPattern/elevationAngleIncrement').text)
               Geap_IQ = [float(val) for val in par.find('elevationAntennaPattern/values').text.split()]
@@ -946,14 +954,7 @@ class Sentinel1(Component):
         if length is None:
             length = self.product.bursts[0].numberOfLines
 
-
-        if os.path.isdir(self.output):
-            print('Output directory exists. Overwriting ...')
-#            os.rmdir(self.output)
-        else:
-            print('Creating directory {0} '.format(self.output))
-            os.makedirs(self.output)
-
+        os.makedirs(self.output, exist_ok=True)
 
         prevTiff = None
         for index, burst in enumerate(self.product.bursts):
