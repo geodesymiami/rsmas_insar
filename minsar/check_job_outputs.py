@@ -263,7 +263,10 @@ def skip_error(file, error_string):
 
     with open(file) as f:
        lines=f.read()
-       if '--- Logging error ---' in lines or '---Loggingerror---' in lines:
+       #if '--- Logging error ---' in lines or '---Loggingerror---' in lines:
+       # 2/23: thought I need to add 'DUE TO TIME LIMIT' but files containing this string are removed earlier
+       # 2/23: added string to skip unexplained dask error which does not appear fatal
+       if '--- Logging error ---' in lines or '---Loggingerror---' in lines or 'distributed.comm.core.CommClosedError: in <TCP' in lines:
             skip = True
 
 
