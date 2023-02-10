@@ -107,6 +107,8 @@ def main(iargs=None):
        # preprocess *.e files
        if 'filter_coherence' in job_name or 'run_09_igram' in job_name or 'miaplpy_generate_ifgram' in job_name:               # run_09_igram is for stripmap
            putils.remove_line_counter_lines_from_error_files(run_file=job_name)
+       if 'smallbaseline_wrapper' in job_name or 'miaplpy_invert_network' in job_name or 'mintpy_timeseries_correction' in job_name:   # dask errors
+           putils.remove_dask_error_lines_from_error_files(run_file=job_name)
 
        # 5/21: sometimes not working. Move before loop using run_file_base ??
        putils.remove_zero_size_or_length_error_files(run_file=job_name)
@@ -228,7 +230,7 @@ def main(iargs=None):
     else:
         print("no error found")
         
-    if 'run_' in job_name:
+    if 'run_' in job_name or 'smallbaseline_wrapper' in job_name:
        putils.concatenate_error_files(run_file=run_file_base, work_dir=project_dir)
     else:
        out_error_file = project_dir + '/out_' + os.path.basename(job_name) + '.e'
@@ -249,6 +251,8 @@ def main(iargs=None):
 
     return
 
+
+###########################################################################################
 def skip_error(file, error_string):
     """ skip error for merge_reference step if contains has different number of bursts (7) than the reference (9)  """
     """ https://github.com/geodesymiami/rsmas_insar/issues/436  """
@@ -263,12 +267,8 @@ def skip_error(file, error_string):
 
     with open(file) as f:
        lines=f.read()
-       #if '--- Logging error ---' in lines or '---Loggingerror---' in lines:
-       # 2/23: thought I need to add 'DUE TO TIME LIMIT' but files containing this string are removed earlier
-       # 2/23: added string to skip unexplained dask error which does not appear fatal
-       if '--- Logging error ---' in lines or '---Loggingerror---' in lines or 'distributed.comm.core.CommClosedError: in <TCP' in lines:
+       if '--- Logging error ---' in lines or '---Loggingerror---' in lines:
             skip = True
-
 
     return skip
 
