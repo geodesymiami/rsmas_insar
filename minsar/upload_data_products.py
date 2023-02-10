@@ -157,7 +157,8 @@ def main(iargs=None):
                 scp_list.extend([
                     '/'+ os.path.dirname(data_dir) +'/inputs/slcStack.h5',
                     '/'+ os.path.dirname(data_dir) +'/inputs/geometryRadar.h5',
-                    '/'+ os.path.dirname(data_dir) +'/maskPS.h5' 
+                    '/'+ os.path.dirname(data_dir) +'/maskPS.h5',
+                    '/'+ os.path.dirname(data_dir) +'/inputs/baselines' 
                     ])
 
         for pattern in scp_list:
