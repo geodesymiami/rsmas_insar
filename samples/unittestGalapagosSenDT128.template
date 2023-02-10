@@ -24,7 +24,7 @@ topsStack.slcDir                = $TESTDATA_ISCE/unittestGalapagosSenDT128/SLC
 
 mintpy.compute.cluster           = local #[local / slurm / pbs / lsf / none], auto for none, cluster type
 mintpy.compute.numWorker         = 6 #[int > 1 / all], auto for 4 (local) or 40 (non-local), num of workers
-mintpy.reference.lalo            = -0.82,-91.14     # S of SN
+mintpy.reference.lalo            = auto # -0.82,-91.14     # S of SN
 mintpy.networkInversion.parallel = yes  #[yes / no], auto for no, parallel processing using dask
 mintpy.troposphericDelay.method  = no    # pyaps  #[pyaps / height_correlation / base_trop_cor / no], auto for pyaps
 mintpy.save.hdfEos5              = yes   #[yes / update / no], auto for no, save timeseries to UNAVCO InSAR Archive format
