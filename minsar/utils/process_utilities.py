@@ -879,6 +879,43 @@ def remove_line_counter_lines_from_error_files(run_file):
 
 ##########################################################################
 
+def remove_dask_error_lines_from_error_files(run_file):
+    """ Remove 23 lines for dask distributed.worker - ERROR """
+
+    error_files = glob.glob(run_file + '*.e*')
+    error_files = natsorted(error_files)
+    for item in error_files:
+        f = open(item, 'r')
+        lines = f.readlines()
+        count = 0
+        skip_number = 23
+        count_skip = 0
+        skip = False
+        new_lines=[]
+        for line in lines:
+            count += 1
+            if skip:
+               #print("YesSkip Line{}: {}".format(count, line.strip()))
+               count_skip += 1
+               if count_skip == skip_number:
+                   skip = False
+            else:
+               if "distributed.worker - ERROR - Failed to communicate with scheduler during heartbeat" in line:
+                   skip = True
+                   count_skip = 0
+                   #print("YesSkip Line{}: {}".format(count, line.strip()))
+               else:
+                   #print("NotSkip Line{}: {}".format(count, line.strip()))
+                   new_lines.append(line)
+               
+        f = open(item, 'w')
+        for line in new_lines:
+            f.writelines(line)
+
+    return None
+
+##########################################################################
+
 
 def remove_last_job_running_products(run_file):
     error_files = glob.glob(run_file + '*.e*')
