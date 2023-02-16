@@ -806,6 +806,7 @@ fi
 if [[ $upload_flag == "1" ]]; then
     cmd="upload_data_products.py $template_file --mintpy"
     echo "Running.... $cmd"
+    echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
     $cmd 2>out_upload_data_products.e 1>out_upload_data_products.o & 
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
@@ -817,6 +818,7 @@ fi
 if [[ $insarmaps_flag == "1" ]]; then
     cmd="run_workflow.bash $PWD --append --dostep insarmaps $copy_to_tmp"
     echo "Running.... $cmd"
+    echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
     $cmd
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
@@ -829,6 +831,7 @@ if [[ $finishup_flag == "1" ]]; then
     cmd="summarize_job_run_times.py $template_file $copy_to_tmp"
     echo "Running.... $cmd"
     $cmd
+    echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
        echo "summarize_job_run_times.py exited with a non-zero exit code ($exit_status). Exiting."
