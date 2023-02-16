@@ -27,7 +27,7 @@ def create_parser():
 #                                     formatter_class=argparse.RawDescriptionHelpFormatter,
 #                                     epilog=TEMPALTE+'\n'+EXAMPLE)
 
-    parser.add_argument('custom_template_file', nargs='?', help='custom template with option settings.\n')
+    parser.add_argument('custom_template_file', nargs='?', default=None, help='custom template with option settings.\n')
 
     parser.add_argument('--mintpy',
                          dest='mintpy_flag',
@@ -39,10 +39,10 @@ def create_parser():
                          action='store_true',
                          default=False,
                          help='uploads miaplpy/*_network data products to data portal')
-    parser.add_argument('--dir', dest='data_dir',  metavar="DIRECTORY",
+    parser.add_argument('--dir', dest='data_dir', default=False,  metavar="DIRECTORY",
                          help='upload specific mintpy/miaplpy directory')
     parser.add_argument('--all',
-                         dest='mintpy_all_flag',
+                         dest='all_flag',
                          action='store_true',
                          default=False,
                          help='uploads full mintpy dir')
@@ -59,8 +59,25 @@ def cmd_line_parse(iargs=None):
     parser = create_parser()
     inps = parser.parse_args(args=iargs)
 
-    inps.miaplpy_all_flag = inps.mintpy_all_flag
+    if inps.data_dir:
+        if 'mintpy' in inps.data_dir:
+            inps.mintpy_flag = True
+        if 'miaplpy' in inps.data_dir:
+            inps.miaplpy_flag = True
 
+    if not inps.data_dir:
+        if inps.mintpy_flag:
+            inps.data_dir = 'mintpy'
+        if inps.miaplpy_flag:
+            inps.data_dir = 'miaplpy'
+
+    #if inps.all_flag:
+    #    if inps.mintpy_flag:
+    #        inps.mintpy_all_flag = True
+    #    if inps.miaplpy_flag:
+    #        inps.miaplpy_all_flag = True
+
+    print(inps)
     return inps
 
 ##############################################################################
@@ -79,10 +96,6 @@ def main(iargs=None):
 
     if inps.image_products_flag:
        inps.mintpy_flag = False
-
-    if inps.data_dir:
-        inps.mintpy_flag = False
-        inps.miaplpy_flag = False
 
     os.chdir(inps.work_dir)
 
@@ -105,99 +118,85 @@ def main(iargs=None):
 
     scp_list = []
 
-    if inps.mintpy_flag or inps.miaplpy_flag or inps.data_dir:
+    if inps.mintpy_flag:
+        data_dir = inps.data_dir
+        scp_list.extend([
+            '/'+ data_dir +'/*.he5',
+            '/'+ data_dir +'/pic',
+            '/'+ data_dir +'/inputs'
+            ])
 
-        if inps.mintpy_flag:
-            data_dir = 'mintpy'
-            if os.path.exists(inps.work_dir + '/mintpy'):
-                scp_list.extend([
-                    '/'+ data_dir +'/*.he5',
-                    '/'+ data_dir +'/pic',
-                    '/'+ data_dir +'/inputs'
-                    ])
+        if inps.all_flag:
+            scp_list = [ '/mintpy/*' ]
 
-            if inps.mintpy_all_flag:
-                scp_list = [ '/mintpy' ]
+    if inps.miaplpy_flag:
+        dir_list = glob.glob(inps.data_dir + '/network_*')
+        for data_dir in dir_list:
+             scp_list.extend([
+                '/'+ data_dir +'/*.he5',
+                '/'+ data_dir +'/demErr.h5',
+                '/'+ data_dir +'/pic' 
+                ])
+                #'/'+ data_dir +'/inputs'
 
-        if inps.miaplpy_flag:
-            dir_list = glob.glob('miaplpy/network_*')
-            for data_dir in dir_list:
-                if os.path.exists(inps.work_dir +'/'+ data_dir):
-                    scp_list.extend([
-                        '/'+ data_dir +'/*.he5',
-                        '/'+ data_dir +'/demErr.h5',
-                        '/'+ data_dir +'/pic' 
-                        ])
-                        #'/'+ data_dir +'/inputs'
+             if inps.all_flag:
+                 scp_list.extend([
+                     '/'+ data_dir +'/*.he5',
+                     '/'+ data_dir +'/*.h5',
+                     '/'+ data_dir +'/*.cfg',
+                     '/'+ data_dir +'/*.txt',
+                     '/'+ data_dir +'/inputs/geometryRadar.h5',
+                     '/'+ data_dir +'/inputs/smallbaselineApp.cfg',
+                     '/'+ data_dir +'/inputs/*template',
+                     '/'+ data_dir +'/pic' 
+                     ])
+                     #'/'+ data_dir +'../inputs/*',
+                     #'/'+ data_dir +'/inputs'
 
-        if inps.data_dir:
-                dir_list = glob.glob(inps.data_dir + '/network_*')
-                for data_dir in dir_list:
-                     #if os.path.exists(inps.work_dir +'/'+ data_dir):
-                     if not inps.miaplpy_all_flag:
-                         scp_list.extend([
-                             '/'+ data_dir +'/*.he5',
-                             '/'+ data_dir +'/demErr.h5',
-                             '/'+ data_dir +'/pic' 
-                             ])
-                     else:
-                         scp_list.extend([
-                             '/'+ data_dir +'/*.he5',
-                             '/'+ data_dir +'/*.h5',
-                             '/'+ data_dir +'/*.cfg',
-                             '/'+ data_dir +'/*.txt',
-                             '/'+ data_dir +'/inputs/geometryRadar.h5',
-                             '/'+ data_dir +'/inputs/smallbaselineApp.cfg',
-                             '/'+ data_dir +'/inputs/*template',
-                             '/'+ data_dir +'/pic' 
-                             ])
-                             #'/'+ data_dir +'../inputs/*',
-                             #'/'+ data_dir +'/inputs'
+        scp_list.extend([
+            '/'+ os.path.dirname(data_dir) +'/inputs/slcStack.h5',
+            '/'+ os.path.dirname(data_dir) +'/inputs/geometryRadar.h5',
+            '/'+ os.path.dirname(data_dir) +'/maskPS.h5',
+            '/'+ os.path.dirname(data_dir) +'/inputs/baselines' 
+            ])
 
-                scp_list.extend([
-                    '/'+ os.path.dirname(data_dir) +'/inputs/slcStack.h5',
-                    '/'+ os.path.dirname(data_dir) +'/inputs/geometryRadar.h5',
-                    '/'+ os.path.dirname(data_dir) +'/maskPS.h5',
-                    '/'+ os.path.dirname(data_dir) +'/inputs/baselines' 
-                    ])
+    for pattern in scp_list:
+        if ( len(glob.glob(inps.work_dir + '/' + pattern)) >= 1 ):
+            #files=glob.glob(inps.work_dir + '/' + pattern)
+            files=glob.glob(inps.work_dir + pattern)
 
-        for pattern in scp_list:
-            if ( len(glob.glob(inps.work_dir + '/' + pattern)) >= 1 ):
-                #files=glob.glob(inps.work_dir + '/' + pattern)
-                files=glob.glob(inps.work_dir + pattern)
+            if os.path.isfile(files[0]):
+               full_dir_name = os.path.dirname(files[0])
+            elif os.path.isdir(files[0]):
+               full_dir_name = os.path.dirname(files[0])
+            else:
+                raise Exception('ERROR finding directory in pattern in upload_data_products.py')
 
-                if os.path.isfile(files[0]):
-                   full_dir_name = os.path.dirname(files[0])
-                elif os.path.isdir(files[0]):
-                   full_dir_name = os.path.dirname(files[0])
-                else:
-                    raise Exception('ERROR finding directory in pattern in upload_data_products.py')
+            dir_name = full_dir_name.removeprefix(inps.work_dir +'/')
+               
+            # create remote directory
+            print ('\nCreating remote directory:',dir_name)
+            command = 'ssh ' + DATA_SERVER + ' mkdir -p ' + REMOTE_DIR + project_name + '/' + dir_name
+            print (command)
+            status = subprocess.Popen(command, shell=True).wait()
+            if status is not 0:
+                raise Exception('ERROR creating remote directory in upload_data_products.py')
 
-                dir_name = full_dir_name.removeprefix(inps.work_dir +'/')
-                   
-                # create remote directory
-                print ('\nCreating remote directory:',dir_name)
-                command = 'ssh ' + DATA_SERVER + ' mkdir -p ' + REMOTE_DIR + project_name + '/' + dir_name
-                print (command)
-                status = subprocess.Popen(command, shell=True).wait()
-                if status is not 0:
-                    raise Exception('ERROR creating remote directory in upload_data_products.py')
+            # upload data
+            print ('\nUploading data:')
+            command = 'scp -r ' + inps.work_dir + pattern + ' ' + destination + project_name + '/'.join(pattern.split('/')[0:-1])
+            print (command)
+            status = subprocess.Popen(command, shell=True).wait()
+            if status is not 0:
+                raise Exception('ERROR uploading using scp -r  in upload_data_products.py')
 
-                # upload data
-                print ('\nUploading data:')
-                command = 'scp -r ' + inps.work_dir + pattern + ' ' + destination + project_name + '/'.join(pattern.split('/')[0:-1])
-                print (command)
-                status = subprocess.Popen(command, shell=True).wait()
-                if status is not 0:
-                    raise Exception('ERROR uploading using scp -r  in upload_data_products.py')
-
-                # adjust permissions
-                print ('\nAdjusting permissions:')
-                command = 'ssh ' + DATA_SERVER + ' chmod -R u=rwX,go=rX ' + REMOTE_DIR + project_name  + pattern
-                print (command)
-                status = subprocess.Popen(command, shell=True).wait()
-                if status is not 0:
-                    raise Exception('ERROR adjusting permissions in upload_data_products.py')
+            # adjust permissions
+            print ('\nAdjusting permissions:')
+            command = 'ssh ' + DATA_SERVER + ' chmod -R u=rwX,go=rX ' + REMOTE_DIR + project_name  + pattern
+            print (command)
+            status = subprocess.Popen(command, shell=True).wait()
+            if status is not 0:
+                raise Exception('ERROR adjusting permissions in upload_data_products.py')
 
 ##########################################
 
