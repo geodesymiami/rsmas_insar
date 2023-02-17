@@ -26,12 +26,12 @@ done
 ###########################################
 function get_date_str() {
 # get string with start and end date
-if  [ ! -z ${template[miaplpy.load.startDate]} ]; then
+if  [ ! -z ${template[miaplpy.load.startDate]} ] && [ ! ${template[miaplpy.load.startDate]} == "auto" ]; then
     start_date=${template[miaplpy.load.startDate]} 
 else
     start_date=$(ls merged/SLC | head -1)
 fi
-if  [ ! -z ${template[miaplpy.load.endDate]} ]; then
+if  [ ! -z ${template[miaplpy.load.endDate]} ] && [ ! ${template[miaplpy.load.endDate]} == "auto" ]; then
     end_date=${template[miaplpy.load.endDate]} 
 else
     end_date=$(ls merged/SLC | tail -1)
