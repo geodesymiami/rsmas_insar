@@ -142,4 +142,27 @@ for dir in ${not_finished[@]}; do
 done
 }
 
+###########################################
+function add_ref_lalo_to_file() { 
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+helptext="                                       \n\
+  Examples:                                      \n\
+      add_ref_lalo_to_file  S1_IW1_128_0596_0597_20160605_XXXXXXXX_S00860_S00810_W091190_W091130_Del4PS.he5                \n\
+                                                 \n\
+  adds REF_LAT, REF_LON to file (read from geo_velocity.h5)  \n
+    "
+    printf "$helptext"
+    return
+fi
+
+file=$1
+
+echo adding to $file
+REF_LAT=$(info.py geo/geo_velocity.h5 | grep REF_LAT | awk '{print $2}')
+REF_LON=$(info.py geo/geo_velocity.h5 | grep REF_LON | awk '{print $2}')
+
+$MINTPY_HOME/src/mintpy/legacy/add_attribute.py $file REF_LAT=${REF_LAT}
+$MINTPY_HOME/src/mintpy/legacy/add_attribute.py $file REF_LON=${REF_LON}
+}
+
 
