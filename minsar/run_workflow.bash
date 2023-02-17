@@ -271,6 +271,14 @@ if [[ $miaplpy_flag == "true" ]]; then
       fi
       network_type=${network_type}_${connection_number}
    fi
+   if [[ $network_type == "delaunay" ]];  then
+      if [[ ! -z $(grep "^miaplpy.interferograms.delaunayBaselineRatio" $template_file) ]];  then
+         delaunay_baseline_ratio=$(grep -E "^miaplpy.interferograms.delaunayBaselineRatio" $template_file | awk -F= '{print $2}' |  awk -F# '{print $1}' | xargs  )
+      else
+         delaunay_baseline_ratio=4                            # default of MiaplPy
+      fi
+      network_type=${network_type}_${delaunay_baseline_ratio}
+   fi
 
    RUNFILES_DIR=$WORKDIR"/${dir_miaplpy}/network_${network_type}/run_files"
    echo "RUNFILES_DIR: $RUNFILES_DIR"
