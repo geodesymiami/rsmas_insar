@@ -58,7 +58,7 @@ sed -i "s|isce2|#isce2|g" ../tools/MiaplPy/docs/requirements.txt
 ../tools/miniconda3/bin/mamba install isce2 -c conda-forge --yes 
 ../tools/miniconda3/bin/conda install --yes --file ../minsar/requirements.txt
 ../tools/miniconda3/bin/conda install --yes --file ../tools/insarmaps_scripts/docs/requirements.txt
-../tools/miniconda3/bin/conda insrall ../tools/MimtPy/mimtpy/docs/requirements.txt  --yes
+../tools/miniconda3/bin/conda insrall --yes --file ../tools/MimtPy/mimtpy/docs/requirements.txt 
 
 ```
 * #Compile [MiaplPy](https://github.com/geodesymiami/MiaplPy) and install [SNAPHU](https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/) (if required):
