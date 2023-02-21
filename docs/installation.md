@@ -35,9 +35,9 @@ git clone https://github.com/geodesymiami/MimtPy.git tools/MimtPy ;
 git clone https://github.com/TACC/launcher.git tools/launcher ;
 
 ########  Done with critical code.  ########
-```
-* #Install your python environment:
-```
+
+### Install your python environment: ###
+
 cd setup
 rm -rf ../tools/miniconda3
 #miniconda_version=Miniconda3-latest-MacOSX-x86_64.sh    # python 3.8  - does not seem to work
@@ -45,7 +45,6 @@ miniconda_version=Miniconda3-py38_4.9.2-Linux-x86_64.sh
 miniconda_version=Miniconda3-latest-Linux-x86_64.sh
 wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate -O $miniconda_version #; if ($? != 0) exit; 
 chmod 755 $miniconda_version
-#./$miniconda_version -b -p ../tools/miniconda3.        # did not work on jetstream
 bash ./$miniconda_version -b -p ../tools/miniconda3
 ../tools/miniconda3/bin/conda config --add channels conda-forge
 ../tools/miniconda3/bin/conda install mamba --yes
@@ -54,15 +53,13 @@ bash ./$miniconda_version -b -p ../tools/miniconda3
 sed -i "s|isce2|#isce2|g" ../tools/MiaplPy/docs/requirements.txt
 ../tools/miniconda3/bin/conda install --yes --file ../tools/MiaplPy/docs/requirements.txt
 
-#../tools/miniconda3/bin/pip install git+https://github.com/insarlab/PySolid.git
 ../tools/miniconda3/bin/mamba install isce2 -c conda-forge --yes 
 ../tools/miniconda3/bin/conda install --yes --file ../minsar/requirements.txt
 ../tools/miniconda3/bin/conda install --yes --file ../tools/insarmaps_scripts/docs/requirements.txt
 ../tools/miniconda3/bin/conda install --yes --file ../tools/MimtPy/mimtpy/docs/requirements.txt 
 
-```
-* #Compile [MiaplPy](https://github.com/geodesymiami/MiaplPy) and install [SNAPHU](https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/) (if required):
-```
+### Compile [MiaplPy](https://github.com/geodesymiami/MiaplPy) and install [SNAPHU](https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/) (if required): ###
+
 export MIAPLPY_HOME="${PWD%/*}/tools/MiaplPy"
 cd $MIAPLPY_HOME/miaplpy/lib;
  ../../../../tools/miniconda3/bin/python  setup.py
@@ -76,9 +73,9 @@ sed -i 's/\/usr\/local/$(MIAPLPY_HOME)\/snaphu/g' snaphu/src/Makefile
 cd snaphu/src; make
 
 cd ../../../../setup/
-```
-* #Adding ISCE fixes and copying latest version into miniconda directory
-```
+
+### Adding ISCE fixes and copying latest version into miniconda directory ###
+
 cp -p ../minsar/additions/isce/logging.conf ../tools/miniconda3/lib/python3.*/site-packages/isce/defaults/logging/logging.conf
 cp -p ../minsar/additions/isce2/topsStack/FilterAndCoherence.py ../tools/isce2/contrib/stack/topsStack
 cp -p ../minsar/additions/isce2/stripmapStack/prepRawCSK.py ../tools/isce2/contrib/stack/stripmapStack
@@ -89,8 +86,6 @@ cp -p ../minsar/additions/isce2/VRTManager.py ../tools/isce2/contrib/stack/topsS
 cp -p ../minsar/additions/isce2/TOPSSwathSLCProduct.py ../tools/isce2/components/isceobj/Sensor/TOPS          # 1/23 np.int issue
 cp -p ../minsar/additions/isce2/Sentinel1.py  ../tools/isce2/components/isceobj/Sensor/TOPS                   # 2/23 np.int issue
 cp -p ../minsar/additions/isce2/stripmapStack/cropFrame.py ../tools/isce2/contrib/stack/stripmapStack         # 1/23 np.int issue
-
-# cp -p ../minsar/additions/mintpy/dem_error.py ../tools/MintPy/src/mintpy 
 
 cp ../tools/isce2/components/isceobj/Sensor/TOPS/TOPSSwathSLCProduct.py ../tools/miniconda3/lib/python3.1?/site-packages/isce/components/isceobj/Sensor/TOPS
 
@@ -103,26 +98,16 @@ cp -p ../minsar/additions/mintpy/cli/save_hdfeos5.py ../tools/MintPy/src/mintpy/
 cp -p ../minsar/additions/miaplpy/find_short_baselines.py  ../tools/MiaplPy/miaplpy/
 cp -p ../minsar/additions/miaplpy/prep_slc_isce.py  ../tools/MiaplPy/miaplpy/
 
-#cp -p ../minsar/additions/mintpy/plot_smallbaselineApp.sh ../tools/MintPy/mintpy/sh/
-#cp -p ../minsar/additions/isce/invertMisreg.py ../tools/isce2/contrib/stack/stripmapStack
-#cp -p ../minsar/additions/stackStripMap.py $ISCE_STACK/stripmapStack
-#cp -p ../minsar/additions/isce/stackSentinel.py $ISCE_STACK/topsStack
-#cp -p ../minsar/additions/isce2/topsStack/fetchOrbit.py ../tools/isce2/contrib/stack/topsStack
-
-```
-
-* #Source the environment and create aux directories. Install credential files for data download:
-```
+### Source the environment and create aux directories. Install credential files for data download: ###
 ./install_credential_files.bash;
 
 source ~/accounts/platforms_defaults.bash;
 export RSMASINSAR_HOME=$(dirname $PWD)
 source environment.bash;
 mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
-```
 
-* #create your `miniconda3.tar` and `minsar.tar`  (removing `pkgs` saves space, could cause problems with environments) (needed for `install_code_to_tmp.bash)
-```
+### create your `miniconda3.tar` and `minsar.tar`  (removing `pkgs` saves space, could cause problems with environments) (needed for `install_code_to_tmp.bash) ###
+
 tar cf ../minsar.tar ../tools/launcher ../minsar ../setup ../tools/MintPy/src ../tools/MimtPy/mimtpy ../tools/MiaplPy/miaplpy ../tools/MiaplPy/snaphu/bin ../tools/insarmaps_scripts ../tools/isce2/contrib/stack
 rm -rf ../tools/miniconda3/pkgs
 tar cf ../tools/miniconda3.tar -C ../tools/ miniconda3 
