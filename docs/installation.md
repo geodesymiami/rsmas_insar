@@ -74,7 +74,7 @@ cd snaphu/src; make
 ############################################
 ### Adding ISCE fixes and copying latest ISCE version into miniconda directory ###
 cd ../../../../setup/
-cp -p ../minsar/additions/isce/logging.conf ../tools/miniconda3/lib/python3.*/site-packages/isce/defaults/logging/logging.conf
+cp -p ../minsar/additions/isce/logging.conf ../tools/miniconda3/lib/python3.?/site-packages/isce/defaults/logging/logging.conf
 cp -p ../minsar/additions/isce2/topsStack/FilterAndCoherence.py ../tools/isce2/contrib/stack/topsStack
 cp -p ../minsar/additions/isce2/stripmapStack/prepRawCSK.py ../tools/isce2/contrib/stack/stripmapStack
 cp -p ../minsar/additions/isce2/stripmapStack/unpackFrame_TSX.py ../tools/isce2/contrib/stack/stripmapStack
@@ -84,7 +84,7 @@ cp -p ../minsar/additions/isce2/VRTManager.py ../tools/isce2/contrib/stack/topsS
 cp -p ../minsar/additions/isce2/TOPSSwathSLCProduct.py ../tools/isce2/components/isceobj/Sensor/TOPS          # 1/23 np.int issue
 cp -p ../minsar/additions/isce2/Sentinel1.py  ../tools/isce2/components/isceobj/Sensor/TOPS                   # 2/23 np.int issue
 cp -p ../minsar/additions/isce2/stripmapStack/cropFrame.py ../tools/isce2/contrib/stack/stripmapStack         # 1/23 np.int issue
-cp ../tools/isce2/components/isceobj/Sensor/TOPS/TOPSSwathSLCProduct.py ../tools/miniconda3/lib/python3.1?/site-packages/isce/components/isceobj/Sensor/TOPS
+cp ../tools/isce2/components/isceobj/Sensor/TOPS/TOPSSwathSLCProduct.py ../tools/miniconda3/lib/python3.?/site-packages/isce/components/isceobj/Sensor/TOPS
 cp -r ../tools/isce2/contrib/stack/* ../tools/miniconda3/share/isce2 
 cp -r ../tools/isce2/components/isceobj/Sensor/TOPS ../tools/miniconda3/share/isce2 
 
