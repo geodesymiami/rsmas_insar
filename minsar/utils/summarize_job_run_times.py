@@ -41,6 +41,7 @@ def main(iargs=None):
     parser.add_argument('--local', dest='local_flag', action='store_true', default=False, help='for current (local) directory')
     parser.add_argument('--tmp', dest='tmp', action='store_true', default=False, help='process run_files in run_files_tmp directory')
     parser.add_argument('--no-tmp', dest='tmp', action='store_false', default=False, help='process run_files in run_files directory')
+    parser.add_argument("--miaplpyDir`", dest="miaplpy_dir", metavar="DIR", help="miaplpy directory")
 
     inps = parser.parse_args(args=iargs)
 
@@ -62,14 +63,14 @@ def main(iargs=None):
             run_files_dir = cwd + '/run_files'
 
     try: 
-        if inps.tmp:
-            miaplpy_run_files_dir = inps.work_dir + '/miaplpy/run_files'
-        else:
-            miaplpy_run_files_dir = inps.work_dir + '/miaplpy/run_files'
-        miaplpy_run_stdout_files = glob.glob(miaplpy_run_files_dir + '/run_*_*_[0-9][0-9][0-9][0-9]*.o') + glob.glob(miaplpy_run_files_dir + '/*/run_*_*_[0-9][0-9][0-9][0-9]*.o')
+       network_type = inps.template['miaplpy.interferograms.networkType']
     except:
-        pass
-    miaplpy_run_stdout_files = natsorted(miaplpy_run_stdout_files)
+       network_type = 'single_reference'
+
+    if inps.miaplpy_dir:
+       miaplpy_run_files_dir = glob.glob(inps.work_dir + '/' + inps.miaplpy_dir + '/network_' + network_type + '*' + '/run_files')[0]
+       miaplpy_run_stdout_files = glob.glob(miaplpy_run_files_dir + '/run_*_*_[0-9][0-9][0-9][0-9]*.o') + glob.glob(miaplpy_run_files_dir + '/stdout*/run_*_*_[0-9][0-9][0-9][0-9]*.o')
+       miaplpy_run_stdout_files = natsorted(miaplpy_run_stdout_files)
 
     run_stdout_files = glob.glob(run_files_dir + '/run_*_*_[0-9][0-9][0-9][0-9]*.o') + glob.glob(run_files_dir + '/*/run_*_*_[0-9][0-9][0-9][0-9]*.o')
     
@@ -86,12 +87,17 @@ def main(iargs=None):
         run_stdout_files_base.append(os.path.basename(f))
     run_stdout_files = natsorted(run_stdout_files_base)
 
-    miaplpy_run_stdout_files_base=[]
-    for f in miaplpy_run_stdout_files:
-        miaplpy_run_stdout_files_base.append(os.path.basename(f))
-    miaplpy_run_stdout_files = natsorted(miaplpy_run_stdout_files_base)
+    if inps.miaplpy_dir:
+       miaplpy_run_files_dir = glob.glob(inps.work_dir + '/' + inps.miaplpy_dir + '/network_' + network_type + '*' + '/run_files')[0]
+       miaplpy_run_stdout_files = glob.glob(miaplpy_run_files_dir + '/run_*_*_[0-9][0-9][0-9][0-9]*.o') + glob.glob(miaplpy_run_files_dir + '/stdout*/run_*_*_[0-9][0-9][0-9][0-9]*.o')
+       miaplpy_run_stdout_files = natsorted(miaplpy_run_stdout_files)
 
-    run_stdout_files = run_stdout_files +  miaplpy_run_stdout_files
+       miaplpy_run_stdout_files_base=[]
+       for f in miaplpy_run_stdout_files:
+           miaplpy_run_stdout_files_base.append(os.path.basename(f))
+       miaplpy_run_stdout_files = natsorted(miaplpy_run_stdout_files_base)
+
+       run_stdout_files = run_stdout_files +  miaplpy_run_stdout_files
 
     bursts = glob.glob(inps.work_dir + '/geom_reference/*/hgt*rdr')
     number_of_bursts = len(bursts)
