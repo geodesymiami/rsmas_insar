@@ -402,8 +402,8 @@ else
 fi
 echo "Switches: select_reference: $select_reference_flag   download_ECMWF: $download_ECMWF_flag  chunks: $chunks_flag"
 echo "Flags for processing steps:"
-echo "download dem jobfiles ifgram mintpy miaplpy upload insarmaps"
-echo "    $download_flag     $dem_flag      $jobfiles_flag       $ifgram_flag       $mintpy_flag      $miaplpy_flag      $upload_flag       $insarmaps_flag"
+echo "download dem jobfiles ifgram mintpy miaplpy upload insarmaps finishup"
+echo "    $download_flag     $dem_flag      $jobfiles_flag       $ifgram_flag       $mintpy_flag      $miaplpy_flag      $upload_flag       $insarmaps_flag        $finishup_flag"
 
 #############################################################
 # check weather python can load matplotlib.pyplot which occasionaly does not work for unknown reasons
@@ -828,7 +828,12 @@ if [[ $insarmaps_flag == "1" ]]; then
 fi
 
 if [[ $finishup_flag == "1" ]]; then
-    cmd="summarize_job_run_times.py $template_file $copy_to_tmp"
+    if [[ $miaplpy_flag == "1" ]]; then
+        miaply_opt="--miaplpyDir $miaplpy_dir_name"
+    else
+        miaply_opt=""
+    fi
+    cmd="summarize_job_run_times.py $template_file $copy_to_tmp $miaply_opt"
     echo "Running.... $cmd"
     $cmd
     echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
