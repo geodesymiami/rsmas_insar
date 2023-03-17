@@ -12,7 +12,7 @@ helptext="                                                                      
       set 'mintpy.timeFunc.polynomial = 2' (here is is assumed that demError was calculated with second order polynominal)   \n\
       then it runs timeseries_rms.py to calculate the RMS . The n_exclude most noisy dates are removed  \n\
       and theh demError is recalculated  \n\
-      as a reminderm demError is calculated using dem_error.py timeseries.h5 -t tmp_smallbaseline.cfg -o timeseries_demErr.h5 --update -g inputs/geometryRadar.h5  \n\
+      as a reminderm demError is calculated using dem_error.py timeseries.h5 -t smallbaseline.cfg -o timeseries_demErr.h5 --update -g inputs/geometryRadar.h5  \n\
                                                                                             \n
      "
     printf "$helptext"
