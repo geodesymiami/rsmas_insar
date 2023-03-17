@@ -146,8 +146,10 @@ def main(iargs=None):
                      '/'+ data_dir +'/*.cfg',
                      '/'+ data_dir +'/*.txt',
                      '/'+ data_dir +'/inputs/geometryRadar.h5',
+                     '/'+ data_dir +'/inputs/ifgramStack.h5',
                      '/'+ data_dir +'/inputs/smallbaselineApp.cfg',
                      '/'+ data_dir +'/inputs/*template',
+                     '/'+ data_dir +'/geo', 
                      '/'+ data_dir +'/pic' 
                      ])
                      #'/'+ data_dir +'../inputs/*',
