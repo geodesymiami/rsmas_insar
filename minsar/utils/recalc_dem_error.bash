@@ -28,20 +28,24 @@ if [ ! $# -eq 1 ]; then
    n_exclude=10
 fi
 
-files=$(ls *timeseriesResidual*)
+files=$(ls rms_timeseriesResidual* timeseries_demErr_exclude${n_exclude}.h5)
 echo removing: $files
-rm *timeseriesResidual*
-cp smallbaselineApp.cfg tmp_smallbaseline.cfg
+rm $files
+cp smallbaselineApp.cfg tmp_smallbaselineApp.cfg
 # modify smallbaselineApp.cfg to create timeseriesResidual.h5 (and velocity.h5) for PhaseVelocity-calculated demError
 sed -i "s|mintpy.timeFunc.polynomial = auto|mintpy.timeFunc.polynomial = 2|g" tmp_smallbaselineApp.cfg
 cmd="timeseries2velocity.py --save-res timeseries_demErr.h5 -t tmp_smallbaselineApp.cfg"
+echo "##############################"
 echo "Running.... $cmd"
+echo "##############################"
 echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
 $cmd
 
-# create timeseriesResidual.h5 (and velocity.h5) for PhaseVelocity
+# create timeseriesResidual.h5 (and velocity.h5) for PhaseVelocity-calculated  demError
 cmd="timeseries_rms.py timeseriesResidual.h5 -t tmp_smallbaselineApp.cfg"
+echo "##############################"
 echo "Running.... $cmd"
+echo "##############################"
 echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
 $cmd
 
@@ -49,9 +53,11 @@ $cmd
 # recalculate demError without bnoisy dates
 tmp1=$(sort -k 2,2 -rn rms_timeseriesResidual_ramp.txt | head -$n_exclude | awk  '{printf "%s,", $1}')
 tmp2=$(echo ${tmp1::-1})
-sed -i "s|mintpy.topographicResidual.excludeDate       = auto|mintpy.topographicResidual.excludeDate = ${tmp2}|g" tmp_smallbaseline.cfg
-cmd="dem_error.py timeseries.h5 -t tmp_smallbaseline.cfg -o timeseries_demErr.h5 --update -g inputs/geometryRadar.h5 --outfile timeseries_demErr_exclude${n_exclude}.h5"
+sed -i "s|mintpy.topographicResidual.excludeDate       = auto|mintpy.topographicResidual.excludeDate = ${tmp2}|g" tmp_smallbaselineApp.cfg
+cmd="dem_error.py timeseries.h5 -t tmp_smallbaselineApp.cfg -o timeseries_demErr.h5 --update -g inputs/geometryRadar.h5 --outfile timeseries_demErr_exclude${n_exclude}.h5"
+echo "##############################"
 echo "Running.... $cmd"
+echo "##############################"
 echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
 $cmd
 mv demErr.h5 demErr_exclude${n_exclude}.h5
