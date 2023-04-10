@@ -85,7 +85,10 @@ cp -p ../minsar/additions/isce2/TOPSSwathSLCProduct.py ../tools/isce2/components
 cp -p ../minsar/additions/isce2/Sentinel1.py  ../tools/isce2/components/isceobj/Sensor/TOPS                   # 2/23 np.int issue
 cp -p ../minsar/additions/isce2/stripmapStack/cropFrame.py ../tools/isce2/contrib/stack/stripmapStack         # 1/23 np.int issue
 cp ../tools/isce2/components/isceobj/Sensor/TOPS/TOPSSwathSLCProduct.py ../tools/miniconda3/lib/python3.?/site-packages/isce/components/isceobj/Sensor/TOPS
+cp ../minsar/additions/isce2/Sentinel1.py  ../tools/miniconda3/lib/python3.?/site-packages/isce/components/isceobj/Sensor/TOPS/    # 4/23 np.int issue, not clear why need to copy into python3.?/site-packages directory
 cp -r ../tools/isce2/contrib/stack/* ../tools/miniconda3/share/isce2 
+
+
 cp -r ../tools/isce2/components/isceobj/Sensor/TOPS ../tools/miniconda3/share/isce2 
 
 cp -p ../minsar/additions/mintpy/save_hdfeos5.py ../tools/MintPy/src/mintpy/
