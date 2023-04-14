@@ -118,13 +118,17 @@ def main(iargs=None):
            bbox = inps.template[inps.prefix + 'Stack.boundingBox'].strip("'")
         if inps.flag_ssara_kml:
            #ssara_kml_file=sorted( glob.glob(inps.work_dir + '/SLC/ssara_search_*.kml') )[-1]
+
            try:
               ssara_kml_file=sorted( glob.glob(inps.slc_dir + '/ssara_search_*.kml') )[-1]
            except:
               raise FileExistsError('No SLC/ssara_search_*.kml found')
-           bbox = get_boundingBox_from_kml.main( [ssara_kml_file, '--delta_lon' , '0'] )
+
+           try:
+              bbox = get_boundingBox_from_kml.main( [ssara_kml_file, '--delta_lon' , '0'] )
+           except:
+              raise Exception('Problem with *kml file: does not contain bbox information')
            bbox = bbox.split('SNWE:')[1]
-              
 
         print('bbox:',bbox)
         bbox = [val for val in bbox.split()]
