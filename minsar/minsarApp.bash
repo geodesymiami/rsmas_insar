@@ -46,6 +46,8 @@ function get_miaplpy_dir_name() {
 date_str=$(get_date_str)
 if [ -z ${template[minsar.miaplpyDir.addition]} ] || [ ${template[minsar.miaplpyDir.addition]} == "auto" ]; then
    miaply_dir_name="miaplpy"
+elif [ ${template[minsar.miaplpyDir.addition]} == "date" ]; then
+   miaply_dir_name=miaplpy_${date_str}
 elif [ ${template[minsar.miaplpyDir.addition]} == "lalo" ]; then
    if  [ ! -z ${template[miaplpy.subset.lalo]} ]; then
        subset_lalo="${template[miaplpy.subset.lalo]}"
@@ -151,7 +153,7 @@ jobfiles_flag=1
 select_reference_flag=1
 new_reference_flag=0
 download_ECMWF_flag=1
-download_ECMWF_before_mintpy_flag=1
+download_ECMWF_before_mintpy_flag=0
 
 #Steps
 download_flag=1
