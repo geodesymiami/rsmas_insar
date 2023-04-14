@@ -188,7 +188,7 @@ fi
 SJOBS_STEP_MAX_TASKS=$(echo "$SJOBS_STEP_MAX_TASKS/$step_io_load" | bc | awk '{print int($1)}')
 
 ################ Set up lockfile
-lockfile="$SCRATCH/sbatch_minsar.lock"
+lockfile="$SCRATCHDIR/sbatch_minsar.lock"
 exec 200>$lockfile
 flock 200
 echo "PID: $$" 1>&200
