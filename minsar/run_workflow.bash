@@ -272,7 +272,7 @@ if [[ $miaplpy_flag == "true" ]]; then
       network_type=${network_type}_${connection_number}
    fi
    if [[ $network_type == "delaunay" ]];  then
-      if [[ ! -z $(grep "^miaplpy.interferograms.delaunayBaselineRatio" $template_file) ]];  then
+      if [ ! -z $(grep "^miaplpy.interferograms.delaunayBaselineRatio" $template_file) ] &&  [ ! ${template[miaplpy.interferograms.delaunayBaselineRatio]} == "auto" ]; then
          delaunay_baseline_ratio=$(grep -E "^miaplpy.interferograms.delaunayBaselineRatio" $template_file | awk -F= '{print $2}' |  awk -F# '{print $1}' | xargs  )
       else
          delaunay_baseline_ratio=4                            # default of MiaplPy
