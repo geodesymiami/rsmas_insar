@@ -1,0 +1,62 @@
+processor                             = isce
+#cleanopt                              = 0
+ssaraopt.platform                     = TSX 
+#ssaraopt.startDate                    = 20150921
+#ssaraopt.endDate                      = 20211115
+ssaraopt.relativeOrbit                = 036
+unavco.relative_orbit                 = 036
+
+# 4/23 this ssara command works but is currently not created b y generate_downlaod_command.py
+# ssara_federated_query.py    --relativeOrbit=036 --intersectsWith='Polygon((-80.71 25.70, -80.71 26.20, -80.12 26.20, -80.12 25.70, -80.71 25.70))' --collectionName="TSX ARC_famelung_COA3837" --beamSwath=strip_014 --beamSwath=strip_014 --start=2017-09-01 --end=2017-12-31 --print --maxResults=20000
+# and then this command works:
+# create_runfiles.py $SAMPLESDIR/MiamitestTsxSMDT36.template --jobfiles --queue skx-dev --no-tmp
+
+
+ssaraopt.collectionName               = "TSX ARC_famelung_COA3837" --beamSwath=strip_014
+ssaraopt.collectionName               = TSX ARC_famelung_COA3837 
+ssaraopt.beamSwath                    = strip_014
+ssaraopt.startDate                    = 20170901
+ssaraopt.endDate                      = 20171031
+
+stripmapStack.sensor                  = tsx
+stripmapStack.zerodop                 = True
+stripmapStack.nofocus                 = True
+acquisition_mode                      = stripmap
+
+stripmapStack.boundingBox             = 25.8384 25.9184 -80.1656 -80.1174
+stripmapStack.boundingBox             = 25.52 26.0 -80.41 -80.1174
+stripmapStack.azimuthLooks            = 10
+stripmapStack.rangeLooks              = 10
+stripmapStack.timeThreshold           = 90
+stripmapStack.baselineThreshold       = 450
+stripmapStack.golsteinFilterStrength  = 0.2          
+stripmapStack.unwMethod               = snaphu     
+
+mintpy.troposphericDelay.method       = no
+mintpy.reference.minCoherence         = 0.7   #[0.0-1.0], auto for 0.85, minimum coherence for auto method
+
+#raw_image_dir                         =  $TESTDATA_ISCE/MiamitestTsxSMDT36/SLC_ORIG
+raw_image_dir                         =  ./SLC_ORIG
+
+mintpy.load.autoPath                  = yes
+mintpy.compute.cluster                = local
+mintpy.compute.numWorker              = 20
+mintpy.save.hdfEos5                   = yes
+mintpy.save.hdfEos5.update            = no
+mintpy.save.hdfEos5.subset            = yes   #[yes / no], auto for no, put subset range info   in output filename
+insarmaps_flag                        = False
+
+###### South Surfside #
+#mintpy.reference.lalo                = 25.8791,-80.1259          
+mintpy.subset.lalo                   = 25.89:25.906,-80.129:-80.115            # Surfside_only
+
+miaplpy.multiprocessing.numProcessor = 40
+### crop the area to a small subset
+miaplpy.load.processor               = isce
+miaplpy.interferograms.networkType   = sequential
+miaplpy.interferograms.networkType   = single_reference
+
+# Unwrapping Error Correction (optional)
+#mintpy.unwrapError.method          = bridging
+#mintpy.unwrapError.connCompMinArea = 200
+#mintpy.deramp                      = no
