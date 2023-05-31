@@ -124,6 +124,8 @@ def main(iargs=None):
            except:
               raise FileExistsError('No SLC/ssara_search_*.kml found')
 
+           print('using kml file:',ssara_kml_file)
+
            try:
               bbox = get_boundingBox_from_kml.main( [ssara_kml_file, '--delta_lon' , '0'] )
            except:
