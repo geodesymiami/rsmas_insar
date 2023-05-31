@@ -60,8 +60,8 @@ def main(iargs=None):
     if os.path.isdir(json_folder):
         shutil.rmtree(json_folder)
 
-    command1 = 'hdfeos5_2json_mbtiles.py ' + hdfeos_file + ' ' + json_folder 
-    command2 = 'json_mbtiles2insarmaps.py -u ' + password.insaruser + ' -p ' + password.insarpass + ' --host ' + \
+    command1 = 'hdfeos5_2json_mbtiles.py --num-workers 8 ' + hdfeos_file + ' ' + json_folder 
+    command2 = 'json_mbtiles2insarmaps.py --num-workers 8 -u ' + password.insaruser + ' -p ' + password.insarpass + ' --host ' + \
                'insarmaps.miami.edu -P rsmastest -U rsmas\@gmail.com --json_folder ' + \
                json_folder + ' --mbtiles_file ' + mbtiles_file 
 
