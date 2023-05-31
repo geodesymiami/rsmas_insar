@@ -392,7 +392,7 @@ def update_template_file(TEMP_FILE, custom_templateObj):
         print('Updating template file')
         fileText = '#####################################\n'
         for key, value in tempObj.options.items():
-            fileText = fileText + "{:<38}".format(key) + "{:<15}".format("= {}".format(value.strip("'"))) + '\n'
+            fileText = fileText + "{:<42}".format(key) + "{:<15}".format("= {}".format(value.strip("'"))) + '\n'
 
         with open(TEMP_FILE, 'w') as file:
             file.writelines(fileText)
@@ -414,7 +414,7 @@ def write_template_file(TEMP_FILE, tempObj):
     print('Updating template file')
     fileText = '#######################################\n'
     for key, value in tempObj.options.items():
-         fileText = fileText + "{:<38}".format(key) + "{:<15}".format("= {}".format(value.strip("'"))) + '\n'
+         fileText = fileText + "{:<42}".format(key) + "{:<15}".format("= {}".format(value.strip("'"))) + '\n'
 
     with open(TEMP_FILE, 'w') as file:
         file.writelines(fileText)
