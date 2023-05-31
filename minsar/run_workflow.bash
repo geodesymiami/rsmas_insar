@@ -80,15 +80,23 @@ cd $WORKDIR
 randomorder=false
 rapid=false
 append=false
-tmp=true
-tmp_flag_str="--tmp"
-run_files_name="run_files_tmp"
 dir_miaplpy="miaplpy"
 wait_time=30
 
+tmp=true
+tmp_flag_str="--tmp"
+run_files_name="run_files_tmp"
+#always use --no-tmp on stampede2   FA 4/2023: need to change to use copy_to_tmp as in minsarApp.bash
+if [[ $HOSTNAME == *"stampede2"* ]] && [[ $tmp_flag_str == "--tmp" ]]; then
+   tmp_flag_str="--no-tmp"
+   run_files_name="run_files"
+   echo "Running on stampede2: switched from --tmp to --no-tmp "
+fi
+
 startstep=1
-#stopstep="insarmaps"
-#stopstep="mintpy"
+stopstep=11
+
+# FA 4/23: need function to get  stopstep depending on ToPS verus stripmap
 dir_flag=false
 
 template_file_dir=$(dirname "$1")          # create name including $TE for concise log file
