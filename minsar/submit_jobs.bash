@@ -46,6 +46,7 @@ max_time=604800
 randomorder=false
 wait_time=300
 wait_time=120
+wait_time=60
 
 while [[ $# -gt 0 ]]
 do
