@@ -45,8 +45,8 @@ elif [[ ${copy[0]} == *COSMO-SKYMED* ]] || [[ ${copy[0]} == *ALOS-2* ]]; then
    regex="https:\/\/imaging\.unavco\.\.org\/*\.gz"
 fi
 
-echo "Running ... ssara_federated_query.py $argstring --maxResults=20000 > ssara_listing.txt"
-ssara_federated_query.py "${argv[@]:0:$#-1}" --maxResults=20000 > ssara_listing.txt
+echo "Running ... ssara_federated_query.py $argstring --maxResults=20000 --asfResponseTimeout=60 > ssara_listing.txt"
+ssara_federated_query.py "${argv[@]:0:$#-1}" --maxResults=20000 --asfResponseTimeout=60  > ssara_listing.txt
 
 #grep Found ssara_listing.txt >> log
 downloads_num=$(grep Found ssara_listing.txt | cut -d " " -f 2)
@@ -83,8 +83,10 @@ while [ $exit_code -ne 0 ] && [ $runs -lt 3 ]; do
     sleep 60
 done
 
-echo "Running (with\`s inserted) ... ssara_federated_query.py ${argv[@]:0:$#-1} --maxResults=20000 --download" | tee -a log
-ssara_federated_query.py "${argv[@]:0:$#-1}" --maxResults=20000 --download  
+echo "Running (with\`s inserted) ... ssara_federated_query.py ${argv[@]:0:$#-1} --maxResults=20000 --download --asfResponseTimeout=60" | tee -a log
+ssara_federated_query.py "${argv[@]:0:$#-1}" --maxResults=20000 --download --asfResponseTimeout=60  
+cmd="ssara_federated_query.py "${argv[@]:0:$#-1}" --maxResults=20000 --download --asfResponseTimeout=60"
+echo "$(date +"%Y%m%d:%H-%m") $cmd"  | tee -a log
 
 echo "$(date +"%Y%m%d:%H-%m") check_download: `check_download.py $PWD --delete`"  | tee -a log
 granules_num=$(ls *.{zip,tar.gz} 2> /dev/null | wc -l)
