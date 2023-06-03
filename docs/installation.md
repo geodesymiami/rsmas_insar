@@ -48,14 +48,14 @@ bash ./$miniconda_version -b -p ../tools/miniconda3
 ../tools/miniconda3/bin/conda config --add channels conda-forge
 ../tools/miniconda3/bin/conda install mamba --yes
 ../tools/miniconda3/bin/conda  update mamba --yes
-../tools/miniconda3/bin/conda install --yes --file ../tools/MintPy/requirements.txt
+../tools/miniconda3/bin/mamba install --yes --file ../tools/MintPy/requirements.txt
 sed -i "s|isce2|#isce2|g" ../tools/MiaplPy/docs/requirements.txt
 ../tools/miniconda3/bin/conda install --yes --file ../tools/MiaplPy/docs/requirements.txt
 
 ../tools/miniconda3/bin/mamba install isce2 -c conda-forge --yes 
-../tools/miniconda3/bin/conda install --yes --file ../minsar/requirements.txt
-../tools/miniconda3/bin/conda install --yes --file ../tools/insarmaps_scripts/docs/requirements.txt
-../tools/miniconda3/bin/conda install --yes --file ../tools/MimtPy/mimtpy/docs/requirements.txt 
+../tools/miniconda3/bin/mamba install --yes --file ../minsar/requirements.txt
+../tools/miniconda3/bin/mamba install --yes --file ../tools/insarmaps_scripts/docs/requirements.txt
+../tools/miniconda3/bin/mamba install --yes --file ../tools/MimtPy/mimtpy/docs/requirements.txt 
 # faster:  ../tools/miniconda3/bin/mamba install --yes --file  ../tools/MintPy/requirements.txt  isce2 -c conda-forge (but needs the memory of a node)
 ############################################
 ### Compile MiaplPy and install SNAPHU #####
