@@ -34,11 +34,11 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 #####
 
 EXAMPLE = """example:
-            ./view_scatterplot.py --subset_lalo 25.875  25.8795  -80.122  -80.121 
+            ./view_scatterplot.py velocity.h5 demErr.h5 geometryRadar.h maskTempCoh.h5 maskPS.h5 timeseries_demErr.h5 slcStack.h5 --subset_lalo 25.875  25.8795  -80.122  -80.121 
 
-            ./view_scatterplot_dem.py --subset_lalo 25.8384 25.909 -80.147 -80.1174 -el -50 50
+            ./view_scatterplot_dem.py velocity.h5 demErr.h5 geometryRadar.h maskTempCoh.h5 maskPS.h5 timeseries_demErr.h5 slcStack.h5 --subset_lalo 25.8384 25.909 -80.147 -80.1174 -el -50 50
 
-            ./view_scatterplot.py --subset_lalo 25.87525.8795-80.122-80.121 --timeseries ./timeseries_demErr.h5            
+            ./view_scatterplot.py velocity.h5 demErr.h5 geometryRadar.h maskTempCoh.h5 maskPS.h5 timeseries_demErr.h5 slcStack.h5 --subset_lalo 25.87525.8795-80.122-80.121 --timeseries ./timeseries_demErr.h5            
 """
 ####
 def cmd_line_parser():
@@ -47,18 +47,15 @@ def cmd_line_parser():
     epilog = EXAMPLE
     name = __name__.split('.')[-1]
     parser = arg_utils.create_argument_parser(name, synopsis=synopsis, description=synopsis, epilog=epilog, subparsers=None)
-#    parser = argparse.ArgumentParser(description='plots velocity, DEM error, and estimated elevation on the backscatter')
-#    parser = argparse.ArgumentParser(description='Calculates Dem error for a pixel using timeseries.h5 file', epilog = " "  + '\n' + EXAMPLE)
     parser.add_argument('--subset_lalo', nargs=4, default=(25.875, 25.8795, -80.122, -80.121), metavar='', type=float, help='latitude and longitude for the corners of the box')
     parser.add_argument('--outfile', '-o', metavar='', type=str, default='scatter_backscatter_dem.png', help='output png file name')
-    parser.add_argument("--velocity", metavar='', type=str, default="./velocity.h5", help = "path to the velocity file")
-    parser.add_argument("--dem_error", metavar='', type=str, default="./demErr.h5", help = "path to the Dem error file")
-    parser.add_argument("--geometry", metavar='', type=str, default="./inputs/geometryRadar.h5", help = "path to the geolocation file")
-    parser.add_argument("--dsm", type=str, metavar='', default="./dsm_reprojected_wgs84.tif", help = "path to Lidar elevation file")
-    parser.add_argument("--masktemp", type=str, metavar='', default="./maskTempCoh.h5", help = "path to temporal coherence mask file")
-    parser.add_argument("--PS", type=str, metavar='', default="./maskPS.h5", help = "path to PS file")
-    parser.add_argument("--timeseries", metavar='', type=str, default="./timeseries_demErr.h5", help = "path to timeseries file")
-    parser.add_argument("--slcStack", metavar='', type=str, default="./inputs/slcStack.h5", help = "path to slcstack file")
+    parser.add_argument("velocity", metavar='', type=str, help = "Velocity file")
+    parser.add_argument("dem_error", metavar='', type=str, help = "Dem error file")
+    parser.add_argument("geometry", metavar='', type=str, help = "Geolocation file")
+    parser.add_argument("masktemp", type=str, metavar='', help = "Temporal coherence mask file")
+    parser.add_argument("PS", type=str, metavar='', help = "PS file")
+    parser.add_argument("timeseries", metavar='', type=str, help = "Timeseries file")
+    parser.add_argument("slcStack", metavar='', type=str, help = "slcstack file")
     parser.add_argument("--out_amplitude", metavar='', type=str, default="./mean_amplitude.npy", help = "file to write the amplitude from slcSack")
     parser.add_argument("--project_dir", metavar='', type=str, default="./", help = "path to the directory containing data files")
     parser.add_argument('--vlim', nargs=2, metavar=('VMIN','VMAX'), default=(-0.6, 0.6), type=float, help='velocity limit for the colorbar. Default is -0.6 0.6')
@@ -104,7 +101,6 @@ def get_data(ymin, ymax, xmin, xmax, ps, out_amplitude, shift=0):
     vel_file=args.velocity
     demError_file=args.dem_error
     geo_file=args.geometry
-    geom_dsm =args.dsm
     mask_file_t=args.masktemp
     mask_file_ps=args.PS
     tsStack=args.timeseries
@@ -272,7 +268,6 @@ def main():
     vel_file=args.velocity  
     demError_file=args.dem_error
     geo_file=args.geometry
-    geom_dsm =args.dsm
     mask_file_t=args.masktemp
     mask_file_ps=args.PS
     tsStack=args.timeseries
@@ -323,6 +318,7 @@ def main():
     plot_subset(ymin=ymin, ymax=ymax, xmin=xmin, xmax=xmax, ps=True, v_min=vl, v_max=vh,
             amplitude_im=out_amplitude, dem_offset=dem_offset, dem_name='dem',
             out_name=outfile, size=args.point_size)
+    plt.show()
 
 if __name__ == '__main__':
     main()
