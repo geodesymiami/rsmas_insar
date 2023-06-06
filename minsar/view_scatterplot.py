@@ -34,11 +34,10 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 #####
 
 EXAMPLE = """example:
-            ./view_scatterplot.py velocity.h5 demErr.h5 geometryRadar.h maskTempCoh.h5 maskPS.h5 timeseries_demErr.h5 slcStack.h5 --subset_lalo 25.875  25.8795  -80.122  -80.121 
+            ./view_scatterplot.py velocity.h5 demErr.h5 geometryRadar.h maskTempCoh.h5 maskPS.h5 timeseries_demErr.h5 slcStack.h5 --sub-lat 25.875  25.8795  --sub-lon -80.122  -80.121 
 
-            ./view_scatterplot_dem.py velocity.h5 demErr.h5 geometryRadar.h maskTempCoh.h5 maskPS.h5 timeseries_demErr.h5 slcStack.h5 --subset_lalo 25.8384 25.909 -80.147 -80.1174 -el -50 50
-
-            ./view_scatterplot.py velocity.h5 demErr.h5 geometryRadar.h maskTempCoh.h5 maskPS.h5 timeseries_demErr.h5 slcStack.h5 --subset_lalo 25.87525.8795-80.122-80.121 --timeseries ./timeseries_demErr.h5            
+            ./view_scatterplot_dem.py velocity.h5 demErr.h5 geometryRadar.h maskTempCoh.h5 maskPS.h5 timeseries_demErr.h5 slcStack.h5 --sub-lat 25.875  25.8795  --sub-lon -80.122  -80.121 -el -50 50
+            ./view_scatterplot.py velocity.h5 demErr.h5 inputs/geometryRadar.h5 maskTempCoh.h5 maskPS.h5 timeseries.h5  ../inputs/slcStack.h5 --sub-lat 25.875  25.8795  --sub-lon -80.122  -80.121 -dl -60 60 -el -30 30 -esl -60 60 
 """
 ####
 def cmd_line_parser():
@@ -47,7 +46,8 @@ def cmd_line_parser():
     epilog = EXAMPLE
     name = __name__.split('.')[-1]
     parser = arg_utils.create_argument_parser(name, synopsis=synopsis, description=synopsis, epilog=epilog, subparsers=None)
-    parser.add_argument('--subset_lalo', nargs=4, default=(25.875, 25.8795, -80.122, -80.121), metavar='', type=float, help='latitude and longitude for the corners of the box')
+    parser.add_argument('--sub-lat', dest='sub_lat',nargs=2, default=(25.875, 25.8795), metavar='', type=float, help='latitude for the corners of the box')
+    parser.add_argument('--sub-lon', dest='sub_lon',nargs=2, default=(-80.122, -80.121), metavar='', type=float, help='longitude for the corners of the box')
     parser.add_argument('--outfile', '-o', metavar='', type=str, default='scatter_backscatter_dem.png', help='output png file name')
     parser.add_argument("velocity", metavar='', type=str, help = "Velocity file")
     parser.add_argument("dem_error", metavar='', type=str, help = "Dem error file")
@@ -56,21 +56,22 @@ def cmd_line_parser():
     parser.add_argument("PS", type=str, metavar='', help = "PS file")
     parser.add_argument("timeseries", metavar='', type=str, help = "Timeseries file")
     parser.add_argument("slcStack", metavar='', type=str, help = "slcstack file")
-    parser.add_argument("--out_amplitude", metavar='', type=str, default="./mean_amplitude.npy", help = "file to write the amplitude from slcSack")
-    parser.add_argument("--project_dir", metavar='', type=str, default="./", help = "path to the directory containing data files")
-    parser.add_argument('--vlim', nargs=2, metavar=('VMIN','VMAX'), default=(-0.6, 0.6), type=float, help='velocity limit for the colorbar. Default is -0.6 0.6')
-    parser.add_argument('--dem_lim', '-dl', nargs=2, metavar='', type=float, help='Dem limit for color bar e.g., 0 50')
-    parser.add_argument('--dem_error_lim', '-el', nargs=2, metavar='', type=float, help='Dem error limit for color bar e.g., -5 20')
-    parser.add_argument('--dem_estimated_lim', '-esl', nargs=2, metavar='', type=float, help='Estimated elevation limit for color bar e.g., 0 50')
+    parser.add_argument("--out-amplitude", dest='out_amplitude', metavar='', type=str, default="./mean_amplitude.npy", help = "file to write the amplitude from slcSack")
+    parser.add_argument('--dem-offset', metavar='', dest='offset',type=float, default=26, help='dem offset (geoid deviation) e.g., it is 26 for Miami')
+    parser.add_argument("--project-dir", dest='project_dir', metavar='', type=str, default="./", help = "path to the directory containing data files")
 
-    parser.add_argument('--colormap', '-c', metavar='', type=str, default="jet", help='colormap used for display e.g., jet')
-    parser.add_argument('--point_size', metavar='', default=10, type=float, help='points size')
-    parser.add_argument('--offset', metavar='', type=float, default=26, help='dem offset (geoid deviation) e.g., it is 26 for Miami')
-    parser.add_argument('--fontsize', '-f', metavar='', type=float, default=10, help='font size')
+    parser.add_argument('--vlim', nargs=2, metavar=('VMIN','VMAX'), default=(-0.6, 0.6), type=float, help='velocity limit for the colorbar. Default is -0.6 0.6')
+    parser.add_argument('--dem-lim','-dl', dest='dem_lim', nargs=2, metavar='', type=float, help='Dem limit for color bar e.g., 0 50')
+    parser.add_argument('--dem_error-lim','-el', dest='dem_error_lim',nargs=2, metavar='', type=float, help='Dem error limit for color bar e.g., -5 20')
+    parser.add_argument('--dem-estimated-lim','-esl', dest='dem_estimated_lim',nargs=2, metavar='', type=float, help='Estimated elevation limit for color bar e.g., 0 50')
+
+    parser.add_argument('--colormap','-c', metavar='', type=str, default="jet", help='colormap used for display e.g., jet')
+    parser.add_argument('--point-size', dest='point_size',metavar='', default=10, type=float, help='points size')
+    parser.add_argument('--fontsize','-f', metavar='', type=float, default=10, help='font size')
     parser.add_argument("--figsize", metavar=('WID','LEN'), help="width and length of the figure", type=float, nargs= 2)
 
-    parser.add_argument('--flip_lr', metavar='', type=str, default='NO', help='If YES, flips the figure Left-Right. Default is NO.')
-    parser.add_argument('--flip_ud', metavar='', type=str, default='NO', help='If YES, flips the figure Up-Down. Default is NO.')
+    parser.add_argument('--flip-lr', dest='flip_lr', metavar='', type=str, default='NO', help='If YES, flips the figure Left-Right. Default is NO.')
+    parser.add_argument('--flip-ud', dest='flip_ud', metavar='', type=str, default='NO', help='If YES, flips the figure Up-Down. Default is NO.')
 
     args = parser.parse_args()
 
@@ -257,10 +258,10 @@ def main():
 
     args=cmd_line_parser()
 
-    lat1=args.subset_lalo[0]
-    lat2=args.subset_lalo[1]
-    lon1=args.subset_lalo[2]
-    lon2=args.subset_lalo[3]
+    lat1=args.sub_lat[0]
+    lat2=args.sub_lat[1]
+    lon1=args.sub_lon[0]
+    lon2=args.sub_lon[1]
     vl=args.vlim[0]
     vh=args.vlim[1]
     dem_offset=args.offset
