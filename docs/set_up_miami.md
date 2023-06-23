@@ -30,8 +30,11 @@ Also, everybody should keep their matlab, python and other scripts  plus noteboo
 cd $RSMASINSAR_HOME/sources;
 git clone https://github.com/geodesymiami/rsmas_tools.git ; 
 ```
+Useful Jupyter Notebooks:
+```
 cd $RSMAS_INSAR
 git clone https://github.com/insarlab/MintPy-tutorial.git notebooks/MintPy-tutorial
 git clone https://github.com/insarlab/MiaplPy_notebooks.git notebooks/MiaplPy_notebooks
 git clone https://github.com/geodesymiami/2021_MaunaLoa_Varugu_Amelung.git notebooks/VaruguAmelung
 git clone https://github.com/mirzaees/2022_MiaplPy_Mirzaee_Amelung_Fattahi.git notebooks/MirzaeeFattahiAmelung
+```
