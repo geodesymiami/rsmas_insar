@@ -2,10 +2,10 @@
 * If you want to use GBIS clone the repo (Marco Bagnardi plans to place this on GitHub soon) 
 ```
 cd $RSMASINSAR_HOME
-git clone https://github.com/geodesymiami/GBIS.git sources/GBIS;
+git clone https://github.com/geodesymiami/GBIS.git tools/GBIS;
 ```
 
-* In order to facilitate  switching between  platforms (e.g. between pegasus, stampede and your mac), it is recommended to keep all your control files (minsar, geodmod, gbis) in your infiles directory and share via github, followinhg the following convention. the directory name is set using the customizable USER_PREFERRED environment variable.
+* In order to facilitate  switching between  platforms (e.g. between pegasus, stampede and your mac), it is recommended to keep all your control files (minsar, geodmod, gbis) in your infiles directory and share via github, following this convention. the directory name is set using the customizable USER_PREFERRED environment variable.
 ```
 $WORKDIR/infiles_famelung/TEMPLATES
 $WORKDIR/infiles_famelung/GEODMOD_INFILES
@@ -30,3 +30,5 @@ Also, everybody should keep their matlab, python and other scripts  plus noteboo
 cd $RSMASINSAR_HOME/sources;
 git clone https://github.com/geodesymiami/rsmas_tools.git ; 
 ```
+
+mkdir 
