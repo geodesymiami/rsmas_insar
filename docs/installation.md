@@ -50,7 +50,7 @@ bash ./$miniconda_version -b -p ../tools/miniconda3
 #../tools/miniconda3/bin/conda  update mamba --yes
 ../tools/miniconda3/bin/mamba install --yes --file ../tools/MintPy/requirements.txt
 sed -i "s|isce2|#isce2|g" ../tools/MiaplPy/docs/requirements.txt
-../tools/miniconda3/bin/conda install --yes --file ../tools/MiaplPy/docs/requirements.txt
+../tools/miniconda3/bin/mamba install --yes --file ../tools/MiaplPy/docs/requirements.txt
 
 ../tools/miniconda3/bin/mamba install isce2 -c conda-forge --yes 
 ../tools/miniconda3/bin/mamba install --yes --file ../minsar/requirements.txt
