@@ -165,4 +165,61 @@ $MINTPY_HOME/src/mintpy/legacy/add_attribute.py $file REF_LAT=${REF_LAT}
 $MINTPY_HOME/src/mintpy/legacy/add_attribute.py $file REF_LON=${REF_LON}
 }
 
+###########################################
+function rsyncfj() { 
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+helptext="            \n\
+  rsyncfj:  rsync directory From Jetstream server to local $SCRATCHDIR \n\
+                                                 \n\
+  Examples:                                      \n\
+            (from $SCRATCHDIR:)                  \n\
+     rsyncfj MaunLoaSenAT124                     \n\
+                                                 \n\
+            (from /scratch/MaunaLoaSenAT124:)     \n\
+     rsyncfj                                     \n\
+    "
+    printf "$helptext"
+    return
+fi
+
+if [[ $# -eq 0 && $(basename $(dirname $PWD)) == "scratch" ]]; then
+  dir=$(basename $PWD)
+else
+  dir=$1
+fi
+
+echo "Syncing directory $dir from jetstream:"
+cmd="rsync -avzh exouser@149.165.154.65:/data/HDF5EOS/$dir/ $SCRATCHDIR/$dir"
+echo running ... $cmd
+$cmd
+}
+
+###########################################
+function rsynctj() { 
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+helptext="            \n\
+  rsyncfj:  rsync directory To Jetstream server from local $SCRATCHDIR \n\
+                                                 \n\
+  Examples:                                      \n\
+            (from $SCRATCHDIR:)                  \n\
+     rsynctj MaunLoaSenAT124                     \n\
+                                                 \n\
+            (from /scratch/MaunaLoaSenAT124:)     \n\
+     rsynctj                                     \n\
+    "
+    printf "$helptext"
+    return
+fi
+
+if [[ $# -eq 0 && $(basename $(dirname $PWD)) == "scratch" ]]; then
+  dir=$(basename $PWD)
+else
+  dir=$1
+fi
+
+echo "Syncing directory $dir from jetstream:"
+cmd="rsync -avzh $SCRATCHDIR/$dir/ exouser@149.165.154.65:/data/HDF5EOS/$dir "
+echo running ... $cmd
+$cmd
+}
 
