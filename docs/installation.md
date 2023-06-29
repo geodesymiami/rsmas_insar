@@ -40,7 +40,7 @@ git clone https://github.com/TACC/launcher.git tools/launcher ;
 cd setup
 rm -rf ../tools/miniconda3
 miniconda_version=Miniconda3-latest-Linux-x86_64.sh
-if [ "$(uname)" == "Darwin" ]; then miniconda_version=Miniconda3-latest-MacOSX-x86_64.sh ; fi
+if [ "$(uname)" == "Darwin" ]; then miniconda_version=Miniconda3-latest-MacOSX-arm64.sh ; fi
 wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate -O $miniconda_version #; if ($? != 0) exit; 
 chmod 755 $miniconda_version
 bash ./$miniconda_version -b -p ../tools/miniconda3
