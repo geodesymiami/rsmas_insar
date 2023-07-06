@@ -90,7 +90,7 @@ def main(iargs=None):
        inps.project_name = putils.get_project_name(custom_template_file=inps.custom_template_file)
        inps.work_dir = putils.get_work_directory(None, inps.project_name)
     else:
-       if len(inps.data_dir.split("/")) == 1:
+       if len(inps.data_dir.rstrip('/').split("/")) == 1:
           inps.work_dir = os.getcwd()
        else:
           # Allows for upload_data_products.py --dir unittestGalapagosSenDT128/miaplpy --all   (log entry not right)
@@ -137,6 +137,7 @@ def main(iargs=None):
 
     if inps.miaplpy_flag:
         dir_list = glob.glob(inps.data_dir + '/network_*')
+        data_dir = inps.data_dir
         for data_dir in dir_list:
              scp_list.extend([
                 '/'+ data_dir +'/*.he5',
@@ -167,6 +168,7 @@ def main(iargs=None):
             '/'+ os.path.dirname(data_dir) +'/maskPS.h5',
             '/'+ os.path.dirname(data_dir) +'/inputs/baselines', 
             '/'+ os.path.dirname(data_dir) +'/inverted/tempCoh_average*', 
+            '/'+ os.path.dirname(data_dir) +'/inverted/phase_series.h5', 
             '/'+ os.path.dirname(data_dir) +'/inverted/tempCoh_full*' 
             ])
 
