@@ -166,17 +166,17 @@ $MINTPY_HOME/src/mintpy/legacy/add_attribute.py $file REF_LON=${REF_LON}
 }
 
 ###########################################
-function rsyncfj() { 
+function rsyncFJ() { 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 helptext="            \n\
-  rsyncfj:  rsync directory From Jetstream server to local $SCRATCHDIR \n\
+  rsyncFJ:  rsync directory From Jetstream server to local $SCRATCHDIR \n\
                                                  \n\
   Examples:                                      \n\
             (from $SCRATCHDIR:)                  \n\
-     rsyncfj MaunLoaSenAT124                     \n\
+     rsyncFJ MaunLoaSenAT124                     \n\
                                                  \n\
             (from /scratch/MaunaLoaSenAT124:)     \n\
-     rsyncfj                                     \n\
+     rsyncFJ                                     \n\
     "
     printf "$helptext"
     return
@@ -195,17 +195,17 @@ $cmd
 }
 
 ###########################################
-function rsynctj() { 
+function rsyncTJ() { 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 helptext="            \n\
-  rsyncfj:  rsync directory To Jetstream server from local $SCRATCHDIR \n\
+  rsyncTJ:  rsync directory TO JETSTREAM server from local $SCRATCHDIR \n\
                                                  \n\
   Examples:                                      \n\
             (from $SCRATCHDIR:)                  \n\
-     rsynctj MaunLoaSenAT124                     \n\
+     rsyncTJ MaunLoaSenAT124                     \n\
                                                  \n\
             (from /scratch/MaunaLoaSenAT124:)     \n\
-     rsynctj                                     \n\
+     rsyncTJ                                     \n\
     "
     printf "$helptext"
     return
