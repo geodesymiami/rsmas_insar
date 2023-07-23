@@ -117,7 +117,7 @@ def run_ssara(download_dir, template, delta_lat, logger, run_number=1):
     get_ssara_kml(download_dir, ssaraopt=ssaraopt)
 
     # Runs ssara_federated_query.bash with proper options
-    ssara_call = ['ssara_federated_query.bash'] + ssaraopt + ['--print', '--download']
+    ssara_call = ['ssara_federated_query.bash'] + ssaraopt + ['--print']
 
     #FA 9/20: I could not figure out how to get the string into a bash shell variable, that is why writing a file
     #print( ' '.join(ssara_call) )

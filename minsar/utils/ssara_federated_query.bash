@@ -8,6 +8,7 @@ for i in "${!copy[@]}"; do
         tmp1=${copy[$i]:0:17}
         tmp2=${copy[$i]:17:${#copy[$i]}}
         copy[$i]="$tmp1'$tmp2'"
+        #copy[$i]="$tmp1\"$tmp2\""
     elif [[ ${copy[$i]} == *collectionName=* ]]; then
         tmp1=${copy[$i]:0:17}
         tmp2=${copy[$i]:17:${#copy[$i]}}
@@ -20,11 +21,6 @@ done
 
 echo "$(date +"%Y%m%d:%H-%m") * `basename "$0"` "${copy[@]}" " >> log
 
-argv=( "$@" )
-argstring=$(printf " %s" "${copy[@]}")
-argstring=${argstring:1}
-#echo $argstring
-
 if  [[ -z "$parallel" ]] ; then 
    parallel=5 
 fi
@@ -34,22 +30,34 @@ timeout=500
 #echo "parallel=${parallel}"
 
 # select password according to satellite
-#echo ${copy[0]}
-if [[ ${copy[0]} == *SENTINEL* ]]; then
-   user=`grep asfuser $RSMASINSAR_HOME/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
-   passwd=`grep asfpass $RSMASINSAR_HOME/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
-elif [[ ${copy[0]} == *COSMO-SKYMED* ]] || [[ ${copy[0]} == *ALOS-2* ]]; then
-   user=`grep unavuser $RSMASINSAR_HOME/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
-   passwd=`grep unavpass $RSMASINSAR_HOME/3rdparty/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
+if [[ ${copy[@]} == *SENTINEL* ]]; then
+   user=`grep asfuser $RSMASINSAR_HOME/tools/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
+   passwd=`grep asfpass $RSMASINSAR_HOME/tools/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
+elif [[ ${copy[@]} == *COSMO-SKYMED* ]] || [[ ${copy[@]} == *ALOS-2* ]] || [[ ${copy[@]} == *TSX* ]]; then
+   user=`grep unavuser $RSMASINSAR_HOME/tools/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
+   passwd=`grep unavpass $RSMASINSAR_HOME/tools/SSARA/password_config.py | sed 's/\"//g''' | cut -d '=' -f 2`
    regex="https:\/\/imaging\.unavco\.\.org\/[a-zA-Z\/0-9\_]+\.tar\.gz"
    regex="https:\/\/imaging\.unavco\.\.org\/*\.gz"
 fi
 
-echo "Running ... ssara_federated_query.py $argstring --maxResults=20000 --asfResponseTimeout=60 > ssara_listing.txt"
-ssara_federated_query.py "${argv[@]:0:$#-1}" --maxResults=20000 --asfResponseTimeout=60  > ssara_listing.txt
+rm -f ssara_listing.txt
+argv=( "$@" )
+string_for_display=$(printf " %s" "${copy[@]}")
+string_for_display=${string_for_display:1}
+#echo $string_for_display
 
-#grep Found ssara_listing.txt >> log
+asfResponseTimeout_opt="--asfResponseTimeout=60"
+if [[ $string_for_display == *TSX* ]] || [[ $string_for_display == *CSK* ]]; then
+   asfResponseTimeout_opt=""
+fi
+
+cmd_display="ssara_federated_query.py $string_for_display --maxResults=20000 $asfResponseTimeout_opt  > ssara_listing.txt"
+echo "Running ... $cmd_display"
+
+ssara_federated_query.py "${argv[@]:0:$#}" --maxResults=20000 $asfResponseTimeout_opt  > ssara_listing.txt
+
 downloads_num=$(grep Found ssara_listing.txt | cut -d " " -f 2)
+echo "Number of granules: $downloads_num"
 
 urls_list=$(cut -s -d ',' -f 14 ssara_listing.txt)
 unset IFS
@@ -60,6 +68,7 @@ num_urls=${#urls[@]}
 echo "URLs to download: ${urls[@]}"
 echo "$(date +"%Y%m%d:%H-%m") * Datafiles to download: $num_urls" | tee -a log
 
+echo "downloading using:: xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd"
 echo ${urls[@]} | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd
 exit_code=$?
 
@@ -80,13 +89,12 @@ while [ $exit_code -ne 0 ] && [ $runs -lt 3 ]; do
     echo "$(date +"%Y%m%d:%H-%m") * Downloaded scenes after check_download: $granules_num" | tee -a log
 
     runs=$((runs+1))
-    sleep 60
+    sleep 1
 done
 
-echo "Running (with\`s inserted) ... ssara_federated_query.py ${argv[@]:0:$#-1} --maxResults=20000 --download --asfResponseTimeout=60" | tee -a log
-ssara_federated_query.py "${argv[@]:0:$#-1}" --maxResults=20000 --download --asfResponseTimeout=60  
-cmd="ssara_federated_query.py "${argv[@]:0:$#-1}" --maxResults=20000 --download --asfResponseTimeout=60"
-echo "$(date +"%Y%m%d:%H-%m") $cmd"  | tee -a log
+#echo "Running.... $cmd_display" | tee -a log
+echo "Running.... $cmd_display" 
+echo "$(date +"%Y%m%d:%H-%m") $cmd_display"  | tee -a log
 
 echo "$(date +"%Y%m%d:%H-%m") check_download: `check_download.py $PWD --delete`"  | tee -a log
 granules_num=$(ls *.{zip,tar.gz} 2> /dev/null | wc -l)
