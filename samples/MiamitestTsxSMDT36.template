@@ -1,20 +1,9 @@
 processor                             = isce
-#cleanopt                              = 0
-ssaraopt.platform                     = TSX 
-#ssaraopt.startDate                    = 20150921
-#ssaraopt.endDate                      = 20211115
-ssaraopt.relativeOrbit                = 036
-unavco.relative_orbit                 = 036
 
-# 4/23 this ssara command works but is currently not created b y generate_downlaod_command.py
-# ssara_federated_query.py    --relativeOrbit=036 --intersectsWith='Polygon((-80.71 25.70, -80.71 26.20, -80.12 26.20, -80.12 25.70, -80.71 25.70))' --collectionName="TSX ARC_famelung_COA3837" --beamSwath=strip_014 --beamSwath=strip_014 --start=2017-09-01 --end=2017-12-31 --print --maxResults=20000
-# and then this command works:
-# create_runfiles.py $SAMPLESDIR/MiamitestTsxSMDT36.template --jobfiles --queue skx-dev --no-tmp
-
-
-ssaraopt.collectionName               = "TSX ARC_famelung_COA3837" --beamSwath=strip_014
-ssaraopt.collectionName               = TSX ARC_famelung_COA3837 
+ssaraopt.collectionName               = "TSX ARC_famelung_COA3837"
 ssaraopt.beamSwath                    = strip_014
+ssaraopt.relativeOrbit                = 36
+unavco.relative_orbit                 = 36
 ssaraopt.startDate                    = 20170901
 ssaraopt.endDate                      = 20171031
 
@@ -35,7 +24,6 @@ stripmapStack.unwMethod               = snaphu
 mintpy.troposphericDelay.method       = no
 mintpy.reference.minCoherence         = 0.7   #[0.0-1.0], auto for 0.85, minimum coherence for auto method
 
-#raw_image_dir                         =  $TESTDATA_ISCE/MiamitestTsxSMDT36/SLC_ORIG
 raw_image_dir                         =  ./SLC_ORIG
 
 mintpy.load.autoPath                  = yes
