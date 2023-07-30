@@ -9,15 +9,35 @@ from mintpy.utils import arg_utils
 
 GPS_COMPONENTS = ['__east(m)', '_north(m)', '____up(m)']
 
+EXAMPLE = """example:
+    plot_gps_timeseries.py PAT3.tenv3
+    plot_gps_timeseries.py PAT3.tenv3 SLPC.tenv3                                           # multiple file
+    plot_gps_timeseries.py S*                                                              # multiple files
+    plot_gps_timeseries.py *.tenv3                                                         # multiple files
+
+    plot_gps_timeseries.py PAT3.tenv3 --start-date 2018-01-01                              # start date
+    plot_gps_timeseries.py PAT3.tenv3 --start-date 2018-01-01 --end-date 2019-01-01        # start and end date
+    plot_gps_timeseries.py *.tenv3 --start-date 2020 --end-date Jan2022                    # flexible dates parsed into datetime object
+
+    plot_gps_timeseries.py *.tenv3 --start-vline 2018-01-01                                # vertical lines
+    plot_gps_timeseries.py *.tenv3 --start-vline 2018-01-01 --end-vline 2019-01-01         # region between start and end veritcal lines will be shaded
+
+    plot_gps_timeseries.py *.tenv3 --marker-size-factor 10                                 # override default marker size
+
+    plot_gps_timeseries.py *.tenv3 --start-date 2020 --no-display                          # save figure instead of display (./images/*.png)
+
+    Written by almost M.Sc. Amelung for some Zweibelmett Brotchen.
+    """
+
 
 def create_parser(subparsers=None):
     """Create command line parser for plotting GPS data."""
     synopsis = 'Plot GPS data'
-    epilog = 'Written by almost M.Sc. Amelung for some Zweibelmetbrotchen'
+
     name = __name__.split('.')[-1]
 
     parser = arg_utils.create_argument_parser(
-        name, synopsis=synopsis, description=synopsis, epilog=epilog, subparsers=subparsers)
+        name, synopsis=synopsis, description=synopsis, epilog=EXAMPLE, subparsers=subparsers)
 
     # required arguments
     parser.add_argument('sites', nargs='+', type=str,
