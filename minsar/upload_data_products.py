@@ -166,7 +166,9 @@ def main(iargs=None):
             '/'+ os.path.dirname(data_dir) +'/inputs/slcStack.h5',
             '/'+ os.path.dirname(data_dir) +'/inputs/geometryRadar.h5',
             '/'+ os.path.dirname(data_dir) +'/maskPS.h5',
+            '/'+ os.path.dirname(data_dir) +'/miaplpyApp.cfg',
             '/'+ os.path.dirname(data_dir) +'/inputs/baselines', 
+            '/'+ os.path.dirname(data_dir) +'/inputs/*.template', 
             '/'+ os.path.dirname(data_dir) +'/inverted/tempCoh_average*', 
             '/'+ os.path.dirname(data_dir) +'/inverted/phase_series.h5', 
             '/'+ os.path.dirname(data_dir) +'/inverted/tempCoh_full*' 
