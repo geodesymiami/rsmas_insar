@@ -113,15 +113,17 @@ def main(iargs=None):
         os.system(cmd)
 
     elif inps.flag_boundingBox or inps.flag_ssara_kml:
-        print('DEM generation using ISCE')
+        print('DEM generation using ISCE based on *kml file')
         if inps.flag_boundingBox:
            bbox = inps.template[inps.prefix + 'Stack.boundingBox'].strip("'")
+
         if inps.flag_ssara_kml:
-           #ssara_kml_file=sorted( glob.glob(inps.work_dir + '/SLC/ssara_search_*.kml') )[-1]
 
            try:
               ssara_kml_file=sorted( glob.glob(inps.slc_dir + '/ssara_search_*.kml') )[-1]
+              #ssara_kml_file=sorted( glob.glob(inps.work_dir + '/SLC/ssara_search_*.kml') )[-1]
            except:
+              # FA 8/2023: If there is no kml file or bbox emty it should rerun ssara to get a kml file
               raise FileExistsError('No SLC/ssara_search_*.kml found')
 
            print('using kml file:',ssara_kml_file)
@@ -152,13 +154,15 @@ def main(iargs=None):
 
         if os.getenv('DOWNLOADHOST') == 'local':
             try:
+                #FA 8/2023: instead of calling dem.py here should import dem.py and call dem.main( (or similar))
                 proc = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True,
                                         universal_newlines=True)
                 output, error = proc.communicate()
                 print(error)
                 if proc.returncode is not 0:
-                    raise Exception(
-                        'ERROR starting dem.py subprocess')  # FA 8/19: I don't think this happens, errors are is output
+                    #raise Exception(
+                    #    'ERROR starting dem.py subprocess')  # FA 8/19: I don't think this happens, errors are is output
+                    print('FA 8/23: dem.py returns error. SKIPPING because it may happen because of poor dem.py call')
                 print(output)
                 print(error, file=sys.stderr)
             except subprocess.CalledProcessError as exc:
@@ -179,8 +183,9 @@ def main(iargs=None):
                 print("Command failed. Exit code, StdErr:", exc.returncode, exc.output)
                 sys.exit('Error produced by dem.py using ' + host)
 
-        cmd = 'fixImageXml.py -f -i {}'.format(glob.glob(dem_dir + '/demLat_*.wgs84')[0])
-        os.system(cmd)
+        #cmd = 'fixImageXml.py -f -i {}'.format(glob.glob(dem_dir + '/demLat_*.wgs84')[0])
+        #os.system(cmd)
+
         # print('Exit status from dem.py: {0}'.format(status))
 
         # xmlFile = glob.glob('demLat_*.wgs84.xml')[0]
