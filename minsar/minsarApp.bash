@@ -1,4 +1,4 @@
-##! /bin/bash
+#_#! /bin/bash
 ##################################################################################
 function create_template_array() {
 mapfile -t array < <(grep -e ^minsar -e ^mintpy -e ^miaplpy $1)
@@ -264,7 +264,8 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-# always use --no-tmp on srampede2
+# always use --no-tmp on stampede2
+miaplpy_tmp_flag=$copy_to_tmp   # first save miaplpy_tmp_flag for testing
 if [[ $HOSTNAME == *"stampede2"* ]] && [[ $copy_to_tmp == "--tmp" ]]; then
    copy_to_tmp="--no-tmp"
    runfiles_dir="run_files"
@@ -784,7 +785,12 @@ if [[ $miaplpy_flag == "1" ]]; then
     miaplpy_dir_name=$(get_miaplpy_dir_name)
     #echo "miaplpy_dir_name: $miaplpy_dir_name"
 
-    cmd="miaplpyApp.py $template_file --dir $miaplpy_dir_name --jobfiles --tmp"
+    # unset $miaplpy_tmp_flag for --no-tmp as miaplpyApp.py does not understand --no-tmp option 
+    if [[ $miaplpy_tmp_flag == "--no-tmp" ]]; then
+       unset miaplpy_tmp_flag
+    fi
+
+    cmd="miaplpyApp.py $template_file --dir $miaplpy_dir_name --jobfiles $miaplpy_tmp_flag"
     echo "Running.... $cmd"
     echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
     $srun_cmd $cmd
