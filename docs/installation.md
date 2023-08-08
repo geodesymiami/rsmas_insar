@@ -77,6 +77,8 @@ cp -p ../minsar/additions/isce/logging.conf ../tools/miniconda3/lib/python3.?/si
 cp -p ../minsar/additions/isce2/topsStack/FilterAndCoherence.py ../tools/isce2/contrib/stack/topsStack
 cp -p ../minsar/additions/isce2/stripmapStack/prepRawCSK.py ../tools/isce2/contrib/stack/stripmapStack
 cp -p ../minsar/additions/isce2/stripmapStack/unpackFrame_TSX.py ../tools/isce2/contrib/stack/stripmapStack
+cp -p ../minsar/additions/isce2/DemStitcher.py ../tools/isce2/contrib/demUtils/demstitcher
+
 cp -p ../minsar/additions/isce2/topo.py ../tools/isce2/contrib/stack/stripmapStack    #(uses method isce instead of gdal)
 
 cp -p ../minsar/additions/isce2/VRTManager.py ../tools/isce2/contrib/stack/topsStack                          # 1/23 np.int issue
@@ -86,6 +88,7 @@ cp -p ../minsar/additions/isce2/stripmapStack/cropFrame.py ../tools/isce2/contri
 cp ../tools/isce2/components/isceobj/Sensor/TOPS/TOPSSwathSLCProduct.py ../tools/miniconda3/lib/python3.?/site-packages/isce/components/isceobj/Sensor/TOPS
 cp ../minsar/additions/isce2/Sentinel1.py  ../tools/miniconda3/lib/python3.?/site-packages/isce/components/isceobj/Sensor/TOPS/    # 4/23 np.int issue, not clear why need to copy into python3.?/site-packages directory
 cp -r ../tools/isce2/contrib/stack/* ../tools/miniconda3/share/isce2 
+cp ../tools/isce2/contrib/demUtils/demstitcher/DemStitcher.py  ../tools/miniconda3/lib/python3.10/site-packages/isce/components/contrib/demUtils 
 
 
 cp -r ../tools/isce2/components/isceobj/Sensor/TOPS ../tools/miniconda3/share/isce2 
