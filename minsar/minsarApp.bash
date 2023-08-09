@@ -453,6 +453,7 @@ if [[ $collectionName_str == *"TSX"* ]]; then
 fi
 ####################################
 srun_cmd="srun -n1 -N1 -A $JOBSHEDULER_PROJECTNAME -p $QUEUENAME  -t 00:07:00 "
+srun_cmd="srun -n1 -N1 -A $JOBSHEDULER_PROJECTNAME -p $QUEUENAME  -t 00:25:00 "
 ####################################
 ###       Processing Steps       ###
 ####################################
@@ -837,11 +838,11 @@ fi
 
 if [[ $finishup_flag == "1" ]]; then
     if [[ $miaplpy_flag == "1" ]]; then
-        miaply_opt="--miaplpyDir $miaplpy_dir_name"
+        miaplpy_opt="--miaplpyDir $miaplpy_dir_name"
     else
-        miaply_opt=""
+        miaplpy_opt=""
     fi
-    cmd="summarize_job_run_times.py $template_file $copy_to_tmp $miaply_opt"
+    cmd="summarize_job_run_times.py $template_file $copy_to_tmp $miaplpy_opt"
     echo "Running.... $cmd"
     $cmd
     echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
