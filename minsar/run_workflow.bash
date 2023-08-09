@@ -8,6 +8,25 @@ function abbreviate {
     echo $abb
 }
 
+function convert_array_to_comma_separated_string() {
+    joined_string=""
+    for item in "$@"; do
+        joined_string+="${item},"
+    done
+    # Remove the trailing comma at the end
+    joined_string="${joined_string%,}"
+
+    echo $joined_string
+}
+
+function get_comma_separated_list {
+    abb=$1
+    if [[ "${#abb}" -gt $2 ]]; then
+        abb=$(echo "$(echo $(basename $abb) | cut -c -$3)...$(echo $(basename $abb) | rev | cut -c -$4 | rev)")
+    fi
+    echo $abb
+}
+
 function remove_from_list {
     var=$1
     shift
@@ -377,8 +396,8 @@ for g in "${globlist[@]}"; do
         jobnumbers=($jns)
     fi
 
-    unset IFS
-    echo "Jobs submitted: ${jobnumbers[@]}"
+    #echo "Jobs submitted: ${jobnumbers[@]}"      #       FA 8/23 : switch to print comma-separated
+    echo "Jobs submitted: $(convert_array_to_comma_separated_string "${jobnumbers[@]}")"
     sleep 5
 
     # Wait for each job to complete
