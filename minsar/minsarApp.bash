@@ -265,13 +265,13 @@ done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
 # always use --no-tmp on stampede2
-miaplpy_tmp_flag=$copy_to_tmp   # first save miaplpy_tmp_flag for testing
 if [[ $HOSTNAME == *"stampede2"* ]] && [[ $copy_to_tmp == "--tmp" ]]; then
    copy_to_tmp="--no-tmp"
    runfiles_dir="run_files"
    configs_dir="configs"
    echo "Running on stampede2: switched from --tmp to --no-tmp because of too slow copying to /tmp"
 fi
+miaplpy_tmp_flag=$copy_to_tmp   
 
 if [[ ${#POSITIONAL[@]} -gt 1 ]]; then
     echo "Unknown parameters provided."
