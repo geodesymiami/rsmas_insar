@@ -39,7 +39,7 @@ def create_parser():
                          action='store_true',
                          default=False,
                          help='uploads miaplpy/*_network data products to data portal')
-    parser.add_argument('--dir', dest='data_dir', default=False,  metavar="DIRECTORY",
+    parser.add_argument('--dir', dest='data_dirs', nargs='+', default=False,  metavar="DIRECTORY",
                          help='upload specific mintpy/miaplpy directory')
     parser.add_argument('--all',
                          dest='all_flag',
@@ -59,17 +59,17 @@ def cmd_line_parse(iargs=None):
     parser = create_parser()
     inps = parser.parse_args(args=iargs)
 
-    if inps.data_dir:
-        if 'mintpy' in inps.data_dir:
+    if inps.data_dirs:
+        if 'mintpy' in inps.data_dirs[0]:
             inps.mintpy_flag = True
-        if 'miaplpy' in inps.data_dir:
+        if 'miaplpy' in inps.data_dirs[0]:
             inps.miaplpy_flag = True
 
-    if not inps.data_dir:
+    if not inps.data_dirs:
         if inps.mintpy_flag:
-            inps.data_dir = 'mintpy'
+            inps.data_dirs = ['mintpy']
         if inps.miaplpy_flag:
-            inps.data_dir = 'miaplpy'
+            inps.data_dirs = ['miaplpy']
 
     #if inps.all_flag:
     #    if inps.mintpy_flag:
@@ -90,12 +90,12 @@ def main(iargs=None):
        inps.project_name = putils.get_project_name(custom_template_file=inps.custom_template_file)
        inps.work_dir = putils.get_work_directory(None, inps.project_name)
     else:
-       if len(inps.data_dir.rstrip('/').split("/")) == 1:
+       if len(inps.data_dirs[0].rstrip('/').split("/")) == 1:
           inps.work_dir = os.getcwd()
        else:
           # Allows for upload_data_products.py --dir unittestGalapagosSenDT128/miaplpy --all   (log entry not right)
           inps.work_dir = os.getcwd() + '/' + os.path.dirname(inps.data_dir)
-          inps.data_dir = inps.data_dir.split("/")[1]
+          inps.data_dir = inps.data_dirs.split("/")[1]
        inps.project_name = os.path.basename(inps.work_dir)
 
     project_name = inps.project_name
@@ -124,9 +124,9 @@ def main(iargs=None):
 
     scp_list = []
 
-    if inps.mintpy_flag:
-        data_dir = inps.data_dir
-        scp_list.extend([
+    for data_dir in inps.data_dirs:
+        if inps.mintpy_flag:
+            scp_list.extend([
             '/'+ data_dir +'/*.he5',
             '/'+ data_dir +'/pic',
             '/'+ data_dir +'/inputs'
@@ -135,34 +135,33 @@ def main(iargs=None):
         if inps.all_flag:
             scp_list = [ '/mintpy/*' ]
 
-    if inps.miaplpy_flag:
-        dir_list = glob.glob(inps.data_dir + '/network_*')
-        data_dir = inps.data_dir
-        for data_dir in dir_list:
+        if inps.miaplpy_flag:
+            dir_list = glob.glob(data_dir + '/network_*')
+            for network_dir in dir_list:
              scp_list.extend([
-                '/'+ data_dir +'/*.he5',
-                '/'+ data_dir +'/demErr.h5',
-                '/'+ data_dir +'/pic' 
+                '/'+ network_dir +'/*.he5',
+                '/'+ network_dir +'/demErr.h5',
+                '/'+ network_dir +'/pic' 
                 ])
-                #'/'+ data_dir +'/inputs'
+                #'/'+ network_dir +'/inputs'
 
              if inps.all_flag:
                  scp_list.extend([
-                     '/'+ data_dir +'/*.he5',
-                     '/'+ data_dir +'/*.h5',
-                     '/'+ data_dir +'/*.cfg',
-                     '/'+ data_dir +'/*.txt',
-                     '/'+ data_dir +'/inputs/geometryRadar.h5',
-                     '/'+ data_dir +'/inputs/ifgramStack.h5',
-                     '/'+ data_dir +'/inputs/smallbaselineApp.cfg',
-                     '/'+ data_dir +'/inputs/*template',
-                     '/'+ data_dir +'/geo', 
-                     '/'+ data_dir +'/pic' 
-                     ])
-                     #'/'+ data_dir +'../inputs/*',
-                     #'/'+ data_dir +'/inputs'
+                 '/'+ network_dir +'/*.he5',
+                 '/'+ network_dir +'/*.h5',
+                 '/'+ network_dir +'/*.cfg',
+                 '/'+ network_dir +'/*.txt',
+                 '/'+ network_dir +'/inputs/geometryRadar.h5',
+                 '/'+ network_dir +'/inputs/ifgramStack.h5',
+                 '/'+ network_dir +'/inputs/smallbaselineApp.cfg',
+                 '/'+ network_dir +'/inputs/*template',
+                 '/'+ network_dir +'/geo', 
+                 '/'+ network_dir +'/pic' 
+                 ])
+                 #'/'+ network_dir +'../inputs/*',
+                 #'/'+ network_dir +'/inputs'
 
-        scp_list.extend([
+            scp_list.extend([
             '/'+ os.path.dirname(data_dir) +'/inputs/slcStack.h5',
             '/'+ os.path.dirname(data_dir) +'/inputs/geometryRadar.h5',
             '/'+ os.path.dirname(data_dir) +'/maskPS.h5',
