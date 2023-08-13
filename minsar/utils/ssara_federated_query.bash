@@ -1,5 +1,17 @@
 #!/bin/bash
-#set -x
+
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+helptext="                                                                       \n\
+   Downloads data.  It first run ssara_federated_query.py to create ssara_listing.txt and ssara_search*.kml files.   \n\
+   Then it reads file URLs from ssara_listing.txt  and downloads using wget                                          \n\
+   (the options --download --print of sara_federated_query.py currently don't work).                                 \n
+  Examples:                                                                      \n\
+      ssara_federated_quey.bash --relativeOrbit=15 --intersectsWith='Polygon((4 49, 4 51, 10 51, 10 49, 4 49))' --platform=SENTINEL-1A,SENTINEL-1B --parallel=5 --maxResults=20000 \n\
+                                                                                 \n\
+   "
+   printf "$helptext"
+   exit 0;
+fi
 
 # insert ' into intersectsWith string that is chopped off by bash
 copy=( "$@" )
@@ -46,15 +58,14 @@ string_for_display=$(printf " %s" "${copy[@]}")
 string_for_display=${string_for_display:1}
 #echo $string_for_display
 
-asfResponseTimeout_opt="--asfResponseTimeout=60"
+asfResponseTimeout_opt="--asfResponseTimeout=300"
 if [[ $string_for_display == *TSX* ]] || [[ $string_for_display == *CSK* ]]; then
    asfResponseTimeout_opt=""
 fi
 
-cmd_display="ssara_federated_query.py $string_for_display --maxResults=20000 $asfResponseTimeout_opt  > ssara_listing.txt"
-echo "Running ... $cmd_display"
-
-ssara_federated_query.py "${argv[@]:0:$#}" --maxResults=20000 $asfResponseTimeout_opt  > ssara_listing.txt
+cmd="ssara_federated_query.py $string_for_display $asfResponseTimeout_opt --kml --print  > ssara_listing.txt"
+echo "Running ... $cmd"
+eval "$cmd"
 
 downloads_num=$(grep Found ssara_listing.txt | cut -d " " -f 2)
 echo "Number of granules: $downloads_num"
@@ -92,9 +103,8 @@ while [ $exit_code -ne 0 ] && [ $runs -lt 3 ]; do
     sleep 1
 done
 
-#echo "Running.... $cmd_display" | tee -a log
-echo "Running.... $cmd_display" 
-echo "$(date +"%Y%m%d:%H-%m") $cmd_display"  | tee -a log
+echo "Running.... $cmd" 
+echo "$(date +"%Y%m%d:%H-%m") $cmd"  | tee -a log
 
 echo "$(date +"%Y%m%d:%H-%m") check_download: `check_download.py $PWD --delete`"  | tee -a log
 granules_num=$(ls *.{zip,tar.gz} 2> /dev/null | wc -l)
