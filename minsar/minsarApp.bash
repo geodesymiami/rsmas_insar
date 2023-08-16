@@ -71,6 +71,31 @@ fi
 unset IFS
 echo $miaply_dir_name
 }
+###########################################
+function get_network_type {
+# get single_reference or delaunay_4 ect. from template file
+network_type=${template[miaplpy.interferograms.networkType]}
+if [[ $network_type == "auto" ]];  then
+      network_type=single_reference                  # default of MiaplPy
+fi
+if [[ $network_type == "sequential" ]];  then
+   if [[ ! -z $(grep "^miaplpy.interferograms.connNum" $template_file) ]];  then
+      connection_number=$(grep -E "^miaplpy.interferograms.connNum" $template_file | awk -F= '{print $2}' |  awk -F# '{print $1}' | xargs  )
+   else
+      connection_number=3                            # default of MiaplPy
+   fi
+   network_type=${network_type}_${connection_number}
+fi
+if [[ $network_type == "delaunay" ]];  then
+   if [ ! -z $(grep "^miaplpy.interferograms.delaunayBaselineRatio" $template_file) ] &&  [ ! ${template[miaplpy.interferograms.delaunayBaselineRatio]} == "auto" ]; then
+      delaunay_baseline_ratio=$(grep -E "^miaplpy.interferograms.delaunayBaselineRatio" $template_file | awk -F= '{print $2}' |  awk -F# '{print $1}' | xargs  )
+   else
+      delaunay_baseline_ratio=4                            # default of MiaplPy
+   fi
+   network_type=${network_type}_${delaunay_baseline_ratio}
+fi
+echo $network_type
+}
 ##################################################################################
 ##################################################################################
 ##################################################################################
@@ -784,7 +809,6 @@ if [[ $miaplpy_flag == "1" ]]; then
     sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.xml merged/SLC/*/*.xml  
 
     miaplpy_dir_name=$(get_miaplpy_dir_name)
-    #echo "miaplpy_dir_name: $miaplpy_dir_name"
 
     # unset $miaplpy_tmp_flag for --no-tmp as miaplpyApp.py does not understand --no-tmp option 
     if [[ $miaplpy_tmp_flag == "--no-tmp" ]]; then
@@ -801,7 +825,6 @@ if [[ $miaplpy_flag == "1" ]]; then
        exit 1;
     fi
 
-    #cmd="run_workflow.bash $template_file --append --dostep miaplpy --dir $miaplpy_dir_name $copy_to_tmp"
     cmd="run_workflow.bash $template_file --append --dostep miaplpy --dir $miaplpy_dir_name"
     echo "Running.... $cmd"
     $cmd
@@ -810,6 +833,22 @@ if [[ $miaplpy_flag == "1" ]]; then
        echo "$cmd with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
+
+    # should be moved to miaplpy (or run_workflow)
+    network_type=$(get_network_type)
+    network_dir=${miaplpy_dir_name}/network_${network_type}
+    cmd="create_save_hdf5_runfile.py  ${network_dir}/inputs/*.template $network_dir --queue skx-normal --walltime 0:30"
+    echo "Running.... $cmd"
+    $cmd
+    exit_status="$?"
+    if [[ $exit_status -ne 0 ]]; then
+       echo "$cmd with a non-zero exit code ($exit_status). Exiting."
+       exit 1;
+    fi
+    sbatch save_hdfeos5_radar_coord.job
+    echo "Need to modify code to use submit_jobs.bash to wait for completion"
+    #submit_jobs.bash save_hdfeos5_radar_coord.job  #should use this to wait but did not work (8/23)
+
 fi
 
 if [[ $upload_flag == "1" ]]; then
