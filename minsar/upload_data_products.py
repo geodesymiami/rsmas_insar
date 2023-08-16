@@ -148,7 +148,11 @@ def main(iargs=None):
              if inps.all_flag:
                  scp_list.extend([
                  '/'+ network_dir +'/*.he5',
-                 '/'+ network_dir +'/*.h5',
+                 '/'+ network_dir +'/avgSpatialCoh.h5',
+                 '/'+ network_dir +'/demErr.h5',
+                 '/'+ network_dir +'/numInvIfgram.h5',
+                 '/'+ network_dir +'/timeseries.h5',
+                 '/'+ network_dir +'/velocity.h5',
                  '/'+ network_dir +'/*.cfg',
                  '/'+ network_dir +'/*.txt',
                  '/'+ network_dir +'/inputs/geometryRadar.h5',
