@@ -46,7 +46,8 @@ if [ "$(uname)" == "Darwin" ]; then miniconda_version=Miniconda3-latest-MacOSX-a
 wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate -O $miniconda_version #; if ($? != 0) exit; 
 chmod 755 $miniconda_version
 bash ./$miniconda_version -b -p ../tools/miniconda3
-../tools/miniconda3/bin/conda update mamba --yes
+../tools/miniconda3/bin/conda install -n base conda-libmamba-solver --yes
+../tools/miniconda3/bin/conda config --set solver libmamba
 ../tools/miniconda3/bin/conda config --add channels conda-forge
 ../tools/miniconda3/bin/conda install --yes --file ../tools/MintPy/requirements.txt
 sed -i "s|isce2|#isce2|g" ../tools/MiaplPy/docs/requirements.txt
