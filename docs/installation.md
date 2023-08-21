@@ -21,8 +21,8 @@ cd $WORK2/code
 ```
 bash
 if [ "$(uname)" == "Linux" ]; then
-module purge
-export PATH=/bin
+   module purge
+   export PATH=/bin
 fi
 git clone https://github.com/geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
