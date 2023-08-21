@@ -73,32 +73,29 @@ sed -i 's/\/usr\/local/$(MIAPLPY_HOME)\/snaphu/g' snaphu/src/Makefile
 cd snaphu/src; make
 
 ############################################
-### Adding ISCE fixes and copying latest ISCE version into miniconda directory ###
 cd ../../../../setup/
+### Adding not-commited MintPy fixes
+cp -p ../minsar/additions/mintpy/save_hdfeos5.py ../tools/MintPy/src/mintpy/
+cp -p ../minsar/additions/mintpy/cli/save_hdfeos5.py ../tools/MintPy/src/mintpy/cli/
+
+### Adding ISCE fixes and copying checked-out ISCE version (the latest) into miniconda directory ###
 cp -p ../minsar/additions/isce/logging.conf ../tools/miniconda3/lib/python3.?/site-packages/isce/defaults/logging/logging.conf
 cp -p ../minsar/additions/isce2/topsStack/FilterAndCoherence.py ../tools/isce2/contrib/stack/topsStack
 cp -p ../minsar/additions/isce2/stripmapStack/prepRawCSK.py ../tools/isce2/contrib/stack/stripmapStack
 cp -p ../minsar/additions/isce2/stripmapStack/unpackFrame_TSX.py ../tools/isce2/contrib/stack/stripmapStack
 cp -p ../minsar/additions/isce2/DemStitcher.py ../tools/isce2/contrib/demUtils/demstitcher
-
-cp -p ../minsar/additions/isce2/topo.py ../tools/isce2/contrib/stack/stripmapStack    #(uses method isce instead of gdal)
-
+#cp -p ../minsar/additions/isce2/topo.py ../tools/isce2/contrib/stack/stripmapStack                           #(uses method isce instead of gdal)
 cp -p ../minsar/additions/isce2/VRTManager.py ../tools/isce2/contrib/stack/topsStack                          # 1/23 np.int issue
 cp -p ../minsar/additions/isce2/TOPSSwathSLCProduct.py ../tools/isce2/components/isceobj/Sensor/TOPS          # 1/23 np.int issue
 cp -p ../minsar/additions/isce2/Sentinel1.py  ../tools/isce2/components/isceobj/Sensor/TOPS                   # 2/23 np.int issue
 cp -p ../minsar/additions/isce2/stripmapStack/cropFrame.py ../tools/isce2/contrib/stack/stripmapStack         # 1/23 np.int issue
-cp ../tools/isce2/components/isceobj/Sensor/TOPS/TOPSSwathSLCProduct.py ../tools/miniconda3/lib/python3.?/site-packages/isce/components/isceobj/Sensor/TOPS
-cp ../minsar/additions/isce2/Sentinel1.py  ../tools/miniconda3/lib/python3.?/site-packages/isce/components/isceobj/Sensor/TOPS/    # 4/23 np.int issue, not clear why need to copy into python3.?/site-packages directory
-cp -r ../tools/isce2/contrib/stack/* ../tools/miniconda3/share/isce2 
-cp ../tools/isce2/contrib/demUtils/demstitcher/DemStitcher.py  ../tools/miniconda3/lib/python3.10/site-packages/isce/components/contrib/demUtils 
 
-
+cp -r ../tools/isce2/contrib/stack/* ../tools/miniconda3/share/isce2
 cp -r ../tools/isce2/components/isceobj/Sensor/TOPS ../tools/miniconda3/share/isce2 
 
-cp -p ../minsar/additions/mintpy/save_hdfeos5.py ../tools/MintPy/src/mintpy/
-cp -p ../minsar/additions/mintpy/cli/save_hdfeos5.py ../tools/MintPy/src/mintpy/cli/
-cp -p ../minsar/additions/miaplpy/find_short_baselines.py  ../tools/MiaplPy/miaplpy/
-cp -p ../minsar/additions/miaplpy/prep_slc_isce.py  ../tools/MiaplPy/miaplpy/
+cp ../tools/isce2/components/isceobj/Sensor/TOPS/TOPSSwathSLCProduct.py ../tools/miniconda3/lib/python3.?/site-packages/isce/components/isceobj/Sensor/TOPS
+cp ../minsar/additions/isce2/Sentinel1.py  ../tools/miniconda3/lib/python3.?/site-packages/isce/components/isceobj/Sensor/TOPS/    # 4/23 np.int issue, not clear why need to copy
+cp ../tools/isce2/contrib/demUtils/demstitcher/DemStitcher.py  ../tools/miniconda3/lib/python3.?/site-packages/isce/components/contrib/demUtils 
 
 ############################################
 ### Source the environment and create aux directories. Install credential files for data download: ###
