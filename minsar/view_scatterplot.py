@@ -19,19 +19,19 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 EXAMPLE = """example:
 
 For plotting velocity in radar coordinates and redefining path for slcStack and maskPS.h5 files:
-            ./view_scatterplot.py velocity.h5 demErr.h5 inputs/geometryRadar.h5 --PS ../maskPS.h5 --slcStack ../slcStack.h5 --sub-lat 25.875  25.8795  --sub-lon -80.123  -80.1205 --subplot velocity
+            view_scatterplot.py velocity.h5 demErr.h5 inputs/geometryRadar.h5 --PS ../maskPS.h5 --slcStack ../inputs/slcStack.h5 --sub-lat 25.875  25.8795  --sub-lon -80.123  -80.1205 --subplot velocity
 
 For plotting everything in radar coordinates:
-            ./view_scatterplot.py velocity.h5 demErr.h5 inputs/geometryRadar.h5  --sub-lat 25.875  25.8795  --sub-lon -80.123  -80.1205
+            view_scatterplot.py velocity.h5 demErr.h5 inputs/geometryRadar.h5  --sub-lat 25.875  25.8795  --sub-lon -80.123  -80.1205
 
 For changing color bars:
-            ./view_scatterplot.py velocity.h5 demErr.h5 inputs/geometryRadar.h5  --sub-lat 25.875  25.8795  --sub-lon -80.122  -80.121 -dl -60 60 -el -30 30 -esl -60 60 
+            view_scatterplot.py velocity.h5 demErr.h5 inputs/geometryRadar.h5  --sub-lat 25.875  25.8795  --sub-lon -80.122  -80.121 -dl -60 60 -el -30 30 -esl -60 60 
 
 For plotting everything in geo coordinates using available dsm tif file as background:
-            ./view_scatterplot.py velocity.h5 demErr.h5 inputs/geometryRadar.h5  --sub-lat 25.875  25.8795  --sub-lon -80.123  -80.1205  --dsm Miami.tif --geo 
+            view_scatterplot.py velocity.h5 demErr.h5 inputs/geometryRadar.h5  --sub-lat 25.875  25.8795  --sub-lon -80.123  -80.1205  --dsm Miami.tif --geo 
 
 For plotting velocity in geo coordinates using available dsm tif file as background:
-            ./view_scatterplot.py velocity.h5 demErr.h5 inputs/geometryRadar.h5  --sub-lat 25.875  25.8795  --sub-lon -80.123  -80.1205  --dsm Miami.tif --geo --subplot velocity
+            view_scatterplot.py velocity.h5 demErr.h5 inputs/geometryRadar.h5  --sub-lat 25.875  25.8795  --sub-lon -80.123  -80.1205  --dsm Miami.tif --geo --subplot velocity
 """
 
 def cmd_line_parser():
@@ -315,19 +315,20 @@ def get_data(lon1, lon2, lat1, lat2, ymin, ymax, xmin, xmax, out_amplitude):
     velocity, atr = readfile.read(vel_file, datasetName='velocity')
 
     mask = np.ones(velocity.shape, dtype=np.int8)
+    
+    mask[latitude<lat1] = 0
+    mask[latitude>lat2] = 0
+    mask[longitude<lon1] = 0
+    mask[longitude>lon2] = 0
+#    mask = np.ones(velocity.shape, dtype=np.float32)
 
-    mask[latitude < lat1] = 0
-    mask[latitude > lat2] = 0
-    mask[longitude < lon1] = 0
-    mask[longitude > lon2] = 0
+#    mask[(latitude < lat1) & (latitude > lat2) & (longitude < lon1) & (longitude > lon2)] = 0
 
     amplitude = np.fliplr(np.load(out_amplitude)[ymin:ymax, xmin:xmax])
 
     mask_p = readfile.read(mask_file_ps, datasetName='mask')[0]
 
-    mask = np.zeros(velocity.shape)
-    mask[ymin:ymax, xmin:xmax] = 1
-    mask *= mask_p
+    mask *= mask_p  # Apply mask_p within the specified ymin, ymax, xmin, xmax
 
     vel = np.array(velocity[mask == 1] * 1000)
     lat = np.array(latitude[mask == 1])
@@ -553,14 +554,20 @@ def plot_subset_geo_single(lon1, lon2, lat1, lat2, ymin, ymax, xmin, xmax, v_min
 
     if os.path.isfile(dsm):
         cmap = 'Greys_r'
-        clim_raster = (-20, 30)
+        clim_raster = (-100, 100)
     else:
         cmap = args.colormap
         clim_raster = None
 
     if os.path.isfile(dsm):
         my_image = georaster.SingleBandRaster(dsm, load_data=(lon1, lon2, lat1, lat2), latlon=True)
-        ax.imshow(my_image.r, extent=my_image.extent, cmap=cmap, vmin=clim_raster[0], vmax=clim_raster[1])
+        hist, bins = np.histogram(my_image.r, bins=256, range=(-100, 1000))
+        threshold = bins[np.argmax(hist)]
+        water_mask = my_image.r <= threshold
+        masked_image = np.where(water_mask, 0, my_image.r)
+        ax.imshow(masked_image, extent=my_image.extent, cmap=cmap, vmin=clim_raster[0], vmax=clim_raster[1])
+       # ax.imshow(my_image.r, extent=my_image.extent, cmap=cmap, vmin=clim_raster[0], vmax=clim_raster[1])
+
     
     if subplot == 'velocity':
         plot_scatter(ax, vel/10, args.colormap, 'velocity (cm/yr)', (vl, vh))
@@ -582,6 +589,7 @@ def plot_subset_geo_single(lon1, lon2, lat1, lat2, ymin, ymax, xmin, xmax, v_min
     
     plt.savefig(out_name, bbox_inches='tight', dpi=300)
     plt.close(fig)
+    
 
 def main():
     args = cmd_line_parser()
@@ -653,7 +661,7 @@ def main():
         plot_subset_radar_single(lon1=lon1, lon2=lon2, lat1=lat1, lat2=lat2, ymin=ymin, ymax=ymax, xmin=xmin, xmax=xmax,
                           v_min=vl, v_max=vh, out_amplitude=out_amplitude, dem_offset=dem_offset, dem_name='dem',
                           out_name=outfile, size=args.point_size, fig=fig, axs=axs)
-
+plt.show()
 if __name__ == '__main__':
     main()
 

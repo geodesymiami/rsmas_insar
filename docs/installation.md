@@ -21,8 +21,8 @@ cd $WORK2/code
 ```
 bash
 if [ "$(uname)" == "Linux" ]; then
-module purge
-export PATH=/bin
+   module purge
+   export PATH=/bin
 fi
 git clone https://github.com/geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
@@ -69,7 +69,7 @@ wget --no-check-certificate  https://web.stanford.edu/group/radar/softwareandlin
 tar -xvf snaphu-v2.0.4.tar.gz
 mv snaphu-v2.0.4 snaphu;
 rm snaphu-v2.0.4.tar.gz;
-sed -i 's/\/usr\/local/$(MIAPLPY_HOME)\/snaphu/g' snaphu/src/Makefile
+sed -i.bak 's/\/usr\/local/$(MIAPLPY_HOME)\/snaphu/g' snaphu/src/Makefile
 cd snaphu/src; make
 
 ############################################
