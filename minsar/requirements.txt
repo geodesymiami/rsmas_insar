@@ -1,3 +1,5 @@
 # MinSAR dependencies
 opencv
 imageMagick
+jupyter
+georaster
