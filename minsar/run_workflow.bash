@@ -462,7 +462,9 @@ for g in "${globlist[@]}"; do
                     exit 1
                 fi
             elif [[ ( $state == *"FAILED"* || $state ==  *"CANCELLED"* ) ]]; then
-                echo "Job failed. Exiting."
+                echo "Job $file, $j: state FAILED or CANCELLED. Exiting."
+                echo "There could be other problem jobs. Need to change  run_workflow so that it exits after loop over all jobs completed"
+                echo "Need to modify code  to resubmit cancelled, failed jobs once (unclear how to count)"
                 exit 1; 
             else
                 echo "Strange job state: $state, encountered."
