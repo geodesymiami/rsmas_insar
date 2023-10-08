@@ -30,7 +30,7 @@ For plotting everything in radar coordinates:
             view_scatterplot.py velocity.h5 demErr.h5 inputs/geometryRadar.h5 all  --subset-lalo 25.875:25.8795,-80.123:-80.1205
 
 For changing color bars:
-            view_scatterplot.py velocity.h5 demErr.h5 inputs/geometryRadar.h5 velocity  --subset-lalo 25.875:25.8795,-80.123:-80.1205  -80.121 -dl -60 60 -el -30 30 -esl -60 60 
+            view_scatterplot.py velocity.h5 demErr.h5 inputs/geometryRadar.h5 velocity  --subset-lalo 25.875:25.8795,-80.123:-80.1205  -dl -60 60 -el -30 30 -esl -60 60 
 
 For plotting everything in geo coordinates using available  tif file as background:
             view_scatterplot.py velocity.h5 demErr.h5 inputs/geometryRadar.h5  all --subset-lalo 25.875:25.8795,-80.123:-80.1205  --gtiff Miami.tif --geo 
