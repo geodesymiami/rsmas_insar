@@ -38,13 +38,17 @@ import contextily as ctx
 from shapely.geometry import box
 import geopandas as gpd
 from shapely.geometry import box
+import matplotlib.cm as cm
 
 EXAMPLE = """example:
-This needs to be completed
 
-    view_ts.py 25.87 -80.123 timeseries.h5 velocity.h5 inputs/geometryRadar.h5 --lalo 25.87 -80.123 --subset-lalo 25.871:25.874,-80.122:-80.119 --gtiff Miami.tif --point-size 40
+For Gtiff background and timeseries of one point:
 
-    view_ts.py 25.87 -80.123 timeseries.h5 velocity.h5 inputs/geometryRadar.h5 --lalo-file list --subset-lalo 25.871:25.874,-80.122:-80.119 --gtiff Miami.tif --point-size 40
+    view_ts.py 25.876047 -80.1222 timeseries.h5 velocity.h5 inputs/geometryRadar.h5 --lalo 25.877169 -80.121302 --subset-lalo 25.874:25.8795,-80.123:-80.1205  --point-size 40 --shift 4 --marker-size 5
+
+For Openstreetmap background and list of points:
+
+    view_ts.py 25.876047 -80.1222 timeseries.h5 velocity.h5 inputs/geometryRadar.h5 --lalo-file list --subset-lalo 25.874:25.8795,-80.123:-80.1205 --point-size 40 --shift 4 --marker-size 5
 
 """
 
@@ -162,6 +166,16 @@ def cmd_line_parser():
         type=float,
         help="Points size",
     )
+
+    parser.add_argument(
+        "--marker-size",
+        dest="marker_size",
+        metavar="",
+        default=10,
+        type=float,
+        help="Points size",
+    )
+
     parser.add_argument(
         "--fontsize",
         "-f",
@@ -258,6 +272,8 @@ def plot_subset_geo(lon1, lon2, lat1, lat2, ymin, ymax, xmin, xmax, v_min, v_max
     gtiff = args.gtiff
     vl = args.vlim[0]
     vh = args.vlim[1]
+    size=args.point_size
+    marksize=args.marker_size
 
     if args.shift is not None:
         shift = args.shift
@@ -296,18 +312,37 @@ def plot_subset_geo(lon1, lon2, lat1, lat2, ymin, ymax, xmin, xmax, v_min, v_max
         ax.set_axis_off()
 
     ref_lon, ref_lat = refx, refy
-    plot_scatter(ax, vel/10, args.colormap, 'velocity (cm/yr)', (vl, vh))
-#    ax.scatter(ref_lon, ref_lat, c='red', marker='x', label='Reference Point')
+    plot_scatter(ax, vel/10, args.colormap,'velocity (cm/yr)', (vl, vh))
+    ax.scatter(ref_lon, ref_lat, c='black', marker='s')
     for i, point in enumerate(points):
-        ax.scatter(points[i, 1], points[i, 0], c='red', marker='x', s=30)
+        ax.scatter(points[i, 1], points[i, 0], c='red', marker='x', s=30, label=f'{i}')
+        ax.text(points[i, 1], points[i, 0], str(i+1), fontsize=12, color='black', ha='center', va='bottom')
 
     fig, axs = plt.subplots(nrows=1, ncols=1, figsize=args.figsize or (10, 5))
+    plt.xlabel('Date')
+    plt.ylabel('Displacement (cm)')
+    num_time_series = len(points)
+    colormap = plt.get_cmap('Dark2')
+    color_levels = np.linspace(0, 1, num_time_series)
+ 
+  
     for i, point in enumerate(points):
-        print(i)
+        color = colormap(color_levels[i])  # Assign a color from the colormap
         if i == 0:
-            axs.plot(dates_ts[4::], ts_p[i, 4::]-ts_p[i, 4], '.', color='black',  linewidth=1)
+            axs.plot(dates_ts[4::], ts_p[i, 4::]-ts_p[i, 4], '.', color=color, markeredgecolor='black', markeredgewidth=0.4 ,markersize=marksize)
+            x_label, y_label = dates_ts[4], ts_p[i, 4]
         else:
-            axs.plot(dates_ts[4::], ts_p[i, 4::]-ts_p[i, 4] - shift  , '.', color='black', linewidth=1)
+            shift = args.shift
+            shift = np.multiply(args.shift, i)
+            axs.plot(dates_ts[4::], ts_p[i, 4::]-ts_p[i, 4] - shift  , '.', color=color, markeredgecolor='black', markeredgewidth=0.4, markersize=marksize)
+            x_label, y_label = dates_ts[4], ts_p[i, 4] - shift
+        label_text = f'{i+1}'
+        axs.text(x_label, y_label, label_text, fontsize=10, color='black', va='bottom', ha='right', rotation=0)
+ 
+#    cbar = plt.colorbar(plt.cm.ScalarMappable(cmap=colormap, norm=plt.Normalize(0, num_time_series-1)), ax=axs)
+#    cbar.set_ticks(range(num_time_series))
+#    cbar.set_ticklabels(range(num_time_series))
+#    cbar.set_label('Time Series Index')  # Set colorbar label
 
 if __name__ == "__main__":
     args = cmd_line_parser()
