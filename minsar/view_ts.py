@@ -44,11 +44,11 @@ EXAMPLE = """example:
 
 For Gtiff background and timeseries of one point:
 
-    view_ts.py 25.876047 -80.1222 timeseries.h5 velocity.h5 inputs/geometryRadar.h5 --lalo 25.877169 -80.121302 --subset-lalo 25.874:25.8795,-80.123:-80.1205  --point-size 40 --shift 4 --marker-size 5
+    view_ts.py 25.876047 -80.1222 timeseries.h5 velocity.h5 inputs/geometryRadar.h5 --lalo 25.877169 -80.121302 --subset-lalo 25.874:25.8795,-80.123:-80.1205  --point-size 40 --shift 4 --marker-size 5 --mask ../maskPS.h5
 
 For Openstreetmap background and list of points:
 
-    view_ts.py 25.876047 -80.1222 timeseries.h5 velocity.h5 inputs/geometryRadar.h5 --lalo-file list --subset-lalo 25.874:25.8795,-80.123:-80.1205 --point-size 40 --shift 4 --marker-size 5
+    view_ts.py 25.876047 -80.1222 timeseries.h5 velocity.h5 inputs/geometryRadar.h5 --lalo-file list --subset-lalo 25.874:25.8795,-80.123:-80.1205 --point-size 40 --shift 4 --marker-size 5 --mask ../maskPS.h5
 
 """
 
@@ -117,10 +117,10 @@ def cmd_line_parser():
         help="Geolocation file",
     )
     parser.add_argument(
-        "--PS",
+        "--mask",
         type=str,
         metavar="",
-        default="../maskPS.h5",
+#        default="../maskPS.h5",
         help="Mask PS file",
     )
 
@@ -130,15 +130,6 @@ def cmd_line_parser():
         metavar="",
         default="./dsm_reprojected_wgs84.tif",
         help="Path to Lidar elevation file",
-    )
-
-    parser.add_argument(
-        "--dem-offset",
-        metavar="",
-        dest="offset",
-        type=float,
-        default=0,
-        help="DEM offset (geoid deviation), e.g., it is 26 for Miami",
     )
 
     parser.add_argument(
@@ -219,15 +210,14 @@ def cmd_line_parser():
 
     return args
 
-def get_data_ts(points, lat1, lat2, lon1, lon2, refy, refx, ps):
+def get_data_ts(points, lat1, lat2, lon1, lon2, refy, refx):
 
     args = cmd_line_parser()
     vl = args.vlim[0]
     vh = args.vlim[1]
-    dem_offset = args.offset
     vel_file = args.velocity
     geo_file = args.geometry
-    mask_file_ps = args.PS
+    mask_file_ps = args.mask
     outfile = args.outfile
     ts_file = args.timeseries
 
@@ -246,8 +236,11 @@ def get_data_ts(points, lat1, lat2, lon1, lon2, refy, refx, ps):
     mask[latitude>lat2] = 0
     mask[longitude<lon1] = 0
     mask[longitude>lon2] = 0
-    mask_p = readfile.read(mask_file_ps, datasetName='mask')[0]
-    mask *= mask_p  # Apply mask_p within the specified ymin, ymax, xmin, xmax
+
+    if args.mask is not None:
+        mask_file = args.mask
+        mask_p = readfile.read(mask_file, datasetName='mask')[0]
+        mask *= mask_p  # Apply mask_p within the specified ymin, ymax, xmin, xmax
 
     vel = np.array(velocity[mask == 1])
     lat = np.array(latitude[mask==1])
@@ -267,7 +260,7 @@ def get_data_ts(points, lat1, lat2, lon1, lon2, refy, refx, ps):
 
 def plot_subset_geo(lon1, lon2, lat1, lat2, ymin, ymax, xmin, xmax, v_min, v_max, points):
 
-    lon, lat, vel, dates_ts, ts, ts_p, ts_std = get_data_ts(points, lat1, lat2, lon1, lon2, refy, refx, ps)
+    lon, lat, vel, dates_ts, ts, ts_p, ts_std = get_data_ts(points, lat1, lat2, lon1, lon2, refy, refx)
     args = cmd_line_parser()
     gtiff = args.gtiff
     vl = args.vlim[0]
@@ -362,7 +355,7 @@ if __name__ == "__main__":
 
 
     lat1, lat2, lon1, lon2 = [float(val) for val in args.subset_lalo.replace(':', ',').split(',')]
-    ps = args.PS
+    mask = args.mask
     vel_file = args.velocity
     geo_file = args.geometry
     refx = args.ref[1]
