@@ -325,7 +325,6 @@ def plot_subset_geo(lon1, lon2, lat1, lat2, ymin, ymax, xmin, xmax, v_min, v_max
             axs.plot(dates_ts[4::], ts_p[i, 4::]-ts_p[i, 4], '.', color=color, markeredgecolor='black', markeredgewidth=0.4 ,markersize=marksize)
             x_label, y_label = dates_ts[4], ts_p[i, 4]
         else:
-            shift = args.shift
             shift = np.multiply(args.shift, i)
             axs.plot(dates_ts[4::], ts_p[i, 4::]-ts_p[i, 4] - shift  , '.', color=color, markeredgecolor='black', markeredgewidth=0.4, markersize=marksize)
             x_label, y_label = dates_ts[4], ts_p[i, 4] - shift
