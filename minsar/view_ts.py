@@ -231,15 +231,15 @@ def cmd_line_parser():
     parser.add_argument(
         "--no-crosses",
         dest="no_crosses",
-        action="store_true",
-        help=" If used, shows the reference point and points on the map",
+        default="False",
+        help=" If True, does not shows the reference point and points on the map",
     )
 
     parser.add_argument(
         "--no-labels",
         dest="no_labels",
-        action="store_true",
-        help=" If used, labels points and timeseries using numbers",
+        default="False",
+        help=" If True, does not shows labels for  points and timeseries using numbers",
     )
 
     parser.add_argument(
@@ -377,13 +377,12 @@ def plot_subset_geo(lon1, lon2, lat1, lat2, ymin, ymax, xmin, xmax, v_min, v_max
     else:
         plot_scatter(ax, vel/10, args.colormap,'velocity (cm/yr)', (vl, vh))
 
-    if args.no_crosses is None:
+    if args.no_crosses == "False":
         ax.scatter(ref_lon, ref_lat, c='black', marker='s')
-    for i, point in enumerate(points):
-        if args.no_crosses is None:
-           ax.scatter(points[i, 1], points[i, 0], c='red', marker='x', s=30, label=f'{i}')
-        if args.no_labels is None:
-           ax.text(points[i, 1], points[i, 0], str(i+1), fontsize=12, color='black', ha='center', va='bottom')
+    if args.no_crosses and args.no_labels == "False":
+        for i, point in enumerate(points):
+            ax.scatter(points[i, 1], points[i, 0], c='red', marker='x', s=30, label=f'{i}')
+            ax.text(points[i, 1], points[i, 0], str(i+1), fontsize=12, color='black', ha='center', va='bottom')
 
     fig, axs = plt.subplots(nrows=1, ncols=1, figsize=args.figsize or (10, 5))
     plt.xlabel('Date')
@@ -403,7 +402,7 @@ def plot_subset_geo(lon1, lon2, lat1, lat2, ymin, ymax, xmin, xmax, v_min, v_max
             axs.plot(dates_ts[4::], ts_p[i, 4::]-ts_p[i, 4] - shift  , '.', color=color, markeredgecolor='black', markeredgewidth=0.4, markersize=marksize)
             x_label, y_label = dates_ts[4], ts_p[i, 4] - shift
 
-        if args.no_labels is None:
+        if args.no_labels == "False":
             label_text = f'{i+1}'
             axs.text(x_label, y_label, label_text, fontsize=10, color='black', va='bottom', ha='right', rotation=0)
  
