@@ -50,6 +50,10 @@ For Openstreetmap background and list of points:
 
     view_ts.py 25.876047 -80.1222 timeseries.h5 velocity.h5 inputs/geometryRadar.h5 --lalo-file list --subset-lalo 25.874:25.8795,-80.123:-80.1205 --point-size 40 --shift 4 --marker-size 5 --mask ../maskPS.h5
 
+To show displacement instead of velocity:
+
+    view_ts.py 25.876047 -80.1222 timeseries.h5 velocity.h5 inputs/geometryRadar.h5 --lalo-file list --subset-lalo 25.874:25.8795,-80.123:-80.1205 --point-size 40 --shift 4 --marker-size 5 --mask ../maskPS.h5 --disp --dates-to-average 3
+
 """
 
 def cmd_line_parser():
@@ -125,6 +129,14 @@ def cmd_line_parser():
     )
 
     parser.add_argument(
+        "--dates-to-average",
+        metavar="",
+        default=1,
+        type=int,
+        help="number of dates to average at the beginning and at end of the time series. Default is 1, meaning no average",
+    )
+
+    parser.add_argument(
         "--gtiff",
         type=str,
         metavar="",
@@ -142,6 +154,16 @@ def cmd_line_parser():
     )
 
     parser.add_argument(
+        "--dlim",
+        nargs=2,
+        metavar=("DMIN", "DMAX"),
+        default=(-0.5, 0.5),
+        type=float,
+        help="Displacement limit for the colorbar. Default is -0.6 0.6",
+    )
+
+
+    parser.add_argument(
         "--colormap",
         "-c",
         metavar="",
@@ -155,7 +177,7 @@ def cmd_line_parser():
         metavar="",
         default=10,
         type=float,
-        help="Points size",
+        help="Points size, Default is 10",
     )
 
     parser.add_argument(
@@ -164,7 +186,7 @@ def cmd_line_parser():
         metavar="",
         default=10,
         type=float,
-        help="Points size",
+        help="Points size. Default is 10",
     )
 
     parser.add_argument(
@@ -178,7 +200,7 @@ def cmd_line_parser():
     parser.add_argument(
         "--figsize",
         metavar=("WID", "LEN"),
-        help="Width and length of the figure",
+        help="Width and length of the figure. Default is 10 and 5",
         type=float,
         nargs=2,
     )
@@ -206,6 +228,27 @@ def cmd_line_parser():
         help="File containing points (each line as LAT LON)",
     )
 
+    parser.add_argument(
+        "--no-crosses",
+        dest="no_crosses",
+        action="store_true",
+        help=" If used, shows the reference point and points on the map",
+    )
+
+    parser.add_argument(
+        "--no-labels",
+        dest="no_labels",
+        action="store_true",
+        help=" If used, labels points and timeseries using numbers",
+    )
+
+    parser.add_argument(
+        "--disp",
+        dest="disp",
+        action="store_true", 
+        help="Define if plotting in Geo coordinate or Radar coordinate",
+    )
+
     args = parser.parse_args()
 
     return args
@@ -220,16 +263,31 @@ def get_data_ts(points, lat1, lat2, lon1, lon2, refy, refx):
     mask_file_ps = args.mask
     outfile = args.outfile
     ts_file = args.timeseries
+    num = args.dates_to_average
 
     velocity = readfile.read(vel_file, datasetName='velocity')[0]*1000
+    latitude = readfile.read(geo_file, datasetName='latitude')[0]
+    longitude = readfile.read(geo_file, datasetName='longitude')[0]
+
 
     stack_obj = timeseries(ts_file)
     stack_obj.open(print_msg=False)
     date_list = stack_obj.get_date_list()
     num_dates = len(date_list)
+    time, atr = readfile.read(ts_file, datasetName='timeseries')
 
-    latitude = readfile.read(geo_file, datasetName='latitude')[0]
-    longitude = readfile.read(geo_file, datasetName='longitude')[0]
+    if num != 1:
+        displacement = np.empty_like(velocity)
+        for i in range(time.shape[1]):
+            for j in range(time.shape[2]):
+                first_values = time[:num,i,j].mean(axis=0)
+                last_values = time[-num:,i,j].mean(axis=0)
+                displacement[i,j] = last_values - first_values         
+    else:
+        displacement = time[-1] - time[0]
+
+
+ 
 
     mask = np.ones(velocity.shape, dtype=np.int8)
     mask[latitude<lat1] = 0
@@ -242,9 +300,10 @@ def get_data_ts(points, lat1, lat2, lon1, lon2, refy, refx):
         mask_p = readfile.read(mask_file, datasetName='mask')[0]
         mask *= mask_p  # Apply mask_p within the specified ymin, ymax, xmin, xmax
 
-    vel = np.array(velocity[mask == 1])
+    vel = np.array(velocity[mask==1])
     lat = np.array(latitude[mask==1])
     lon = np.array(longitude[mask==1])
+    disp= np.array(displacement[mask==1])
 
     ts = np.zeros([len(lat), num_dates])
 
@@ -255,16 +314,23 @@ def get_data_ts(points, lat1, lat2, lon1, lon2, refy, refx):
         dates_ts, ts_p[i,:], ts_std[i,:] = ut.read_timeseries_lalo(points[i, 0], points[i, 1], ts_file,
                                                                       lookup_file=geo_file, ref_lat=refy, ref_lon=refx,
                                                                        win_size=2, unit='cm', print_msg=True)
-
-    return lon, lat, vel, dates_ts, ts, ts_p, ts_std
+    return lon, lat, vel, disp, dates_ts, ts, ts_p, ts_std
 
 def plot_subset_geo(lon1, lon2, lat1, lat2, ymin, ymax, xmin, xmax, v_min, v_max, points):
 
-    lon, lat, vel, dates_ts, ts, ts_p, ts_std = get_data_ts(points, lat1, lat2, lon1, lon2, refy, refx)
+    lon, lat, vel, disp, dates_ts, ts, ts_p, ts_std = get_data_ts(points, lat1, lat2, lon1, lon2, refy, refx)
+    print(vel.shape, disp.shape)
+   
     args = cmd_line_parser()
     gtiff = args.gtiff
-    vl = args.vlim[0]
-    vh = args.vlim[1]
+
+    if args.disp:
+       vl = args.dlim[0]
+       vh = args.dlim[1]
+    else:
+       vl = args.vlim[0]
+       vh = args.vlim[1]
+
     size=args.point_size
     marksize=args.marker_size
 
@@ -273,12 +339,12 @@ def plot_subset_geo(lon1, lon2, lat1, lat2, ymin, ymax, xmin, xmax, v_min, v_max
     else:
         shift = 3
 
-    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=args.figsize or (5, 5))
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=args.figsize or (10, 5))
 
     def plot_scatter(ax, data, cmap, c_label, clim=None, marker='o', colorbar=True):
         im = ax.scatter(lon, lat, c=data, s=size, cmap=cmap, marker=marker)
         if colorbar:
-            cbar = plt.colorbar(im, ax=ax, shrink=1, orientation='horizontal', pad=0.1)
+            cbar = plt.colorbar(im, ax=ax, shrink=0.4, orientation='horizontal', pad=0.1)
             cbar.set_label(c_label)
             if clim is not None:
                 im.set_clim(clim[0], clim[1])
@@ -305,11 +371,19 @@ def plot_subset_geo(lon1, lon2, lat1, lat2, ymin, ymax, xmin, xmax, v_min, v_max
         ax.set_axis_off()
 
     ref_lon, ref_lat = refx, refy
-    plot_scatter(ax, vel/10, args.colormap,'velocity (cm/yr)', (vl, vh))
-    ax.scatter(ref_lon, ref_lat, c='black', marker='s')
+
+    if args.disp:
+        plot_scatter(ax, disp*100, args.colormap,'displacement (cm)', (vl, vh))
+    else:
+        plot_scatter(ax, vel/10, args.colormap,'velocity (cm/yr)', (vl, vh))
+
+    if args.no_crosses is None:
+        ax.scatter(ref_lon, ref_lat, c='black', marker='s')
     for i, point in enumerate(points):
-        ax.scatter(points[i, 1], points[i, 0], c='red', marker='x', s=30, label=f'{i}')
-        ax.text(points[i, 1], points[i, 0], str(i+1), fontsize=12, color='black', ha='center', va='bottom')
+        if args.no_crosses is None:
+           ax.scatter(points[i, 1], points[i, 0], c='red', marker='x', s=30, label=f'{i}')
+        if args.no_labels is None:
+           ax.text(points[i, 1], points[i, 0], str(i+1), fontsize=12, color='black', ha='center', va='bottom')
 
     fig, axs = plt.subplots(nrows=1, ncols=1, figsize=args.figsize or (10, 5))
     plt.xlabel('Date')
@@ -328,8 +402,10 @@ def plot_subset_geo(lon1, lon2, lat1, lat2, ymin, ymax, xmin, xmax, v_min, v_max
             shift = np.multiply(args.shift, i)
             axs.plot(dates_ts[4::], ts_p[i, 4::]-ts_p[i, 4] - shift  , '.', color=color, markeredgecolor='black', markeredgewidth=0.4, markersize=marksize)
             x_label, y_label = dates_ts[4], ts_p[i, 4] - shift
-        label_text = f'{i+1}'
-        axs.text(x_label, y_label, label_text, fontsize=10, color='black', va='bottom', ha='right', rotation=0)
+
+        if args.no_labels is None:
+            label_text = f'{i+1}'
+            axs.text(x_label, y_label, label_text, fontsize=10, color='black', va='bottom', ha='right', rotation=0)
  
 #    cbar = plt.colorbar(plt.cm.ScalarMappable(cmap=colormap, norm=plt.Normalize(0, num_time_series-1)), ax=axs)
 #    cbar.set_ticks(range(num_time_series))
@@ -359,8 +435,14 @@ if __name__ == "__main__":
     geo_file = args.geometry
     refx = args.ref[1]
     refy = args.ref[0]
-    vl = args.vlim[0]
-    vh = args.vlim[1]
+
+    if args.disp:
+       vl = args.dlim[0]
+       vh = args.dlim[1]
+    else:
+       vl = args.vlim[0]
+       vh = args.vlim[1]
+ 
     outfile = args.outfile
     size = args.point_size
 
