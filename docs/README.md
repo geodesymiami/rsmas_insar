@@ -10,41 +10,39 @@ The main Developers are Sara Mirzaee and Falk Amelung with contributions of many
 
 ## 2. Running MinSAR ###
 
-MinSAR downloads a stack of SLC images, downloads a DEM, processes the interferograms and creates displacement timeseries products. Optional steps are the ingestion into our [dataportal] (https//:insarmaps.miami.edu) and the generation of image products that will soon be made available from another data portal.
+MinSAR downloads a stack of SLC images, downloads a DEM, processes the interferograms and creates displacement timeseries products using MintPy and/or MiaplPy. Optional steps are the ingestion into our [dataportal] (https//:insarmaps.miami.edu) and the upload of the data products to our jetstream server.
 
-The processing is controlled by a template file which offers many different options for each processing step ([see example])(../samples/GalapagosSenDT128.template). The processing is executed using `process_rsmas.py` with the processing steps specified on the command line. Steps:
+The processing is controlled by a *.template file which offers many different options for each processing step ([see example])(../samples/unittestGalapagosSenDT128.template). The processing is executed by `minsarApp.bash`. The processing steps are specified on the command line. Steps:
 ```
-download:   downloading data
+download:   downloading data     (by executing the command in 
 dem:        downloading DEM
-ifgrams:    processing interferograms starting with unpacking of the images
-timeseries: time series analysis based on smallbaseline method or single master interferograms (MintPy or MiNoPy)
+jobfiles:   create runfiles and jobfiles
+ifgram:     processing interferograms starting with unpacking of the images
+mintpy:     time series analysis based on smallbaseline method or single master interferograms (MintPy) (see Yunjun et al., 2019(
 insarmaps:  uploading displacement products to insarmaps website
-image_products: generating and uploading image products to hazards website (amplitudes, interferograms, coherences)
+miaplpy:    time series analysis of persistent and distributed scatterers  (see Mirzaee et al., 2023)
+upload:     upload data products to jetstream server
 ```
-Processing can be started at a given step using the `--start` option. The `--dostep`  option allows to execute only one processing step. Example: 
-```bash
-  process_rsmas.py  $SAMPLESDIR/GalapagosSenDT128.template             # run with default and custom templates
-  process_rsmas.py  $SAMPLESDIR/GalapagosSenDT128.template  --submit   # submit as job
-  process_rsmas.py  -h / --help                      # help 
-  process_rsmas.py -H                                # print    default template options
 
-# Run with --start/stop/step options
-  process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --dostep  download        # run the step 'download' only
-  process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --start download        # start from the step 'download' 
-  process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --stop  ifgrams         # end after step 'interferogram'
+The entire workflow including `insarmaps` is run by specifying the *template file (see note below for the unittestGalapagosSenDT128.template example):
 ```
-In order to use either `--start` or `--step`, it is necessary that the previous step was completed.
+  minsarApp.bash  $SAMPLESDIR/unittestGalapagosSenDT128.template             # run with default and custom templates
+  minsarApp.bash  -h / --help                      # help 
+```
+The default is to run the `mintpy` step. The `--mintpy --miaplpy` option runs both, MintPy and MiaplPy.
 
-## 3. Example for Galápagos with Sentinel-1 data ####
-The individual processing steps can be run stepwise using
-```bash
-process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --dostep  download
-process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --dostep  dem
-process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --dostep  ifgrams
-process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --dostep  timeseries
-process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --dostep  insarmaps
-process_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template --dostep  image_products
+Processing can be started at a given step using the `--start` option and stopped using `--stop` option. The `--dostep` option execute only one processing step. Examples:
+
+  minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  download     
+  minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  dem          
+  minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  jobfiles
+  minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  ifgram
+  minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  mintpy
+  (minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  insarmaps   # currently switched off because of disk space limitations)
+  (minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  upload      # currently switched off)
+  minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  miaplpy        
 ```
+In order to use either `--start` or `--dostep`, it is necessary that the previous step was completed.
 
 These commands run the following scripts:
 ```
@@ -78,11 +76,6 @@ Examples:
 ```
 download_data.py $SAMPLESDIR/GalapagosSenDT128.template
 
-# submit as a job:
-download_data.py $SAMPLESDIR/GalapagosSenDT128.template --submit
-
-# Add a value of 0.1 to latitude from boundingBox field (default is 0.0):       
-download_data.py $SAMPLESDIR/GalapagosSenDT128.template --delta_lat 0.1  
  ```
 `download_data.py` calls two scripts. `download_ssara.py` and `download_asfserial.py` The first uses `ssara_federated_query-cj.py` and the second the ASF python download script.  The scripts can be called individually:
 ```
