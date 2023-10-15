@@ -27,22 +27,27 @@ upload:     upload data products to jetstream server
 The entire workflow including `insarmaps` is run by specifying the *template file (see note below for the unittestGalapagosSenDT128.template example):
 ```
   minsarApp.bash  $SAMPLESDIR/unittestGalapagosSenDT128.template             # run with default and custom templates
-  minsarApp.bash  -h / --help                      # help 
+  minsarApp.bash  -h / --help                      # help
+  minsarApp.bash  $SAMPLESDIR/unittestGalapagosSenDT128.template --mintpy --miaplpy
 ```
 The default is to run the `mintpy` step. The `--mintpy --miaplpy` option runs both, MintPy and MiaplPy.
 
 Processing can be started at a given step using the `--start` option and stopped using `--stop` option. The `--dostep` option execute only one processing step. Examples:
-
+```
   minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  download     
   minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  dem          
-  minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  jobfiles
-  minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  ifgram
+  minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  jobfiles 
+  minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  ifgram 
   minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  mintpy
-  (minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  insarmaps   # currently switched off because of disk space limitations)
-  (minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  upload      # currently switched off)
+ (minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  insarmaps   # currently switched off because of disk space limitations)
+ (minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  upload      # currently switched off)
   minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  miaplpy        
 ```
 In order to use either `--start` or `--dostep`, it is necessary that the previous step was completed.
+
+Details on the different steps.
+`download`: The script generate_download_command.py` is run and creates a `ssara_federated_query.py` download command in `ssara_command.txt` (which is excuted in the `SLC` directory using `bash ../ssara_command.txt`.
+`dem_rsmas.py $SAMPLESDIR/unittestGalapagosSenDT128.template`:  This script runs `dem.py` from ISCE2 and uses the `ssara*kml` file in the `SLC` directory to determine the extent of the DEM.
 
 These commands run the following scripts:
 ```
