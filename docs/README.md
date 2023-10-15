@@ -52,22 +52,22 @@ In order to use either `--start` or `--dostep`, it is necessary that the previou
 
 - **jobfiles:**  `create_runfiles.py $SAMPLESDIR/unittestGalapagosSenDT128.template` creates the run_files (using `stackSentinel.py` of ISCE2). Then it creates SLURM jobfiles using `job_submission.py`.
 
-- ifgram:   `run_workflow.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --start 1`  submits the `run_01* to run_09* jobfiles to SLURM.
+- **ifgram:**   `run_workflow.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --start 1`  submits the `run_01* to run_09* jobfiles to SLURM.
 
-- mintpy:    submits `smallbaseline_wrapper.job` to SLURM.
+- **mintpy:**    submits `smallbaseline_wrapper.job` to SLURM.
 
-- miaplpy:    submits  `miaplpyApp.py $SAMPLESDIR/unittestGalapagosSenDT128.template  --dir miaplpy --jobfiles` to SLURM via the `srun` command. Creates  
+- **miaplpy:**    submits  `miaplpyApp.py $SAMPLESDIR/unittestGalapagosSenDT128.template  --dir miaplpy --jobfiles` to SLURM via the `srun` command. Creates  
 
-- insarmaps:  submits   `insarmaps.job` to slurm, which runs `ingest_insarmaps.py $SAMPLESDIR/unittestGalapagosSenDT128.template` to create `run_insarmaps` containing the two commands required fro ingesting.
+- **insarmaps:**  submits   `insarmaps.job` to slurm, which runs `ingest_insarmaps.py $SAMPLESDIR/unittestGalapagosSenDT128.template` to create `run_insarmaps` containing the two commands required fro ingesting.
 
-- upload:    runs `upload_data_products.py $SAMPLESDIR/unittestGalapagosSenDT128.template` (options `--mintpy, --miaplpy, --dir`) to upload the mintpy and/or miaplpy/network* directories to jetstream
+- **upload:**    runs `upload_data_products.py $SAMPLESDIR/unittestGalapagosSenDT128.template` (options `--mintpy, --miaplpy, --dir`) to upload the mintpy and/or miaplpy/network* directories to jetstream
 
 The  processing steps are recorded in the `./log` file in your project directory.
 
 ## 4. Detailed processing steps
 
 ### 4.1 Download data: --step download
-The `download_data.py` script downloads data based on the `ssaraopt` parameters in the template file. It will create an `--intersectsWith={Polygon ..)` string based on `topsStack.boundingBox`.
+The `generate_download_command.py` script generates the download command data based on the `ssaraopt` parameters in the template file. It will create an `--intersectsWith={Polygon ..)` string based on `topsStack.boundingBox`.
 
 ```################################# ssara option Parameters #################################
 ssaraopt.platform                     = None         # platform name [SENTINEL-1A, ...]
@@ -79,18 +79,7 @@ topsStack.boundingBox                 = None         # [ -1 0.15 -91.7 -90.9] la
 ```
 It also accepts the `ssaraopt.frame` option but this did not work very well for us.
 
-Examples:
 ```
-download_data.py $SAMPLESDIR/GalapagosSenDT128.template
-
- ```
-`download_data.py` calls two scripts. `download_ssara.py` and `download_asfserial.py` The first uses `ssara_federated_query-cj.py` and the second the ASF python download script.  The scripts can be called individually:
-```
-download_ssara.py $SAMPLESDIR/GalapagosSenDT128.template --delta_lat 0.1  
-download_asfserial.py $SAMPLESDIR/GalapagosSenDT128.template --delta_lat 0.1 
-```
-* [Trouble shooting](./download_data_troubleshooting.md)
-
 ### 4.2. Download DEM: --dostep dem
 Downaloading DEM from the USGS
 * [Trouble shooting](./download_dem_troubleshooting.md)
