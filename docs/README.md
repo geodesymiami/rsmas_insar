@@ -45,15 +45,10 @@ Processing can be started at a given step using the `--start` option and stopped
 ```
 In order to use either `--start` or `--dostep`, it is necessary that the previous step was completed.
 
-Details on the different steps.
-`download`: The script generate_download_command.py` is run and creates a `ssara_federated_query.py` download command in `ssara_command.txt` (which is excuted in the `SLC` directory using `bash ../ssara_command.txt`.
-`dem_rsmas.py $SAMPLESDIR/unittestGalapagosSenDT128.template`:  This script runs `dem.py` from ISCE2 and uses the `ssara*kml` file in the `SLC` directory to determine the extent of the DEM.
-
-These commands run the following scripts:
-```
-download_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template
-dem_rsmas.py $SAMPLESDIR/GalapagosSenDT128.template
-create_runfiles.py $SAMPLESDIR/GalapagosSenDT128.template
+## 3. Summary of processing steps ###
+`--download`: `minsrApp.bash` runs  `generate_download_command.py` and creates a `ssara_federated_query.py` download command in `ssara_command.txt` (which is excuted in the `SLC` directory using `bash ../ssara_command.txt`.
+`--dem`: `dem_rsmas.py $SAMPLESDIR/unittestGalapagosSenDT128.template`:  This script runs `dem.py` from ISCE2 and uses the `ssara*kml` file in the `SLC` directory to determine the extent of the DEM.
+`--jobfiles`: `create_runfiles.py $SAMPLESDIR/unittestGalapagosSenDT128.template` creates the run_files (using `stackSentinel.py` of ISCE2. The it creates SLURM jobfiles using `job_submission.py`.
 execute_runfiles.py $SAMPLESDIR/GalapagosSenDT128.template
 smallbaseline_wrapper.py $SAMPLESDIR/GalapagosSenDT128.template
 miaplpy_wrapper.py $SAMPLESDIR/GalapagosSenDT128.template
@@ -62,7 +57,7 @@ export_ortho_geo.py $SAMPLESDIR/GalapagosSenDT128.template
 ````
 The  processing steps are recorded in the `./log` file in your project directory.
 
-## 4. Processing steps
+## 4. Detailed processing steps
 
 ### 4.1 Download data: --step download
 The `download_data.py` script downloads data based on the `ssaraopt` parameters in the template file. It will create an `--intersectsWith={Polygon ..)` string based on `topsStack.boundingBox`.
