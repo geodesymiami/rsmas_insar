@@ -62,7 +62,6 @@ In order to use either `--start` or `--dostep`, it is necessary that the previou
 
 - upload:    runs `upload_data_products.py $SAMPLESDIR/unittestGalapagosSenDT128.template` (options `--mintpy, --miaplpy, --dir`) to upload the mintpy and/or miaplpy/network* directories to jetstream
 
-````
 The  processing steps are recorded in the `./log` file in your project directory.
 
 ## 4. Detailed processing steps
