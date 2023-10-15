@@ -46,11 +46,11 @@ Processing can be started at a given step using the `--start` option and stopped
 In order to use either `--start` or `--dostep`, it is necessary that the previous step was completed.
 
 ## 3. Summary of processing steps ###
-- download: `minsrApp.bash` runs  `generate_download_command.py` and creates a `ssara_federated_query.py` download command in `ssara_command.txt` (which is excuted in the `SLC` directory using `bash ../ssara_command.txt`.
+- **download:** `minsrApp.bash` runs  `generate_download_command.py` and creates a `ssara_federated_query.py` download command in `ssara_command.txt` (which is excuted in the `SLC` directory using `bash ../ssara_command.txt`.
 
-- dem: `dem_rsmas.py $SAMPLESDIR/unittestGalapagosSenDT128.template`:  This script runs `dem.py` from ISCE2 and uses the `ssara*kml` file in the `SLC` directory to determine the extent of the DEM.
+- **dem:** `dem_rsmas.py $SAMPLESDIR/unittestGalapagosSenDT128.template`:  This script runs `dem.py` from ISCE2 and uses the `ssara*kml` file in the `SLC` directory to determine the extent of the DEM.
 
-- jobfiles:  `create_runfiles.py $SAMPLESDIR/unittestGalapagosSenDT128.template` creates the run_files (using `stackSentinel.py` of ISCE2). Then it creates SLURM jobfiles using `job_submission.py`.
+- **jobfiles:**  `create_runfiles.py $SAMPLESDIR/unittestGalapagosSenDT128.template` creates the run_files (using `stackSentinel.py` of ISCE2). Then it creates SLURM jobfiles using `job_submission.py`.
 
 - ifgram:   `run_workflow.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --start 1`  submits the `run_01* to run_09* jobfiles to SLURM.
 
