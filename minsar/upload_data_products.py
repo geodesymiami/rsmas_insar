@@ -147,11 +147,9 @@ def main(iargs=None):
 
              if inps.all_flag:
                  scp_list.extend([
-                 '/'+ network_dir +'/*.he5',
                  '/'+ network_dir +'/avgSpatialCoh.h5',
-                 '/'+ network_dir +'/demErr.h5',
                  '/'+ network_dir +'/numInvIfgram.h5',
-                 '/'+ network_dir +'/timeseries.h5',
+                 '/'+ network_dir +'/timeseries_demErr.h5',
                  '/'+ network_dir +'/velocity.h5',
                  '/'+ network_dir +'/*.cfg',
                  '/'+ network_dir +'/*.txt',
@@ -159,9 +157,11 @@ def main(iargs=None):
                  '/'+ network_dir +'/inputs/ifgramStack.h5',
                  '/'+ network_dir +'/inputs/smallbaselineApp.cfg',
                  '/'+ network_dir +'/inputs/*template',
-                 '/'+ network_dir +'/geo', 
-                 '/'+ network_dir +'/pic' 
+                 '/'+ network_dir +'/geo' 
                  ])
+                 #'/'+ network_dir +'/*.he5',
+                 #'/'+ network_dir +'/demErr.h5',
+                 #'/'+ network_dir +'/pic' 
                  #'/'+ network_dir +'../inputs/*',
                  #'/'+ network_dir +'/inputs'
 
@@ -177,6 +177,7 @@ def main(iargs=None):
             '/'+ os.path.dirname(data_dir) +'/inverted/tempCoh_full*' 
             ])
 
+    print('To be uploaded: ', scp_list)
     for pattern in scp_list:
         if ( len(glob.glob(inps.work_dir + '/' + pattern)) >= 1 ):
             #files=glob.glob(inps.work_dir + '/' + pattern)
@@ -200,7 +201,7 @@ def main(iargs=None):
                 raise Exception('ERROR creating remote directory in upload_data_products.py')
 
             # upload data
-            print ('\nUploading data:')
+            print ('Uploading data:')
             command = 'scp -r ' + inps.work_dir + pattern + ' ' + destination + project_name + '/'.join(pattern.split('/')[0:-1])
             print (command)
             status = subprocess.Popen(command, shell=True).wait()
@@ -208,7 +209,7 @@ def main(iargs=None):
                 raise Exception('ERROR uploading using scp -r  in upload_data_products.py')
 
             # adjust permissions
-            print ('\nAdjusting permissions:')
+            print ('Adjusting permissions:')
             command = 'ssh ' + DATA_SERVER + ' chmod -R u=rwX,go=rX ' + REMOTE_DIR + project_name  + pattern
             print (command)
             status = subprocess.Popen(command, shell=True).wait()
