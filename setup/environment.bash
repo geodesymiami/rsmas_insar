@@ -103,6 +103,7 @@ export PATH=${PYTHON3DIR}/bin:${PATH}
 export PATH=${PATH}:${PROJ_LIB}
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/tippecanoe
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/insarmaps_scripts
+export PATH=${PATH}:${RSMASINSAR_HOME}/tools/autoencoder
 export PATH=${PATH}:${DASK_CONFIG}
 export PATH=${MIAPLPY_HOME}/snaphu/bin:${PATH}
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/S4I/viewer4falk
