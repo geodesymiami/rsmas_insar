@@ -66,6 +66,7 @@ export PYTHONPATH=${PYTHONPATH-""}
 export PYTHONPATH=${PYTHONPATH}:${MINTPY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${MINTPY_HOME}/src
 export PYTHONPATH=${PYTHONPATH}:${MIAPLPY_HOME}
+export PYTHONPATH=${PYTHONPATH}:${MIAPLPY_HOME}/src
 export PYTHONPATH=${PYTHONPATH}:${MIMTPY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${ISCE_HOME}:${ISCE_HOME}/components
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}
@@ -86,7 +87,7 @@ export PYTHONWARNINGS="ignore"
 #####################################
 export PATH=${PATH}:${SSARAHOME}
 export PATH=${PATH}:${SSARA_ASF}
-export PATH=${PATH}:${MIAPLPY_HOME}/miaplpy
+export PATH=${PATH}:${MIAPLPY_HOME}/src/miaplpy
 export PATH=${PATH}:${MIMTPY_HOME}/mimtpy
 export PATH=${PATH}:${SNAPHU_HOME}/bin
 export PATH=${PATH}:${RSMASINSAR_HOME}/minsar:${RSMASINSAR_HOME}/minsar/utils
@@ -102,8 +103,10 @@ export PATH=${PYTHON3DIR}/bin:${PATH}
 export PATH=${PATH}:${PROJ_LIB}
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/tippecanoe
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/insarmaps_scripts
+export PATH=${PATH}:${RSMASINSAR_HOME}/tools/autoencoder
 export PATH=${PATH}:${DASK_CONFIG}
 export PATH=${MIAPLPY_HOME}/snaphu/bin:${PATH}
+export PATH=${PATH}:${RSMASINSAR_HOME}/tools/S4I/viewer4falk
 
 [ -n ${MATLAB_HOME} ] && export PATH=${PATH}:${MATLAB_HOME}/bin
 

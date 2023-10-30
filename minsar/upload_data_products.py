@@ -125,11 +125,15 @@ def main(iargs=None):
     scp_list = []
 
     for data_dir in inps.data_dirs:
+        data_dir = data_dir.rstrip('/')
         if inps.mintpy_flag:
             scp_list.extend([
             '/'+ data_dir +'/*.he5',
             '/'+ data_dir +'/pic',
-            '/'+ data_dir +'/inputs'
+            '/'+ data_dir +'/inputs/geometryRadar.h5',
+#            '/'+ data_dir +'/inputs/ifgramStack.h5',
+            '/'+ data_dir +'/inputs/smallbaselineApp.cfg',
+            '/'+ data_dir +'/inputs/*.template'
             ])
 
         if inps.all_flag:
@@ -151,7 +155,7 @@ def main(iargs=None):
                  '/'+ network_dir +'/avgSpatialCoh.h5',
                  '/'+ network_dir +'/demErr.h5',
                  '/'+ network_dir +'/numInvIfgram.h5',
-                 '/'+ network_dir +'/timeseries.h5',
+                 '/'+ network_dir +'/timeseries_demErr.h5',
                  '/'+ network_dir +'/velocity.h5',
                  '/'+ network_dir +'/*.cfg',
                  '/'+ network_dir +'/*.txt',
@@ -166,16 +170,18 @@ def main(iargs=None):
                  #'/'+ network_dir +'/inputs'
 
             scp_list.extend([
-            '/'+ os.path.dirname(data_dir) +'/inputs/slcStack.h5',
-            '/'+ os.path.dirname(data_dir) +'/inputs/geometryRadar.h5',
-            '/'+ os.path.dirname(data_dir) +'/maskPS.h5',
-            '/'+ os.path.dirname(data_dir) +'/miaplpyApp.cfg',
-            '/'+ os.path.dirname(data_dir) +'/inputs/baselines', 
-            '/'+ os.path.dirname(data_dir) +'/inputs/*.template', 
-            '/'+ os.path.dirname(data_dir) +'/inverted/tempCoh_average*', 
-            '/'+ os.path.dirname(data_dir) +'/inverted/phase_series.h5', 
-            '/'+ os.path.dirname(data_dir) +'/inverted/tempCoh_full*' 
+            '/'+ os.path.basename(data_dir) +'/inputs/slcStack.h5',
+            '/'+ os.path.basename(data_dir) +'/inputs/geometryRadar.h5',
+            '/'+ os.path.basename(data_dir) +'/maskPS.h5',
+            '/'+ os.path.basename(data_dir) +'/miaplpyApp.cfg',
+            '/'+ os.path.basename(data_dir) +'/inputs/baselines', 
+            '/'+ os.path.basename(data_dir) +'/inputs/*.template', 
+            '/'+ os.path.basename(data_dir) +'/inverted/tempCoh_average*', 
+            '/'+ os.path.basename(data_dir) +'/inverted/phase_series.h5', 
+            '/'+ os.path.basename(data_dir) +'/inverted/tempCoh_full*' 
             ])
+
+    print('Data to upload: ', scp_list)
 
     for pattern in scp_list:
         if ( len(glob.glob(inps.work_dir + '/' + pattern)) >= 1 ):

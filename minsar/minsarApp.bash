@@ -75,7 +75,7 @@ echo $miaply_dir_name
 function get_network_type {
 # get single_reference or delaunay_4 ect. from template file
 network_type=${template[miaplpy.interferograms.networkType]}
-if [[ $network_type == "auto" ]];  then
+if [[ $network_type == "auto" ]] || [[ -z "$network_type" ]];   then
       network_type=single_reference                  # default of MiaplPy
 fi
 if [[ $network_type == "sequential" ]];  then
@@ -837,7 +837,7 @@ if [[ $miaplpy_flag == "1" ]]; then
     # should be moved to miaplpy (or run_workflow)
     network_type=$(get_network_type)
     network_dir=${miaplpy_dir_name}/network_${network_type}
-    cmd="create_save_hdf5_runfile.py  ${network_dir}/inputs/*.template $network_dir --queue skx-normal --walltime 0:30"
+    cmd="create_save_hdf5_runfile.py  ${network_dir}/inputs/*.template $network_dir --queue $QUEUENAME --walltime 0:30"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"
