@@ -137,7 +137,8 @@ def main(iargs=None):
             ])
 
         if inps.all_flag:
-            scp_list = [ '/mintpy/*' ]
+            #scp_list = [ '/mintpy/*' ]
+            scp_list = [ '/' + data_dir + '/*' ]
 
         if inps.miaplpy_flag:
             dir_list = glob.glob(data_dir + '/network_*')
@@ -145,6 +146,9 @@ def main(iargs=None):
              scp_list.extend([
                 '/'+ network_dir +'/*.he5',
                 '/'+ network_dir +'/demErr.h5',
+                '/'+ network_dir +'/velocity.h5',
+                '/'+ network_dir +'/temporalCoherence.h5',
+                '/'+ network_dir +'/avgSpatialCoh.h5',
                 '/'+ network_dir +'/pic' 
                 ])
                 #'/'+ network_dir +'/inputs'
@@ -169,17 +173,17 @@ def main(iargs=None):
                  #'/'+ network_dir +'../inputs/*',
                  #'/'+ network_dir +'/inputs'
 
-            scp_list.extend([
-            '/'+ os.path.basename(data_dir) +'/inputs/slcStack.h5',
-            '/'+ os.path.basename(data_dir) +'/inputs/geometryRadar.h5',
-            '/'+ os.path.basename(data_dir) +'/maskPS.h5',
-            '/'+ os.path.basename(data_dir) +'/miaplpyApp.cfg',
-            '/'+ os.path.basename(data_dir) +'/inputs/baselines', 
-            '/'+ os.path.basename(data_dir) +'/inputs/*.template', 
-            '/'+ os.path.basename(data_dir) +'/inverted/tempCoh_average*', 
-            '/'+ os.path.basename(data_dir) +'/inverted/phase_series.h5', 
-            '/'+ os.path.basename(data_dir) +'/inverted/tempCoh_full*' 
-            ])
+                 scp_list.extend([
+                 '/'+ os.path.basename(data_dir) +'/inputs/slcStack.h5',
+                 '/'+ os.path.basename(data_dir) +'/inputs/geometryRadar.h5',
+                 '/'+ os.path.basename(data_dir) +'/maskPS.h5',
+                 '/'+ os.path.basename(data_dir) +'/miaplpyApp.cfg',
+                 '/'+ os.path.basename(data_dir) +'/inputs/baselines', 
+                 '/'+ os.path.basename(data_dir) +'/inputs/*.template', 
+                 '/'+ os.path.basename(data_dir) +'/inverted/tempCoh_average*', 
+                 '/'+ os.path.basename(data_dir) +'/inverted/phase_series.h5', 
+                 '/'+ os.path.basename(data_dir) +'/inverted/tempCoh_full*' 
+                 ])
 
     print('Data to upload: ', scp_list)
 
