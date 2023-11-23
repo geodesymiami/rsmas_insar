@@ -50,8 +50,10 @@ bash ./$miniconda_version -b -p ../tools/miniconda3
 ../tools/miniconda3/bin/conda config --set solver libmamba
 ../tools/miniconda3/bin/conda config --add channels conda-forge
 ../tools/miniconda3/bin/conda install --yes --file ../tools/MintPy/requirements.txt
-sed -i.bak "s|isce2|#isce2|g" ../tools/MiaplPy/docs/requirements.txt
-../tools/miniconda3/bin/conda install --yes --file ../tools/MiaplPy/docs/requirements.txt
+cat ../tools/MiaplPy/conda-env.yml |  awk '/^  -/ {print $2}' | sed 's/\([>=<]\)/ \1 /g' | cut -d ' ' -f1 | grep -v '^$' > ../tools/MiaplPy/requirements.txt
+../tools/miniconda3/bin/conda install --yes --file ../tools/MiaplPy/requirements.txt
+#../tools/miniconda3/bin/conda config --set solver classic
+../tools/miniconda3/bin/pip install --no-deps -e ../tools/MiaplPy
 
 ../tools/miniconda3/bin/conda install isce2 -c conda-forge --yes 
 ../tools/miniconda3/bin/conda install --yes --file ../minsar/requirements.txt
@@ -59,24 +61,23 @@ sed -i.bak "s|isce2|#isce2|g" ../tools/MiaplPy/docs/requirements.txt
 ../tools/miniconda3/bin/conda install --yes --file ../tools/MimtPy/mimtpy/docs/requirements.txt 
 # faster:  ../tools/miniconda3/bin/conda install --yes --file  ../tools/MintPy/requirements.txt  isce2 -c conda-forge (but needs the memory of a node)
 ############################################
-### Compile MiaplPy and install SNAPHU #####
-export MIAPLPY_HOME="${PWD%/*}/tools/MiaplPy"
-cd $MIAPLPY_HOME/miaplpy/lib;
- ../../../../tools/miniconda3/bin/python  setup.py
- 
-cd $MIAPLPY_HOME;
-wget --no-check-certificate  https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/snaphu-v2.0.4.tar.gz
-tar -xvf snaphu-v2.0.4.tar.gz
-mv snaphu-v2.0.4 snaphu;
-rm snaphu-v2.0.4.tar.gz;
-sed -i.bak 's/\/usr\/local/$(MIAPLPY_HOME)\/snaphu/g' snaphu/src/Makefile
+###  Install SNAPHU #####
+cd ../tools
+wget --no-check-certificate  https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/snaphu-v2.0.5.tar.gz
+tar -xvf snaphu-v2.0.5.tar.gz
+mv snaphu-v2.0.5 snaphu;
+rm snaphu-v2.0.5.tar.gz;
+sed -i 's/\/usr\/local/$(PWD)\/snaphu/g' snaphu/src/Makefile
 cd snaphu/src; make
 
 ############################################
-cd ../../../../setup/
+cd ../../../setup/
 ### Adding not-commited MintPy fixes
 cp -p ../minsar/additions/mintpy/save_hdfeos5.py ../tools/MintPy/src/mintpy/
 cp -p ../minsar/additions/mintpy/cli/save_hdfeos5.py ../tools/MintPy/src/mintpy/cli/
+
+### Adding MiaplPy fix which Sara says she is going to fix
+cp -p ../minsar/additions/miaplpy/prep_slc_isce.py ../tools/MiaplPy/src/miaplpy
 
 ### Adding ISCE fixes and copying checked-out ISCE version (the latest) into miniconda directory ###
 cp -p ../minsar/additions/isce/logging.conf ../tools/miniconda3/lib/python3.?/site-packages/isce/defaults/logging/logging.conf
@@ -108,7 +109,7 @@ mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 
 ############################################
 ### create your `miniconda3.tar` and `minsar.tar`  (removing `pkgs` saves space, could cause problems with environments) (needed for `install_code_to_tmp.bash) ###
-tar cf ../minsar.tar ../tools/launcher ../minsar ../setup ../tools/MintPy/src ../tools/MimtPy/mimtpy ../tools/MiaplPy/miaplpy ../tools/MiaplPy/snaphu/bin ../tools/insarmaps_scripts ../tools/isce2/contrib/stack
+tar cf ../minsar.tar ../tools/launcher ../minsar ../setup ../tools/MintPy/src ../tools/MimtPy/mimtpy ../tools/MiaplPy/ ../tools/snaphu/bin ../tools/insarmaps_scripts ../tools/isce2/contrib/stack
 rm -rf ../tools/miniconda3/pkgs
 tar cf ../tools/miniconda3.tar -C ../tools/ miniconda3 
 echo "Installation DONE"
