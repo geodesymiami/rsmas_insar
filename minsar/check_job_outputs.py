@@ -83,6 +83,7 @@ def main(iargs=None):
     miaplpy_error_strings = [
                     'ERROR 4: ',
                     'NaN or infinity found in input float data',
+                    'Out of memory',
                     'Traceback'
                     ]
 
