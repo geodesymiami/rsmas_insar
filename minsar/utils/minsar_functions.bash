@@ -169,14 +169,12 @@ $MINTPY_HOME/src/mintpy/legacy/add_attribute.py $file REF_LON=${REF_LON}
 function rsyncFJ() { 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 helptext="            \n\
-  rsyncFJ:  rsync directory From Jetstream server to local $SCRATCHDIR \n\
+  rsyncFJ:  rsync directory From Jetstream (FJ) server to local \$SCRATCHDIR \n\
+                            requires local \$SCRATCHDIR environment variable\n\
                                                  \n\
   Examples:                                      \n\
-            (from $SCRATCHDIR:)                  \n\
      rsyncFJ MaunLoaSenAT124                     \n\
-                                                 \n\
-            (from /scratch/MaunaLoaSenAT124:)     \n\
-     rsyncFJ                                     \n\
+     rsyncFJ MaunLoaSenAT124/mintpy_5_20         \n\
     "
     printf "$helptext"
     return
