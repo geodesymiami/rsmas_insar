@@ -136,11 +136,8 @@ def main(iargs=None):
             '/'+ data_dir +'/inputs/*.template'
             ])
 
-        if inps.all_flag:
-            #scp_list = [ '/mintpy/*' ]
-            scp_list = [ '/' + data_dir + '/*' ]
-
         if inps.miaplpy_flag:
+            # loop over network_* folder
             dir_list = glob.glob(data_dir + '/network_*')
             for network_dir in dir_list:
              scp_list.extend([
@@ -151,41 +148,36 @@ def main(iargs=None):
                 '/'+ network_dir +'/avgSpatialCoh.h5',
                 '/'+ network_dir +'/pic' 
                 ])
-                #'/'+ network_dir +'/inputs'
 
              if inps.all_flag:
                  scp_list.extend([
-                 '/'+ network_dir +'/*.he5',
-                 '/'+ network_dir +'/avgSpatialCoh.h5',
-                 '/'+ network_dir +'/demErr.h5',
                  '/'+ network_dir +'/numInvIfgram.h5',
                  '/'+ network_dir +'/timeseries_demErr.h5',
-                 '/'+ network_dir +'/velocity.h5',
-                 '/'+ network_dir +'/*.cfg',
-                 '/'+ network_dir +'/*.txt',
                  '/'+ network_dir +'/inputs/geometryRadar.h5',
                  '/'+ network_dir +'/inputs/ifgramStack.h5',
                  '/'+ network_dir +'/inputs/smallbaselineApp.cfg',
                  '/'+ network_dir +'/inputs/*template',
+                 '/'+ network_dir +'/*.cfg',
+                 '/'+ network_dir +'/*.txt',
                  '/'+ network_dir +'/geo', 
-                 '/'+ network_dir +'/pic' 
-                 ])
-                 #'/'+ network_dir +'../inputs/*',
-                 #'/'+ network_dir +'/inputs'
-
-                 scp_list.extend([
-                 '/'+ os.path.basename(data_dir) +'/inputs/slcStack.h5',
-                 '/'+ os.path.basename(data_dir) +'/inputs/geometryRadar.h5',
-                 '/'+ os.path.basename(data_dir) +'/maskPS.h5',
-                 '/'+ os.path.basename(data_dir) +'/miaplpyApp.cfg',
-                 '/'+ os.path.basename(data_dir) +'/inputs/baselines', 
-                 '/'+ os.path.basename(data_dir) +'/inputs/*.template', 
-                 '/'+ os.path.basename(data_dir) +'/inverted/tempCoh_average*', 
-                 '/'+ os.path.basename(data_dir) +'/inverted/phase_series.h5', 
-                 '/'+ os.path.basename(data_dir) +'/inverted/tempCoh_full*' 
                  ])
 
-    print('Data to upload: ', scp_list)
+             # After completion of network_* loops
+             scp_list.extend([
+             '/'+ os.path.basename(data_dir) +'/maskPS.h5',
+             '/'+ os.path.basename(data_dir) +'/miaplpyApp.cfg',
+             '/'+ os.path.basename(data_dir) +'/inputs/slcStack.h5',
+             '/'+ os.path.basename(data_dir) +'/inputs/geometryRadar.h5',
+             '/'+ os.path.basename(data_dir) +'/inputs/baselines', 
+             '/'+ os.path.basename(data_dir) +'/inputs/*.template', 
+             '/'+ os.path.basename(data_dir) +'/inverted/tempCoh_average*', 
+             '/'+ os.path.basename(data_dir) +'/inverted/phase_series.h5', 
+             '/'+ os.path.basename(data_dir) +'/inverted/tempCoh_full*' 
+             ])
+
+    print('Data to upload: ')
+    for element in scp_list:
+        print(element)
 
     for pattern in scp_list:
         if ( len(glob.glob(inps.work_dir + '/' + pattern)) >= 1 ):
