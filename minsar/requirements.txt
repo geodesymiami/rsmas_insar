@@ -4,3 +4,4 @@ imageMagick
 jupyter
 georaster
 natsort
+contextily
