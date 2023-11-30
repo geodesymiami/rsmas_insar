@@ -7,4 +7,4 @@ natsort
 contextily
 natsort
 rasterio       # this is for miaplpy but was not installed Nov 2023
-jupyter_ai
+jupyter-ai
