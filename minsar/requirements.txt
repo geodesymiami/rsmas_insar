@@ -5,3 +5,4 @@ jupyter
 georaster
 natsort
 contextily
+jupyter_ai
