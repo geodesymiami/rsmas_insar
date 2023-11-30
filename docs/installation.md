@@ -98,6 +98,7 @@ mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 
 echo "Installation DONE"
 ############################################
+
 ### create your `miniconda3.tar` and `minsar.tar`  (removing `pkgs` saves space, could cause problems with environments) (needed for `install_code_to_tmp.bash) ###
 #tar cf ../minsar.tar ../tools/launcher ../minsar ../setup ../tools/MintPy/src ../tools/MimtPy/mimtpy ../tools/MiaplPy/ ../tools/snaphu/bin ../tools/insarmaps_scripts ../tools/isce2/contrib/stack
 #rm -rf ../tools/miniconda3/pkgs
