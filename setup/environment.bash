@@ -99,6 +99,7 @@ export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${PATH}
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/MimtPy
 export PATH=${PATH}:${MINTPY_HOME}/src/mintpy/cli
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/snaphu/bin
+export PATH=${PATH}:${RSMASINSAR_HOME}/tools/plotdata
 
 export PATH=${PYTHON3DIR}/bin:${PATH}
 export PATH=${PATH}:${PROJ_LIB}
