@@ -46,22 +46,24 @@ if [ "$(uname)" == "Darwin" ]; then miniconda_version=Miniconda3-latest-MacOSX-a
 wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate -O $miniconda_version #; if ($? != 0) exit; 
 chmod 755 $miniconda_version
 bash ./$miniconda_version -b -p ../tools/miniconda3
- ../tools/miniconda3/bin/conda install -n base --solver=classic conda-forge::conda-libmamba-solver conda-forge::libmamba conda-forge::libmambapy conda-forge::libarchive --yes
-../tools/miniconda3/bin/conda config --set solver libmamba
-../tools/miniconda3/bin/conda config --add channels conda-forge
-../tools/miniconda3/bin/conda install --yes --file ../tools/MintPy/requirements.txt
-cat ../tools/MiaplPy/conda-env.yml | sed '/conda-for/d;/defaults/d' | awk '/^  -/ {print $2}' | sed 's/\([>=<]\)/ \1 /g' | cut -d ' ' -f1 | grep -v '^$' > ../tools/MiaplPy/requirements.txt
-../tools/miniconda3/bin/conda install --yes --file ../tools/MiaplPy/requirements.txt
+# ../tools/miniconda3/bin/conda install -n base --solver=classic conda-forge::conda-libmamba-solver conda-forge::libmamba conda-forge::libmambapy conda-forge::libarchive --yes
+#../tools/miniconda3/bin/conda config --set solver libmamba
 #../tools/miniconda3/bin/conda config --set solver classic
+../tools/miniconda3/bin/conda install mamba --yes
+../tools/miniconda3/bin/mamba config --add channels conda-forge
+
+../tools/miniconda3/bin/mamba install isce2 -c conda-forge --yes 
+../tools/miniconda3/bin/mamba install --yes --file ../tools/insarmaps_scripts/requirements.txt
+../tools/miniconda3/bin/mamba install --yes --file ../tools/MimtPy/mimtpy/docs/requirements.txt 
+cat ../tools/MiaplPy/conda-env.yml | sed '/conda-for/d;/defaults/d' | awk '/^  -/ {print $2}' | sed 's/\([>=<]\)/ \1 /g' | cut -d ' ' -f1 | grep -v '^$' > ../tools/MiaplPy/requirements.txt
+../tools/miniconda3/bin/mamba install --yes --file ../tools/MiaplPy/requirements.txt
 ../tools/miniconda3/bin/pip install --no-deps -e ../tools/MiaplPy
 
-../tools/miniconda3/bin/conda install isce2 -c conda-forge --yes 
 ../tools/miniconda3/bin/conda install --yes --file ../minsar/requirements.txt
-../tools/miniconda3/bin/conda install --yes --file ../tools/insarmaps_scripts/requirements.txt
-../tools/miniconda3/bin/conda install --yes --file ../tools/MimtPy/mimtpy/docs/requirements.txt 
+../tools/miniconda3/bin/conda install --yes --file ../tools/MintPy/requirements.txt
+
 # faster:  ../tools/miniconda3/bin/conda install --yes --file  ../tools/MintPy/requirements.txt  isce2 -c conda-forge (but needs the memory of a node)
 ############################################
-###  Install SNAPHU #####
 ###  Install SNAPHU #####
 wget --no-check-certificate  https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/snaphu-v2.0.5.tar.gz
 tar -xvf snaphu-v2.0.5.tar.gz
