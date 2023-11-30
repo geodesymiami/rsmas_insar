@@ -62,7 +62,10 @@ cat ../tools/MiaplPy/conda-env.yml | sed '/conda-for/d;/defaults/d' | awk '/^  -
 ../tools/miniconda3/bin/conda install --yes --file ../minsar/requirements.txt
 ../tools/miniconda3/bin/conda install --yes --file ../tools/MintPy/requirements.txt
 
-# faster:  ../tools/miniconda3/bin/conda install --yes --file  ../tools/MintPy/requirements.txt  isce2 -c conda-forge (but needs the memory of a node)
+# faster:  ../tools/miniconda3/bin/conda install --yes --file  ../tools/MintPy/requirements.txt  isce2 -c conda-forge # (but needs the memory of a node)
+# try: ../tools/miniconda3/bin/conda install --yes --file ../tools/insarmaps_scripts/requirements.txt --file ../tools/MimtPy/mimtpy/docs/requirements.txt --file ../minsar/requirements.txt
+# try: ../tools/miniconda3/bin/conda install --yes  isce2 --file ../tools/MiaplPy/requirements.txt  --file ../tools/MintPy/requirements.txt
+
 ############################################
 ###  Install SNAPHU #####
 wget --no-check-certificate  https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/snaphu-v2.0.5.tar.gz
