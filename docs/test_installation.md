@@ -51,28 +51,26 @@ bash ./$miniconda_version -b -p ../tools/miniconda3
 #../tools/miniconda3/bin/conda config --set solver classic
 ../tools/miniconda3/bin/conda install mamba --yes
 ../tools/miniconda3/bin/mamba config --add channels conda-forge
-../tools/miniconda3/bin/mamba install --yes --file ../tools/MintPy/requirements.txt
 
 ../tools/miniconda3/bin/mamba install isce2 -c conda-forge --yes 
 ../tools/miniconda3/bin/mamba install --yes --file ../tools/insarmaps_scripts/requirements.txt
 ../tools/miniconda3/bin/mamba install --yes --file ../tools/MimtPy/mimtpy/docs/requirements.txt 
-
 cat ../tools/MiaplPy/conda-env.yml | sed '/conda-for/d;/defaults/d' | awk '/^  -/ {print $2}' | sed 's/\([>=<]\)/ \1 /g' | cut -d ' ' -f1 | grep -v '^$' > ../tools/MiaplPy/requirements.txt
 ../tools/miniconda3/bin/mamba install --yes --file ../tools/MiaplPy/requirements.txt
 ../tools/miniconda3/bin/pip install --no-deps -e ../tools/MiaplPy
 
 ../tools/miniconda3/bin/conda install --yes --file ../minsar/requirements.txt
+../tools/miniconda3/bin/conda install --yes --file ../tools/MintPy/requirements.txt
 
 # faster:  ../tools/miniconda3/bin/conda install --yes --file  ../tools/MintPy/requirements.txt  isce2 -c conda-forge (but needs the memory of a node)
 ############################################
 ###  Install SNAPHU #####
-cd ../tools
 wget --no-check-certificate  https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/snaphu-v2.0.5.tar.gz
 tar -xvf snaphu-v2.0.5.tar.gz
-mv snaphu-v2.0.5 snaphu;
-rm snaphu-v2.0.5.tar.gz;
-sed -i 's/\/usr\/local/$(PWD)\/snaphu/g' snaphu/src/Makefile
-cd snaphu/src; make
+mv snaphu-v2.0.5 ../tools/snaphu
+sed -i 's/\/usr\/local/$(PWD)\/snaphu/g' ../tools/snaphu/src/Makefile
+cc=../../../miniconda3/bin/cc
+cd  ../tools/snaphu/src; make
 
 ############################################
 cd ../../../setup/
