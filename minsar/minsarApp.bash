@@ -614,6 +614,22 @@ if [[ $chunks_flag == "1" ]]; then
 fi
 
 if [[ $jobfiles_flag == "1" ]]; then
+#############################################################
+# download latest orbits from ASF mirror
+    if [[ $template_file == *"Sen"*  ]]; then 
+       echo "Preparing to download latest poe and res orbits from ASF..."
+       year=$(date +%Y)
+       cd $WORKDIR/S1orbits
+       curl --ftp-ssl-reqd --silent --use-ascii --ftp-method nocwd --list-only https://s1qc.asf.alaska.edu/aux_poeorb/ > ASF_poeorb.txt
+       curl --ftp-ssl-reqd --silent --use-ascii --ftp-method nocwd --list-only https://s1qc.asf.alaska.edu/aux_resorb/ > ASF_resorb.txt
+       cat ASF_poeorb.txt | awk '{printf "! test -f %s && wget -c https://s1qc.asf.alaska.edu/aux_poeorb/%s\n", substr($0,10,77), substr($0,10,77)}' | grep $year > ASF_poeorb_latest.txt
+       cat ASF_resorb.txt | awk '{printf "! test -f %s && wget -c https://s1qc.asf.alaska.edu/aux_resorb/%s\n", substr($0,10,77), substr($0,10,77)}' | grep $year > ASF_resorb_latest.txt
+       echo "Downloading poe orbits: running bash ASF_poeorb_latest.txt in orbit directory  $SENTINEL_ORBITS  ..."
+       bash ASF_poeorb_latest.txt
+       #echo "Downloading res orbits: running bash ASF_resorb_latest.txt in orbit directory  $SENTINEL_ORBITS  ..."
+       #bash ASF_resorb_latest.txt
+       cd -
+    fi
     
     # clean directory for processing
     pwd=`pwd`; echo "DIR: $pwd"
@@ -653,20 +669,6 @@ if [[ $ifgram_flag == "1" ]]; then
     #timeout 0.1 ls  $WEATHER_DIR/ERA5/* >> /dev/null ; echo $?
     #cmd_try="download_ERA5_data.py --date_list SAFE_files.txt $template_file"
 
-#############################################################
-# download latest orbits from ASF mirror
-    if [[ $template_file == *"Sen"*  ]]; then 
-       echo "Downloading latest orbits from ASF..."
-       year=$(date +%Y)
-       cd $WORKDIR/S1orbits
-       curl --ftp-ssl-reqd --silent --use-ascii --ftp-method nocwd --list-only https://s1qc.asf.alaska.edu/aux_poeorb/ > ASF_poeorb.txt
-       curl --ftp-ssl-reqd --silent --use-ascii --ftp-method nocwd --list-only https://s1qc.asf.alaska.edu/aux_resorb/ > ASF_resorb.txt
-       cat ASF_poeorb.txt | awk '{printf "! test -f %s && wget -c https://s1qc.asf.alaska.edu/aux_poeorb/%s\n", substr($0,10,77), substr($0,10,77)}' | grep $year > ASF_poeorb_latest.txt
-       cat ASF_resorb.txt | awk '{printf "! test -f %s && wget -c https://s1qc.asf.alaska.edu/aux_resorb/%s\n", substr($0,10,77), substr($0,10,77)}' | grep $year > ASF_resorb_latest.txt
-       bash ASF_poeorb_latest.txt
-       #bash ASF_resorb_latest.txt
-       cd -
-    fi
 
     if [[ $template_file != *"Sen"* || $select_reference_flag == "0" ]]; then 
        cmd="run_workflow.bash $template_file --dostep ifgram $copy_to_tmp"
