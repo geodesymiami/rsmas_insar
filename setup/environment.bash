@@ -27,6 +27,7 @@ export ISCE_STACK=${RSMASINSAR_HOME}/tools/miniconda3/share/isce2
 export MINTPY_HOME=${RSMASINSAR_HOME}/tools/MintPy
 export MIAPLPY_HOME=${RSMASINSAR_HOME}/tools/MiaplPy
 export MIMTPY_HOME=${RSMASINSAR_HOME}/tools/MimtPy
+export GBIS_HOME=${RSMASINSAR_HOME}/tools/GBIS
 export JOBDIR=${WORKDIR}/JOBS
 export OPERATIONS=${WORKDIR}/OPERATIONS
 
