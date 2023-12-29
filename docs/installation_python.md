@@ -1,7 +1,7 @@
 ## Different python installations 
 * install miniconda
 ```
-cd setup
+#cd setup
 rm -rf ../tools/miniconda3
 miniconda_version=Miniconda3-latest-Linux-x86_64.sh
 if [ "$(uname)" == "Darwin" ]; then miniconda_version=Miniconda3-latest-MacOSX-arm64.sh ; fi
