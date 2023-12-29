@@ -22,7 +22,10 @@ source environment.bash;
 ```
 conda install isce2 -c conda-forge --yes
 conda install --yes --file ../minsar/requirements_all.txt
-conda install mintpy --yes
+# conda install mintpy --yes     ## took to long
+pip install -e ../tools/MintPy
+#pip install --no-deps -e ../tools/MintPy
+
 ```
 
 # Dec 3  I think this should work but was not veryified
