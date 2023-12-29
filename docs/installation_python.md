@@ -20,9 +20,9 @@ source environment.bash;
 
 # Dec 3  try on t2 without mamba, idevdev
 ```
-../tools/miniconda3/bin/conda install isce2 -c conda-forge --yes
-../tools/miniconda3/bin/conda install --yes --file ../minsar/requirements_all.txt
-../tools/miniconda3/bin/conda install mintpy --yes
+conda install isce2 -c conda-forge --yes
+conda install --yes --file ../minsar/requirements_all.txt
+conda install mintpy --yes
 ```
 
 # Dec 3  I think this should work but was not veryified
