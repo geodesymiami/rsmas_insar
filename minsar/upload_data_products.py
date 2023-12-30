@@ -129,11 +129,13 @@ def main(iargs=None):
         if inps.mintpy_flag:
             scp_list.extend([
             '/'+ data_dir +'/*.he5',
+            '/'+ data_dir +'/timeseries*demErr.h5',
             '/'+ data_dir +'/pic',
             '/'+ data_dir +'/inputs/geometryRadar.h5',
 #            '/'+ data_dir +'/inputs/ifgramStack.h5',
             '/'+ data_dir +'/inputs/smallbaselineApp.cfg',
-            '/'+ data_dir +'/inputs/*.template'
+            '/'+ data_dir +'/inputs/*.template',
+            '/'+ data_dir +'/geo/geo_velocity.h5'
             ])
 
         if inps.miaplpy_flag:
