@@ -1,3 +1,6 @@
+## ... and install credential files
+./install_credential_files.bash;
+
 ## Different python installations 
 * install miniconda
 ```
@@ -8,21 +11,22 @@ if [ "$(uname)" == "Darwin" ]; then miniconda_version=Miniconda3-latest-MacOSX-a
 wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate -O $miniconda_version #; if ($? != 0) exit; 
 chmod 755 $miniconda_version
 bash ./$miniconda_version -b -p ../tools/miniconda3
-```
-############################################
-### Source the environment and create aux directories. Install credential files for data download: ###
-```
+
+### Source the environment and create aux directories.
 source ~/accounts/platforms_defaults.bash;
 export RSMASINSAR_HOME=$(dirname $PWD)
 source environment.bash;
-./install_credential_files.bash;
 ```
 
-# Dec 3  try on t2 without mamba, idevdev
 ```
-conda install isce2 -c conda-forge --yes
+conda install mamba --yes
+mamba install isce2 -c conda-forge --yes
+pip install -e ../tools/MintPy
+
+pip install -e ../tools/MiaplPy
 conda install --yes --file ../minsar/requirements_all.txt
 # conda install mintpy --yes     ## took to long
+
 pip install -e ../tools/MintPy
 #pip install --no-deps -e ../tools/MintPy
 
