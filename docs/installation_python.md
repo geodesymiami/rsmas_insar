@@ -22,52 +22,17 @@ source environment.bash;
 conda install mamba --yes
 mamba install isce2 -c conda-forge --yes
 pip install -e ../tools/MintPy
-
 pip install -e ../tools/MiaplPy
-conda install --yes --file ../minsar/requirements_all.txt
-# conda install mintpy --yes     ## took to long
 
-pip install -e ../tools/MintPy
-#pip install --no-deps -e ../tools/MintPy
+pip install -r ../minsar/requirements.txt
+conda install --file ../minsar/environment.yml
 
+###  Install SNAPHU #####
+wget --no-check-certificate  https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/snaphu-v2.0.5.tar.gz
+tar -xvf snaphu-v2.0.5.tar.gz
+mv snaphu-v2.0.5 ../tools/snaphu
+sed -i 's/\/usr\/local/$(PWD)\/snaphu/g' ../tools/snaphu/src/Makefile
+cc=../../../miniconda3/bin/cc
+cd  ../tools/snaphu/src; make
 ```
 
-# Dec 3  I think this should work but was not veryified
-* idevdev,
-../tools/miniconda3/bin/conda install --yes --file ../minsar/requirements_all.txt
-../tools/miniconda3/bin/conda install isce2 -c conda-forge --yes
-../tools/miniconda3/bin/conda install mamba --yes                          # Very slow 20 hours
-cat ../tools/MiaplPy/conda-env.yml | sed '/conda-for/d;/defaults/d' | awk '/^  -/ {print $2}' | sed 's/\([>=<]\)/ \1 /g' | cut -d ' ' -f1 | grep -v '^$' > ../tools/MiaplPy/requirements.txt
-../tools/miniconda3/bin/mamba install --yes --file ../tools/MiaplPy/requirements.txt
-../tools/miniconda3/bin/conda install mintpy --yes
-
-
-* idevdev, conda isce, conda mamba, mambd miaplpy worked fine. Problems with mimtpy
- conda minsar requirements_all, conda isce, conda mamba, mambd miaplpy worked fine. Problems with mimtpy
-* idevdev, conda isce, conda mamba, mambd miaplpy worked fine. Problems with mimtpy
-* conda isce on idevdev, conda miaplpy on login, t2
-#cd setup
-../tools/miniconda3/bin/conda config --set solver classic
-# run on an interactive node (idevdev), took 10 minutes for me
-../tools/miniconda3/bin/conda install --yes --file ../tools/insarmaps_scripts/requirements.txt
-../tools/miniconda3/bin/conda install --yes --file ../tools/MimtPy/mimtpy/docs/requirements.txt 
-../tools/miniconda3/bin/conda install --yes --file ../minsar/requirements.txt
-../tools/miniconda3/bin/conda install isce2 -c conda-forge --yes 
-cat ../tools/MiaplPy/conda-env.yml | sed '/conda-for/d;/defaults/d' | awk '/^  -/ {print $2}' | sed 's/\([>=<]\)/ \1 /g' | cut -d ' ' -f1 | grep -v '^$' > ../tools/MiaplPy/requirements.txt
-../tools/miniconda3/bin/conda install --yes --file ../tools/MiaplPy/requirements.txt
-../tools/miniconda3/bin/pip install --no-deps -e ../tools/MiaplPy
-../tools/miniconda3/bin/conda install mintpy --yes
-
-# conda isce, mamba miaplpy, uninstall mamba, conda mintpy (t3)
-#cd setup
-../tools/miniconda3/bin/conda config --set solver classic
-../tools/miniconda3/bin/conda install isce2 -c conda-forge --yes
-../tools/miniconda3/bin/conda install mamba --yes
-cat ../tools/MiaplPy/conda-env.yml | sed '/conda-for/d;/defaults/d' | awk '/^  -/ {print $2}' | sed 's/\([>=<]\)/ \1 /g' | cut -d ' ' -f1 | grep -v '^$' > ../tools/MiaplPy/requirements.txt
-../tools/miniconda3/bin/mamba install --yes --file ../tools/MiaplPy/requirements.txt
-../tools/miniconda3/bin/pip install --no-deps -e ../tools/MiaplPy
-../tools/miniconda3/bin/conda uninstall mamba --yes
-../tools/miniconda3/bin/conda install mintpy --yes
-../tools/miniconda3/bin/conda install --yes --file ../tools/insarmaps_scripts/requirements.txt
-../tools/miniconda3/bin/conda install --yes --file ../tools/MimtPy/mimtpy/docs/requirements.txt
-../tools/miniconda3/bin/conda install --yes --file ../minsar/requirements.txt
