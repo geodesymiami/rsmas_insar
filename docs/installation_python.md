@@ -20,11 +20,13 @@ source environment.bash;
 
 ```
 conda install conda-libmamba-solver --yes
-conda install --file environment.yml --solver libmamba --yes     # first install c-code
+conda install --file ../minsar/environment.yml --solver libmamba --yes                      # first install c-code
+conda install --file ../tools/insarmaps-scripts/environment.yml --solver libmamba --yes     # first install c-code
 conda install isce2 -c conda-forge  --solver libmamba --yes 
 pip install -e ../tools/MintPy
 pip install -e ../tools/MiaplPy
 pip install -r ../minsar/requirements.txt
+pip install -r ../tools/insarmaps/requirements.txt
 
 ###  Install SNAPHU #####
 wget --no-check-certificate  https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/snaphu-v2.0.5.tar.gz
