@@ -50,6 +50,12 @@ wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificat
 chmod 755 $miniconda_version
 bash ./$miniconda_version -b -p ../tools/miniconda3
 
+### Source the environment 
+source ~/accounts/platforms_defaults.bash;
+export RSMASINSAR_HOME=$(dirname $PWD)
+source environment.bash;
+```
+
 ### Install c-dependencies and then python code: #######
 conda install conda-libmamba-solver --yes
 conda install --file ../minsar/environment.yml --solver libmamba --yes                      # first install c-code
@@ -70,6 +76,7 @@ cd  ../tools/snaphu/src; make
 
 ############################################
 cd ../../../setup/
+rm -rf ../tools/miniconda3/pkgs
 ### Adding not-commited MintPy fixes
 cp -p ../minsar/additions/mintpy/save_hdfeos5.py ../tools/MintPy/src/mintpy/
 cp -p ../minsar/additions/mintpy/cli/save_hdfeos5.py ../tools/MintPy/src/mintpy/cli/
@@ -96,13 +103,12 @@ cp ../tools/isce2/components/isceobj/Sensor/TOPS/TOPSSwathSLCProduct.py ../tools
 #cp ../minsar/additions/isce2/Sentinel1.py  ../tools/miniconda3/lib/python3.??/site-packages/isce/components/isceobj/Sensor/TOPS/    # 4/23 np.int issue, not clear why need to copy
 cp ../tools/isce2/contrib/demUtils/demstitcher/DemStitcher.py  ../tools/miniconda3/lib/python3.??/site-packages/isce/components/contrib/demUtils 
 
-############################################
+### Create orbits and aux directories
 mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 
 ############################################
 ### create your `miniconda3.tar` and `minsar.tar`  (removing `pkgs` saves space, could cause problems with environments) (needed for `install_code_to_tmp.bash) ###
 #tar cf ../minsar.tar ../tools/launcher ../minsar ../setup ../tools/MintPy/src ../tools/MimtPy/mimtpy ../tools/MiaplPy/ ../tools/snaphu/bin ../tools/insarmaps_scripts ../tools/isce2/contrib/stack
-rm -rf ../tools/miniconda3/pkgs
 #tar cf ../tools/miniconda3.tar -C ../tools/ miniconda3 
 echo "Installation DONE"
 ```
