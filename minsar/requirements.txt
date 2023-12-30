@@ -1,6 +1,6 @@
 # MinSAR dependencies  (georaster is for view_scatterplot)
-opencv
-imageMagick
+opencv-python
+#imageMagick
 jupyter
 georaster
 natsort
