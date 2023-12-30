@@ -54,7 +54,6 @@ bash ./$miniconda_version -b -p ../tools/miniconda3
 source ~/accounts/platforms_defaults.bash;
 export RSMASINSAR_HOME=$(dirname $PWD)
 source environment.bash;
-```
 
 ### Install c-dependencies and then python code: #######
 conda install conda-libmamba-solver --yes
