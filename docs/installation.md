@@ -32,6 +32,7 @@ git clone https://github.com/insarlab/MiaplPy.git tools/MiaplPy ;
 git clone https://github.com/geodesymiami/insarmaps_scripts.git tools/insarmaps_scripts ;
 git clone https://github.com/isce-framework/isce2.git tools/isce2
 git clone https://github.com/geodesymiami/MimtPy.git tools/MimtPy ;
+git clone https://github.com/geodesymiami/PlotData.git tools/PlotData ;
 git clone https://github.com/geodesymiami/geodmod.git tools/geodmod ;
 git clone https://github.com/geodesymiami/SSARA.git tools/SSARA ;
 git clone https://github.com/TACC/launcher.git tools/launcher ;
@@ -41,7 +42,7 @@ git clone https://github.com/TACC/launcher.git tools/launcher ;
 ./install_credential_files.bash;
 
 ############################################
-### Install your python environment: #######
+### Install python #########################
 cd setup
 rm -rf ../tools/miniconda3
 miniconda_version=Miniconda3-latest-Linux-x86_64.sh
@@ -50,22 +51,25 @@ wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificat
 chmod 755 $miniconda_version
 bash ./$miniconda_version -b -p ../tools/miniconda3
 
-### Source the environment 
+### Source the environment  #################
 source ~/accounts/platforms_defaults.bash;
 export RSMASINSAR_HOME=$(dirname $PWD)
 source environment.bash;
 
-### Install c-dependencies and then python code: #######
+### Install c-dependencies (isce fails on Mac) ###
 conda install conda-libmamba-solver --yes
 conda install --file ../minsar/environment.yml --solver libmamba --yes                      # first install c-code
 conda install --file ../tools/insarmaps_scripts/environment.yml --solver libmamba --yes     # first install c-code
 conda install isce2 -c conda-forge  --solver libmamba --yes 
+
+### Install python code and dependencies  ########
 pip install -e ../tools/MintPy
 pip install -e ../tools/MiaplPy
 pip install -r ../minsar/requirements.txt
 pip install -r ../tools/insarmaps_scripts/requirements.txt
+pip install -r ../tools/PlotData/requirements.txt
 
-###  Install SNAPHU #####
+###  Install SNAPHU #################
 wget --no-check-certificate  https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/snaphu-v2.0.5.tar.gz
 tar -xvf snaphu-v2.0.5.tar.gz
 mv snaphu-v2.0.5 ../tools/snaphu
