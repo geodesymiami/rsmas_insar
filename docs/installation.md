@@ -69,6 +69,9 @@ pip install -r ../minsar/requirements.txt
 pip install -r ../tools/insarmaps_scripts/requirements.txt
 pip install -r ../tools/PlotData/requirements.txt
 
+###  Reduce miniconda size #################
+rm -rf ../tools/miniconda3/pkgs
+
 ###  Install SNAPHU #################
 wget --no-check-certificate  https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/snaphu-v2.0.5.tar.gz
 tar -xvf snaphu-v2.0.5.tar.gz
@@ -77,10 +80,8 @@ sed -i 's/\/usr\/local/$(PWD)\/snaphu/g' ../tools/snaphu/src/Makefile
 cc=../../../miniconda3/bin/cc
 cd  ../tools/snaphu/src; make
 
-############################################
-cd ../../../setup/
-rm -rf ../tools/miniconda3/pkgs
 ### Adding not-commited MintPy fixes
+cd ../../../setup/
 cp -p ../minsar/additions/mintpy/save_hdfeos5.py ../tools/MintPy/src/mintpy/
 cp -p ../minsar/additions/mintpy/cli/save_hdfeos5.py ../tools/MintPy/src/mintpy/cli/
 
