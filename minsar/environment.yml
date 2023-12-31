@@ -1,3 +1,6 @@
 # MinSAR dependencies  
 imageMagick
 tippecanoe
+gdal          # did not install with mintpy on Mac
+pygrib        # same as above
+
