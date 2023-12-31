@@ -8,3 +8,4 @@ contextily
 natsort
 rasterio       # this is for miaplpy but was not installed Nov 2023
 jupyter-ai
+pulp           # needed for ISCE but was missing
