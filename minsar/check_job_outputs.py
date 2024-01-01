@@ -110,6 +110,7 @@ def main(iargs=None):
            putils.remove_line_counter_lines_from_error_files(run_file=job_name)
        if 'smallbaseline_wrapper' in job_name or 'miaplpy_invert_network' in job_name or 'mintpy_timeseries_correction' in job_name:   # dask errors
            putils.remove_dask_error_lines_from_error_files(run_file=job_name)
+           putils.remove_dask_error_lines_from_stdout_files(run_file=job_name)
 
        # 5/21: sometimes not working. Move before loop using run_file_base ??
        putils.remove_zero_size_or_length_error_files(run_file=job_name)
