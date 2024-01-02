@@ -447,15 +447,16 @@ fi
 # check weather newest miniconda3.tar, minsar.tar,  S1orbits.tar and S1orbits exist on $SCRATCHDIR (might be purged) (partly only needed for --tmp)
 # code_dir from RSMASINSAR_HOME directory is prepended to distingiush different minsar.tar versions
 
-code_dir=$(echo $(basename $(dirname $RSMASINSAR_HOME)))
-if  ! test -f "$SCRATCHDIR/${code_dir}_miniconda3.tar" || [[ "$RSMASINSAR_HOME/tools/miniconda3.tar" -nt "$SCRATCHDIR/${code_dir}_miniconda3.tar" ]]; then
-    echo "Copying $RSMASINSAR_HOME/tools/miniconda3.tar to $SCRATCHDIR/${code_dir}_miniconda3.tar ..."
-    cp $RSMASINSAR_HOME/tools/miniconda3.tar $SCRATCHDIR/${code_dir}_miniconda3.tar
-fi
-if  ! test -f "$SCRATCHDIR/${code_dir}_minsar.tar" || [[ "$RSMASINSAR_HOME/minsar.tar" -nt "$SCRATCHDIR/${code_dir}_minsar.tar" ]]; then
-    echo "Copying $RSMASINSAR_HOME/minsar.tar to $SCRATCHDIR/${code_dir}_minsar.tar ..."
-    cp $RSMASINSAR_HOME/minsar.tar $SCRATCHDIR/${code_dir}_minsar.tar
-fi
+# FA 12/23  remove checking/copying of miniconda3.tar
+#code_dir=$(echo $(basename $(dirname $RSMASINSAR_HOME)))
+#if  ! test -f "$SCRATCHDIR/${code_dir}_miniconda3.tar" || [[ "$RSMASINSAR_HOME/tools/miniconda3.tar" -nt "$SCRATCHDIR/${code_dir}_miniconda3.tar" ]]; then
+#    echo "Copying $RSMASINSAR_HOME/tools/miniconda3.tar to $SCRATCHDIR/${code_dir}_miniconda3.tar ..."
+#    cp $RSMASINSAR_HOME/tools/miniconda3.tar $SCRATCHDIR/${code_dir}_miniconda3.tar
+#fi
+#if  ! test -f "$SCRATCHDIR/${code_dir}_minsar.tar" || [[ "$RSMASINSAR_HOME/minsar.tar" -nt "$SCRATCHDIR/${code_dir}_minsar.tar" ]]; then
+#    echo "Copying $RSMASINSAR_HOME/minsar.tar to $SCRATCHDIR/${code_dir}_minsar.tar ..."
+#    cp $RSMASINSAR_HOME/minsar.tar $SCRATCHDIR/${code_dir}_minsar.tar
+#fi
 
 #if  ! test -f "$SCRATCHDIR/S1orbits.tar" ; then
 #    echo "Copying S1orbits.tar to $SCRATCHDIR ..."
