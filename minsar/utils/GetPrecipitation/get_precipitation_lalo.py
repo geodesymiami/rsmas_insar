@@ -369,7 +369,7 @@ def plot_precipitaion_nc4(longitude, latitude, start_date, end_date, folder, fpa
         Create longitude and latitude arrays
         '''
 
-        lon,lat = generate_coordinate_array()
+        lon, lat = generate_coordinate_array()
 
         lon_index = lon.index(longitude)
         lat_index = lat.index(latitude)
@@ -384,7 +384,7 @@ def plot_precipitaion_nc4(longitude, latitude, start_date, end_date, folder, fpa
             if f.endswith('.nc4'):
 
                 #Open the file
-                file = folder + '/'+ f
+                file = folder + '/' + f
                 ds = nc.Dataset(file)
 
                 #Extract date from file name
@@ -402,6 +402,8 @@ def plot_precipitaion_nc4(longitude, latitude, start_date, end_date, folder, fpa
 
                     df1 = pd.DataFrame(dictionary.items(), columns=['Date', 'Precipitation'])
                     finaldf = pd.concat([df,df1], ignore_index=True, sort=False)
+
+                    ds.close()
 
                 else: continue
 
@@ -471,7 +473,7 @@ def weekly_precipitation(dictionary):
         index = 0
         value = 0
 
-        for j in range ((dates_len - resto), dates_len):
+        for j in range((dates_len - resto), dates_len):
 
             value += Precipitation[0][j]
             week = Dates[0][j]
@@ -480,8 +482,12 @@ def weekly_precipitation(dictionary):
         weekly_dict[week] = value
 
     df1 = pd.DataFrame(weekly_dict.items(), columns=['Date', 'Precipitation'])
+    intervals = int((len(df1) * 30/100))
+    print(len(df1))
+    print(intervals)
 
-    plt.gca().xaxis.set_major_locator(dt.DayLocator(interval=6))
+    plt.ylabel("Precipitation [mm/day]")
+    plt.gca().xaxis.set_major_locator(dt.DayLocator(interval=intervals))
     plt.xticks(rotation=90)
     plt.bar(df1['Date'],df1['Precipitation'], color ='maroon',
             width = 0.5)
