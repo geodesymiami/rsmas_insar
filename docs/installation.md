@@ -16,7 +16,7 @@ git clone https://github.com/geodesymiami/accounts.git ~/accounts ;
 cd $WORK2/code
 ```
 
-* Install the code using the commands below (you need a reasonable recent git version). 
+* Install the code using the commands below (there could be copy-paste issues if copying too many lines ). 
 
 ```
 bash
@@ -27,6 +27,7 @@ fi
 git clone https://github.com/geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
 
+########### Clone the required code  #################
 git clone https://github.com/insarlab/MintPy.git tools/MintPy ;
 git clone https://github.com/insarlab/MiaplPy.git tools/MiaplPy ;
 git clone https://github.com/geodesymiami/insarmaps_scripts.git tools/insarmaps_scripts ;
@@ -36,12 +37,10 @@ git clone https://github.com/geodesymiami/PlotData.git tools/PlotData ;
 git clone https://github.com/geodesymiami/geodmod.git tools/geodmod ;
 git clone https://github.com/geodesymiami/SSARA.git tools/SSARA ;
 git clone https://github.com/TACC/launcher.git tools/launcher ;
-###########  Done cloning  #################
 
 ### Install credential files ###############
 ./install_credential_files.bash;
 
-############################################
 ### Install python #########################
 cd setup
 rm -rf ../tools/miniconda3
@@ -69,7 +68,7 @@ pip install -r ../minsar/requirements.txt
 pip install -r ../tools/insarmaps_scripts/requirements.txt
 pip install -r ../tools/PlotData/requirements.txt
 
-###  Reduce miniconda size #################
+###  Reduce miniconda3 directory size #################
 rm -rf ../tools/miniconda3/pkgs
 
 ###  Install SNAPHU #################
@@ -78,10 +77,11 @@ tar -xvf snaphu-v2.0.5.tar.gz
 mv snaphu-v2.0.5 ../tools/snaphu
 sed -i 's/\/usr\/local/$(PWD)\/snaphu/g' ../tools/snaphu/src/Makefile
 cc=../../../miniconda3/bin/cc
-cd  ../tools/snaphu/src; make
+make -C ../tools/snaphu/src
+# cd  ../tools/snaphu/src; make
+# cd ../../../setup/
 
 ### Adding not-commited MintPy fixes
-cd ../../../setup/
 cp -p ../minsar/additions/mintpy/save_hdfeos5.py ../tools/MintPy/src/mintpy/
 cp -p ../minsar/additions/mintpy/cli/save_hdfeos5.py ../tools/MintPy/src/mintpy/cli/
 
@@ -94,26 +94,16 @@ cp -p ../minsar/additions/isce2/topsStack/FilterAndCoherence.py ../tools/isce2/c
 cp -p ../minsar/additions/isce2/stripmapStack/prepRawCSK.py ../tools/isce2/contrib/stack/stripmapStack
 cp -p ../minsar/additions/isce2/stripmapStack/unpackFrame_TSX.py ../tools/isce2/contrib/stack/stripmapStack
 cp -p ../minsar/additions/isce2/DemStitcher.py ../tools/isce2/contrib/demUtils/demstitcher
-#cp -p ../minsar/additions/isce2/topo.py ../tools/isce2/contrib/stack/stripmapStack                           #(uses method isce instead of gdal)
-#cp -p ../minsar/additions/isce2/VRTManager.py ../tools/isce2/contrib/stack/topsStack                          # 1/23 np.int issue
-#cp -p ../minsar/additions/isce2/TOPSSwathSLCProduct.py ../tools/isce2/components/isceobj/Sensor/TOPS          # 1/23 np.int issue
-#cp -p ../minsar/additions/isce2/Sentinel1.py  ../tools/isce2/components/isceobj/Sensor/TOPS                   # 2/23 np.int issue
-#cp -p ../minsar/additions/isce2/stripmapStack/cropFrame.py ../tools/isce2/contrib/stack/stripmapStack         # 1/23 np.int issue
 
 ### Copying ISCE fixes into miniconda directory ###
 cp -r ../tools/isce2/contrib/stack/* ../tools/miniconda3/share/isce2
 cp -r ../tools/isce2/components/isceobj/Sensor/TOPS ../tools/miniconda3/share/isce2 
 cp ../tools/isce2/components/isceobj/Sensor/TOPS/TOPSSwathSLCProduct.py ../tools/miniconda3/lib/python3.?/site-packages/isce/components/isceobj/Sensor/TOPS
-#cp ../minsar/additions/isce2/Sentinel1.py  ../tools/miniconda3/lib/python3.??/site-packages/isce/components/isceobj/Sensor/TOPS/    # 4/23 np.int issue, not clear why need to copy
 cp ../tools/isce2/contrib/demUtils/demstitcher/DemStitcher.py  ../tools/miniconda3/lib/python3.??/site-packages/isce/components/contrib/demUtils 
 
 ### Create orbits and aux directories
 mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 
-############################################
-### create your `miniconda3.tar` and `minsar.tar`  (removing `pkgs` saves space, could cause problems with environments) (needed for `install_code_to_tmp.bash) ###
-#tar cf ../minsar.tar ../tools/launcher ../minsar ../setup ../tools/MintPy/src ../tools/MimtPy/mimtpy ../tools/MiaplPy/ ../tools/snaphu/bin ../tools/insarmaps_scripts ../tools/isce2/contrib/stack
-#tar cf ../tools/miniconda3.tar -C ../tools/ miniconda3 
 echo "Installation DONE"
 ```
 
