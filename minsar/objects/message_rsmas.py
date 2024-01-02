@@ -61,6 +61,8 @@ def insert_environment_variables_into_path( msg ):
             token = token.replace(os.getenv('SAMPLESDIR'),"$SAMPLESDIR")
         if os.getenv('TEMPLATES') in token:
             token = token.replace(os.getenv('TEMPLATES'),"$TE")
+        if os.getenv('SCRATCHDIR') in token:
+            token = token.replace(os.getenv('SCRATCHDIR'),"$SCRATCHDIR")
         toks_mod.append(token)
     msg_mod = ' '.join(toks_mod)
     return msg_mod

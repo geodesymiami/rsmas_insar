@@ -71,13 +71,7 @@ def cmd_line_parse(iargs=None):
         if inps.miaplpy_flag:
             inps.data_dirs = ['miaplpy']
 
-    #if inps.all_flag:
-    #    if inps.mintpy_flag:
-    #        inps.mintpy_all_flag = True
-    #    if inps.miaplpy_flag:
-    #        inps.miaplpy_all_flag = True
-
-    print(inps)
+    print('inps: ',inps)
     return inps
 
 ##############################################################################
@@ -90,12 +84,7 @@ def main(iargs=None):
        inps.project_name = putils.get_project_name(custom_template_file=inps.custom_template_file)
        inps.work_dir = putils.get_work_directory(None, inps.project_name)
     else:
-       if len(inps.data_dirs[0].rstrip('/').split("/")) == 1:
-          inps.work_dir = os.getcwd()
-       else:
-          # Allows for upload_data_products.py --dir unittestGalapagosSenDT128/miaplpy --all   (log entry not right)
-          inps.work_dir = os.getcwd() + '/' + os.path.dirname(inps.data_dir)
-          inps.data_dir = inps.data_dirs.split("/")[1]
+       inps.work_dir = os.getcwd()
        inps.project_name = os.path.basename(inps.work_dir)
 
     project_name = inps.project_name
@@ -139,8 +128,12 @@ def main(iargs=None):
             ])
 
         if inps.miaplpy_flag:
-            # loop over network_* folder
-            dir_list = glob.glob(data_dir + '/network_*')
+            if 'network_' in data_dir:
+               dir_list = [ data_dir ]
+            else:
+               dir_list = glob.glob(data_dir + '/network_*')
+
+            # loop over network_* folder(s)
             for network_dir in dir_list:
              scp_list.extend([
                 '/'+ network_dir +'/*.he5',

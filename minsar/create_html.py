@@ -8,6 +8,7 @@ import argparse
 import re
 import fnmatch
 from pdf2image import convert_from_path
+from minsar.objects import message_rsmas
 
 EXAMPLE = """example:
     create_html.py MaunaLoaSenDT87/mintpy_5_20/pic
@@ -36,7 +37,7 @@ def build_html(directory_path):
     template_files = [file for file in file_list if file.lower().endswith('.template')]
 
     os.chdir(directory_path)
-    # print('QQ:',pdf_files)
+
     # Convert each PDF file to PNG
     for pdf_file in pdf_files:
         images = convert_from_path(pdf_file)
@@ -96,13 +97,14 @@ def build_html(directory_path):
             html_content += header_tag + '<pre>\n' + file.read() + '</pre>\n'
 
     # Close the HTML tags
-    html_content += "</body></html>"
+    html_content += "</body></html>" + "\n"
 
     # Write the HTML content to a file without spaces
     html_file_path = os.path.join(directory_path, 'index.html')
     with open(html_file_path, 'w') as html_file:
         html_file.write(html_content)
 
+    html_file_path = message_rsmas.insert_environment_variables_into_path( html_file_path )
     print(f"HTML file created: {html_file_path}")
     return None
 
@@ -115,6 +117,8 @@ def main(iargs=None):
         sys.argv = cmd.split()
     # print('QQ1',sys.argv[:])    
     inps = create_parser()
+    
+    message_rsmas.log(os.getcwd(), os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1:]))
 
     build_html(inps.dir)
 
