@@ -880,8 +880,8 @@ def remove_line_counter_lines_from_error_files(run_file):
 ##########################################################################
 
 def remove_dask_error_lines_from_error_files(run_file):
-    """ Remove 23 lines for dask distributed.worker - ERROR """
 
+    """ Remove 23 lines for dask distributed.worker - ERROR """
     error_files = glob.glob(run_file + '*.e*')
     error_files = natsorted(error_files)
     for item in error_files:
@@ -924,6 +924,7 @@ def remove_dask_error_lines_from_stdout_files(run_file):
 
     start_phrase = "Traceback (most recent call last):"
     end_phrase = "distributed.comm.core.CommClosedError"
+    end_phrases = ["distributed.comm.core.CommClosedError", "tornado.iostream.StreamClosedError"]
 
     for item in stdout_files:
         f = open(item, 'r')
@@ -936,7 +937,7 @@ def remove_dask_error_lines_from_stdout_files(run_file):
 
         # Find all start and end indices
         start_indices = [i for i, line in enumerate(lines) if start_phrase in line]
-        end_indices = [i for i, line in enumerate(lines) if end_phrase in line]
+        end_indices = [i for i, line in enumerate(lines) if search_for_end_phrases(end_phrases, line)]
 
         # Check if the number of start phrases matches the number of end phrases
         if len(start_indices) != len(end_indices):
@@ -950,8 +951,11 @@ def remove_dask_error_lines_from_stdout_files(run_file):
             file.writelines(lines)
 
     return None
-##########################################################################
 
+def search_for_end_phrases(end_phrases, line):
+    return any(phrase in line for phrase in end_phrases)
+
+##########################################################################
 
 def remove_last_job_running_products(run_file):
     error_files = glob.glob(run_file + '*.e*')
