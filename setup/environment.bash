@@ -27,6 +27,7 @@ export ISCE_STACK=${RSMASINSAR_HOME}/tools/miniconda3/share/isce2
 export MINTPY_HOME=${RSMASINSAR_HOME}/tools/MintPy
 export MIAPLPY_HOME=${RSMASINSAR_HOME}/tools/MiaplPy
 export MIMTPY_HOME=${RSMASINSAR_HOME}/tools/MimtPy
+export PLOTDATA_HOME=${RSMASINSAR_HOME}/tools/PlotData
 export GBIS_HOME=${RSMASINSAR_HOME}/tools/GBIS
 export JOBDIR=${WORKDIR}/JOBS
 export OPERATIONS=${WORKDIR}/OPERATIONS
@@ -47,8 +48,7 @@ export TEMPLATES=${WORKDIR}/infiles/${USER_PREFERRED}/TEMPLATES
 export TE=${TEMPLATES}
 
 ############## DASK ##############
-export DASK_CONFIG=${MINTPY_HOME}/mintpy/defaults/
-#export DASK_CONFIG=${RSMASINSAR_HOME}/tools/MintPy/mintpy/defaults
+export DASK_CONFIG=${MINTPY_HOME}/src/mintpy/defaults/
 
 ############## LAUNCHER ##############
 export LAUNCHER_DIR=${RSMASINSAR_HOME}/tools/launcher
@@ -64,10 +64,6 @@ export PROJ_LIB=${PYTHON3DIR}/share/proj
 export GDAL_DATA=${PYTHON3DIR}/share/gdal
 
 export PYTHONPATH=${PYTHONPATH-""}
-#export PYTHONPATH=${PYTHONPATH}:${MINTPY_HOME}
-#export PYTHONPATH=${PYTHONPATH}:${MINTPY_HOME}/src
-#export PYTHONPATH=${PYTHONPATH}:${MIAPLPY_HOME}
-#export PYTHONPATH=${PYTHONPATH}:${MIAPLPY_HOME}/src
 export PYTHONPATH=${PYTHONPATH}:${MIMTPY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${ISCE_HOME}:${ISCE_HOME}/components
 export PYTHONPATH=${PYTHONPATH}:${ISCE_STACK}
@@ -76,7 +72,6 @@ export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/tools/PyAPS
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/minsar/utils/ssara_ASF
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/tools/PySolid
 #export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/tools      # needed for mimt. Need to talk to Sara on how to do this smarter
-#export PYTHONPATH_RSMAS=${PYTHONPATH}
 #export MPLBACKEND='Agg'
 
 ######### Ignore warnings ############
@@ -87,29 +82,21 @@ export PYTHONWARNINGS="ignore"
 ############  PATH  #################
 #####################################
 export PATH=${PATH}:${SSARAHOME}
-export PATH=${PATH}:${SSARA_ASF}
 export PATH=${PATH}:${MIAPLPY_HOME}/src/miaplpy
 export PATH=${PATH}:${MIMTPY_HOME}/mimtpy
-export PATH=${PATH}:${SNAPHU_HOME}/bin
-export PATH=${PATH}:${RSMASINSAR_HOME}/minsar:${RSMASINSAR_HOME}/minsar/utils
 export PATH=${PATH}:${RSMASINSAR_HOME}/minsar
-export PATH=${PATH}:${RSMASINSAR_HOME}/minsar/utils/ssara_ASF
-export PATH=${PATH}:${RSMASINSAR_HOME}/setup/accounts
-export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${ISCE_STACK}:${PATH}
-export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${PATH}
-export PATH=${PATH}:${RSMASINSAR_HOME}/tools/MimtPy
+export PATH=${PATH}:${RSMASINSAR_HOME}/minsar/utils
 export PATH=${PATH}:${MINTPY_HOME}/src/mintpy/cli
+export PATH=${PATH}:${PLOTDATA_HOME}/cli
+export PATH=${PATH}:${RSMASINSAR_HOME}/tools/MimtPy
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/snaphu/bin
-export PATH=${PATH}:${RSMASINSAR_HOME}/tools/plotdata
-
-export PATH=${PYTHON3DIR}/bin:${PATH}
 export PATH=${PATH}:${PROJ_LIB}
-export PATH=${PATH}:${RSMASINSAR_HOME}/tools/tippecanoe
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/insarmaps_scripts
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/autoencoder
 export PATH=${PATH}:${DASK_CONFIG}
-export PATH=${MIAPLPY_HOME}/snaphu/bin:${PATH}
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/S4I/viewer4falk
+export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${ISCE_STACK}:${PATH}
+export PATH=${PYTHON3DIR}/bin:${PATH}
 
 [ -n ${MATLAB_HOME} ] && export PATH=${PATH}:${MATLAB_HOME}/bin
 
