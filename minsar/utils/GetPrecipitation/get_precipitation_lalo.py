@@ -360,8 +360,9 @@ def plot_precipitaion_nc4(longitude, latitude, start_date, end_date, folder, fpa
                 #Check if the date range passed as input is within the date range created from the downloaded files
                 #if not, launch the download function
                 if not all(elem in file_date_list for elem in date_list):
-
                     folder = dload_site_list_nc4(folder, fpath)
+
+                print('All files present, no download needed')
             except:
                 folder = dload_site_list_nc4(folder, fpath)
 
@@ -403,6 +404,10 @@ def plot_precipitaion_nc4(longitude, latitude, start_date, end_date, folder, fpa
                     df1 = pd.DataFrame(dictionary.items(), columns=['Date', 'Precipitation'])
                     finaldf = pd.concat([df,df1], ignore_index=True, sort=False)
 
+                    df.sort_index()
+                    df.sort_index(ascending=False)
+
+
                     ds.close()
 
                 else: continue
@@ -420,11 +425,11 @@ def check_nc4_hdf5(folder, lo, la, start, end, fpath):
     hdf5_files = [f for f in os.listdir(folder) if f.endswith('.hdf5')]
 
     if len(nc4_files) >= len(hdf5_files):
-        dload_site_list_nc4(folder, fpath)
+        #dload_site_list_nc4(folder, fpath)
         precip = plot_precipitaion_nc4(lo, la, start, end, folder, fpath)
 
     else:
-        dload_site_list_hdf5(folder, fpath)
+        #dload_site_list_hdf5(folder, fpath)
         precip = plot_precipitaion_hdf5(lo, la, start, end, folder, fpath)
 
     return precip
@@ -432,7 +437,9 @@ def check_nc4_hdf5(folder, lo, la, start, end, fpath):
 
 def weekly_precipitation(dictionary):
     weekly_dict = {}
-    Precipitation=[]
+    Precipitation = []
+    dictionary['Date'] = pd.to_datetime(dictionary['Date'])
+    dictionary.reset_index(drop=True, inplace=True)
 
     if 'Precipitation' in dictionary:
         # Iterate through the dictionary and extract the values for the specified field
@@ -451,13 +458,11 @@ def weekly_precipitation(dictionary):
     precipitation_len = len(Precipitation[0])
     resto = dates_len % 7
 
-    if len(Dates[0]) == len(Precipitation[0]):
-
+    if dates_len == precipitation_len:
         index = 0
         value = 0
 
-        for i in range (0,dates_len - resto):
-
+        for i in range(0, dates_len - resto):
             if index < 7:
 
                 value += Precipitation[0][i]
@@ -482,9 +487,9 @@ def weekly_precipitation(dictionary):
         weekly_dict[week] = value
 
     df1 = pd.DataFrame(weekly_dict.items(), columns=['Date', 'Precipitation'])
-    intervals = int((len(df1) * 30/100))
-    print(len(df1))
-    print(intervals)
+    df1.sort_values(by='Date', ascending=True)
+
+    intervals = int((len(df1) * 25/100))
 
     plt.ylabel("Precipitation [mm/day]")
     plt.gca().xaxis.set_major_locator(dt.DayLocator(interval=intervals))
