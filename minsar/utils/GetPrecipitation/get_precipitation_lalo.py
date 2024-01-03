@@ -498,6 +498,40 @@ def weekly_precipitation(dictionary):
             width = 0.5)
     plt.show()
 
+def daily_plot(dictionary, lat, lon):
+
+    rainfalldfNoNull = dictionary.dropna()
+
+    # Convert date strings to decimal years
+    rainfalldfNoNull['Decimal_Year'] = rainfalldfNoNull['Date'].apply(date_to_decimal_year)
+
+
+    rainfalldfNoNull["cum"] = rainfalldfNoNull.Precipitation.cumsum()
+
+    fig, ax = plt.subplots(layout='constrained')
+
+    plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color ='maroon',
+            width = 0.01)
+
+    plt.ylabel("Precipitation [mm/day]")
+
+    rainfalldfNoNull.plot('Decimal_Year', 'cum', secondary_y=True, ax=ax)
+
+    plt.title(f'Latitude: {lat}, Longitude: {lon}')
+    ax.set_xlabel("Yr")
+    ax.right_ax.set_ylabel("Cumulative Precipitation [mm]")
+
+    ax.get_legend().remove()
+
+    plt.xticks(rotation=90)
+
+    #Eruptions
+    plt.axvline(x = date_to_decimal_year('2020-03-06'), color='red', linestyle='--', label='Eruption Date')
+    plt.axvline(x = date_to_decimal_year('2019-12-06'), color='red', linestyle='--', label='Eruption Date')
+
+    # Data plot
+    plt.show()
+    rainfalldfNoNull
 
 if 'SCRATCHDIR' in os.environ:
     work_dir = os.getenv('SCRATCHDIR') + '/' + 'gpm_data'
