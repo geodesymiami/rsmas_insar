@@ -839,9 +839,19 @@ if [[ $miaplpy_flag == "1" ]]; then
        exit 1;
     fi
 
-    # should be moved to miaplpy (or run_workflow)
+    # the following should be moved to miaplpy (or run_workflow)
     network_type=$(get_network_type)
     network_dir=${miaplpy_dir_name}/network_${network_type}
+
+    cmd="create_html.py ${network_dir}/pic"
+    echo "Running.... $cmd"
+    $cmd
+    exit_status="$?"
+    if [[ $exit_status -ne 0 ]]; then
+       echo "$cmd with a non-zero exit code ($exit_status). Exiting."
+       exit 1;
+    fi
+
     cmd="create_save_hdf5_runfile.py  ${network_dir}/inputs/*.template $network_dir --queue $QUEUENAME --walltime 0:30"
     echo "Running.... $cmd"
     $cmd
@@ -853,7 +863,6 @@ if [[ $miaplpy_flag == "1" ]]; then
     sbatch save_hdfeos5_radar_coord.job
     echo "Need to modify code to use submit_jobs.bash to wait for completion"
     #submit_jobs.bash save_hdfeos5_radar_coord.job  #should use this to wait but did not work (8/23)
-
 fi
 
 if [[ $upload_flag == "1" ]]; then

@@ -120,6 +120,9 @@ def main(iargs=None):
     
     message_rsmas.log(os.getcwd(), os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1:]))
 
+    if not os.path.isabs(inps.dir):
+         inps.dir = os.getcwd() + '/' + inps.dir
+
     build_html(inps.dir)
 
     return None

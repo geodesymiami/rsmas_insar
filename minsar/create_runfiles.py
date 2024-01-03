@@ -154,7 +154,7 @@ def main(iargs=None):
 
             # pre_command = ["""[[ $(ls mintpy/time* | wc -l) -eq 1 ]] && rm mintpy/time*"""]
             pre_command = ["check_timeseries_file.bash --dir mintpy;"]
-            post_command = ["create_html.py $SCRATCHDIR/" + os.path.basename(inps.work_dir) + "/mintpy/pic;"]
+            post_command = ["create_html.py  mintpy/pic;"]
             command = pre_command + command + post_command
 
             job_obj.submit_script(job_name, job_file_name, command, writeOnly='True')
