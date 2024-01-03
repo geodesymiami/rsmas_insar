@@ -32,6 +32,7 @@ def create_parser():
         description='Plot precipitation data from GPM dataset for a specific location at a given date range',
         formatter_class=argparse.RawTextHelpFormatter,
         epilog=EXAMPLE)
+    parser.add_argument('--plot', choices=['daily', 'weekly'], required=False)
     parser.add_argument('la', help='latitude')
     parser.add_argument('lo', help='longitude')
     parser.add_argument('strt', help='start date')
@@ -362,7 +363,7 @@ def plot_precipitaion_nc4(longitude, latitude, start_date, end_date, folder, fpa
                 if not all(elem in file_date_list for elem in date_list):
                     folder = dload_site_list_nc4(folder, fpath)
 
-                print('All files present, no download needed')
+                print('All files are present, no download needed')
             except:
                 folder = dload_site_list_nc4(folder, fpath)
 
@@ -435,7 +436,7 @@ def check_nc4_hdf5(folder, lo, la, start, end, fpath):
     return precip
 
 
-def weekly_precipitation(dictionary):
+def weekly_precipitation(dictionary, lat, lon):
     weekly_dict = {}
     Precipitation = []
     dictionary['Date'] = pd.to_datetime(dictionary['Date'])
@@ -489,29 +490,43 @@ def weekly_precipitation(dictionary):
     df1 = pd.DataFrame(weekly_dict.items(), columns=['Date', 'Precipitation'])
     df1.sort_values(by='Date', ascending=True)
 
-    intervals = int((len(df1) * 25/100))
+    df1["cum"] = df1.Precipitation.cumsum()
+    fig, ax = plt.subplots(layout='constrained')
 
-    plt.ylabel("Precipitation [mm/day]")
-    plt.gca().xaxis.set_major_locator(dt.DayLocator(interval=intervals))
+    plt.bar(df1['Date'],df1['Precipitation'], color='maroon', width=0.01 * len(df1))
+    plt.ylabel("Precipitation [mm/week]")
+
+    df1.plot('Date', 'cum', secondary_y=True, ax=ax)
+
+    plt.title(f'Latitude: {lat}, Longitude: {lon}')
+    ax.set_xlabel("Yr")
+    ax.right_ax.set_ylabel("Cumulative Precipitation [mm]")
+    ax.get_legend().remove()
+
     plt.xticks(rotation=90)
-    plt.bar(df1['Date'],df1['Precipitation'], color ='maroon',
-            width = 0.5)
+
+    print(df1)
+
+    # plt.ylabel("Precipitation [mm/day]")
+    # plt.gca().xaxis.set_major_locator(dt.DayLocator(interval=intervals))
+    # plt.xticks(rotation=90)
+    # plt.bar(df1['Date'],df1['Precipitation'], color ='maroon',
+    #         width = 0.5)
     plt.show()
 
-def daily_plot(dictionary, lat, lon):
+
+def daily_precipitation(dictionary, lat, lon):
 
     rainfalldfNoNull = dictionary.dropna()
 
     # Convert date strings to decimal years
     rainfalldfNoNull['Decimal_Year'] = rainfalldfNoNull['Date'].apply(date_to_decimal_year)
-
-
     rainfalldfNoNull["cum"] = rainfalldfNoNull.Precipitation.cumsum()
-
+    print(rainfalldfNoNull)
     fig, ax = plt.subplots(layout='constrained')
 
-    plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color ='maroon',
-            width = 0.01)
+    plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color='maroon',
+            width=0.01 * len(rainfalldfNoNull))
 
     plt.ylabel("Precipitation [mm/day]")
 
@@ -525,13 +540,12 @@ def daily_plot(dictionary, lat, lon):
 
     plt.xticks(rotation=90)
 
-    #Eruptions
-    plt.axvline(x = date_to_decimal_year('2020-03-06'), color='red', linestyle='--', label='Eruption Date')
-    plt.axvline(x = date_to_decimal_year('2019-12-06'), color='red', linestyle='--', label='Eruption Date')
+    # #Eruptions
+    # plt.axvline(x = date_to_decimal_year('2020-03-06'), color='red', linestyle='--', label='Eruption Date')
+    # plt.axvline(x = date_to_decimal_year('2019-12-06'), color='red', linestyle='--', label='Eruption Date')
 
     # Data plot
     plt.show()
-    rainfalldfNoNull
 
 if 'SCRATCHDIR' in os.environ:
     work_dir = os.getenv('SCRATCHDIR') + '/' + 'gpm_data'
@@ -545,6 +559,13 @@ if __name__ == "__main__":
     la = round(float(args.la), 1)
     lo = round(float(args.lo), 1)
 
+    #HARDCODED TO BE PARAMETERISED
     prec = check_nc4_hdf5('/' + path_data + 'data', lo, la, args.strt, args.end, '/' + path_data + 'subset_GPM_3IMERGDF_06_20230906_204147_.txt')
-    weekly_precipitation(prec)
+
+    if args.plot == 'daily':
+        daily_precipitation(prec, la, lo)
+    elif args.plot =='weekly':
+        weekly_precipitation(prec, la, lo)
+    else:
+        daily_precipitation(prec, la, lo)
 
