@@ -213,6 +213,9 @@ def main(iargs=None):
                 raise Exception('ERROR adjusting permissions in upload_data_products.py')
 
 ##########################################
+    remote_url = 'http://' + DATA_SERVER.split('@')[1] + REMOTE_DIR + '/' + project_name + '/' + data_dir + '/pic'
+    print('Data at:\n',remote_url)
+##########################################
 
     if inps.image_products_flag:
         REMOTE_DIR = '/data/image_products/'
@@ -222,7 +225,7 @@ def main(iargs=None):
                 '/image_products/*',
                 ]
 
-        command = 'ssh ' + DATA_SERVER + ' mkdir -p ' + REMOTE_DIR + project_name
+        command = 'ssh ' + DATA_SERVER + ' mkdir -p ' + REMOTE_DIR + project_namEMOTE_DIR
         print (command)
         status = subprocess.Popen(command, shell=True).wait()
         if status is not 0:
