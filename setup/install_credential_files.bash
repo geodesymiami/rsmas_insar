@@ -13,25 +13,13 @@ if [[  $characterCount == 75 ]]; then
       echo File password_config.py not empty - kept unchanged
 fi
 
-echo "Copying password_config.py into ../minsar/utils/ssara_ASF"
-cp ~/accounts/password_config.py ../minsar/utils/ssara_ASF
-
 # for dem.py 
 if [[ ! -f ~/.netrc ]]; then
   echo "copying .netrc file for DEM data download into ~/.netrc"
   cp ~/accounts/netrc ~/.netrc
 fi
 
-## for pyaps 
-#if (! -f tools/PyAPS/pyaps3/model.cfg) then
-#      echo Copying default model.cfg for ECMWF download with PyAPS into ../tools/PyAPS/pyaps3
-#      cp ~/accounts/model.cfg ../tools/PyAPS/pyaps3
-#   else
-#      echo File model.cfg exists already - kept unchanged
-#endif
-
 # for pyaps 
-
 python_version=$(echo "python3.$(../tools/miniconda3/bin/python --version | cut -d. -f2)")
 model_cfg_file=$(echo "../tools/miniconda3/lib/$python_version/site-packages/pyaps3/model.cfg")
 if [[ ! -f $model_cfg_file ]]; then
