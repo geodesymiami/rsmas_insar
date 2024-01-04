@@ -547,6 +547,7 @@ def daily_precipitation(dictionary, lat, lon):
     # Data plot
     plt.show()
 
+
 if 'SCRATCHDIR' in os.environ:
     work_dir = os.getenv('SCRATCHDIR') + '/' + 'gpm_data'
 
@@ -564,7 +565,7 @@ if __name__ == "__main__":
 
     if args.plot == 'daily':
         daily_precipitation(prec, la, lo)
-    elif args.plot =='weekly':
+    elif args.plot == 'weekly':
         weekly_precipitation(prec, la, lo)
     else:
         daily_precipitation(prec, la, lo)
