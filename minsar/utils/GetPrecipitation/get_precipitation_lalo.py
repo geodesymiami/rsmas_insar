@@ -493,7 +493,7 @@ def weekly_precipitation(dictionary, lat, lon):
     df1["cum"] = df1.Precipitation.cumsum()
     fig, ax = plt.subplots(layout='constrained')
 
-    plt.bar(df1['Date'],df1['Precipitation'], color='maroon', width=0.01 * len(df1))
+    plt.bar(df1['Date'],df1['Precipitation'], color='maroon', width=0.01)
     plt.ylabel("Precipitation [mm/week]")
 
     df1.plot('Date', 'cum', secondary_y=True, ax=ax)
@@ -525,9 +525,7 @@ def daily_precipitation(dictionary, lat, lon):
     print(rainfalldfNoNull)
     fig, ax = plt.subplots(layout='constrained')
 
-    plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color='maroon',
-            width=0.01 * len(rainfalldfNoNull))
-
+    plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color='maroon', width=0.01)
     plt.ylabel("Precipitation [mm/day]")
 
     rainfalldfNoNull.plot('Decimal_Year', 'cum', secondary_y=True, ax=ax)
