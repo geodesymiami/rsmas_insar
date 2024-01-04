@@ -88,6 +88,14 @@ def extract_volcanoes_info(jsonfile, volcanoName):
             print(f'{name} eruption started {start} and ended {end}')
 
 
+def generate_url_download(date):
+    d = datetime.strptime(date, '%Y-%d-%m')
+    year = d.year
+    day = d.day
+    month = d.month
+    url = 'https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDF.06/' + year + '/' + month + '/3B-DAY.MS.MRG.3IMERG.' + year+month+day + '-S000000-E235959.V06.nc4'
+    print(url)
+
 def adapt_coordinates(lon, lat):
     lat = round(float(lat),1)
     lon = round(float(lon),1)
