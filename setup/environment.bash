@@ -71,6 +71,8 @@ export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/tools/PyAPS
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/minsar/utils/ssara_ASF
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/tools/PySolid
+export PYTHONPATH=${PYTHONPATH}:${PLOTDATA_HOME}/src/cli
+export PYTHONPATH=${PYTHONPATH}:${PLOTDATA_HOME}/src
 #export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/tools      # needed for mimt. Need to talk to Sara on how to do this smarter
 #export MPLBACKEND='Agg'
 
@@ -87,7 +89,7 @@ export PATH=${PATH}:${MIMTPY_HOME}/mimtpy
 export PATH=${PATH}:${RSMASINSAR_HOME}/minsar
 export PATH=${PATH}:${RSMASINSAR_HOME}/minsar/utils
 export PATH=${PATH}:${MINTPY_HOME}/src/mintpy/cli
-export PATH=${PATH}:${PLOTDATA_HOME}/cli
+export PATH=${PATH}:${PLOTDATA_HOME}/src/cli
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/MimtPy
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/snaphu/bin
 export PATH=${PATH}:${PROJ_LIB}
