@@ -14,6 +14,8 @@ from minsar.objects.rsmas_logging import loglevel
 from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
 import minsar.job_submission as js
+#from minsar.create_html import create_html
+import create_html
 #from minsar import email_results
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
@@ -24,8 +26,6 @@ def create_parser():
     parser = argparse.ArgumentParser(description='Convert MintPy timeseries product into HDF-EOS5 format\n' +
                                      '  https://earthdata.nasa.gov/esdis/eso/standards-and-references/hdf-eos5\n' +
                                      '  https://mintpy.readthedocs.io/en/latest/hdfeos5/')
-#                                     formatter_class=argparse.RawDescriptionHelpFormatter,
-#                                     epilog=TEMPALTE+'\n'+EXAMPLE)
 
     parser.add_argument('custom_template_file', nargs='?', default=None, help='custom template with option settings.\n')
 
@@ -41,11 +41,9 @@ def create_parser():
                          help='uploads miaplpy/*_network data products to data portal')
     parser.add_argument('--dir', dest='data_dirs', nargs='+', default=False,  metavar="DIRECTORY",
                          help='upload specific mintpy/miaplpy directory')
-    parser.add_argument('--all',
-                         dest='all_flag',
-                         action='store_true',
-                         default=False,
-                         help='uploads full mintpy dir')
+    parser.add_argument('--geo', dest='geo_flag', action='store_true', default=False, help='uploads geo  directory')
+    parser.add_argument('--slcStack', dest='slcStack_flag', action='store_true', default=False, help='uploads miaplpy*/inputs directory')
+    parser.add_argument('--all', dest='all_flag', action='store_true', default=False, help='uploads full directory')
     parser.add_argument('--imageProducts',
                          dest='image_products_flag',
                          action='store_true',
@@ -74,6 +72,10 @@ def cmd_line_parse(iargs=None):
     print('inps: ',inps)
     return inps
 
+def create_html_if_needed(dir):
+    if not os.path.isfile(dir + '/pic/index.html'):
+        create_html.main(dir + '/pic')
+   
 ##############################################################################
 
 def main(iargs=None):
@@ -112,20 +114,29 @@ def main(iargs=None):
     destination = DATA_SERVER + ':' + REMOTE_DIR
 
     scp_list = []
-
     for data_dir in inps.data_dirs:
         data_dir = data_dir.rstrip('/')
         if inps.mintpy_flag:
+            create_html_if_needed(data_dir)
             scp_list.extend([
             '/'+ data_dir +'/*.he5',
             '/'+ data_dir +'/timeseries*demErr.h5',
             '/'+ data_dir +'/pic',
             '/'+ data_dir +'/inputs/geometryRadar.h5',
-#            '/'+ data_dir +'/inputs/ifgramStack.h5',
+#            '/'+ data_dir +'/inputs/ifgramStack.h5',            # removed becasue I never rerran based of ifgramStack.h5
             '/'+ data_dir +'/inputs/smallbaselineApp.cfg',
             '/'+ data_dir +'/inputs/*.template',
             '/'+ data_dir +'/geo/geo_velocity.h5'
             ])
+            if inps.geo_flag:
+               scp_list.extend([
+               '/'+ data_dir +'/geo/geo_avgSpatialCoh.h5',
+               '/'+ data_dir +'/geo/geo_geometryRadar.h5',
+               '/'+ data_dir +'/geo/geo_maskTempCoh.h5',
+               '/'+ data_dir +'/geo/geo_temporalCoherence.h5',
+               '/'+ data_dir +'/geo/geo_timeseries_demErr.h5'
+               #'/'+ data_dir +'/geo/geo_velocity.h5'             # already included earlier
+               ])
 
         if inps.miaplpy_flag:
             if 'network_' in data_dir:
@@ -135,44 +146,60 @@ def main(iargs=None):
 
             # loop over network_* folder(s)
             for network_dir in dir_list:
-             scp_list.extend([
+                create_html_if_needed(data_dir)
+                scp_list.extend([
                 '/'+ network_dir +'/*.he5',
                 '/'+ network_dir +'/demErr.h5',
                 '/'+ network_dir +'/velocity.h5',
                 '/'+ network_dir +'/temporalCoherence.h5',
                 '/'+ network_dir +'/avgSpatialCoh.h5',
-                '/'+ network_dir +'/pic' 
+                '/'+ network_dir +'/pic',
+                '/'+ data_dir +'/geo/geo_velocity.h5'             # already included earlier
+                ])
+                if inps.geo_flag:
+                   scp_list.extend([
+                   '/'+ data_dir +'/geo/geo_avgSpatialCoh.h5',
+                   '/'+ data_dir +'/geo/geo_geometryRadar.h5',
+                   '/'+ data_dir +'/geo/geo_maskTempCoh.h5',
+                   '/'+ data_dir +'/geo/geo_temporalCoherence.h5',
+                   '/'+ data_dir +'/geo/geo_timeseries_demErr.h5'
+                   #'/'+ data_dir +'/geo/geo_velocity.h5'             # already included earlier
+                   ])
+                if inps.all_flag:
+                    scp_list.extend([
+                    '/'+ network_dir +'/numInvIfgram.h5',
+                    '/'+ network_dir +'/timeseries_demErr.h5',
+                    '/'+ network_dir +'/inputs/geometryRadar.h5',
+                    '/'+ network_dir +'/inputs/ifgramStack.h5',
+                    '/'+ network_dir +'/inputs/smallbaselineApp.cfg',
+                    '/'+ network_dir +'/inputs/*template',
+                    '/'+ network_dir +'/*.cfg',
+                    '/'+ network_dir +'/*.txt',
+                    '/'+ network_dir +'/geo', 
+                    ])
+
+            # After completion of network_* loops
+            scp_list.extend([
+            '/'+ os.path.basename(data_dir) +'/maskPS.h5',
+            '/'+ os.path.basename(data_dir) +'/miaplpyApp.cfg',
+            #'/'+ os.path.basename(data_dir) +'/inputs/slcStack.h5',
+            '/'+ os.path.basename(data_dir) +'/inputs/geometryRadar.h5',
+            '/'+ os.path.basename(data_dir) +'/inputs/baselines', 
+            '/'+ os.path.basename(data_dir) +'/inputs/*.template', 
+            '/'+ os.path.basename(data_dir) +'/inverted/tempCoh_average*', 
+            #'/'+ os.path.basename(data_dir) +'/inverted/phase_series.h5', 
+            '/'+ os.path.basename(data_dir) +'/inverted/tempCoh_full*' 
+            ])
+            if inps.slcStack_flag:
+                scp_list.extend([
+                '/'+ os.path.basename(data_dir) +'/inputs/slcStack.h5'
                 ])
 
-             if inps.all_flag:
-                 scp_list.extend([
-                 '/'+ network_dir +'/numInvIfgram.h5',
-                 '/'+ network_dir +'/timeseries_demErr.h5',
-                 '/'+ network_dir +'/inputs/geometryRadar.h5',
-                 '/'+ network_dir +'/inputs/ifgramStack.h5',
-                 '/'+ network_dir +'/inputs/smallbaselineApp.cfg',
-                 '/'+ network_dir +'/inputs/*template',
-                 '/'+ network_dir +'/*.cfg',
-                 '/'+ network_dir +'/*.txt',
-                 '/'+ network_dir +'/geo', 
-                 ])
-
-             # After completion of network_* loops
-             scp_list.extend([
-             '/'+ os.path.basename(data_dir) +'/maskPS.h5',
-             '/'+ os.path.basename(data_dir) +'/miaplpyApp.cfg',
-             '/'+ os.path.basename(data_dir) +'/inputs/slcStack.h5',
-             '/'+ os.path.basename(data_dir) +'/inputs/geometryRadar.h5',
-             '/'+ os.path.basename(data_dir) +'/inputs/baselines', 
-             '/'+ os.path.basename(data_dir) +'/inputs/*.template', 
-             '/'+ os.path.basename(data_dir) +'/inverted/tempCoh_average*', 
-             '/'+ os.path.basename(data_dir) +'/inverted/phase_series.h5', 
-             '/'+ os.path.basename(data_dir) +'/inverted/tempCoh_full*' 
-             ])
-
+    print('################')
     print('Data to upload: ')
     for element in scp_list:
         print(element)
+    print('################')
 
     for pattern in scp_list:
         if ( len(glob.glob(inps.work_dir + '/' + pattern)) >= 1 ):
