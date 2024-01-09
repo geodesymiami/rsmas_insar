@@ -108,24 +108,11 @@ def build_html(directory_path):
     print(f"HTML file created: {html_file_path}")
     return None
 
-def main(iargs=None):
-    if len(sys.argv) == 1:
-        cmd = 'create_html.py /Users/famelung/onedrive/scratch/MaunaLoaSenDT87/mintpy_5_20/pic'
-        cmd = 'create_html.py $SCRATCHDIR/unittestGalapagosSenDT128/mintpy/pic'
-        cmd = os.path.expandvars(cmd)
-        cmd = re.sub(' +', ' ', cmd) .rstrip()
-        sys.argv = cmd.split()
-    # print('QQ1',sys.argv[:])    
-    inps = create_parser()
+def create_html(inps):
     
-    message_rsmas.log(os.getcwd(), os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1:]))
-
     if not os.path.isabs(inps.dir):
          inps.dir = os.getcwd() + '/' + inps.dir
 
     build_html(inps.dir)
 
     return None
-
-if __name__ == '__main__':
-    main()

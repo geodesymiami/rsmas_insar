@@ -14,9 +14,7 @@ from minsar.objects.rsmas_logging import loglevel
 from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
 import minsar.job_submission as js
-#from minsar.create_html import create_html
-import create_html
-#from minsar import email_results
+from minsar.create_html import create_html
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
@@ -72,9 +70,16 @@ def cmd_line_parse(iargs=None):
     print('inps: ',inps)
     return inps
 
+###################################################
+class Inps:
+    def __init__(self, dir):
+        self.dir = dir
+
 def create_html_if_needed(dir):
     if not os.path.isfile(dir + '/pic/index.html'):
-        create_html.main(dir + '/pic')
+        # Create an instance of Inps with the directory
+        inps = Inps(dir + '/pic')
+        create_html(inps)
    
 ##############################################################################
 

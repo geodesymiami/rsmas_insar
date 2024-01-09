@@ -23,7 +23,6 @@ import xml.etree.ElementTree as ET
 import shutil
 from minsar.objects.dataset_template import Template
 from minsar.objects.auto_defaults import PathFind
-from isceobj.Sensor.TOPS.Sentinel1 import Sentinel1
 import time, datetime
 
 pathObj = PathFind()
@@ -1059,6 +1058,7 @@ def xmlread(filename):
 
 def get_number_of_bursts(inps_dict):
     """ calculates the number of bursts based on boundingBox and returns an adjusting factor for walltimes """
+    from isceobj.Sensor.TOPS.Sentinel1 import Sentinel1
 
     system_path = os.getenv('PATH')
     sys.path.append(os.path.join(os.getenv('ISCE_STACK'), 'topsStack'))
