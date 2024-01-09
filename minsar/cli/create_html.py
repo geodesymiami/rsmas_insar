@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # Authors:  Falk Amelung
 # This script creates an index.html file o display mintpy results.
-############################################################
+###############################################################################
 import os  
 import sys
+import re
 import argparse
 from minsar.objects import message_rsmas
 
@@ -25,7 +26,8 @@ def create_parser():
     )
     inps = parser.parse_args()
     return inps
-    
+
+###################################################################################  
 def main(iargs=None):
     if len(sys.argv) == 1:
         cmd = 'create_html.py /Users/famelung/onedrive/scratch/MaunaLoaSenDT87/mintpy_5_20/pic'
@@ -34,14 +36,22 @@ def main(iargs=None):
         cmd = re.sub(' +', ' ', cmd) .rstrip()
         sys.argv = cmd.split()
 
-    inps = create_parser()
     message_rsmas.log(os.getcwd(), os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1:]))
 
-    # import
-    from 
-    if not os.path.isabs(inps.dir):
-         inps.dir = os.getcwd() + '/' + inps.dir
+    # parse
+    inps = create_parser()
 
-##########################################################################
+    # import  (prepend parent_dir to sys.path)
+    # parent_dir = os.path.dirname( os.path.dirname(os.path.abspath(__file__)) )
+    # sys.path.insert(0, parent_dir)
+
+    # import  (remove the directory of script from sys.path)
+    sys.path.pop(0)
+    from minsar.create_html import create_html
+   
+    # run
+    create_html(inps)
+
+   ################################################################################
 if __name__ == '__main__':
     main()
