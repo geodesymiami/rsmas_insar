@@ -41,10 +41,6 @@ def main(iargs=None):
     # parse
     inps = create_parser()
 
-    # import  (prepend parent_dir to sys.path)
-    # parent_dir = os.path.dirname( os.path.dirname(os.path.abspath(__file__)) )
-    # sys.path.insert(0, parent_dir)
-
     # import  (remove the directory of script from sys.path)
     sys.path.pop(0)
     from minsar.create_html import create_html

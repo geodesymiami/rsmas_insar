@@ -9,6 +9,7 @@ import re
 import fnmatch
 from pdf2image import convert_from_path
 from minsar.objects import message_rsmas
+import minsar.utils.process_utilities as putils
 
 EXAMPLE = """example:
     create_html.py MaunaLoaSenDT87/mintpy_5_20/pic
@@ -29,6 +30,10 @@ def create_parser():
     inps = parser.parse_args()
     return inps
     
+class Inps:
+    def __init__(self, template_file):
+        self.custom_template_file = template_file
+
 def build_html(directory_path):
 
     file_list = [file for file in os.listdir(directory_path) if file.lower().endswith(('.png', '.pdf','.template'))]
@@ -78,10 +83,19 @@ def build_html(directory_path):
 
     png_files.sort(key=sort_key)
 
+    # get project_name and network_type for header
+    inps = Inps(template_files[0])
+    inps = putils.create_or_update_template(inps)
+    try:
+       network_type = inps.template['miaplpy.interferograms.networkType']
+    except:
+       network_type = 'single_reference'
+    project_name = template_files[0].split('.')[0]
+
     # Create the HTML file with headers and image tags
     html_content = "<html><body>"
-    project_name = template_files[0].split('.')[0]
-    html_content = f'  <h1>{project_name}</h1>\n'
+    html_content += f'  <h1>{project_name}</h1>\n'
+    html_content += f'  <h2>network: {network_type}</h2>\n'
 
     for png_file in png_files:
         header_tag = f'  <h2>{png_file}</h2>\n'
@@ -107,7 +121,7 @@ def build_html(directory_path):
         html_file.write(html_content)
 
     html_file_path = message_rsmas.insert_environment_variables_into_path( html_file_path )
-    print(f"HTML file created: {html_file_path}")
+    print(f"HTML file created: \n{html_file_path}")
     return None
 
 def create_html(inps):
