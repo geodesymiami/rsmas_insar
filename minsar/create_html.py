@@ -95,7 +95,8 @@ def build_html(directory_path):
     # Create the HTML file with headers and image tags
     html_content = "<html><body>"
     html_content += f'  <h1>{project_name}</h1>\n'
-    html_content += f'  <h2>network: {network_type}</h2>\n'
+    if 'miaplpy' in directory_path:
+       html_content += f'  <h2>network: {network_type}</h2>\n'
 
     for png_file in png_files:
         header_tag = f'  <h2>{png_file}</h2>\n'
