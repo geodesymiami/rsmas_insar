@@ -866,7 +866,7 @@ if [[ $miaplpy_flag == "1" ]]; then
 fi
 
 if [[ $upload_flag == "1" ]]; then
-    cmd="upload_data_products.py $template_file --mintpy"
+    cmd="upload_data_products.py $template_file --dir mintpy"
     echo "Running.... $cmd"
     echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
     $cmd 2>out_upload_data_products.e 1>out_upload_data_products.o & 
