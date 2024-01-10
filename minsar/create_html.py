@@ -80,6 +80,8 @@ def build_html(directory_path):
 
     # Create the HTML file with headers and image tags
     html_content = "<html><body>"
+    project_name = template_files[0].split('.')[0]
+    html_content = f'  <h1>{project_name}</h1>\n'
 
     for png_file in png_files:
         header_tag = f'  <h2>{png_file}</h2>\n'
