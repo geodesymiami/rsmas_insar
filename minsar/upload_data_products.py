@@ -20,52 +20,44 @@ sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
 
 ##############################################################################
+EXAMPLE = """example:
+    upload_data_products.py --dir mintppy
+    upload_data_products.py --dir miaplpy
+    upload_data_products.py --dir miaplpy/network_single_reference
+"""
+
+DESCRIPTION = (
+    "Uploads mintpy and miaplpy data products to jetstream server"
+)
+
 def create_parser():
-    parser = argparse.ArgumentParser(description='Convert MintPy timeseries product into HDF-EOS5 format\n' +
-                                     '  https://earthdata.nasa.gov/esdis/eso/standards-and-references/hdf-eos5\n' +
-                                     '  https://mintpy.readthedocs.io/en/latest/hdfeos5/')
+    parser = argparse.ArgumentParser(description=DESCRIPTION, epilog=EXAMPLE,
+                 formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument('custom_template_file', nargs='?', default=None, help='custom template with option settings.\n')
 
-    parser.add_argument('--mintpy',
-                         dest='mintpy_flag',
-                         action='store_true',
-                         default=False,
-                         help='uploads mintpy data products to data portal')
-    parser.add_argument('--miaplpy',
-                         dest='miaplpy_flag',
-                         action='store_true',
-                         default=False,
-                         help='uploads miaplpy/*_network data products to data portal')
     parser.add_argument('--dir', dest='data_dirs', nargs='+', default=False,  metavar="DIRECTORY",
                          help='upload specific mintpy/miaplpy directory')
     parser.add_argument('--geo', dest='geo_flag', action='store_true', default=False, help='uploads geo  directory')
     parser.add_argument('--slcStack', dest='slcStack_flag', action='store_true', default=False, help='uploads miaplpy*/inputs directory')
     parser.add_argument('--all', dest='all_flag', action='store_true', default=False, help='uploads full directory')
-    parser.add_argument('--imageProducts',
-                         dest='image_products_flag',
-                         action='store_true',
-                         default=False,
-                         help='uploads image data products to data portal')
-    return parser
 
+    return parser
 
 def cmd_line_parse(iargs=None):
 
     parser = create_parser()
     inps = parser.parse_args(args=iargs)
 
+    inps.mintpy_flag = False
+    inps.miaplpy_flag = False
     if inps.data_dirs:
         if 'mintpy' in inps.data_dirs[0]:
             inps.mintpy_flag = True
-        if 'miaplpy' in inps.data_dirs[0]:
+        elif 'miaplpy' in inps.data_dirs[0]:
             inps.miaplpy_flag = True
-
-    if not inps.data_dirs:
-        if inps.mintpy_flag:
-            inps.data_dirs = ['mintpy']
-        if inps.miaplpy_flag:
-            inps.data_dirs = ['miaplpy']
+        else:
+            raise Exception("USER ERROR: requires mintpy or miaplpy directory")
 
     print('inps: ',inps)
     return inps
@@ -76,9 +68,9 @@ class Inps:
         self.dir = dir
 
 def create_html_if_needed(dir):
-    if not os.path.isfile(dir + '/pic/index.html'):
+    if not os.path.isfile(dir + '/index.html'):
         # Create an instance of Inps with the directory
-        inps = Inps(dir + '/pic')
+        inps = Inps(dir)
         create_html(inps)
    
 ##############################################################################
@@ -95,9 +87,6 @@ def main(iargs=None):
        inps.project_name = os.path.basename(inps.work_dir)
 
     project_name = inps.project_name
-
-    if inps.image_products_flag:
-       inps.mintpy_flag = False
 
     os.chdir(inps.work_dir)
 
@@ -122,7 +111,7 @@ def main(iargs=None):
     for data_dir in inps.data_dirs:
         data_dir = data_dir.rstrip('/')
         if inps.mintpy_flag:
-            create_html_if_needed(data_dir)
+            create_html_if_needed(data_dir + '/pic')
             scp_list.extend([
             '/'+ data_dir +'/*.he5',
             '/'+ data_dir +'/timeseries*demErr.h5',
@@ -151,7 +140,7 @@ def main(iargs=None):
 
             # loop over network_* folder(s)
             for network_dir in dir_list:
-                create_html_if_needed(data_dir)
+                create_html_if_needed(network_dir + '/pic')
                 scp_list.extend([
                 '/'+ network_dir +'/*.he5',
                 '/'+ network_dir +'/demErr.h5',
@@ -159,16 +148,16 @@ def main(iargs=None):
                 '/'+ network_dir +'/temporalCoherence.h5',
                 '/'+ network_dir +'/avgSpatialCoh.h5',
                 '/'+ network_dir +'/pic',
-                '/'+ data_dir +'/geo/geo_velocity.h5'             # already included earlier
+                '/'+ network_dir +'/geo/geo_velocity.h5'             # already included earlier
                 ])
                 if inps.geo_flag:
                    scp_list.extend([
-                   '/'+ data_dir +'/geo/geo_avgSpatialCoh.h5',
-                   '/'+ data_dir +'/geo/geo_geometryRadar.h5',
-                   '/'+ data_dir +'/geo/geo_maskTempCoh.h5',
-                   '/'+ data_dir +'/geo/geo_temporalCoherence.h5',
-                   '/'+ data_dir +'/geo/geo_timeseries_demErr.h5'
-                   #'/'+ data_dir +'/geo/geo_velocity.h5'             # already included earlier
+                   '/'+ network_dir +'/geo/geo_avgSpatialCoh.h5',
+                   '/'+ network_dir +'/geo/geo_geometryRadar.h5',
+                   '/'+ network_dir +'/geo/geo_maskTempCoh.h5',
+                   '/'+ network_dir +'/geo/geo_temporalCoherence.h5',
+                   '/'+ network_dir +'/geo/geo_timeseries_demErr.h5'
+                   #'/'+ network_dir +'/geo/geo_velocity.h5'             # already included earlier
                    ])
                 if inps.all_flag:
                     scp_list.extend([
@@ -249,29 +238,14 @@ def main(iargs=None):
     print('Data at:\n',remote_url)
 ##########################################
 
-    if inps.image_products_flag:
-        REMOTE_DIR = '/data/image_products/'
-        destination = DATA_SERVER + ':' + REMOTE_DIR
-
-        rsync_list = [
-                '/image_products/*',
-                ]
-
-        command = 'ssh ' + DATA_SERVER + ' mkdir -p ' + REMOTE_DIR + project_namEMOTE_DIR
-        print (command)
-        status = subprocess.Popen(command, shell=True).wait()
-        if status is not 0:
-             raise Exception('ERROR in upload_data_products.py')
-
-
-        for pattern in rsync_list:
-            command = 'rsync -avuz -e ssh --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r ' + inps.work_dir + pattern + ' ' + destination + project_name + '/'.join(pattern.split('/')[0:-1])
-            print (command)
-            status = subprocess.Popen(command, shell=True).wait()
-            if status is not 0:
-                raise Exception('ERROR in upload_data_products.py')
-
-        return None
+        #for pattern in rsync_list:
+        #    command = 'rsync -avuz -e ssh --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r ' + inps.work_dir + pattern + ' ' + destination + project_name + '/'.join(pattern.split('/')[0:-1])
+        #    print (command)
+        #    status = subprocess.Popen(command, shell=True).wait()
+        #    if status is not 0:
+        #        raise Exception('ERROR in upload_data_products.py')
+        #
+        #    return None
 
     return None
 
