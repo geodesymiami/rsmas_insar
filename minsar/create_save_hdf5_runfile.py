@@ -64,8 +64,8 @@ def main(iargs=None):
     job_name = 'save_hdfeos5_radar_coord'
     job_file_name = job_name
 
-    cmd1 = 'save_hdfeos5.py timeseries_demErr.h5 --tc temporalCoherence.h5 --asc avgSpatialCoh.h5 -m ../maskPS.h5 -g inputs/geometryRadar.h5 -t smallbaselineApp.cfg --suffix PS &'
-    cmd2 = 'save_hdfeos5.py timeseries_demErr.h5 --tc temporalCoherence.h5 --asc avgSpatialCoh.h5 -m maskTempCoh.h5 -g inputs/geometryRadar.h5 -t smallbaselineApp.cfg --suffix PSDS &'
+    cmd1 = 'save_hdfeos5.py timeseries_*demErr.h5 --tc temporalCoherence.h5 --asc avgSpatialCoh.h5 -m ../maskPS.h5 -g inputs/geometryRadar.h5 -t smallbaselineApp.cfg --suffix PS &'
+    cmd2 = 'save_hdfeos5.py timeseries_*demErr.h5 --tc temporalCoherence.h5 --asc avgSpatialCoh.h5 -m maskTempCoh.h5 -g inputs/geometryRadar.h5 -t smallbaselineApp.cfg --suffix PSDS &'
 
     command = ['cd ' + dir + '\n' + cmd1 + '\n' + cmd2 + '\nwait']
     job_obj.submit_script(job_name, job_file_name, command, writeOnly='True')

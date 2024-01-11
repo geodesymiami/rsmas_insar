@@ -156,7 +156,7 @@ def main(iargs=None):
                    '/'+ network_dir +'/geo/geo_geometryRadar.h5',
                    '/'+ network_dir +'/geo/geo_maskTempCoh.h5',
                    '/'+ network_dir +'/geo/geo_temporalCoherence.h5',
-                   '/'+ network_dir +'/geo/geo_timeseries_demErr.h5'
+                   '/'+ network_dir +'/geo/geo_timeseries_*demErr.h5'
                    #'/'+ network_dir +'/geo/geo_velocity.h5'             # already included earlier
                    ])
                 if inps.all_flag:
