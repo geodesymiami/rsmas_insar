@@ -24,7 +24,7 @@ EXAMPLE = """example:
 
 """
 
-path_data = 'Users/giacomo/Library/CloudStorage/OneDrive-UniversityofMiami/GetPrecipitation/'
+path_data = '/Users/giacomo/Library/CloudStorage/OneDrive-UniversityofMiami/GetPrecipitation/'
 
 #TODO Adapt the script for hdf5 files too as it has been done for nc4
 #TODO add requirements.txt
@@ -539,7 +539,7 @@ def daily_precipitation(dictionary, lat, lon):
     print(rainfalldfNoNull)
     fig, ax = plt.subplots(layout='constrained')
 
-    plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color='maroon', width=0.001)
+    plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color='maroon', width=0.00001 * len(rainfalldfNoNull))
 
     plt.ylabel("Precipitation [mm/day]")
 
