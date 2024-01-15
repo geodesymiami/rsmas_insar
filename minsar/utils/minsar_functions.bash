@@ -186,6 +186,12 @@ else
   dir=$1
 fi
 
+echo "test:"
+if [ ! -d "$SCRATCHDIR/$dir" ]; then
+  echo "dir does not exist, mkking it: $SCRATCHDIR/$dir"
+  mkdir -p $SCRATCHDIR/$dir
+fi
+
 echo "Syncing directory $dir from jetstream:"
 cmd="rsync -avzh exouser@149.165.154.65:/data/HDF5EOS/$dir/ $SCRATCHDIR/$dir"
 echo running ... $cmd
