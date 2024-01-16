@@ -90,8 +90,8 @@ def update_input_namespace(inps):
         key: val for (key, val) in zip(keys, [lat1, lat2, lon1, lon2])
     }
     # read data file
-    dataset_names = readfile.get_dataset_list(inps.data_file[0])
-    data, atr = readfile.read(inps.data_file[0], datasetName=dataset_names[0])
+    dataset_names = readfile.get_dataset_list(inps.data_file)
+    data, atr = readfile.read(inps.data_file, datasetName=dataset_names[0])
 
     # read geo_file
     latitude = readfile.read(inps.geometry_file, datasetName='latitude')[0]
