@@ -34,7 +34,7 @@ def create_parser():
         formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument(
-        'data_file', nargs='*', help='Data file to be plotted (e.g. velocity.h5, demErr.h5).\n'
+        'data_file', help='Data file to be plotted (e.g. velocity.h5, demErr.h5).\n'
     )
     parser.add_argument(
         "--subset-lalo", type=str, required=True,
