@@ -6,6 +6,7 @@ import argparse
 import os
 import sys
 import re
+import time
 from minsar.objects import message_rsmas
 
 '''
@@ -26,6 +27,8 @@ EXAMPLE = """example:
             view_persistent_scatterers.py velocity.h5 demErr.h5 inputs/geometryRadar.h5  velocity --subset-lalo 25.875:25.8795,-80.123:-80.1205 --geo
 
             view_persistent_scatterers.py velocity.h5 --mask ../maskPS.h5 --subset-lalo 25.8755:25.879,-80.1226:-80.1205
+            view_persistent_scatterers.py velocity.h5 --mask ../maskPS.h5 --subset-lalo 25.875:25.8795,-80.123:-80.1205 --backscatter --vlim -0.6 0.6 
+
             """
 DESCRIPTION = (
     "Plots velocity, DEM error, and estimated elevation on the backscatter."
@@ -40,11 +43,6 @@ def create_parser():
         'data_file', nargs='*', help='Data file to be plotted (e.g. velocity.h5, demErr.h5).\n'
     )
     parser.add_argument(
-        "--background", dest='background', type=str, 
-        choices=['open_street_map','backscatter', 'satellite','geotif'], default="open_street_map", 
-        help='Background image (default: open_street_map).'
-    )
-    parser.add_argument(
         "--subset-lalo", type=str, required=True,
         help="Latitude and longitude box in format 'lat1:lat2,lon1:lon2'"
     )
@@ -53,40 +51,35 @@ def create_parser():
         help="PS mask file",
     )
     parser.add_argument(
-        "--geometry-file", metavar="", type=str, default='inputs/geometryRadar.h5', nargs='?', 
+        "--geometry-file", metavar='FILE', type=str, default='inputs/geometryRadar.h5', 
         help="Geolocation file",
     )
-    parser.add_argument(
-        "--ref-lalo", nargs=2,  metavar=('LAT', 'LON'), type=float, help="reference point"
+    parser.add_argument( "--ref-lalo", nargs=2,  metavar=('LAT', 'LON'), type=float, 
+        help="reference point"
     )
     parser.add_argument(
-        "--dem-offset", metavar="", type=float, default=26,
+        "--dem-offset", metavar='NUM', type=float, default=26,
         help="DEM offset (geoid deviation) (default: 26 m for Miami)"
     )
     parser.add_argument(
         "--dem-error", dest="estimated_elevation", action='store_false',
-        help="Plot dem-error instead of estimated elevation (default: False)"
+        help="Display DEM Error (Default: estimated elevation)"
     )
-
+    
+    parser.add_argument(
+        "--backscatter", dest="backscatter", action='store_true',
+        help="use backscatter as background (Default background: open_streep_map)"
+    )
+    parser.add_argument(
+        "--geotiff", type=str, metavar='FILE', default=None,
+        help="geotiff elevation file",
+    )
+    parser.add_argument("--out-amplitude", metavar='FILE', type=str, default="mean_amplitude.npy",
+        help="slcStack amplitude file (default: mean_amplitude.npy)",
+    )
     parser.add_argument(
         "--vlim", nargs=2, metavar=("VMIN", "VMAX"), default=None,
         type=float, help="Velocity limit for the colorbar. Default: None",
-    )
-    parser.add_argument(
-        "--colormap", "-c", metavar="", type=str, default="jet",
-        help="Colormap used for display, e.g., jet",
-    )
-    parser.add_argument(
-        "--point-size", metavar="", default=50, type=float,
-        help="Points size",
-    )
-    parser.add_argument(
-        "--fontsize", "-f", metavar="", type=float, default=10,
-        help="Font size",
-    )
-    parser.add_argument(
-        "--figsize", metavar=("WID", "LEN"), type=float, nargs=2,
-        default=(5,10), help="Width and length of the figure"
     )
     parser.add_argument(
         "--flip-lr", dest="flip_lr",  action='store_true', default=False, 
@@ -95,55 +88,54 @@ def create_parser():
     parser.add_argument("--flip-ud", dest="flip_ud",  action='store_true', default=False, 
                         help="Flip the figure Up-Down (Default: False)."
     )
+    parser.add_argument(
+        "--colormap", "-c", metavar="", type=str, default="jet",
+        help="Colormap used for display, e.g., jet",
+    )
+    parser.add_argument(
+        "--marker-size", metavar='NUM', default=50, type=float,
+        help="Marker size (Default: 50  (20 for backscatter))",
+    )
+    parser.add_argument(
+        "--fontsize", "-f", metavar="", type=float, default=10,
+        help="Font size (Default: 10)",
+    )
+    parser.add_argument(
+        "--figsize", metavar=("WID", "LEN"), type=float, nargs=2,
+        default=(5,10), help="Width and length of the figure"
+    )
     parser.add_argument('-o', '--outfile', type=str,  default=None,
                     help="filename to save figure (default=scatter.png).")
     parser.add_argument('--save', dest='save_fig', action='store_true',
                     help='save the figure')
-    parser.add_argument('--nodisplay', dest='disp_fig', action='store_false',
-                    help='save and do not display the figure')
     parser.add_argument('--dpi', dest='fig_dpi', metavar='DPI', type=int, default=300,
                     help='DPI - dot per inch - for display/write (default: %(default)s).')
+    parser.add_argument('--nodisplay', dest='disp_fig', action='store_false',
+                    help='save and do not display the figure')
     parser.add_argument('--nowhitespace', dest='disp_whitespace',
                     action='store_false', help='do not display white space')
 
     inps = parser.parse_args()
+   
+    # set background based on backscatter, geotiff
+    inps.background = 'open_street_map'
+    if  inps.backscatter:
+        inps.background = 'backscatter'
+        inps.point_size = 15
+        inps.figsize = (5, 5)
+    if  inps.geotiff:
+        inps.background = 'geotiff'
 
     # check: coupled option behaviors
     if not inps.disp_fig or inps.outfile:
         inps.save_fig = True
     if not inps.outfile:
         inps.outfile = 'scatter.png'
+    
+    # print(f"QQ inps.background: {inps.background}, inps.backscatter: {inps.backscatter}, inps.geotiff: {inps.geotiff}")
+
     return inps
 
-def main():
-    inps = cmd_line_parser()
-    update_input_namespace(inps)
-
-    fig, ax = configure_plot_settings(inps)
-
-    # Adding background image
-    if inps.background == 'open_street_map':
-        add_open_street_map_image(ax, inps.coords)
-    elif inps.background == 'backscatter':
-        add_backscatter_image(ax, inps.amplitude)
-    elif inps.background == 'satellite':
-        add_satellite_image(ax)
-    elif inps.background == 'geotif':
-        add_geotif_image(ax, inps.geotif, inps.coords)
-    else:
-        raise Exception("USER ERROR: background option not supported:", inps.background )
-        
-    plot_scatter(ax=ax, inps=inps)
-
-    # save figure
-    if inps.save_fig:
-        print(f'save figure to {inps.outfile} with dpi={inps.fig_dpi}')
-        if not inps.disp_whitespace:
-            fig.savefig(inps.outfile, transparent=True, dpi=inps.fig_dpi, pad_inches=0.0)
-        else:
-            fig.savefig(inps.outfile, transparent=True, dpi=inps.fig_dpi, bbox_inches='tight')
-    
-    plt.show()
 
 ###################################################################################
 def main(iargs=None):
