@@ -19,16 +19,8 @@ PLOT REPO TODO:
     either as subparser or create parser that handles argparse.ArugmentParser
 '''
 EXAMPLE = """example:
-            
-            view_persistent_scatterers.py velocity.h5 demErr.h5 inputs/geometryRadar.h5 velocity --mask ../maskPS.h5 --slcStack ../inputs/slcStack.h5 --subset-lalo 25.875:25.8795,-80.123:-80.1205
-            view_persistent_scatterers.py velocity.h5 demErr.h5 inputs/geometryRadar.h5 all  --subset-lalo 25.875:25.8795,-80.123:-80.1205
-            view_persistent_scatterers.py velocity.h5 demErr.h5 inputs/geometryRadar.h5 velocity  --subset-lalo 25.875:25.8795,-80.123:-80.1205  -dl -60 60 -el -30 30 -esl -60 60
-            view_persistent_scatterers.py velocity.h5 demErr.h5 inputs/geometryRadar.h5  all --subset-lalo 25.875:25.8795,-80.123:-80.1205  --gtif Miami.tif --geo
-            view_persistent_scatterers.py velocity.h5 demErr.h5 inputs/geometryRadar.h5  velocity --subset-lalo 25.875:25.8795,-80.123:-80.1205 --geo
-
             view_persistent_scatterers.py velocity.h5 --mask ../maskPS.h5 --subset-lalo 25.8755:25.879,-80.1226:-80.1205
             view_persistent_scatterers.py velocity.h5 --mask ../maskPS.h5 --subset-lalo 25.875:25.8795,-80.123:-80.1205 --backscatter --vlim -0.6 0.6 
-
             """
 DESCRIPTION = (
     "Plots velocity, DEM error, and estimated elevation on the backscatter."
