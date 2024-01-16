@@ -16,26 +16,10 @@ import h5py
 import matplotlib.pyplot as plt
 from mintpy.utils import readfile, arg_utils, utils as ut
 
-'''
-PLOT REPO TODO:
-    Subparser for editing style/format parameters
-        o fig size
-        o font size
-        o point size
-        o color map
-    either as subparser or create parser that handles argparse.ArugmentParser
-'''
-EXAMPLE = """example:
-            view_persistent_scatterers.py velocity.h5 --mask ../maskPS.h5 --subset-lalo 25.8755:25.879,-80.1226:-80.1205
-            view_persistent_scatterers.py velocity.h5 --mask ../maskPS.h5 --subset-lalo 25.875:25.8795,-80.123:-80.1205 --backscatter --vlim -0.6 0.6
-"""
-DESCRIPTION = (
-    "Plots velocity, DEM error, and estimated elevation on the backscatter."
-)
 
 def plot_scatter(ax, inps, marker='o', colorbar=True):
     
-    if  inps.background == 'open_streep_map' or inps.background == 'geotiff':
+    if  inps.background == 'open_street_map' or inps.background == 'geotiff':
         im = ax.scatter(inps.lon, inps.lat, c=inps.data, s=inps.point_size, cmap=inps.colormap, marker=marker)
     elif  inps.background == 'backscatter':
         # Create a boolean mask for the condition

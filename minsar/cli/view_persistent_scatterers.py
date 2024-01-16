@@ -21,9 +21,11 @@ PLOT REPO TODO:
 EXAMPLE = """example:
             view_persistent_scatterers.py velocity.h5 --mask ../maskPS.h5 --subset-lalo 25.8755:25.879,-80.1226:-80.1205
             view_persistent_scatterers.py velocity.h5 --mask ../maskPS.h5 --subset-lalo 25.875:25.8795,-80.123:-80.1205 --backscatter --vlim -0.6 0.6 
+            view_persistent_scatterers.py demErr.h5 --mask ../maskPS.h5 --subset-lalo 25.8755:25.879,-80.1226:-80.1205 
+            view_persistent_scatterers.py demErr.h5 --mask ../maskPS.h5 --subset-lalo 25.8755:25.879,-80.1226:-80.1205 --estimated-elevation
             """
 DESCRIPTION = (
-    "Plots velocity, DEM error, and estimated elevation on the backscatter."
+    "Plots velocity, DEM error or estimated elevation on open_street_map, geoTiff or backscatter."
 )
 
 def create_parser():
@@ -54,10 +56,9 @@ def create_parser():
         help="DEM offset (geoid deviation) (default: 26 m for Miami)"
     )
     parser.add_argument(
-        "--dem-error", dest="estimated_elevation", action='store_false',
-        help="Display DEM Error (Default: estimated elevation)"
+        "--estimated-elevation", dest="estimated_elevation", action='store_true',
+        help="Display estimated elevation (Default: False)"
     )
-    
     parser.add_argument(
         "--backscatter", dest="backscatter", action='store_true',
         help="use backscatter as background (Default background: open_streep_map)"
@@ -85,8 +86,8 @@ def create_parser():
         help="Colormap used for display, e.g., jet",
     )
     parser.add_argument(
-        "--marker-size", metavar='NUM', default=50, type=float,
-        help="Marker size (Default: 50  (20 for backscatter))",
+        "--point-size", metavar='NUM', default=50, type=float,
+        help="Point size (Default: 50  (20 for backscatter))",
     )
     parser.add_argument(
         "--fontsize", "-f", metavar="", type=float, default=10,
