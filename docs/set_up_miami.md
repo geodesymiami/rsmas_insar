@@ -32,10 +32,13 @@ git clone https://github.com/geodesymiami/rsmas_tools.git ;
 ```
 Useful Jupyter Notebooks:
 ```
-cd $RSMAS_INSAR
-git clone https://github.com/insarlab/MintPy-tutorial.git notebooks/MintPy-tutorial
-git clone https://github.com/insarlab/MiaplPy_notebooks.git notebooks/MiaplPy_notebooks
-git clone https://github.com/geodesymiami/2021_MaunaLoa_Varugu_Amelung.git notebooks/VaruguAmelung
-git clone https://github.com/mirzaees/2022_MiaplPy_Mirzaee_Amelung_Fattahi.git notebooks/MirzaeeFattahiAmelung
+cd $RSMAS_INSAR/notebooks
+git clone https://github.com/insarlab/MintPy-tutorial.git 
+git clone https://github.com/insarlab/MiaplPy_notebooks.git
+git clone https://github.com/geodesymiami/2021_MaunaLoa_Varugu_Amelung.git 
+git clone https://github.com/mirzaees/2022_MiaplPy_Mirzaee_Amelung_Fattahi.git 
 git clone https://github.com/geodesymiami/Yunjun_et_al-2019-MintPy.git
+git clone https://github.com/geodesymiami/PlotData-notebooks.git
+git clone https://github.com/geodesymiami/viewPS-notebooks.git
+git clone https://github.com/geodesymiami/precip-notebooks.git
 ```
