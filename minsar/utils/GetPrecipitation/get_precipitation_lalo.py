@@ -9,7 +9,7 @@ import os
 from os import path
 import h5py
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 import requests
 import argparse
 import calendar
@@ -19,15 +19,19 @@ import netCDF4 as nc
 EXAMPLE = """example:
   
   date = yyyy-dd-mm
-  get_precipitation_lalo.py latitude longitude startdate enddate
-  get_precipitation_lalo.py 19.5 -156.5 2019-01-01 2021-29-09
+  get_precipitation_lalo.py --plot-[daily, weekly] latitude longitude startdate enddate
+  get_precipitation_lalo.py --plot-daily 19.5 -156.5 2019-01-01 2021-29-09
+
+  get_precipitation_lalo.py --download start_date end_date
+  get_precipitation_lalo.py --download 2019-01-01 2021-29-09
 
 """
-
+workDir = 'SCRATCHDIR'
 path_data = '/Users/giacomo/Library/CloudStorage/OneDrive-UniversityofMiami/GetPrecipitation/'
 
 #TODO Adapt the script for hdf5 files too as it has been done for nc4
 #TODO add requirements.txt
+#TODO change SCRATCHDIR to WORKDIR or something else
 
 def create_parser():
     """ Creates command line argument parser object. """
@@ -36,11 +40,22 @@ def create_parser():
         description='Plot precipitation data from GPM dataset for a specific location at a given date range',
         formatter_class=argparse.RawTextHelpFormatter,
         epilog=EXAMPLE)
-    parser.add_argument('--plot', choices=['daily', 'weekly'], required=False)
-    parser.add_argument('la', help='latitude')
-    parser.add_argument('lo', help='longitude')
-    parser.add_argument('strt', help='start date')
-    parser.add_argument('end', help='end date')
+    
+    group = parser.add_mutually_exclusive_group(required=True)
+
+    group.add_argument('-d', '--download', nargs=2, metavar=('start', 'end'), help='download data')
+
+    group.add_argument('--plot-daily', nargs=4, metavar=( 'lat', 'lon', 'start', 'end'))
+
+    group.add_argument('--plot-weekly', nargs=4, metavar=( 'lat', 'lon', 'start', 'end'))
+
+    # Add a subparser for the plot command
+    # plot_parser = subparsers.add_parser('--plot', aliases=['-p'], help='plot data')
+    # plot_parser.add_argument('plot', choices=['daily', 'weekly'], help='plot frequency')
+    # plot_parser.add_argument('lat', help='latitude')
+    # plot_parser.add_argument('lon', help='longitude')
+    # plot_parser.add_argument('start', help='start date')
+    # plot_parser.add_argument('end', help='end date')
 
     return parser
 
@@ -91,14 +106,13 @@ def extract_volcanoes_info(jsonfile, volcanoName):
                 end = 'None'
             print(f'{name} eruption started {start} and ended {end}')
 
-
 def generate_url_download(date):
     # d = datetime.strptime(date, '%Y-%d-%m')
     year = str(date.year)
     day = str(date.strftime('%d'))
     month = str(date.strftime('%m'))
     url = 'https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDF.06/' + year + '/' + month + '/3B-DAY.MS.MRG.3IMERG.' + year+month+day + '-S000000-E235959.V06.nc4'
-    print(url)
+
     return url
 
 def adapt_coordinates(lon, lat):
@@ -125,15 +139,14 @@ def adapt_coordinates(lon, lat):
 
 
 def dload_site_list_nc4(folder, date_list):
-    # Creates gpm_data folder oif it doesn't exist
-
+    # Creates gpm_data folder if it doesn't exist
     for date in date_list:
         url = generate_url_download(date)
         filename = folder + '/' + str(date) + '.nc4'
         cnt = 0
 
-        # Try download three times before sending an error
-        while cnt < 3:
+        # Try download 4 times before sending an error
+        while cnt < 4:
             if not os.path.exists(filename):
                 result = requests.get(url.strip())
 
@@ -151,17 +164,21 @@ def dload_site_list_nc4(folder, date_list):
                     else:
                         cnt += 1
 
-                except:
-                    print('requests.get() returned an error code '+str(result.status_code))
-                    cnt += 1
+                except requests.exceptions.HTTPError as err:
+                    if err.response.status_code == 404:
+                        print(f'Error: {err.response.status_code} Url Not Found')
+                        cnt = 4
+                    else:
+                        print('An HTTP error occurred: ' + str(err.response.status_code))
+                        cnt += 1
 
             else:
                 print(f'File: {filename} already exists')
                 break
 
         # Number of download retry exceeded
-        if cnt == 3:
-           print(f'Failed to download file for date: {date} after 3 attempts. Exiting...')
+        if cnt >= 4:
+           print(f'Failed to download file for date: {date} after 4 attempts. Exiting...')
            sys.exit(1)
 
     return folder
@@ -424,11 +441,11 @@ def plot_precipitaion_nc4(longitude, latitude, start_date, end_date, folder):
         return finaldf
 
 
-def check_nc4_hdf5(lo, la, start, end):
+def check_nc4_hdf5_old(lo, la, start, end):
 
     # If the folder name is left blank, it will be automatically named 'gpm_data'
-    if 'SCRATCHDIR' in os.environ:
-        folder = os.getenv('SCRATCHDIR') + '/' + 'gpm_data'
+    if workDir in os.environ:
+        folder = os.getenv(workDir) + '/' + 'gpm_data'
 
     else:
         folder = '$HOME/gpm_data'
@@ -449,6 +466,31 @@ def check_nc4_hdf5(lo, la, start, end):
 
     return precip
 
+def generate_date_list(start, end):
+        sdate = datetime.strptime(start,'%Y-%d-%m')
+        edate = datetime.strptime(end,'%Y-%d-%m')
+
+        if edate >= datetime.today():
+            edate = datetime.today() - timedelta(days=1)
+
+        #Create a date range with the input dates, from start_date to end_date
+        date_list = pd.date_range(start = sdate,end = edate).date
+
+        return date_list
+
+def check_nc4_hdf5_new(work_dir, start, end):    
+        if not os.path.exists(work_dir):
+            os.mkdir(work_dir)
+    
+        else:
+            nc4_files = [f for f in os.listdir(work_dir) if f.endswith('.nc4')]
+            hdf5_files = [f for f in os.listdir(work_dir) if f.endswith('.hdf5')]
+    
+            if len(nc4_files) >= len(hdf5_files):
+                dload_site_list_nc4(work_dir, generate_date_list(start, end))
+    
+            else:
+                dload_site_list_hdf5(work_dir, 'fpath')
 
 def weekly_precipitation(dictionary, lat, lon):
     weekly_dict = {}
@@ -561,25 +603,49 @@ def daily_precipitation(dictionary, lat, lon):
     plt.show()
 
 
-if 'SCRATCHDIR' in os.environ:
-    work_dir = os.getenv('SCRATCHDIR') + '/' + 'gpm_data'
+if workDir in os.environ:
+    work_dir = os.getenv(workDir) + '/' + 'gpm_data'
 
 else:
-    work_dir = './gpm_data'
+    work_dir = '$HOME/gpm_data'
 
 if __name__ == "__main__":
     parser = create_parser()
     args = parser.parse_args()
-    la = round(float(args.la), 1)
-    lo = round(float(args.lo), 1)
+
+    if args.download:
+        nc4_files = [f for f in os.listdir(work_dir) if f.endswith('.nc4')]
+        hdf5_files = [f for f in os.listdir(work_dir) if f.endswith('.hdf5')]
+
+        if len(nc4_files) >= len(hdf5_files):
+            check_nc4_hdf5_new(work_dir, args.download[0], args.download[1])
+
+        else:
+            dload_site_list_hdf5(args.download[0], args.download[1])
+
+    elif args.plot_daily:
+        la = round(float(args.plot_daily[0]), 1)
+        lo = round(float(args.plot_daily[1]), 1)
+        prec = check_nc4_hdf5(lo, la, args.plot_daily[2], args.plot_daily[3])
+
+    elif args.plot_weekly:
+
+        if args.plot[0] == 'daily':
+            daily_precipitation(prec, la, lo)
+
+        elif args.plot[0] == 'weekly':
+            weekly_precipitation(prec, la, lo)
+
+        else:
+            daily_precipitation(prec, la, lo)
+            plot_precipitaion_nc4(lo, la, args.start, args.end, work_dir)
 
     #HARDCODED TO BE PARAMETERISED
-    prec = check_nc4_hdf5(lo, la, args.strt, args.end, )
 
-    if args.plot == 'daily':
-        daily_precipitation(prec, la, lo)
-    elif args.plot == 'weekly':
-        weekly_precipitation(prec, la, lo)
-    else:
-        daily_precipitation(prec, la, lo)
+    # if args.plot == 'daily':
+    #     daily_precipitation(prec, la, lo)
+    # elif args.plot == 'weekly':
+    #     weekly_precipitation(prec, la, lo)
+    # else:
+    #     daily_precipitation(prec, la, lo)
 
