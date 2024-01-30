@@ -18,16 +18,16 @@ import netCDF4 as nc
 
 EXAMPLE = """example:
   
-  date = yyyy-dd-mm
-  get_precipitation_lalo.py --plot-[daily, weekly] latitude longitude startdate enddate
+  date = yyyy-mm-dd
   get_precipitation_lalo.py --plot-daily 19.5 -156.5 2019-01-01 2021-29-09
 
   get_precipitation_lalo.py --download start_date end_date
-  get_precipitation_lalo.py --download 2019-01-01 2021-29-09
+  get_precipitation_lalo.py --download 2019-01-01 2021-09-29
 
 """
 workDir = 'SCRATCHDIR'
 path_data = '/Users/giacomo/Library/CloudStorage/OneDrive-UniversityofMiami/GetPrecipitation/'
+jsonVolcano = './volcanoes.json'
 
 #TODO Adapt the script for hdf5 files too as it has been done for nc4
 #TODO add requirements.txt
@@ -43,11 +43,11 @@ def create_parser():
     
     group = parser.add_mutually_exclusive_group(required=True)
 
-    group.add_argument('-d', '--download', nargs=2, metavar=('start', 'end'), help='download data')
+    group.add_argument('-d', '--download', nargs=2, metavar=('start_date', 'end_date'), help='download data')
 
-    group.add_argument('--plot-daily', nargs=4, metavar=( 'lat', 'lon', 'start', 'end'))
+    group.add_argument('--plot-daily', nargs=4, metavar=( 'latitude', 'longintude', 'start_date', 'end_date'))
 
-    group.add_argument('--plot-weekly', nargs=4, metavar=( 'lat', 'lon', 'start', 'end'))
+    group.add_argument('--plot-weekly', nargs=4, metavar=( 'latitude', 'longintude', 'start_date', 'end_date'))
 
     # Add a subparser for the plot command
     # plot_parser = subparsers.add_parser('--plot', aliases=['-p'], help='plot data')
@@ -106,14 +106,18 @@ def extract_volcanoes_info(jsonfile, volcanoName):
                 end = 'None'
             print(f'{name} eruption started {start} and ended {end}')
 
-def generate_url_download(date):
-    # d = datetime.strptime(date, '%Y-%d-%m')
+
+def generate_url_download(date, extension):
     year = str(date.year)
     day = str(date.strftime('%d'))
     month = str(date.strftime('%m'))
-    url = 'https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDF.06/' + year + '/' + month + '/3B-DAY.MS.MRG.3IMERG.' + year+month+day + '-S000000-E235959.V06.nc4'
+    if extension == 'nc4':
+        url = 'https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDF.06/' + year + '/' + month + '/3B-DAY.MS.MRG.3IMERG.' + year+month+day + '-S000000-E235959.V06.nc4'
+    else:
+        url = 'https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGM.07' + year + '/3B-MO.MS.MRG.3IMERG.' + year+month+day + '-S000000-E235959.08.V07B.HDF5'
 
     return url
+
 
 def adapt_coordinates(lon, lat):
     lat = round(float(lat),1)
@@ -138,11 +142,11 @@ def adapt_coordinates(lon, lat):
     return lon, lat
 
 
-def dload_site_list_nc4(folder, date_list):
+def dload_site_list(folder, date_list, extension):
     # Creates gpm_data folder if it doesn't exist
     for date in date_list:
-        url = generate_url_download(date)
-        filename = folder + '/' + str(date) + '.nc4'
+        url = generate_url_download(date, extension)
+        filename = folder + '/' + str(date) + '.' + extension
         cnt = 0
 
         # Try download 4 times before sending an error
@@ -181,63 +185,6 @@ def dload_site_list_nc4(folder, date_list):
            print(f'Failed to download file for date: {date} after 4 attempts. Exiting...')
            sys.exit(1)
 
-    return folder
-
-
-def dload_site_list_hdf5(folder, fpath):
-    '''
-    Creates data folder
-    '''
-    if not folder:
-        folder = 'data'
-
-    if not os.path.exists(folder):
-        os.mkdir(folder)
-
-    '''
-    Looks for list of links i.e. the only txt file in the current folder
-    '''
-    if not fpath:
-
-        txt_files = [f for f in os.listdir('.') if f.endswith('.txt')]
-
-        if len(txt_files) != 1:
-            raise ValueError('should be only one txt file in the current directory')
-
-        fpath = txt_files[0]
-        print(fpath)
-
-    '''
-    Loop torough every line in the list of links .txt file and download every .HDF5 file within the list
-    '''
-
-    with open(fpath, "r") as ifile:
-            for URL in ifile:
-                if '.hdf5' in URL[-6:]:
-
-                    d = re.search('\d{8}', URL)
-                    d.group(0)
-                    date = datetime.strptime(d.group(0), "%Y%m%d").date()
-
-                    FILENAME = folder + '/'+ str(date) + '.hdf5'
-
-                    if not os.path.exists(FILENAME):
-
-                        result = requests.get(URL.strip())
-
-                        try:
-                            result.raise_for_status()
-                            f = open(FILENAME,'wb')
-                            f.write(result.content)
-                            f.close()
-                            print('contents of URL written to '+FILENAME)
-                        except:
-                            print('requests.get() returned an error code '+str(result.status_code))
-
-                    else:
-                        print(f'File: {FILENAME} already exists')
-    return folder
-
 
 def plot_precipitaion_hdf5(longitude, latitude, start_date, end_date, folder, fpath):
 
@@ -249,8 +196,8 @@ def plot_precipitaion_hdf5(longitude, latitude, start_date, end_date, folder, fp
 
         longitude, latitude = adapt_coordinates(longitude, latitude)
 
-        sdate = datetime.strptime(start_date,'%Y-%d-%m')
-        edate = datetime.strptime(end_date,'%Y-%d-%m')
+        sdate = datetime.strptime(start_date,'%Y-%m-%d')
+        edate = datetime.strptime(end_date,'%Y-%m-%d')
 
         #Create a date range with the input dates, from start_date to end_date
         date_list = pd.date_range(start = sdate,end = edate).date
@@ -309,7 +256,7 @@ def plot_precipitaion_hdf5(longitude, latitude, start_date, end_date, folder, fp
                 data = h5py.File(file,'r')
 
                 d = re.search('\d{4}[-]\d{2}[-]\d{2}', file)
-                date = datetime.strptime(d.group(0), "%Y-%d-%m").date()
+                date = datetime.strptime(d.group(0), "%Y-%m-%d").date()
 
                 if date in date_list:
 
@@ -334,74 +281,17 @@ def plot_precipitaion_hdf5(longitude, latitude, start_date, end_date, folder, fp
         return finaldf
 
 
-def plot_precipitaion_nc4(longitude, latitude, start_date, end_date, folder):
+def plot_precipitaion_nc4(longitude, latitude, date_list, folder):
 
         finaldf = {}
         df = pd.DataFrame()
         dictionary = {}
 
         longitude, latitude = adapt_coordinates(longitude, latitude)
-
-        sdate = datetime.strptime(start_date, '%Y-%d-%m')
-        edate = datetime.strptime(end_date, '%Y-%d-%m')
-
-        # Create a date range with the input dates, from start_date to end_date
-        date_list = pd.date_range(start=sdate, end=edate).date
-
-        # If the folder name is left blank, it will be automatically named 'gpm_data'
-        # if not folder:
-        #     if 'SCRATCHDIR' in os.environ:
-        #         folder = os.getenv('SCRATCHDIR') + '/' + 'gpm_data'
-        #
-        #     else:
-        #         folder = './gpm_data'
-
-        # Check if files date is in range with the input dates
-        # Check if folder exists, otherwise execute download function
-        if not os.path.exists(folder):
-            folder = dload_site_list_nc4(folder, date_list)
-
-        else:
-
-            try:
-
-                # Converts file names within the data folder in date
-                # biggest = [f for f in os.listdir(folder) if f.endswith('.nc4')]
-                biggest = datetime.strptime(os.listdir(folder)[-1].replace('.nc4',''),'%Y-%m-%d').date()
-                smallest = datetime.strptime(os.listdir(folder)[0].replace('.nc4',''),'%Y-%m-%d').date()
-
-                for file in os.listdir(folder):
-                    if file.endswith('.nc4') and datetime.strptime(file.replace('.nc4',''),'%Y-%m-%d').date() < smallest:
-                        smallest = datetime.strptime(file.replace('.nc4',''),'%Y-%m-%d').date()
-
-                    if file.endswith('.nc4') and datetime.strptime(file.replace('.nc4',''),'%Y-%m-%d').date() > biggest:
-                        biggest = datetime.strptime(file.replace('.nc4',''),'%Y-%m-%d').date()
-
-                # Create a range of dates with the name of the files within the data folder
-                file_date_list = pd.date_range(start=smallest, end=biggest).date
-
-                # Check if the date range passed as input is within the date range created from the downloaded files
-                # if not, launch the download function
-                if not all(elem in file_date_list for elem in date_list):
-                    folder = dload_site_list_nc4(folder, date_list)
-                else:
-                    print('All files are present, no download needed')
-
-            except:
-                folder = dload_site_list_nc4(folder, date_list)
-
-        '''
-        Create longitude and latitude arrays
-        '''
-
         lon, lat = generate_coordinate_array()
 
         lon_index = lon.index(longitude)
         lat_index = lat.index(latitude)
-
-        '''
-        Loops trough every nc4 file
-        '''
 
         # For each file in the data folder that as nc4 extension
         for f in os.listdir(folder):
@@ -441,56 +331,31 @@ def plot_precipitaion_nc4(longitude, latitude, start_date, end_date, folder):
         return finaldf
 
 
-def check_nc4_hdf5_old(lo, la, start, end):
-
-    # If the folder name is left blank, it will be automatically named 'gpm_data'
-    if workDir in os.environ:
-        folder = os.getenv(workDir) + '/' + 'gpm_data'
-
-    else:
-        folder = '$HOME/gpm_data'
-
-    if not os.path.exists(folder):
-        os.mkdir(folder)
-        precip = plot_precipitaion_nc4(lo, la, start, end, folder)
-
-    else:
-        nc4_files = [f for f in os.listdir(folder) if f.endswith('.nc4')]
-        hdf5_files = [f for f in os.listdir(folder) if f.endswith('.hdf5')]
-
-        if len(nc4_files) >= len(hdf5_files):
-            precip = plot_precipitaion_nc4(lo, la, start, end, folder)
-
-        else:
-            precip = plot_precipitaion_hdf5(lo, la, start, end, folder, 'fpath')
-
-    return precip
-
 def generate_date_list(start, end):
-        sdate = datetime.strptime(start,'%Y-%d-%m')
-        edate = datetime.strptime(end,'%Y-%d-%m')
+        sdate = datetime.strptime(start,'%Y-%m-%d').date()
+        edate = datetime.strptime(end,'%Y-%m-%d').date()
 
-        if edate >= datetime.today():
-            edate = datetime.today() - timedelta(days=1)
+        if edate >= datetime.today().date():
+            edate = datetime.today().date() - timedelta(days=1)
 
         #Create a date range with the input dates, from start_date to end_date
         date_list = pd.date_range(start = sdate,end = edate).date
 
         return date_list
 
-def check_nc4_hdf5_new(work_dir, start, end):    
-        if not os.path.exists(work_dir):
-            os.mkdir(work_dir)
-    
-        else:
-            nc4_files = [f for f in os.listdir(work_dir) if f.endswith('.nc4')]
-            hdf5_files = [f for f in os.listdir(work_dir) if f.endswith('.hdf5')]
-    
-            if len(nc4_files) >= len(hdf5_files):
-                dload_site_list_nc4(work_dir, generate_date_list(start, end))
-    
-            else:
-                dload_site_list_hdf5(work_dir, 'fpath')
+
+def check_nc4_hdf5_new(work_dir, date_list):    
+    nc4_files = [f for f in os.listdir(work_dir) if f.endswith('.nc4')]
+    hdf5_files = [f for f in os.listdir(work_dir) if f.endswith('.hdf5')]
+
+    if len(nc4_files) >= len(hdf5_files):
+        extension = 'nc4'
+
+    else:
+        extension = 'HDF5'
+
+    dload_site_list(work_dir, date_list, extension)
+
 
 def weekly_precipitation(dictionary, lat, lon):
     weekly_dict = {}
@@ -607,45 +472,38 @@ if workDir in os.environ:
     work_dir = os.getenv(workDir) + '/' + 'gpm_data'
 
 else:
-    work_dir = '$HOME/gpm_data'
+    work_dir = os.getenv('HOME') + '/gpm_data'
 
 if __name__ == "__main__":
     parser = create_parser()
     args = parser.parse_args()
 
     if args.download:
-        nc4_files = [f for f in os.listdir(work_dir) if f.endswith('.nc4')]
-        hdf5_files = [f for f in os.listdir(work_dir) if f.endswith('.hdf5')]
+        check_nc4_hdf5_new(work_dir, generate_date_list(args.download[0], args.download[1]))
 
-        if len(nc4_files) >= len(hdf5_files):
-            check_nc4_hdf5_new(work_dir, args.download[0], args.download[1])
+    else:
+        if args.plot_daily:
+            la = round(float(args.plot_daily[0]), 1)
+            lo = round(float(args.plot_daily[1]), 1)
+            start_date = args.plot_daily[2]
+            end_date = args.plot_daily[3]
+
+        elif args.plot_weekly:
+            la = round(float(args.plot_weekly[0]), 1)
+            lo = round(float(args.plot_weekly[1]), 1)
+            start_date = args.plot_weekly[2]
+            end_date = args.plot_weekly[3]
 
         else:
-            dload_site_list_hdf5(args.download[0], args.download[1])
+            print('Error: no plot frequency specified')
+            sys.exit(1)
 
-    elif args.plot_daily:
-        la = round(float(args.plot_daily[0]), 1)
-        lo = round(float(args.plot_daily[1]), 1)
-        prec = check_nc4_hdf5(lo, la, args.plot_daily[2], args.plot_daily[3])
+        date_list = generate_date_list(start_date, end_date)
+        check_nc4_hdf5_new(work_dir, date_list)
+        prec = plot_precipitaion_nc4(lo, la, date_list, work_dir)
 
-    elif args.plot_weekly:
-
-        if args.plot[0] == 'daily':
+        if args.plot_daily:
             daily_precipitation(prec, la, lo)
 
-        elif args.plot[0] == 'weekly':
+        elif args.plot_weekly:
             weekly_precipitation(prec, la, lo)
-
-        else:
-            daily_precipitation(prec, la, lo)
-            plot_precipitaion_nc4(lo, la, args.start, args.end, work_dir)
-
-    #HARDCODED TO BE PARAMETERISED
-
-    # if args.plot == 'daily':
-    #     daily_precipitation(prec, la, lo)
-    # elif args.plot == 'weekly':
-    #     weekly_precipitation(prec, la, lo)
-    # else:
-    #     daily_precipitation(prec, la, lo)
-
