@@ -175,7 +175,8 @@ helptext="            \n\
   Examples:                                      \n\
      rsyncFJ MaunLoaSenAT124                     \n\
      rsyncFJ MaunLoaSenAT124/mintpy_5_20         \n\
-    "
+     rsyncFJ unittestGalapagosSenDT128/miaplpy/network_single_reference \n\
+"
     printf "$helptext"
     return
 fi
@@ -186,9 +187,10 @@ else
   dir=$1
 fi
 
+set -v
 echo "test:"
 if [ ! -d "$SCRATCHDIR/$dir" ]; then
-  echo "dir does not exist, mkking it: $SCRATCHDIR/$dir"
+  echo "dir $SCRATCHDIR/$dir does not exist, making it"
   mkdir -p $SCRATCHDIR/$dir
 fi
 
@@ -196,6 +198,16 @@ echo "Syncing directory $dir from jetstream:"
 cmd="rsync -avzh exouser@149.165.154.65:/data/HDF5EOS/$dir/ $SCRATCHDIR/$dir"
 echo running ... $cmd
 $cmd
+
+if [[ $dir == *"network"* ]]; then
+  cmd="rsync -avzh exouser@149.165.154.65:/data/HDF5EOS/${dir%/*}/maskPS.h5 $SCRATCHDIR/${dir%/*}/maskPS.h5"
+  echo running ... $cmd
+  $cmd
+  cmd="rsync -avzh exouser@149.165.154.65:/data/HDF5EOS/$dir/inputs/geometryRadar.h5 $SCRATCHDIR/$dir/inputs"
+  echo running ... $cmd
+  $cmd
+fi
+
 }
 
 ###########################################
