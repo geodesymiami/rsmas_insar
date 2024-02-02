@@ -17,7 +17,20 @@ import json
 import netCDF4 as nc
 from dateutil.relativedelta import relativedelta
 
-print(datetime.today().date() - relativedelta(months=6))
+r = requests.get('https://www.ngdc.noaa.gov/hazel/hazard-service/api/v1/volcanoes?nameInclude=Cerro')
+volcan_json = r.json()
+# for item in volcan_json['items']:
+#     print(item['name'], item['latitude'], item['longitude'], item['year'], item['month'], item['day'])
+
+volcanoName = []
+
+for item in volcan_json['items']:
+    if item['name'] not in volcanoName:
+        volcanoName.append(item['name'])
+
+for volcano in volcanoName:
+    print(volcano)
+
 
 EXAMPLE = """example:
   
@@ -256,101 +269,6 @@ def dload_site_list(folder, date_list):
         if cnt >= 4:
             print(f'Failed to download file for date: {date} after 4 attempts. Exiting...')
             sys.exit(1)
-
-
-def plot_precipitaion_hdf5(longitude, latitude, start_date, end_date, folder, fpath):
-
-        finaldf = {}
-        df = pd.DataFrame()
-        dictionary = {}
-
-        lon,lat = generate_coordinate_array()
-
-        longitude, latitude = adapt_coordinates(longitude, latitude)
-
-        sdate = datetime.strptime(start_date,'%Y-%m-%d')
-        edate = datetime.strptime(end_date,'%Y-%m-%d')
-
-        #Create a date range with the input dates, from start_date to end_date
-        date_list = pd.date_range(start = sdate,end = edate).date
-
-        #If the folder name is left blank, it will be automatically named 'data'
-        if not folder:
-            folder = 'data'
-
-        '''
-        Check if files date is in range with the input dates
-        '''
-
-        #Check if folder exists, otherwise execute download function
-        if not os.path.exists(folder):
-            folder = dload_site_list_hdf5(folder, fpath)
-
-        else:
-
-            try:
-
-                #Converts file names within the data folder in date
-                biggest = datetime.strptime(os.listdir(folder)[-1].replace('.nc4',''),'%Y-%m-%d').date()
-                smallest = datetime.strptime(os.listdir(folder)[0].replace('.nc4',''),'%Y-%m-%d').date()
-
-                for file in os.listdir(folder):
-
-                    if file.endswith('.nc4') and datetime.strptime(file.replace('.nc4',''),'%Y-%m-%d').date() < smallest:
-                        smallest = datetime.strptime(file.replace('.nc4',''),'%Y-%m-%d').date()
-
-                    if file.endswith('.nc4') and datetime.strptime(file.replace('.nc4',''),'%Y-%m-%d').date() > biggest:
-                        biggest = datetime.strptime(file.replace('.nc4',''),'%Y-%m-%d').date()
-
-                #Create a range of dates with the name of the files within the data folder
-                file_date_list = pd.date_range(start = smallest,end = biggest).date
-
-                #Check if the date range passed as input is within the date range created from the downloaded files
-                #if not, launch the download function
-                if not all(elem in file_date_list for elem in date_list):
-
-                    folder = dload_site_list_nc4(folder, )
-            except:
-
-                folder = dload_site_list_hdf5(folder, fpath)
-
-        '''
-        Loops trough every HDF5 file
-        '''
-
-        #For each file in the data folder that as HDF5 extension
-        for f in os.listdir(folder):
-
-            if f.endswith('.HDF5'):
-
-                file = './' + folder + '/'+ f
-
-                data = h5py.File(file,'r')
-
-                d = re.search('\d{4}[-]\d{2}[-]\d{2}', file)
-                date = datetime.strptime(d.group(0), "%Y-%m-%d").date()
-
-                if date in date_list:
-
-                    dictionary[str(date)] = {}
-
-                    for key in data.keys():
-                        pre = data[key]['precipitation']
-                        lonPrec = dict(zip(lon, zip(*pre)))
-
-                    lonPrec[longitude]
-
-                    i = list(lat).index(latitude)
-                    dictionary[str(date)] = lonPrec[longitude][0][i]
-
-                    df1 = pd.DataFrame(dictionary.items(), columns=['Date', 'Precipitation'])
-                    finaldf = pd.concat([df,df1], ignore_index=True, sort=False)
-
-                else: continue
-
-        finaldf = finaldf.sort_values(by='Date', ascending=True)
-
-        return finaldf
 
 
 def plot_precipitaion_nc4(longitude, latitude, date_list, folder):
