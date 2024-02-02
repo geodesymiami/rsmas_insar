@@ -34,8 +34,6 @@ def create_parser():
     parser = argparse.ArgumentParser(description=DESCRIPTION, epilog=EXAMPLE,
                  formatter_class=argparse.RawTextHelpFormatter)
 
-    parser.add_argument('custom_template_file', nargs='?', default=None, help='custom template with option settings.\n')
-
     parser.add_argument('--dir', dest='data_dirs', nargs='+', default=False,  metavar="DIRECTORY",
                          help='upload specific mintpy/miaplpy directory')
     parser.add_argument('--geo', dest='geo_flag', action='store_true', default=False, help='uploads geo  directory')
@@ -79,12 +77,8 @@ def main(iargs=None):
 
     inps = cmd_line_parse()
 
-    if inps.custom_template_file:
-       inps.project_name = putils.get_project_name(custom_template_file=inps.custom_template_file)
-       inps.work_dir = putils.get_work_directory(None, inps.project_name)
-    else:
-       inps.work_dir = os.getcwd()
-       inps.project_name = os.path.basename(inps.work_dir)
+    inps.work_dir = os.getcwd()
+    inps.project_name = os.path.basename(inps.work_dir)
 
     project_name = inps.project_name
 
@@ -147,7 +141,10 @@ def main(iargs=None):
                 '/'+ network_dir +'/velocity.h5',
                 '/'+ network_dir +'/temporalCoherence.h5',
                 '/'+ network_dir +'/avgSpatialCoh.h5',
+                '/'+ network_dir +'/maskTempCoh.h5',
+                '/'+ network_dir +'/../maskPS.h5',
                 '/'+ network_dir +'/pic',
+                '/'+ network_dir +'/inputs/geometryRadar.h5',
                 '/'+ network_dir +'/geo/geo_velocity.h5'             # already included earlier
                 ])
                 if inps.geo_flag:
@@ -163,7 +160,6 @@ def main(iargs=None):
                     scp_list.extend([
                     '/'+ network_dir +'/numInvIfgram.h5',
                     '/'+ network_dir +'/timeseries_demErr.h5',
-                    '/'+ network_dir +'/inputs/geometryRadar.h5',
                     '/'+ network_dir +'/inputs/ifgramStack.h5',
                     '/'+ network_dir +'/inputs/smallbaselineApp.cfg',
                     '/'+ network_dir +'/inputs/*template',

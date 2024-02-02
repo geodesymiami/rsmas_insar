@@ -24,8 +24,7 @@ def create_parser():
         description=DESCRIPTION, epilog=EXAMPLE,
         formatter_class=argparse.RawTextHelpFormatter
     )
-    parser.add_argument(
-        "dir", type=str, help="mintpy/pic directory path"
+    parser.add_argument( "dir", type=str, metavar="DIR", help="mintpy/pic directory path"
     )
     inps = parser.parse_args()
     return inps
@@ -36,6 +35,7 @@ class Inps:
 
 def build_html(directory_path):
 
+    print('QQ DIRECTORY_PATH:', directory_path )    
     file_list = [file for file in os.listdir(directory_path) if file.lower().endswith(('.png', '.pdf','.template'))]
     png_files = [file for file in file_list if file.lower().endswith('.png')]
     pdf_files = [file for file in file_list if file.lower().endswith('.pdf')]
@@ -85,7 +85,6 @@ def build_html(directory_path):
 
     # get project_name and network_type for header
     inps = Inps(template_files[0])
-    inps = putils.create_or_update_template(inps)
     try:
        network_type = inps.template['miaplpy.interferograms.networkType']
     except:
@@ -128,7 +127,7 @@ def build_html(directory_path):
 def create_html(inps):
     
     if not os.path.isabs(inps.dir):
-         inps.dir = os.getcwd() + '/' + inps.dir
+        inps.dir = os.getcwd() + '/' + inps.dir
 
     build_html(inps.dir)
 
