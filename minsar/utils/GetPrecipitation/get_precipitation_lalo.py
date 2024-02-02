@@ -9,12 +9,28 @@ import os
 from os import path
 import h5py
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 import requests
 import argparse
 import calendar
 import json
 import netCDF4 as nc
+from dateutil.relativedelta import relativedelta
+
+r = requests.get('https://www.ngdc.noaa.gov/hazel/hazard-service/api/v1/volcanoes?nameInclude=Cerro')
+volcan_json = r.json()
+# for item in volcan_json['items']:
+#     print(item['name'], item['latitude'], item['longitude'], item['year'], item['month'], item['day'])
+
+volcanoName = []
+
+for item in volcan_json['items']:
+    if item['name'] not in volcanoName:
+        volcanoName.append(item['name'])
+
+for volcano in volcanoName:
+    print(volcano)
+
 
 EXAMPLE = """example:
   
@@ -27,11 +43,17 @@ EXAMPLE = """example:
 """
 workDir = 'SCRATCHDIR'
 path_data = '/Users/giacomo/Library/CloudStorage/OneDrive-UniversityofMiami/GetPrecipitation/'
-jsonVolcano = './volcanoes.json'
+#TODO change jsonVolcano path
+jsonVolcano = '/Users/giacomo/code/rsmas_insar/minsar/utils/GetPrecipitation/volcanoes.json'
 
 #TODO Adapt the script for hdf5 files too as it has been done for nc4
 #TODO add requirements.txt
 #TODO change SCRATCHDIR to WORKDIR or something else
+#TODO possible to go back to version 7 of Final Run 
+#https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDF.07 ++ V07B.nc4
+
+v7_head = 'https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDF.07'
+v7_tail = '-S000000-E235959.V07B.'
 
 def create_parser():
     """ Creates command line argument parser object. """
@@ -48,6 +70,10 @@ def create_parser():
     group.add_argument('--plot-daily', nargs=4, metavar=( 'latitude', 'longintude', 'start_date', 'end_date'))
 
     group.add_argument('--plot-weekly', nargs=4, metavar=( 'latitude', 'longintude', 'start_date', 'end_date'))
+
+    group.add_argument('-vd', '--volcano-daily', nargs=1, metavar=( 'volcanoName'), help='plot eruption dates and precipitation levels')
+
+    group.add_argument('-ls', '--list', action='store_true', help='list volcanoes')
 
     # Add a subparser for the plot command
     # plot_parser = subparsers.add_parser('--plot', aliases=['-p'], help='plot data')
@@ -92,29 +118,86 @@ def generate_coordinate_array():
     return lon, lat
 
 
+def volcanoes_list(jsonfile):
+    print(os.getcwd())
+    f = open(jsonfile)
+    data = json.load(f)
+    volcanoName = []
+
+    for j in data['features']:
+        if j['properties']['VolcanoName'] not in volcanoName:
+            volcanoName.append(j['properties']['VolcanoName'])
+
+    for volcano in volcanoName:
+        print(volcano)
+
+
 def extract_volcanoes_info(jsonfile, volcanoName):
     f = open(jsonfile)
     data = json.load(f)
+    start_date = []
+    first_day = datetime.strptime('2000-06-01', '%Y-%m-%d').date()
+    last_day = datetime.today().date() - relativedelta(months=28)
+
     for j in data['features']:
-        if j['properties']['VolcanoName'] in volcanoName:
+        if j['properties']['VolcanoName'] == volcanoName:
 
             name = (j['properties']['VolcanoName'])
-            start = datetime.strptime((j['properties']['StartDate']), '%Y%m%d')
+            start = datetime.strptime((j['properties']['StartDate']), '%Y%m%d').date()
             try:
-                end = datetime.strptime((j['properties']['EndDate']), '%Y%m%d')
+                end = datetime.strptime((j['properties']['EndDate']), '%Y%m%d').date()
             except:
                 end = 'None'
+            
             print(f'{name} eruption started {start} and ended {end}')
 
+            if start > first_day and start < last_day:
+                start_date.append(start)
+                coordinates = j['geometry']['coordinates']
 
-def generate_url_download(date, extension):
+    if not start_date:
+        print(f'Error: {volcanoName} eruption date is out of range')
+        sys.exit(1)
+
+    start_date = sorted(start_date)
+
+    return start_date, coordinates
+
+
+def plot_eruptions(start_date, volcanoName):
+    for date in start_date:
+        plt.axvline(x = date_to_decimal_year(str(date)), color='red', linestyle='--', label='Eruption Date')
+
+
+def generate_url_download(date):
+    # Creates gpm_data folder if it doesn't exist
+    intervals = {"Final06": datetime.strptime('2021-09-30', '%Y-%m-%d').date(),
+                 "Final07": datetime.strptime('2023-07-31', '%Y-%m-%d').date(),
+                 "Late06": datetime.today().date() - relativedelta(days=1)}
+    
+    # Final Run 07
+    if date < intervals["Final06"]:    
+        head = 'https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDF.07/'
+        body = '/3B-DAY.MS.MRG.3IMERG.'
+        tail = '-S000000-E235959.V07B.'
+
+    # Late Run 06
+    elif date > intervals["Final07"]:
+        head = 'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGDL.06/'
+        body = '/3B-DAY-L.MS.MRG.3IMERG.'
+        tail = '-S000000-E235959.V06.nc4'
+
+    # Final Run 06
+    else:
+        head = 'https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDF.06/'
+        body = '/3B-DAY.MS.MRG.3IMERG.'
+        tail = '-S000000-E235959.V06.nc4'
+
     year = str(date.year)
     day = str(date.strftime('%d'))
     month = str(date.strftime('%m'))
-    if extension == 'nc4':
-        url = 'https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDF.06/' + year + '/' + month + '/3B-DAY.MS.MRG.3IMERG.' + year+month+day + '-S000000-E235959.V06.nc4'
-    else:
-        url = 'https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGM.07' + year + '/3B-MO.MS.MRG.3IMERG.' + year+month+day + '-S000000-E235959.08.V07B.HDF5'
+
+    url = head + year + '/' + month + body + year+month+day + tail
 
     return url
 
@@ -142,11 +225,13 @@ def adapt_coordinates(lon, lat):
     return lon, lat
 
 
-def dload_site_list(folder, date_list, extension):
-    # Creates gpm_data folder if it doesn't exist
+def dload_site_list(folder, date_list):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
     for date in date_list:
-        url = generate_url_download(date, extension)
-        filename = folder + '/' + str(date) + '.' + extension
+        url = generate_url_download(date)
+        filename = folder + '/' + str(date) + '.nc4'
         cnt = 0
 
         # Try download 4 times before sending an error
@@ -182,103 +267,8 @@ def dload_site_list(folder, date_list, extension):
 
         # Number of download retry exceeded
         if cnt >= 4:
-           print(f'Failed to download file for date: {date} after 4 attempts. Exiting...')
-           sys.exit(1)
-
-
-def plot_precipitaion_hdf5(longitude, latitude, start_date, end_date, folder, fpath):
-
-        finaldf = {}
-        df = pd.DataFrame()
-        dictionary = {}
-
-        lon,lat = generate_coordinate_array()
-
-        longitude, latitude = adapt_coordinates(longitude, latitude)
-
-        sdate = datetime.strptime(start_date,'%Y-%m-%d')
-        edate = datetime.strptime(end_date,'%Y-%m-%d')
-
-        #Create a date range with the input dates, from start_date to end_date
-        date_list = pd.date_range(start = sdate,end = edate).date
-
-        #If the folder name is left blank, it will be automatically named 'data'
-        if not folder:
-            folder = 'data'
-
-        '''
-        Check if files date is in range with the input dates
-        '''
-
-        #Check if folder exists, otherwise execute download function
-        if not os.path.exists(folder):
-            folder = dload_site_list_hdf5(folder, fpath)
-
-        else:
-
-            try:
-
-                #Converts file names within the data folder in date
-                biggest = datetime.strptime(os.listdir(folder)[-1].replace('.nc4',''),'%Y-%m-%d').date()
-                smallest = datetime.strptime(os.listdir(folder)[0].replace('.nc4',''),'%Y-%m-%d').date()
-
-                for file in os.listdir(folder):
-
-                    if file.endswith('.nc4') and datetime.strptime(file.replace('.nc4',''),'%Y-%m-%d').date() < smallest:
-                        smallest = datetime.strptime(file.replace('.nc4',''),'%Y-%m-%d').date()
-
-                    if file.endswith('.nc4') and datetime.strptime(file.replace('.nc4',''),'%Y-%m-%d').date() > biggest:
-                        biggest = datetime.strptime(file.replace('.nc4',''),'%Y-%m-%d').date()
-
-                #Create a range of dates with the name of the files within the data folder
-                file_date_list = pd.date_range(start = smallest,end = biggest).date
-
-                #Check if the date range passed as input is within the date range created from the downloaded files
-                #if not, launch the download function
-                if not all(elem in file_date_list for elem in date_list):
-
-                    folder = dload_site_list_nc4(folder, )
-            except:
-
-                folder = dload_site_list_hdf5(folder, fpath)
-
-        '''
-        Loops trough every HDF5 file
-        '''
-
-        #For each file in the data folder that as HDF5 extension
-        for f in os.listdir(folder):
-
-            if f.endswith('.HDF5'):
-
-                file = './' + folder + '/'+ f
-
-                data = h5py.File(file,'r')
-
-                d = re.search('\d{4}[-]\d{2}[-]\d{2}', file)
-                date = datetime.strptime(d.group(0), "%Y-%m-%d").date()
-
-                if date in date_list:
-
-                    dictionary[str(date)] = {}
-
-                    for key in data.keys():
-                        pre = data[key]['precipitation']
-                        lonPrec = dict(zip(lon, zip(*pre)))
-
-                    lonPrec[longitude]
-
-                    i = list(lat).index(latitude)
-                    dictionary[str(date)] = lonPrec[longitude][0][i]
-
-                    df1 = pd.DataFrame(dictionary.items(), columns=['Date', 'Precipitation'])
-                    finaldf = pd.concat([df,df1], ignore_index=True, sort=False)
-
-                else: continue
-
-        finaldf = finaldf.sort_values(by='Date', ascending=True)
-
-        return finaldf
+            print(f'Failed to download file for date: {date} after 4 attempts. Exiting...')
+            sys.exit(1)
 
 
 def plot_precipitaion_nc4(longitude, latitude, date_list, folder):
@@ -336,7 +326,7 @@ def generate_date_list(start, end):
         edate = datetime.strptime(end,'%Y-%m-%d').date()
 
         if edate >= datetime.today().date():
-            edate = datetime.today().date() - timedelta(days=1)
+            edate = datetime.today().date() - relativedelta(days=1)
 
         #Create a date range with the input dates, from start_date to end_date
         date_list = pd.date_range(start = sdate,end = edate).date
@@ -344,17 +334,14 @@ def generate_date_list(start, end):
         return date_list
 
 
-def check_nc4_hdf5_new(work_dir, date_list):    
+#TODO remove this function
+def check_nc4(work_dir, date_list):    
     nc4_files = [f for f in os.listdir(work_dir) if f.endswith('.nc4')]
-    hdf5_files = [f for f in os.listdir(work_dir) if f.endswith('.hdf5')]
 
     if len(nc4_files) >= len(hdf5_files):
         extension = 'nc4'
 
-    else:
-        extension = 'HDF5'
-
-    dload_site_list(work_dir, date_list, extension)
+    dload_site_list(work_dir, date_list)
 
 
 def weekly_precipitation(dictionary, lat, lon):
@@ -425,9 +412,6 @@ def weekly_precipitation(dictionary, lat, lon):
     ax.get_legend().remove()
 
     plt.xticks(rotation=90)
-
-    print(df1)
-
     # plt.ylabel("Precipitation [mm/day]")
     # plt.gca().xaxis.set_major_locator(dt.DayLocator(interval=intervals))
     # plt.xticks(rotation=90)
@@ -443,29 +427,23 @@ def daily_precipitation(dictionary, lat, lon):
     # Convert date strings to decimal years
     rainfalldfNoNull['Decimal_Year'] = rainfalldfNoNull['Date'].apply(date_to_decimal_year)
     rainfalldfNoNull["cum"] = rainfalldfNoNull.Precipitation.cumsum()
-    print(rainfalldfNoNull)
+    
     fig, ax = plt.subplots(layout='constrained')
 
     plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color='maroon', width=0.00001 * len(rainfalldfNoNull))
-
     plt.ylabel("Precipitation [mm/day]")
 
     rainfalldfNoNull.plot('Decimal_Year', 'cum', secondary_y=True, ax=ax)
 
     plt.title(f'Latitude: {lat}, Longitude: {lon}')
+
     ax.set_xlabel("Yr")
     ax.right_ax.set_ylabel("Cumulative Precipitation [mm]")
-
     ax.get_legend().remove()
 
     plt.xticks(rotation=90)
 
-    # #Eruptions
-    # plt.axvline(x = date_to_decimal_year('2020-03-06'), color='red', linestyle='--', label='Eruption Date')
-    # plt.axvline(x = date_to_decimal_year('2019-12-06'), color='red', linestyle='--', label='Eruption Date')
-
-    # Data plot
-    plt.show()
+    return plt
 
 
 if workDir in os.environ:
@@ -479,7 +457,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.download:
-        check_nc4_hdf5_new(work_dir, generate_date_list(args.download[0], args.download[1]))
+        dload_site_list(work_dir, generate_date_list(args.download[0], args.download[1]))
 
     else:
         if args.plot_daily:
@@ -494,16 +472,35 @@ if __name__ == "__main__":
             start_date = args.plot_weekly[2]
             end_date = args.plot_weekly[3]
 
+        elif args.volcano_daily:
+            eruption_dates, lon_lat = extract_volcanoes_info(jsonVolcano, args.volcano_daily[0])
+
+            lo = round(float(lon_lat[0]), 1)
+            la = round(float(lon_lat[1]), 1)
+
+            date_list = pd.date_range(start = eruption_dates[0], end = eruption_dates[-1]).date
+            dload_site_list(work_dir, date_list)
+            prec = plot_precipitaion_nc4(lo, la, date_list, work_dir)
+            plt = daily_precipitation(prec, la, lo)
+            plot_eruptions(eruption_dates, args.volcano_daily[0])
+            plt.show()
+            sys.exit(0)
+
+        elif args.list:
+            volcanoes_list(jsonVolcano)
+            sys.exit(0)
+
         else:
             print('Error: no plot frequency specified')
             sys.exit(1)
 
         date_list = generate_date_list(start_date, end_date)
-        check_nc4_hdf5_new(work_dir, date_list)
+        dload_site_list(work_dir, date_list)
         prec = plot_precipitaion_nc4(lo, la, date_list, work_dir)
 
         if args.plot_daily:
-            daily_precipitation(prec, la, lo)
+            plt = daily_precipitation(prec, la, lo)
+            plt.show()
 
         elif args.plot_weekly:
             weekly_precipitation(prec, la, lo)
