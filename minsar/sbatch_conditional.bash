@@ -252,8 +252,8 @@ if  [[ $resource_check == "OK" ]] &&
 
         exit 1
     fi
-
-    job_number=$(echo $sbatch_submit | grep -oE "[0-9]{7,}")
+    #job_number=$(echo $sbatch_submit | grep -oE "[0-9]{7,}")    #FA  2/2024:  did not work on Stampede3 with small job-ids.  purpose of -oE option not clear
+    job_number=$(echo "$sbatch_submit" | grep -oE "[0-9]{1,}$")
     
     echot "$job_file submitted as job $job_number at $(date +"%T") on $(date +"%Y-%m-%d")."
 

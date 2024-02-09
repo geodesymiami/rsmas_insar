@@ -142,6 +142,7 @@ def main(iargs=None):
                 '/'+ network_dir +'/temporalCoherence.h5',
                 '/'+ network_dir +'/avgSpatialCoh.h5',
                 '/'+ network_dir +'/maskTempCoh.h5',
+                '/'+ network_dir +'/numTriNonzeroIntAmbiguity.h5',
                 '/'+ network_dir +'/../maskPS.h5',
                 '/'+ network_dir +'/pic',
                 '/'+ network_dir +'/inputs/geometryRadar.h5',

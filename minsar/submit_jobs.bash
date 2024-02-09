@@ -135,8 +135,12 @@ for ((j=0; j < "${#files[@]}"; j++)); do
             time_elapsed=$((time_elapsed+$wait_time))
         else
             # Parse job number (7+ digit number) from sbatch_conditional output
-            job_number=$(echo $sbatch_conditional | grep -oP "\d{7,}(?= )")
+            #job_number=$(echo $sbatch_conditional | grep -oP "\d{7,}(?= )")
+	    # regular expression provided by co-pilot to extract job_number (FA 2/2024)
+	    job_number=$(echo "$sbatch_conditional" | grep -oP '\b\d+\b(?=\s+at\s+\d{2}:\d{2}:\d{2}\s+on)')
+
             printf "%-70s |\n" "Submitted: $job_number" >&2
+	    sleep 3
 
             # Add job nunmber to running list of succesfully submitted job numbers
             jns+=($job_number)

@@ -105,11 +105,11 @@ wait_time=30
 tmp=true
 tmp_flag_str="--tmp"
 run_files_name="run_files_tmp"
-#always use --no-tmp on stampede2   FA 4/2023: need to change to use copy_to_tmp as in minsarApp.bash
-if [[ $HOSTNAME == *"stampede2"* ]] && [[ $tmp_flag_str == "--tmp" ]]; then
+#always use --no-tmp on stampede3   FA 4/2023: need to change to use copy_to_tmp as in minsarApp.bash
+if [[ $HOSTNAME == *"stampede3"* ]] && [[ $tmp_flag_str == "--tmp" ]]; then
    tmp_flag_str="--no-tmp"
    run_files_name="run_files"
-   echo "Running on stampede2: switched from --tmp to --no-tmp "
+   echo "Running on stampede3: switched from --tmp to --no-tmp "
 fi
 
 startstep=1
@@ -372,12 +372,6 @@ for g in "${globlist[@]}"; do
 
     jobnumbers=()
     file_pattern=$(echo "${files[0]}" | grep -oP "(.*)(?=_\d{1,}.job)|insarmaps|smallbaseline_wrapper")
-    #step_name=$(echo $file_pattern | grep -oP "(?<=run_\d{2}_)(.*)|insarmaps|smallbaseline_wrapper")
-    
-    #step_io_load=$(cat $defaults_file | grep $step_name | awk '{print $7}')
-    #step_max_tasks=$(echo "$SJOBS_STEP_MAX_TASKS/$step_io_load" | bc | awk '{print int($1)}')
-
-    #sbc_command="submit_jobs.bash $file_pattern --step_name $step_name --step_max_tasks $step_max_tasks --total_max_tasks $SJOBS_TOTAL_MAX_TASKS"
 
     sbc_command="submit_jobs.bash $file_pattern"
 
