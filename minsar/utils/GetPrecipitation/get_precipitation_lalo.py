@@ -17,20 +17,6 @@ import json
 import netCDF4 as nc
 from dateutil.relativedelta import relativedelta
 
-r = requests.get('https://www.ngdc.noaa.gov/hazel/hazard-service/api/v1/volcanoes?nameInclude=Cerro')
-volcan_json = r.json()
-# for item in volcan_json['items']:
-#     print(item['name'], item['latitude'], item['longitude'], item['year'], item['month'], item['day'])
-
-volcanoName = []
-
-for item in volcan_json['items']:
-    if item['name'] not in volcanoName:
-        volcanoName.append(item['name'])
-
-for volcano in volcanoName:
-    print(volcano)
-
 
 EXAMPLE = """example:
   
@@ -44,16 +30,13 @@ EXAMPLE = """example:
 workDir = 'SCRATCHDIR'
 path_data = '/Users/giacomo/Library/CloudStorage/OneDrive-UniversityofMiami/GetPrecipitation/'
 #TODO change jsonVolcano path
-jsonVolcano = '/Users/giacomo/code/rsmas_insar/minsar/utils/GetPrecipitation/volcanoes.json'
+jsonVolcano = 'volcanoes.json'
+json_download_url = 'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/wms?service=WFS&version=1.0.0&request=GetFeature&typeName=GVP-VOTW:E3WebApp_Eruptions1960&outputFormat=application%2Fjson'
 
 #TODO Adapt the script for hdf5 files too as it has been done for nc4
 #TODO add requirements.txt
 #TODO change SCRATCHDIR to WORKDIR or something else
 #TODO possible to go back to version 7 of Final Run 
-#https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDF.07 ++ V07B.nc4
-
-v7_head = 'https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDF.07'
-v7_tail = '-S000000-E235959.V07B.'
 
 def create_parser():
     """ Creates command line argument parser object. """
@@ -74,14 +57,6 @@ def create_parser():
     group.add_argument('-vd', '--volcano-daily', nargs=1, metavar=( 'volcanoName'), help='plot eruption dates and precipitation levels')
 
     group.add_argument('-ls', '--list', action='store_true', help='list volcanoes')
-
-    # Add a subparser for the plot command
-    # plot_parser = subparsers.add_parser('--plot', aliases=['-p'], help='plot data')
-    # plot_parser.add_argument('plot', choices=['daily', 'weekly'], help='plot frequency')
-    # plot_parser.add_argument('lat', help='latitude')
-    # plot_parser.add_argument('lon', help='longitude')
-    # plot_parser.add_argument('start', help='start date')
-    # plot_parser.add_argument('end', help='end date')
 
     return parser
 
@@ -119,7 +94,20 @@ def generate_coordinate_array():
 
 
 def volcanoes_list(jsonfile):
-    print(os.getcwd())
+    ############################## Alternative API but only with significant eruptions ##############################
+    # r = requests.get('https://www.ngdc.noaa.gov/hazel/hazard-service/api/v1/volcanoes?nameInclude=Cerro')
+    # volcan_json = r.json()
+    # volcanoName = []
+
+    # for item in volcan_json['items']:
+    #     if item['name'] not in volcanoName:
+    #         volcanoName.append(item['name'])
+
+    # for volcano in volcanoName:
+    #     print(volcano)
+
+    # print(os.getcwd())
+
     f = open(jsonfile)
     data = json.load(f)
     volcanoName = []
@@ -130,6 +118,15 @@ def volcanoes_list(jsonfile):
 
     for volcano in volcanoName:
         print(volcano)
+
+
+def crontab_volcano_json(json_path):
+    # TODO add crontab to update json file every ???
+    json_download_url = 'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/wms?service=WFS&version=1.0.0&request=GetFeature&typeName=GVP-VOTW:E3WebApp_Eruptions1960&outputFormat=application%2Fjson'
+    result = requests.get(json_download_url)
+    f = open(json_path, 'wb')
+    f.write(result.content)
+    f.close()
 
 
 def extract_volcanoes_info(jsonfile, volcanoName):
@@ -458,6 +455,7 @@ if __name__ == "__main__":
 
     if args.download:
         dload_site_list(work_dir, generate_date_list(args.download[0], args.download[1]))
+        crontab_volcano_json(work_dir + '/' + jsonVolcano)  # TODO modify path
 
     else:
         if args.plot_daily:
@@ -473,7 +471,7 @@ if __name__ == "__main__":
             end_date = args.plot_weekly[3]
 
         elif args.volcano_daily:
-            eruption_dates, lon_lat = extract_volcanoes_info(jsonVolcano, args.volcano_daily[0])
+            eruption_dates, lon_lat = extract_volcanoes_info(work_dir + '/' + jsonVolcano, args.volcano_daily[0])
 
             lo = round(float(lon_lat[0]), 1)
             la = round(float(lon_lat[1]), 1)
