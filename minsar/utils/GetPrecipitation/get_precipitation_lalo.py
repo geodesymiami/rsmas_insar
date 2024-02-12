@@ -172,11 +172,11 @@ def generate_url_download(date):
                  "Final07": datetime.strptime('2023-07-31', '%Y-%m-%d').date(),
                  "Late06": datetime.today().date() - relativedelta(days=1)}
     
-    # Final Run 07
-    if date < intervals["Final06"]:    
-        head = 'https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDF.07/'
+    # Final Run 06
+    if date <= intervals["Final06"]:    
+        head = 'https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDF.06/'
         body = '/3B-DAY.MS.MRG.3IMERG.'
-        tail = '-S000000-E235959.V07B.'
+        tail = '-S000000-E235959.V06.nc4'
 
     # Late Run 06
     elif date > intervals["Final07"]:
@@ -184,11 +184,11 @@ def generate_url_download(date):
         body = '/3B-DAY-L.MS.MRG.3IMERG.'
         tail = '-S000000-E235959.V06.nc4'
 
-    # Final Run 06
+    # Final Run 07
     else:
-        head = 'https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDF.06/'
+        head = 'https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDF.07/'
         body = '/3B-DAY.MS.MRG.3IMERG.'
-        tail = '-S000000-E235959.V06.nc4'
+        tail = '-S000000-E235959.V07B.'
 
     year = str(date.year)
     day = str(date.strftime('%d'))
