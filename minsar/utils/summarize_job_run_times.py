@@ -120,7 +120,7 @@ def main(iargs=None):
     hostname = subprocess.Popen("hostname -f", shell=True, stdout=subprocess.PIPE).stdout.read().decode("utf-8")
 
     scheduler = None
-    for platform in ['frontera', 'stampede2', 'comet']:
+    for platform in ['frontera', 'stampede3', 'comet']:
         if platform in hostname:
             scheduler = 'SLURM'
             break
