@@ -331,16 +331,6 @@ def generate_date_list(start, end):
         return date_list
 
 
-#TODO remove this function
-def check_nc4(work_dir, date_list):    
-    nc4_files = [f for f in os.listdir(work_dir) if f.endswith('.nc4')]
-
-    if len(nc4_files) >= len(hdf5_files):
-        extension = 'nc4'
-
-    dload_site_list(work_dir, date_list)
-
-
 def weekly_precipitation(dictionary, lat, lon):
     weekly_dict = {}
     Precipitation = []
