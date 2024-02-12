@@ -8,8 +8,8 @@ if [[ $PLATFORM_NAME == "frontera" ]] ; then
           sed -i "s|flex|normal|g" "$@" ;
           sed -i "s|small|normal|g" "$@" ;
           sed -i "s|development|normal|g" "$@" ;
-elif [[ $PLATFORM_NAME == "stampede2" ]] ; then 
-          sed -i "s|skx-dev|skx-normal|g" "$@" ;
+elif [[ $PLATFORM_NAME == "stampede3" ]] ; then 
+          sed -i "s|dev|skx|g" "$@" ;
 fi 
 }
 
@@ -22,8 +22,8 @@ if [[ $PLATFORM_NAME == "frontera" ]] ; then
           sed -i "s|flex|development|g" "$@" ;
           sed -i "s|small|development|g" "$@" ;
           sed -i "s|normal|development|g" "$@" ;
-elif [[ $PLATFORM_NAME == "stampede2" ]] ; then 
-          sed -i "s|skx-normal|skx-dev|g" "$@" ;
+elif [[ $PLATFORM_NAME == "stampede3" ]] ; then 
+          sed -i "s|skx|dev|g" "$@" ;
 fi 
 sed -i "s|SBATCH -t .:..:|SBATCH -t 1:59:|g" "$@" ; 
 sed -i "s|SBATCH -t ..:..:|SBATCH -t 01:59:|g" "$@" ;
@@ -175,7 +175,8 @@ helptext="            \n\
   Examples:                                      \n\
      rsyncFJ MaunLoaSenAT124                     \n\
      rsyncFJ MaunLoaSenAT124/mintpy_5_20         \n\
-    "
+     rsyncFJ unittestGalapagosSenDT128/miaplpy/network_single_reference \n\
+"
     printf "$helptext"
     return
 fi
@@ -186,9 +187,10 @@ else
   dir=$1
 fi
 
+set -v
 echo "test:"
 if [ ! -d "$SCRATCHDIR/$dir" ]; then
-  echo "dir does not exist, mkking it: $SCRATCHDIR/$dir"
+  echo "dir $SCRATCHDIR/$dir does not exist, making it"
   mkdir -p $SCRATCHDIR/$dir
 fi
 
@@ -196,6 +198,16 @@ echo "Syncing directory $dir from jetstream:"
 cmd="rsync -avzh exouser@149.165.154.65:/data/HDF5EOS/$dir/ $SCRATCHDIR/$dir"
 echo running ... $cmd
 $cmd
+
+if [[ $dir == *"network"* ]]; then
+  cmd="rsync -avzh exouser@149.165.154.65:/data/HDF5EOS/${dir%/*}/maskPS.h5 $SCRATCHDIR/${dir%/*}/maskPS.h5"
+  echo running ... $cmd
+  $cmd
+  cmd="rsync -avzh exouser@149.165.154.65:/data/HDF5EOS/$dir/inputs/geometryRadar.h5 $SCRATCHDIR/$dir/inputs"
+  echo running ... $cmd
+  $cmd
+fi
+
 }
 
 ###########################################

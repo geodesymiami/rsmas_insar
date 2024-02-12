@@ -38,7 +38,7 @@ module load TACC
 
 if [[ $job_name != *"unpack_topo_reference"* && $job_name != *"unpack_secondary_slc"* ]]; then
     
-    if [[ $PLATFORM_NAME == *"stampede2"* ]]; then
+    if [[ $PLATFORM_NAME == *"stampede3"* ]]; then
         export CDTOOL=/scratch/01255/siliu/collect_distribute
     elif [[ $PLATFORM_NAME == *"frontera"* ]]; then
         export CDTOOL=/scratch1/01255/siliu/collect_distribute
