@@ -132,9 +132,9 @@ def crontab_volcano_json(json_path):
 def extract_volcanoes_info(jsonfile, volcanoName):
     f = open(jsonfile)
     data = json.load(f)
-    start_date = []
+    start_dates = []
     first_day = datetime.strptime('2000-06-01', '%Y-%m-%d').date()
-    last_day = datetime.today().date() - relativedelta(months=28)
+    last_day = datetime.today().date() - relativedelta(days=1)
 
     for j in data['features']:
         if j['properties']['VolcanoName'] == volcanoName:
@@ -148,17 +148,23 @@ def extract_volcanoes_info(jsonfile, volcanoName):
             
             print(f'{name} eruption started {start} and ended {end}')
 
-            if start > first_day and start < last_day:
-                start_date.append(start)
+            if start >= first_day and start <= last_day:
+                start_dates.append(start)
                 coordinates = j['geometry']['coordinates']
 
-    if not start_date:
+    if not start_dates:
         print(f'Error: {volcanoName} eruption date is out of range')
         sys.exit(1)
 
-    start_date = sorted(start_date)
+    start_dates = sorted(start_dates)
+    first_date = start_dates[0]
 
-    return start_date, coordinates
+    if first_date - relativedelta(days=14) >= first_day:
+        first_date = first_date - relativedelta(days=14)
+
+    date_list = pd.date_range(start = first_date, end = start_dates[-1]).date
+
+    return start_dates, date_list, coordinates
 
 
 def plot_eruptions(start_date, volcanoName):
@@ -172,11 +178,11 @@ def generate_url_download(date):
                  "Final07": datetime.strptime('2023-07-31', '%Y-%m-%d').date(),
                  "Late06": datetime.today().date() - relativedelta(days=1)}
     
-    # Final Run 07
-    if date < intervals["Final06"]:    
-        head = 'https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDF.07/'
+    # Final Run 06
+    if date <= intervals["Final06"]:    
+        head = 'https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDF.06/'
         body = '/3B-DAY.MS.MRG.3IMERG.'
-        tail = '-S000000-E235959.V07B.'
+        tail = '-S000000-E235959.V06.nc4'
 
     # Late Run 06
     elif date > intervals["Final07"]:
@@ -184,11 +190,11 @@ def generate_url_download(date):
         body = '/3B-DAY-L.MS.MRG.3IMERG.'
         tail = '-S000000-E235959.V06.nc4'
 
-    # Final Run 06
+    # Final Run 07
     else:
-        head = 'https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDF.06/'
+        head = 'https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGDF.07/'
         body = '/3B-DAY.MS.MRG.3IMERG.'
-        tail = '-S000000-E235959.V06.nc4'
+        tail = '-S000000-E235959.V07B.nc4'
 
     year = str(date.year)
     day = str(date.strftime('%d'))
@@ -219,7 +225,7 @@ def adapt_coordinates(lon, lat):
     else:
         raise ValueError(f'Values not in the Interval (-89.95, 89.95)')
 
-    return lon, lat
+    return round(float(lon),2), round(float(lat),2)
 
 
 def dload_site_list(folder, date_list):
@@ -280,24 +286,27 @@ def plot_precipitaion_nc4(longitude, latitude, date_list, folder):
         lon_index = lon.index(longitude)
         lat_index = lat.index(latitude)
 
-        # For each file in the data folder that as nc4 extension
+        # For each file in the data folder that has nc4 extension
         for f in os.listdir(folder):
 
             if f.endswith('.nc4'):
-
-                #Open the file
                 file = folder + '/' + f
-                ds = nc.Dataset(file)
 
                 #Extract date from file name
                 d = re.search('\d{4}[-]\d{2}[-]\d{2}', file)
                 date = datetime.strptime(d.group(0), "%Y-%m-%d").date()
 
                 if date in date_list:
+                    #Open the file
+                    ds = nc.Dataset(file)
 
                     dictionary[str(date)] = {}
 
-                    data = ds['precipitationCal']
+                    try:
+                        data = ds['precipitationCal']
+                    except:
+                        data = ds['precipitation']
+
                     data[0,lon_index,lat_index]
 
                     dictionary[str(date)] = float(data[0,lon_index,lat_index])
@@ -461,12 +470,12 @@ if __name__ == "__main__":
             end_date = args.plot_weekly[3]
 
         elif args.volcano_daily:
-            eruption_dates, lon_lat = extract_volcanoes_info(work_dir + '/' + jsonVolcano, args.volcano_daily[0])
+            eruption_dates, date_list, lon_lat = extract_volcanoes_info(work_dir + '/' + jsonVolcano, args.volcano_daily[0])
 
-            lo = round(float(lon_lat[0]), 1)
-            la = round(float(lon_lat[1]), 1)
+            # lo = round(float(lon_lat[0]), 1)
+            # la = round(float(lon_lat[1]), 1)
+            lo,la = adapt_coordinates(lon_lat[0], lon_lat[1])
 
-            date_list = pd.date_range(start = eruption_dates[0], end = eruption_dates[-1]).date
             dload_site_list(work_dir, date_list)
             prec = plot_precipitaion_nc4(lo, la, date_list, work_dir)
             plt = daily_precipitation(prec, la, lo)
