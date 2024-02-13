@@ -72,7 +72,10 @@ if path == '':
 # print(results[0].properties['startTime'], (results[0].properties['stopTime']), results[0].geometry)
 # print(results[-1].properties['startTime'], (results[-1].properties['stopTime']), results[-1].geometry)
 for r in results:
-    print(r.properties['startTime'], (r.properties['stopTime']), r.geometry)
+    print('--------------------------------------------------------------------------------------------------------------------------')
+    print(f"Start date: {r.properties['startTime']}")
+    print(f"End date: {(r.properties['stopTime'])}")
+    print(f"{r.geometry['type']}: {r.geometry['coordinates']}")
 
 if path != '' and path is not None:
     results.download(
