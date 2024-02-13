@@ -471,9 +471,6 @@ if __name__ == "__main__":
 
         elif args.volcano_daily:
             eruption_dates, date_list, lon_lat = extract_volcanoes_info(work_dir + '/' + jsonVolcano, args.volcano_daily[0])
-
-            # lo = round(float(lon_lat[0]), 1)
-            # la = round(float(lon_lat[1]), 1)
             lo,la = adapt_coordinates(lon_lat[0], lon_lat[1])
 
             dload_site_list(work_dir, date_list)
@@ -484,7 +481,7 @@ if __name__ == "__main__":
             sys.exit(0)
 
         elif args.list:
-            volcanoes_list(jsonVolcano)
+            volcanoes_list(work_dir + '/' + jsonVolcano)
             sys.exit(0)
 
         else:
