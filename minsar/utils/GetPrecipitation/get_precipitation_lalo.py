@@ -206,8 +206,8 @@ def generate_url_download(date):
 
 
 def adapt_coordinates(lon, lat):
-    lat = round(float(lat),1)
-    lon = round(float(lon),1)
+    lat = float("%.1f"%lat)
+    lon = float("%.1f"%lon)
 
     if -179.95 <= lon <= 179.95:
 
