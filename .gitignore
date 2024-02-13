@@ -11,3 +11,4 @@ setup/snaphu-v2.0.5.tar.gz
 tools
 minsar/.vscode/launch.json
 .DS_Store
+minsar/utils/GetPrecipitation/.vscode/launch.json
