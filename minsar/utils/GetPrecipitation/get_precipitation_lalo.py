@@ -129,13 +129,34 @@ def volcanoes_list(jsonfile):
 def crontab_volcano_json(json_path):
     # TODO add crontab to update json file every ???
     json_download_url = 'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/wms?service=WFS&version=1.0.0&request=GetFeature&typeName=GVP-VOTW:E3WebApp_Eruptions1960&outputFormat=application%2Fjson'
-    result = requests.get(json_download_url)
+    
+    try:
+        result = requests.get(json_download_url)
+    
+    except requests.exceptions.HTTPError as err:
+        if err.response.status_code == 404:
+            print(f'Error: {err.response.status_code} Url Not Found')
+            sys.exit(1)
+
+        else:
+            print('An HTTP error occurred: ' + str(err.response.status_code))
+            sys.exit(1)
+
     f = open(json_path, 'wb')
     f.write(result.content)
     f.close()
 
+    if os.path.exists(json_path):
+        print(f'Json file downloaded in {json_path}')
+
+    else:
+        print('Cannot create json file')
+
 
 def extract_volcanoes_info(jsonfile, volcanoName):
+    if not os.path.exists(jsonfile):
+        crontab_volcano_json(jsonfile)
+
     f = open(jsonfile)
     data = json.load(f)
     start_dates = []
@@ -498,7 +519,7 @@ if __name__ == "__main__":
             dload_site_list(work_dir, date_list)
             prec = plot_precipitaion_nc4(lo, la, date_list, work_dir)
             plt = daily_precipitation(prec, la, lo, volcano=args.volcano_daily[0])
-            plot_eruptions(eruption_dates, args.volcano_daily[0])
+            plot_eruptions(eruption_dates)
             plt.show()
             sys.exit(0)
 
