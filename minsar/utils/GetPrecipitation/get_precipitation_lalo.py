@@ -95,6 +95,7 @@ def generate_coordinate_array():
 
 def volcanoes_list(jsonfile):
     ############################## Alternative API but only with significant eruptions ##############################
+    
     # r = requests.get('https://www.ngdc.noaa.gov/hazel/hazard-service/api/v1/volcanoes?nameInclude=Cerro')
     # volcan_json = r.json()
     # volcanoName = []
@@ -107,6 +108,8 @@ def volcanoes_list(jsonfile):
     #     print(volcano)
 
     # print(os.getcwd())
+
+    ####################################################################################################################
 
     f = open(jsonfile)
     data = json.load(f)
@@ -159,15 +162,17 @@ def extract_volcanoes_info(jsonfile, volcanoName):
     start_dates = sorted(start_dates)
     first_date = start_dates[0]
 
-    if first_date - relativedelta(days=14) >= first_day:
-        first_date = first_date - relativedelta(days=14)
+    if first_date - relativedelta(days=90) >= first_day:
+        first_date = first_date - relativedelta(days=90)
+    else:
+        first_date = first_day
 
     date_list = pd.date_range(start = first_date, end = start_dates[-1]).date
 
     return start_dates, date_list, coordinates
 
 
-def plot_eruptions(start_date, volcanoName):
+def plot_eruptions(start_date):
     for date in start_date:
         plt.axvline(x = date_to_decimal_year(str(date)), color='red', linestyle='--', label='Eruption Date')
 
@@ -416,7 +421,7 @@ def weekly_precipitation(dictionary, lat, lon):
     plt.show()
 
 
-def daily_precipitation(dictionary, lat, lon):
+def daily_precipitation(dictionary, lat, lon, volcano=''):
 
     rainfalldfNoNull = dictionary.dropna()
 
@@ -431,7 +436,10 @@ def daily_precipitation(dictionary, lat, lon):
 
     rainfalldfNoNull.plot('Decimal_Year', 'cum', secondary_y=True, ax=ax)
 
-    plt.title(f'Latitude: {lat}, Longitude: {lon}')
+    if volcano == '':
+        plt.title(f'Latitude: {lat}, Longitude: {lon}')
+    else:
+        plt.title(f'{volcano} - Latitude: {lat}, Longitude: {lon}')
 
     ax.set_xlabel("Yr")
     ax.right_ax.set_ylabel("Cumulative Precipitation [mm]")
@@ -475,7 +483,7 @@ if __name__ == "__main__":
 
             dload_site_list(work_dir, date_list)
             prec = plot_precipitaion_nc4(lo, la, date_list, work_dir)
-            plt = daily_precipitation(prec, la, lo)
+            plt = daily_precipitation(prec, la, lo, volcano=args.volcano_daily[0])
             plot_eruptions(eruption_dates, args.volcano_daily[0])
             plt.show()
             sys.exit(0)
