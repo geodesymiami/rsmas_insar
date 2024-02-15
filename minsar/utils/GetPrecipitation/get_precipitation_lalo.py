@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-import numpy
+import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib import dates as dt
@@ -110,6 +110,9 @@ def volcanoes_list(jsonfile):
     # print(os.getcwd())
 
     ####################################################################################################################
+
+    if not os.path.exists(jsonfile):
+        crontab_volcano_json(jsonfile)
 
     f = open(jsonfile)
     data = json.load(f)
@@ -428,12 +431,23 @@ def daily_precipitation(dictionary, lat, lon, volcano=''):
     # Convert date strings to decimal years
     rainfalldfNoNull['Decimal_Year'] = rainfalldfNoNull['Date'].apply(date_to_decimal_year)
     rainfalldfNoNull["cum"] = rainfalldfNoNull.Precipitation.cumsum()
-    
+
     fig, ax = plt.subplots(layout='constrained')
 
-    plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color='maroon', width=0.00001 * len(rainfalldfNoNull))
-    plt.ylabel("Precipitation [mm/day]")
+    if 1==1:
+        lower = rainfalldfNoNull['Precipitation'].quantile(0.33)
+        upper = rainfalldfNoNull['Precipitation'].quantile(0.66)
 
+        rainfalldfNoNull['color'] = np.where(rainfalldfNoNull['Precipitation'] < lower, 'yellow', 
+                                     np.where(rainfalldfNoNull['Precipitation'] < upper, 'green', 'blue'))
+        
+        plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color=rainfalldfNoNull['color'], width=0.00001 * len(rainfalldfNoNull))
+    
+    # fig, ax = plt.subplots(layout='constrained')
+    else:
+        plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color='maroon', width=0.00001 * len(rainfalldfNoNull))
+    
+    plt.ylabel("Precipitation [mm/day]")
     rainfalldfNoNull.plot('Decimal_Year', 'cum', secondary_y=True, ax=ax)
 
     if volcano == '':
