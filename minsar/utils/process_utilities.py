@@ -351,12 +351,17 @@ def create_default_template(temp_inps):
         if value not in [None, 'auto']:
             inps.template.update({key: os.path.expandvars(value.strip("'"))})
 
-    # update template file if necessary
-    if not os.path.exists(inps.template_file):
-        shutil.copyfile(inps.custom_template_file, inps.template_file)
-    else:
-        # FA 12/22  I wonder why updating the template file here. This causes an error in `download_data.py if a *template file exist 
-        update_template_file(inps.template_file, custom_tempObj)
+    # # update template file if necessary
+    # if not os.path.exists(inps.template_file):
+    #     shutil.copyfile(inps.custom_template_file, inps.template_file)
+    # else:
+    #     # FA 12/22  I wonder why updating the template file here. This causes an error in `download_data.py if a *template file exist 
+    #     update_template_file(inps.template_file, custom_tempObj)
+    # FA 2/2024:  Gives trouble in create_runfiles.py and create_html.py if corrupt *template in project_dir
+    # FA 2/2024:  Try always copying and then updating. ATTENTION: Is that OK?        
+    shutil.copyfile(inps.custom_template_file, inps.template_file)
+    update_template_file(inps.template_file, custom_tempObj)
+
 
     inps.cropbox = pathObj.grab_cropbox(inps)
 
