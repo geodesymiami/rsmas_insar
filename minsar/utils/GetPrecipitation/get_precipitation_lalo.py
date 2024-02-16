@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-import numpy
+import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib import dates as dt
@@ -21,7 +21,7 @@ from dateutil.relativedelta import relativedelta
 EXAMPLE = """example:
   
   date = yyyy-mm-dd
-  get_precipitation_lalo.py --plot-daily 19.5 -156.5 2019-01-01 2021-29-09
+  get_precipitation_lalo.py --plot-daily 19.5 -156.5 2019-01-01 2021-09-29
 
   get_precipitation_lalo.py --download start_date end_date
   get_precipitation_lalo.py --download 2019-01-01 2021-09-29
@@ -95,6 +95,7 @@ def generate_coordinate_array():
 
 def volcanoes_list(jsonfile):
     ############################## Alternative API but only with significant eruptions ##############################
+    
     # r = requests.get('https://www.ngdc.noaa.gov/hazel/hazard-service/api/v1/volcanoes?nameInclude=Cerro')
     # volcan_json = r.json()
     # volcanoName = []
@@ -107,6 +108,11 @@ def volcanoes_list(jsonfile):
     #     print(volcano)
 
     # print(os.getcwd())
+
+    ####################################################################################################################
+
+    if not os.path.exists(jsonfile):
+        crontab_volcano_json(jsonfile)
 
     f = open(jsonfile)
     data = json.load(f)
@@ -123,13 +129,34 @@ def volcanoes_list(jsonfile):
 def crontab_volcano_json(json_path):
     # TODO add crontab to update json file every ???
     json_download_url = 'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/wms?service=WFS&version=1.0.0&request=GetFeature&typeName=GVP-VOTW:E3WebApp_Eruptions1960&outputFormat=application%2Fjson'
-    result = requests.get(json_download_url)
+    
+    try:
+        result = requests.get(json_download_url)
+    
+    except requests.exceptions.HTTPError as err:
+        if err.response.status_code == 404:
+            print(f'Error: {err.response.status_code} Url Not Found')
+            sys.exit(1)
+
+        else:
+            print('An HTTP error occurred: ' + str(err.response.status_code))
+            sys.exit(1)
+
     f = open(json_path, 'wb')
     f.write(result.content)
     f.close()
 
+    if os.path.exists(json_path):
+        print(f'Json file downloaded in {json_path}')
+
+    else:
+        print('Cannot create json file')
+
 
 def extract_volcanoes_info(jsonfile, volcanoName):
+    if not os.path.exists(jsonfile):
+        crontab_volcano_json(jsonfile)
+
     f = open(jsonfile)
     data = json.load(f)
     start_dates = []
@@ -159,15 +186,17 @@ def extract_volcanoes_info(jsonfile, volcanoName):
     start_dates = sorted(start_dates)
     first_date = start_dates[0]
 
-    if first_date - relativedelta(days=14) >= first_day:
-        first_date = first_date - relativedelta(days=14)
+    if first_date - relativedelta(days=90) >= first_day:
+        first_date = first_date - relativedelta(days=90)
+    else:
+        first_date = first_day
 
     date_list = pd.date_range(start = first_date, end = start_dates[-1]).date
 
     return start_dates, date_list, coordinates
 
 
-def plot_eruptions(start_date, volcanoName):
+def plot_eruptions(start_date):
     for date in start_date:
         plt.axvline(x = date_to_decimal_year(str(date)), color='red', linestyle='--', label='Eruption Date')
 
@@ -206,8 +235,8 @@ def generate_url_download(date):
 
 
 def adapt_coordinates(lon, lat):
-    lat = round(float(lat),1)
-    lon = round(float(lon),1)
+    lat = float("%.1f"%lat)
+    lon = float("%.1f"%lon)
 
     if -179.95 <= lon <= 179.95:
 
@@ -416,22 +445,38 @@ def weekly_precipitation(dictionary, lat, lon):
     plt.show()
 
 
-def daily_precipitation(dictionary, lat, lon):
+def daily_precipitation(dictionary, lat, lon, volcano=''):
 
     rainfalldfNoNull = dictionary.dropna()
 
     # Convert date strings to decimal years
     rainfalldfNoNull['Decimal_Year'] = rainfalldfNoNull['Date'].apply(date_to_decimal_year)
     rainfalldfNoNull["cum"] = rainfalldfNoNull.Precipitation.cumsum()
-    
+
     fig, ax = plt.subplots(layout='constrained')
 
-    plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color='maroon', width=0.00001 * len(rainfalldfNoNull))
-    plt.ylabel("Precipitation [mm/day]")
+    # if 1==1:
+    #     lower = rainfalldfNoNull['Precipitation'].quantile(0.33)
+    #     upper = rainfalldfNoNull['Precipitation'].quantile(0.66)
 
+    #     rainfalldfNoNull['color'] = np.where(rainfalldfNoNull['Precipitation'] < lower, 'yellow', 
+    #                                  np.where(rainfalldfNoNull['Precipitation'] < upper, 'green', 'blue'))
+        
+    #     plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color=rainfalldfNoNull['color'], width=0.00001 * len(rainfalldfNoNull))
+    
+    # # fig, ax = plt.subplots(layout='constrained')
+    # else:
+        # plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color='maroon', width=0.00001 * len(rainfalldfNoNull))
+
+    plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color='maroon', width=0.00001 * len(rainfalldfNoNull))
+    
+    plt.ylabel("Precipitation [mm/day]")
     rainfalldfNoNull.plot('Decimal_Year', 'cum', secondary_y=True, ax=ax)
 
-    plt.title(f'Latitude: {lat}, Longitude: {lon}')
+    if volcano == '':
+        plt.title(f'Latitude: {lat}, Longitude: {lon}')
+    else:
+        plt.title(f'{volcano} - Latitude: {lat}, Longitude: {lon}')
 
     ax.set_xlabel("Yr")
     ax.right_ax.set_ylabel("Cumulative Precipitation [mm]")
@@ -471,20 +516,17 @@ if __name__ == "__main__":
 
         elif args.volcano_daily:
             eruption_dates, date_list, lon_lat = extract_volcanoes_info(work_dir + '/' + jsonVolcano, args.volcano_daily[0])
-
-            # lo = round(float(lon_lat[0]), 1)
-            # la = round(float(lon_lat[1]), 1)
             lo,la = adapt_coordinates(lon_lat[0], lon_lat[1])
 
             dload_site_list(work_dir, date_list)
             prec = plot_precipitaion_nc4(lo, la, date_list, work_dir)
-            plt = daily_precipitation(prec, la, lo)
-            plot_eruptions(eruption_dates, args.volcano_daily[0])
+            plt = daily_precipitation(prec, la, lo, volcano=args.volcano_daily[0])
+            plot_eruptions(eruption_dates)
             plt.show()
             sys.exit(0)
 
         elif args.list:
-            volcanoes_list(jsonVolcano)
+            volcanoes_list(work_dir + '/' + jsonVolcano)
             sys.exit(0)
 
         else:
