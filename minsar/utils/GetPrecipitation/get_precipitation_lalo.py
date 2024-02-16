@@ -21,7 +21,7 @@ from dateutil.relativedelta import relativedelta
 EXAMPLE = """example:
   
   date = yyyy-mm-dd
-  get_precipitation_lalo.py --plot-daily 19.5 -156.5 2019-01-01 2021-29-09
+  get_precipitation_lalo.py --plot-daily 19.5 -156.5 2019-01-01 2021-09-29
 
   get_precipitation_lalo.py --download start_date end_date
   get_precipitation_lalo.py --download 2019-01-01 2021-09-29
@@ -455,18 +455,20 @@ def daily_precipitation(dictionary, lat, lon, volcano=''):
 
     fig, ax = plt.subplots(layout='constrained')
 
-    if 1==1:
-        lower = rainfalldfNoNull['Precipitation'].quantile(0.33)
-        upper = rainfalldfNoNull['Precipitation'].quantile(0.66)
+    # if 1==1:
+    #     lower = rainfalldfNoNull['Precipitation'].quantile(0.33)
+    #     upper = rainfalldfNoNull['Precipitation'].quantile(0.66)
 
-        rainfalldfNoNull['color'] = np.where(rainfalldfNoNull['Precipitation'] < lower, 'yellow', 
-                                     np.where(rainfalldfNoNull['Precipitation'] < upper, 'green', 'blue'))
+    #     rainfalldfNoNull['color'] = np.where(rainfalldfNoNull['Precipitation'] < lower, 'yellow', 
+    #                                  np.where(rainfalldfNoNull['Precipitation'] < upper, 'green', 'blue'))
         
-        plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color=rainfalldfNoNull['color'], width=0.00001 * len(rainfalldfNoNull))
+    #     plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color=rainfalldfNoNull['color'], width=0.00001 * len(rainfalldfNoNull))
     
-    # fig, ax = plt.subplots(layout='constrained')
-    else:
-        plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color='maroon', width=0.00001 * len(rainfalldfNoNull))
+    # # fig, ax = plt.subplots(layout='constrained')
+    # else:
+        # plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color='maroon', width=0.00001 * len(rainfalldfNoNull))
+
+    plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color='maroon', width=0.00001 * len(rainfalldfNoNull))
     
     plt.ylabel("Precipitation [mm/day]")
     rainfalldfNoNull.plot('Decimal_Year', 'cum', secondary_y=True, ax=ax)
