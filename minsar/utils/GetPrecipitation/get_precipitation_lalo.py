@@ -16,6 +16,8 @@ import calendar
 import json
 import netCDF4 as nc
 from dateutil.relativedelta import relativedelta
+import geopandas as gpd
+from matplotlib.path import Path
 
 
 EXAMPLE = """example:
@@ -54,9 +56,13 @@ def create_parser():
 
     group.add_argument('--plot-weekly', nargs=4, metavar=( 'latitude', 'longintude', 'start_date', 'end_date'))
 
+    group.add_argument('--plot-monthly', nargs=4, metavar=( 'latitude', 'longintude', 'start_date', 'end_date'))
+
     group.add_argument('-vd', '--volcano-daily', nargs=1, metavar=( 'volcanoName'), help='plot eruption dates and precipitation levels')
 
     group.add_argument('-ls', '--list', action='store_true', help='list volcanoes')
+
+    group.add_argument('--map', nargs=1, metavar=('date'),help='Heat map of precipitation')
 
     return parser
 
@@ -76,19 +82,14 @@ def days_in_month(date):
     return num_days
 
 
-def generate_coordinate_array():
-    lon = []
-    lat = []
-    lo = - 179.95
-    la = - 89.95
+def generate_coordinate_array(latitude = [- 89.95], longitude = [- 179.95]):
+    try:
+        lon = np.round(np.arange(longitude[0], longitude[1], 0.1), 2)
+        lat = np.round(np.arange(latitude[0], latitude[1], 0.1), 2)
 
-    for i in range(0, 3600):
-        lon.append(round(lo, 2))
-        lo += 0.1
-
-    for i in range(0, 1800):
-        lat.append(round(la, 2))
-        la += 0.1
+    except:
+        lon = np.round(np.arange(longitude[0], -180.05, 0.1), 2)
+        lat = np.round(np.arange(latitude[0], 90.05, 0.1), 2)
 
     return lon, lat
 
@@ -158,7 +159,7 @@ def extract_volcanoes_info(jsonfile, volcanoName):
         crontab_volcano_json(jsonfile)
 
     f = open(jsonfile)
-    data = json.load(f)
+    data = json.load(f) 
     start_dates = []
     first_day = datetime.strptime('2000-06-01', '%Y-%m-%d').date()
     last_day = datetime.today().date() - relativedelta(days=1)
@@ -235,8 +236,9 @@ def generate_url_download(date):
 
 
 def adapt_coordinates(lon, lat):
-    lat = float("%.1f"%lat)
-    lon = float("%.1f"%lon)
+    # TODO to correct rounding i.i 1.05 goes to 1.1
+    lat = int(float(lat) *  10) /  10.0
+    lon = int(float(lon) *  10) /  10.0
 
     if -179.95 <= lon <= 179.95:
 
@@ -420,29 +422,134 @@ def weekly_precipitation(dictionary, lat, lon):
 
         weekly_dict[week] = value
 
-    df1 = pd.DataFrame(weekly_dict.items(), columns=['Date', 'Precipitation'])
+    print(weekly_dict)
+    return weekly_dict
+
+
+def bar_plot(dictionary, lat, lon):
+
+    df1 = pd.DataFrame(dictionary.items(), columns=['Date', 'Precipitation'])
     df1.sort_values(by='Date', ascending=True)
 
     df1["cum"] = df1.Precipitation.cumsum()
     fig, ax = plt.subplots(layout='constrained')
 
-    plt.bar(df1['Date'],df1['Precipitation'], color='maroon', width=0.01 * len(df1))
-    plt.ylabel("Precipitation [mm/week]")
+    plt.bar(df1['Date'],df1['Precipitation'], color='maroon')
+    plt.ylabel("Precipitation [mm]")
 
     df1.plot('Date', 'cum', secondary_y=True, ax=ax)
 
     plt.title(f'Latitude: {lat}, Longitude: {lon}')
-    ax.set_xlabel("Yr")
+    # ax.set_xlabel("Yr")
     ax.right_ax.set_ylabel("Cumulative Precipitation [mm]")
     ax.get_legend().remove()
 
     plt.xticks(rotation=90)
-    # plt.ylabel("Precipitation [mm/day]")
-    # plt.gca().xaxis.set_major_locator(dt.DayLocator(interval=intervals))
-    # plt.xticks(rotation=90)
-    # plt.bar(df1['Date'],df1['Precipitation'], color ='maroon',
-    #         width = 0.5)
+
     plt.show()
+
+    print(df1)
+
+def monthly_precipitation(dictionary):
+    dictionary['Date'] = pd.to_datetime(dictionary['Date'])
+    dictionary.set_index('Date', inplace=True)
+
+    if 'Precipitation' in dictionary:
+        # Resample the data by month and calculate the mean
+        monthly_precipitation = dictionary['Precipitation'].resample('M').mean()
+
+    print(monthly_precipitation)
+    return monthly_precipitation
+
+
+def yearly_precipitation(dictionary):
+    dictionary['Date'] = pd.to_datetime(dictionary['Date'])
+    dictionary.set_index('Date', inplace=True)
+
+    if 'Precipitation' in dictionary:
+        # Resample the data by year and calculate the mean
+        yearly_precipitation = dictionary['Precipitation'].resample('Y').mean()
+
+    return yearly_precipitation
+
+
+def map_precipitation(folder, date):
+        
+    file = '/Users/giacomo/onedrive/scratch/gpm_data/2000-06-02.nc4'
+
+    ds = nc.Dataset(file)
+
+    try:
+        data = ds['precipitationCal']
+
+    except:
+        data = ds['precipitation']
+
+    '''
+    Example of global precipitations given by Nasa at: https://gpm.nasa.gov/data/tutorials
+    '''
+
+    precip = data[:]
+    precip = np.flip( precip[0,:,:].transpose(), axis=0 )
+
+    xmin, xmax, ymin, ymax = -180, 180, -90, 90
+    extent = [xmin, xmax, ymin, ymax]
+
+
+    mapgalapagos = '/Users/giacomo/Desktop/worldheritagemarineprogramme/worldheritagemarineprogramme.shp'
+    mapEarth = '/Users/giacomo/Desktop/ne_10m_land/ne_10m_land.shp'
+
+    island_boundary = gpd.read_file(mapEarth)
+    geometry = island_boundary['geometry']
+
+    # Extract coordinates
+    coordinates = []
+    for geom in geometry:
+        # Check the type of the geometry and extract coordinates accordingly
+        if geom.geom_type == 'Polygon':
+            # For polygons, extract exterior coordinates
+            coords = geom.exterior.coords[:]
+            coordinates.append(coords)
+        elif geom.geom_type == 'MultiPolygon':
+            # For multi-polygons, extract exterior coordinates for each polygon
+            for polygon in geom.geoms:  # Use the 'geoms' attribute to iterate over polygons
+                coords = polygon.exterior.coords[:]
+                coordinates.append(coords)
+
+    # Print or use the extracted coordinates
+    coord = coordinates[0]
+
+    max_latitude = -90
+    max_longitude = -180
+    min_latitude = 90
+    min_longitude = 180
+
+    for c in coord:
+        if c[0] > max_longitude:
+            max_longitude = c[0]
+            
+        if c[0] < min_longitude:
+            min_longitude = c[0]
+
+        if c[1] > max_latitude:
+            max_latitude = c[1]
+
+        if c[1] < min_latitude:
+            min_latitude = c[1]
+
+
+    # plt.imshow(precip[ymin:ymax, xmin:xmax], vmin=-1, vmax=2, extent=extent)
+    plt.imshow( precip, vmin=0, vmax=2, extent=[-180,180,-90,90] )
+    island_boundary.plot(ax=plt.gca(), edgecolor='blue', facecolor='none') #plot shapefile
+
+    plt.ylim((-3.113)+2, (3.353)-2) #lat
+    plt.xlim((-93.680)+2,(-87.4981)-2) #long
+
+    print(min_latitude-1, max_latitude+1, min_longitude-1,max_longitude+1)
+
+    # -- add a color bar
+    cbar = plt.colorbar( )
+    cbar.set_label('millimeters')
 
 
 def daily_precipitation(dictionary, lat, lon, volcano=''):
@@ -503,16 +610,19 @@ if __name__ == "__main__":
 
     else:
         if args.plot_daily:
-            la = round(float(args.plot_daily[0]), 1)
-            lo = round(float(args.plot_daily[1]), 1)
+            lo, la = adapt_coordinates(args.plot_daily[1], args.plot_daily[0])
             start_date = args.plot_daily[2]
             end_date = args.plot_daily[3]
 
         elif args.plot_weekly:
-            la = round(float(args.plot_weekly[0]), 1)
-            lo = round(float(args.plot_weekly[1]), 1)
+            lo , la = adapt_coordinates(args.plot_weekly[1], args.plot_weekly[0])
             start_date = args.plot_weekly[2]
             end_date = args.plot_weekly[3]
+
+        elif args.plot_monthly:
+            lo, la = adapt_coordinates(args.plot_monthly[1], args.plot_monthly[0])
+            start_date = args.plot_monthly[2]
+            end_date = args.plot_monthly[3]
 
         elif args.volcano_daily:
             eruption_dates, date_list, lon_lat = extract_volcanoes_info(work_dir + '/' + jsonVolcano, args.volcano_daily[0])
@@ -528,6 +638,10 @@ if __name__ == "__main__":
         elif args.list:
             volcanoes_list(work_dir + '/' + jsonVolcano)
             sys.exit(0)
+        #TODO restructure the code
+        elif args.map:
+            map_precipitation(work_dir, args.map[0])
+            sys.exit(0)
 
         else:
             print('Error: no plot frequency specified')
@@ -542,4 +656,9 @@ if __name__ == "__main__":
             plt.show()
 
         elif args.plot_weekly:
-            weekly_precipitation(prec, la, lo)
+            precipitation_values = weekly_precipitation(prec, la, lo)
+
+        elif args.plot_monthly:
+            precipitation_values = monthly_precipitation(prec)
+
+    bar_plot(precipitation_values, la, lo)
