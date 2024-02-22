@@ -42,7 +42,7 @@ git clone https://github.com/geodesymiami/PlotData tools/PlotData
 git clone https://github.com/geodesymiami/precip tools/precip
 
 ### Install credential files ###############
-./install_credential_files.bash;
+./setup/install_credential_files.bash;
 
 ### Install python #########################
 cd setup
@@ -161,7 +161,7 @@ git clone git@github.com:geodesymiami/PlotData tools/PlotData
 git clone git@github.com:geodesymiami/precip tools/precip
 
 ### Install credential files ###############
-./install_credential_files.bash;
+./setup/install_credential_files.bash;
 
 ### Install python #########################
 cd setup
