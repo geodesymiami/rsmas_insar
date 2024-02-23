@@ -25,7 +25,6 @@ EXAMPLE = """example:
   date = yyyy-mm-dd
   get_precipitation_lalo.py --plot-daily 19.5 -156.5 2019-01-01 2021-09-29
 
-  get_precipitation_lalo.py --download start_date end_date
   get_precipitation_lalo.py --download 2019-01-01 2021-09-29
 
 """
@@ -54,11 +53,11 @@ def create_parser():
 
     group.add_argument('--plot-daily', nargs=4, metavar=( 'latitude', 'longintude', 'start_date', 'end_date'))
 
-    group.add_argument('--plot-weekly', nargs=4, metavar=( 'latitude', 'longintude', 'start_date', 'end_date'))
+    group.add_argument('--plot-weekly', nargs=4, metavar=( 'latitude', 'longitude', 'start_date', 'end_date'))
 
-    group.add_argument('--plot-monthly', nargs=4, metavar=( 'latitude', 'longintude', 'start_date', 'end_date'))
+    group.add_argument('--plot-monthly', nargs=4, metavar=( 'latitude', 'longitude', 'start_date', 'end_date'))
 
-    group.add_argument('-vd', '--volcano-daily', nargs=1, metavar=( 'volcanoName'), help='plot eruption dates and precipitation levels')
+    group.add_argument('-vd', '--volcano-daily', nargs=1, metavar=( 'NAME'), help='plot eruption dates and precipitation levels')
 
     group.add_argument('-ls', '--list', action='store_true', help='list volcanoes')
 
@@ -68,7 +67,12 @@ def create_parser():
 
 
 def date_to_decimal_year(date_str):
-    date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+    if type(date_str) == str:
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+
+    else:
+        date_obj = date_str
+
     year = date_obj.year
     day_of_year = date_obj.timetuple().tm_yday
     decimal_year = year + (day_of_year - 1) / 365.0
@@ -77,18 +81,22 @@ def date_to_decimal_year(date_str):
 
 
 def days_in_month(date):
-    year, month, day = map(int, date.split("-"))
+    try:
+        year, month, day = map(int, date.split("-"))
+    except:
+        year, month = date.year, date.month 
+    
     num_days = calendar.monthrange(year, month)[1]
     return num_days
 
 
-def generate_coordinate_array(latitude = [- 89.95], longitude = [- 179.95]):
+def generate_coordinate_array(longitude = [- 179.95], latitude = [- 89.95]):
     try:
         lon = np.round(np.arange(longitude[0], longitude[1], 0.1), 2)
         lat = np.round(np.arange(latitude[0], latitude[1], 0.1), 2)
 
     except:
-        lon = np.round(np.arange(longitude[0], -180.05, 0.1), 2)
+        lon = np.round(np.arange(longitude[0], 180.05, 0.1), 2)
         lat = np.round(np.arange(latitude[0], 90.05, 0.1), 2)
 
     return lon, lat
@@ -235,28 +243,30 @@ def generate_url_download(date):
     return url
 
 
-def adapt_coordinates(lon, lat):
-    # TODO to correct rounding i.i 1.05 goes to 1.1
-    lat = int(float(lat) *  10) /  10.0
-    lon = int(float(lon) *  10) /  10.0
+def adapt_coordinates(longitude, latitude):
+    for i in range(len(latitude)):
+        
+        la = int(float(latitude[i]) *  10) /  10.0
 
-    if -179.95 <= lon <= 179.95:
+        if -89.95 <= la <= 89.95:
 
-        val = 0.05 if lon > 0 else  -0.05
-        lon = lon + val
+            val = 0.05 if la > 0 else -0.05
+            latitude[i] = round(la + val, 2)
 
-    else:
-        raise ValueError(f'Values not in the Interval (-179.5, 179.5)')
+        else:
+            raise ValueError(f'Values not in the Interval (-89.95, 89.95)')
+            
+    for i in range(len(longitude)):
+        lo = int(float(longitude[i]) *  10) /  10.0
 
-    if -89.95 <= lat <= 89.95:
+        if -179.95 <= lo <= 179.95:
 
-        val = 0.05 if lat > 0 else -0.05
-        lat = lat + val
-
-    else:
-        raise ValueError(f'Values not in the Interval (-89.95, 89.95)')
-
-    return round(float(lon),2), round(float(lat),2)
+            val = 0.05 if lo > 0 else  -0.05
+            longitude[i] = round(lo + val, 2)
+        else:
+            raise ValueError(f'Values not in the Interval (-179.5, 179.5)')
+        
+    return longitude, latitude
 
 
 def dload_site_list(folder, date_list):
@@ -305,18 +315,12 @@ def dload_site_list(folder, date_list):
             sys.exit(1)
 
 
-def plot_precipitaion_nc4(longitude, latitude, date_list, folder):
-
+def create_map(longitude, latitude, date_list, folder):
         finaldf = {}
         df = pd.DataFrame()
         dictionary = {}
 
-        longitude, latitude = adapt_coordinates(longitude, latitude)
         lon, lat = generate_coordinate_array()
-
-        lon_index = lon.index(longitude)
-        lat_index = lat.index(latitude)
-
         # For each file in the data folder that has nc4 extension
         for f in os.listdir(folder):
 
@@ -332,15 +336,10 @@ def plot_precipitaion_nc4(longitude, latitude, date_list, folder):
                     ds = nc.Dataset(file)
 
                     dictionary[str(date)] = {}
+                    data = ds['precipitationCal'] if 'precipitationCal' in ds.variables else ds['precipitation']
 
-                    try:
-                        data = ds['precipitationCal']
-                    except:
-                        data = ds['precipitation']
-
-                    data[0,lon_index,lat_index]
-
-                    dictionary[str(date)] = float(data[0,lon_index,lat_index])
+                    subset = data[:, np.where(lon == longitude[0])[0][0]:np.where(lon == longitude[1])[0][0]+1, np.where(lat == latitude[0])[0][0]:np.where(lat == latitude[1])[0][0]+1]
+                    dictionary[str(date)] = subset.astype(float)
 
                     df1 = pd.DataFrame(dictionary.items(), columns=['Date', 'Precipitation'])
                     finaldf = pd.concat([df,df1], ignore_index=True, sort=False)
@@ -358,9 +357,100 @@ def plot_precipitaion_nc4(longitude, latitude, date_list, folder):
         return finaldf
 
 
+#TODO default for dictionary
+def extract_precipitation(longitude, latitude, date_list, folder):
+    dictionary = {}
+
+    lon, lat = generate_coordinate_array()
+
+    if longitude[1] and latitude[1]:
+        last_longitude = longitude[1]
+        last_latitude = latitude[1]
+
+    else:
+        last_longitude = longitude[0]
+        last_latitude = latitude[0]
+
+    # For each file in the data folder that has nc4 extension
+    for f in os.listdir(folder):
+
+        if f.endswith('.nc4'):
+            file = folder + '/' + f
+
+            #Extract date from file name
+            d = re.search('\d{4}[-]\d{2}[-]\d{2}', file)
+            file_date = datetime.strptime(d.group(0), "%Y-%m-%d").date()
+
+            if file_date in date_list:
+                #Open the file
+                ds = nc.Dataset(file)
+                dictionary[str(file_date)] = {}
+
+                data = ds['precipitationCal'] if 'precipitationCal' in ds.variables else ds['precipitation']
+                subset = data[:, np.where(lon == longitude[0])[0][0]:np.where(lon == last_longitude)[0][0]+1, np.where(lat == latitude[0])[0][0]:np.where(lat == last_latitude)[0][0]+1]
+
+                dictionary[str(file_date)] = subset.astype(float)
+
+    return dictionary
+
+
+def plot_precipitaion_nc4(longitude, latitude, date_list, folder):
+
+    finaldf = {}
+    df = pd.DataFrame()
+    dictionary = {}
+
+    lon, lat = generate_coordinate_array()
+
+    lon_index = np.where(lon == longitude)[0][0]
+    lat_index = np.where(lat == latitude)[0][0]
+
+    # For each file in the data folder that has nc4 extension
+    for f in os.listdir(folder):
+
+        if f.endswith('.nc4'):
+            file = folder + '/' + f
+
+            #Extract date from file name
+            d = re.search('\d{4}[-]\d{2}[-]\d{2}', file)
+            date = datetime.strptime(d.group(0), "%Y-%m-%d").date()
+
+            if date in date_list:
+                #Open the file
+                ds = nc.Dataset(file)
+
+                dictionary[str(date)] = {}
+
+                data = ds['precipitationCal'] if 'precipitationCal' in ds.variables else ds['precipitation']
+
+                data[0,lon_index,lat_index]
+
+                dictionary[str(date)] = float(data[0,lon_index,lat_index])
+
+                df1 = pd.DataFrame(dictionary.items(), columns=['Date', 'Precipitation'])
+                finaldf = pd.concat([df,df1], ignore_index=True, sort=False)
+
+                df.sort_index()
+                df.sort_index(ascending=False)
+
+
+                ds.close()
+
+            else: continue
+
+    finaldf = finaldf.sort_values(by='Date', ascending=True)
+
+    return finaldf
+
+
 def generate_date_list(start, end):
-        sdate = datetime.strptime(start,'%Y-%m-%d').date()
-        edate = datetime.strptime(end,'%Y-%m-%d').date()
+        if (type(start) and type (end)) == str:
+            sdate = datetime.strptime(start,'%Y-%m-%d').date()
+            edate = datetime.strptime(end,'%Y-%m-%d').date()
+        
+        else:
+            sdate = start
+            edate = end
 
         if edate >= datetime.today().date():
             edate = datetime.today().date() - relativedelta(days=1)
@@ -426,39 +516,61 @@ def weekly_precipitation(dictionary, lat, lon):
     return weekly_dict
 
 
-def bar_plot(dictionary, lat, lon):
+def bar_plot(precipitation, lat, lon, volcano=''):
+    if type(precipitation) == dict:
+        precipitation = pd.DataFrame(precipitation.items(), columns=['Date', 'Precipitation'])
 
-    df1 = pd.DataFrame(dictionary.items(), columns=['Date', 'Precipitation'])
-    df1.sort_values(by='Date', ascending=True)
+    # Convert array into single values
+    precipitation['Precipitation'] = precipitation['Precipitation'].apply(lambda x: x[0][0][0])
+    precipitation.sort_values(by='Date', ascending=True, inplace=True)
+    print(precipitation['Date'])
+    # Convert date strings to decimal years
+    if 'Non mensile o annuale':
+        precipitation['Decimal_Year'] = precipitation['Date'].apply(date_to_decimal_year)
+        precipitation_field = 'Decimal_Year'
+    
+    else:
+        precipitation_field = 'Date'
 
-    df1["cum"] = df1.Precipitation.cumsum()
+    # Calculate the cumulative precipitation
+    precipitation["cum"] = precipitation.Precipitation.cumsum()
+
     fig, ax = plt.subplots(layout='constrained')
 
-    plt.bar(df1['Date'],df1['Precipitation'], color='maroon')
+    plt.bar(precipitation[precipitation_field], precipitation['Precipitation'], color='maroon', width=0.00001 * len(precipitation))
     plt.ylabel("Precipitation [mm]")
 
-    df1.plot('Date', 'cum', secondary_y=True, ax=ax)
+    print(precipitation)
 
-    plt.title(f'Latitude: {lat}, Longitude: {lon}')
+    precipitation.plot(precipitation_field, 'cum', secondary_y=True, ax=ax)
+
+    if volcano == '':
+        plt.title(f'Latitude: {lat}, Longitude: {lon}')
+    else:
+        plt.title(f'{volcano} - Latitude: {lat}, Longitude: {lon}')
+
     # ax.set_xlabel("Yr")
     ax.right_ax.set_ylabel("Cumulative Precipitation [mm]")
     ax.get_legend().remove()
 
     plt.xticks(rotation=90)
-
     plt.show()
 
-    print(df1)
 
 def monthly_precipitation(dictionary):
-    dictionary['Date'] = pd.to_datetime(dictionary['Date'])
-    dictionary.set_index('Date', inplace=True)
+    df = pd.DataFrame(list(dictionary.items()), columns=['Date', 'Precipitation'])
+    df['Date'] = pd.to_datetime(df['Date'])
+    df['Date_copy'] = df['Date']  # Create a copy of the 'Date' column
+    df.set_index('Date_copy', inplace=True)
 
-    if 'Precipitation' in dictionary:
+    if 'Precipitation' in df:
         # Resample the data by month and calculate the mean
-        monthly_precipitation = dictionary['Precipitation'].resample('M').mean()
+        monthly_precipitation = df.resample('M').mean()
 
-    print(monthly_precipitation)
+    else:
+        print('Error: Precipitation field not found in the dictionary')
+        sys.exit(1)
+
     return monthly_precipitation
 
 
@@ -470,33 +582,29 @@ def yearly_precipitation(dictionary):
         # Resample the data by year and calculate the mean
         yearly_precipitation = dictionary['Precipitation'].resample('Y').mean()
 
+    else: 
+        print('Error: Precipitation field not found in the dictionary')
+        sys.exit(1)
+
     return yearly_precipitation
 
 
-def map_precipitation(folder, date):
-        
-    file = '/Users/giacomo/onedrive/scratch/gpm_data/2000-06-02.nc4'
-
-    ds = nc.Dataset(file)
-
-    try:
-        data = ds['precipitationCal']
-
-    except:
-        data = ds['precipitation']
-
+def map_precipitation(precipitation_series, lo, la, date):
     '''
     Example of global precipitations given by Nasa at: https://gpm.nasa.gov/data/tutorials
-    '''
+    '''  
+    if type(precipitation_series) == pd.DataFrame:
+        precip = precipitation_series.get('Precipitation')[0][0]
 
-    precip = data[:]
-    precip = np.flip( precip[0,:,:].transpose(), axis=0 )
+    elif type(precipitation_series) == dict:
+        precip = precipitation_series[date[0].strftime('%Y-%m-%d')]
+        
+    precip = np.flip(precip.transpose(), axis=0)
 
-    xmin, xmax, ymin, ymax = -180, 180, -90, 90
-    extent = [xmin, xmax, ymin, ymax]
-
-
-    mapgalapagos = '/Users/giacomo/Desktop/worldheritagemarineprogramme/worldheritagemarineprogramme.shp'
+    plt.imshow(precip, vmin=0, vmax=precip.max(), extent=[lo[0],lo[1],la[0],la[1]])
+    plt.ylim(la[0], la[1])
+    plt.xlim(lo[0], lo[1])
+    
     mapEarth = '/Users/giacomo/Desktop/ne_10m_land/ne_10m_land.shp'
 
     island_boundary = gpd.read_file(mapEarth)
@@ -516,82 +624,14 @@ def map_precipitation(folder, date):
                 coords = polygon.exterior.coords[:]
                 coordinates.append(coords)
 
-    # Print or use the extracted coordinates
-    coord = coordinates[0]
-
-    max_latitude = -90
-    max_longitude = -180
-    min_latitude = 90
-    min_longitude = 180
-
-    for c in coord:
-        if c[0] > max_longitude:
-            max_longitude = c[0]
-            
-        if c[0] < min_longitude:
-            min_longitude = c[0]
-
-        if c[1] > max_latitude:
-            max_latitude = c[1]
-
-        if c[1] < min_latitude:
-            min_latitude = c[1]
-
-
-    # plt.imshow(precip[ymin:ymax, xmin:xmax], vmin=-1, vmax=2, extent=extent)
-    plt.imshow( precip, vmin=0, vmax=2, extent=[-180,180,-90,90] )
-    island_boundary.plot(ax=plt.gca(), edgecolor='blue', facecolor='none') #plot shapefile
-
-    plt.ylim((-3.113)+2, (3.353)-2) #lat
-    plt.xlim((-93.680)+2,(-87.4981)-2) #long
-
-    print(min_latitude-1, max_latitude+1, min_longitude-1,max_longitude+1)
+    island_boundary.plot(ax=plt.gca(), edgecolor='white', facecolor='none') #plot shapefile
 
     # -- add a color bar
     cbar = plt.colorbar( )
     cbar.set_label('millimeters')
 
-
-def daily_precipitation(dictionary, lat, lon, volcano=''):
-
-    rainfalldfNoNull = dictionary.dropna()
-
-    # Convert date strings to decimal years
-    rainfalldfNoNull['Decimal_Year'] = rainfalldfNoNull['Date'].apply(date_to_decimal_year)
-    rainfalldfNoNull["cum"] = rainfalldfNoNull.Precipitation.cumsum()
-
-    fig, ax = plt.subplots(layout='constrained')
-
-    # if 1==1:
-    #     lower = rainfalldfNoNull['Precipitation'].quantile(0.33)
-    #     upper = rainfalldfNoNull['Precipitation'].quantile(0.66)
-
-    #     rainfalldfNoNull['color'] = np.where(rainfalldfNoNull['Precipitation'] < lower, 'yellow', 
-    #                                  np.where(rainfalldfNoNull['Precipitation'] < upper, 'green', 'blue'))
-        
-    #     plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color=rainfalldfNoNull['color'], width=0.00001 * len(rainfalldfNoNull))
-    
-    # # fig, ax = plt.subplots(layout='constrained')
-    # else:
-        # plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color='maroon', width=0.00001 * len(rainfalldfNoNull))
-
-    plt.bar(rainfalldfNoNull.Decimal_Year, rainfalldfNoNull.Precipitation, color='maroon', width=0.00001 * len(rainfalldfNoNull))
-    
-    plt.ylabel("Precipitation [mm/day]")
-    rainfalldfNoNull.plot('Decimal_Year', 'cum', secondary_y=True, ax=ax)
-
-    if volcano == '':
-        plt.title(f'Latitude: {lat}, Longitude: {lon}')
-    else:
-        plt.title(f'{volcano} - Latitude: {lat}, Longitude: {lon}')
-
-    ax.set_xlabel("Yr")
-    ax.right_ax.set_ylabel("Cumulative Precipitation [mm]")
-    ax.get_legend().remove()
-
-    plt.xticks(rotation=90)
-
-    return plt
+    plt.show()
+    print('DONE')
 
 
 if workDir in os.environ:
@@ -600,47 +640,62 @@ if workDir in os.environ:
 else:
     work_dir = os.getenv('HOME') + '/gpm_data'
 
+###################### TEST ##########################
+# lo, la = adapt_coordinates([(-93.680)+1,(-87.4981)-1], [(-3.113)+1, (3.353)-1])
+lo, la = adapt_coordinates([92.05, 92.05], [0.05, 0.05])
+date_list = generate_date_list('2000-06-01', '2000-06-30')
+prova = extract_precipitation(lo, la, date_list, work_dir)
+
+prova = monthly_precipitation(prova)
+
+bar_plot(prova, la, lo)
+
+
+sys.exit(1)
+
+#################### END TEST ########################
+
 if __name__ == "__main__":
     parser = create_parser()
-    args = parser.parse_args()
+    inps = parser.parse_args()
 
-    if args.download:
-        dload_site_list(work_dir, generate_date_list(args.download[0], args.download[1]))
+    if inps.download:
+        dload_site_list(work_dir, generate_date_list(inps.download[0], inps.download[1]))
         crontab_volcano_json(work_dir + '/' + jsonVolcano)  # TODO modify path
 
     else:
-        if args.plot_daily:
-            lo, la = adapt_coordinates(args.plot_daily[1], args.plot_daily[0])
-            start_date = args.plot_daily[2]
-            end_date = args.plot_daily[3]
+        if inps.plot_daily:
+            lo, la = adapt_coordinates(inps.plot_daily[1], inps.plot_daily[0])
+            start_date = inps.plot_daily[2]
+            end_date = inps.plot_daily[3]
 
-        elif args.plot_weekly:
-            lo , la = adapt_coordinates(args.plot_weekly[1], args.plot_weekly[0])
-            start_date = args.plot_weekly[2]
-            end_date = args.plot_weekly[3]
+        elif inps.plot_weekly:
+            lo , la = adapt_coordinates(inps.plot_weekly[1], inps.plot_weekly[0])
+            start_date = inps.plot_weekly[2]
+            end_date = inps.plot_weekly[3]
 
-        elif args.plot_monthly:
-            lo, la = adapt_coordinates(args.plot_monthly[1], args.plot_monthly[0])
-            start_date = args.plot_monthly[2]
-            end_date = args.plot_monthly[3]
+        elif inps.plot_monthly:
+            lo, la = adapt_coordinates(inps.plot_monthly[1], inps.plot_monthly[0])
+            start_date = inps.plot_monthly[2]
+            end_date = inps.plot_monthly[3]
 
-        elif args.volcano_daily:
-            eruption_dates, date_list, lon_lat = extract_volcanoes_info(work_dir + '/' + jsonVolcano, args.volcano_daily[0])
+        elif inps.volcano_daily:
+            eruption_dates, date_list, lon_lat = extract_volcanoes_info(work_dir + '/' + jsonVolcano, inps.volcano_daily[0])
             lo,la = adapt_coordinates(lon_lat[0], lon_lat[1])
 
             dload_site_list(work_dir, date_list)
             prec = plot_precipitaion_nc4(lo, la, date_list, work_dir)
-            plt = daily_precipitation(prec, la, lo, volcano=args.volcano_daily[0])
+            plt = daily_precipitation(prec, la, lo, volcano=inps.volcano_daily[0])
             plot_eruptions(eruption_dates)
             plt.show()
             sys.exit(0)
 
-        elif args.list:
+        elif inps.list:
             volcanoes_list(work_dir + '/' + jsonVolcano)
             sys.exit(0)
         #TODO restructure the code
-        elif args.map:
-            map_precipitation(work_dir, args.map[0])
+        elif inps.map:
+            map_precipitation(work_dir, inps.map[0])
             sys.exit(0)
 
         else:
@@ -651,14 +706,14 @@ if __name__ == "__main__":
         dload_site_list(work_dir, date_list)
         prec = plot_precipitaion_nc4(lo, la, date_list, work_dir)
 
-        if args.plot_daily:
+        if inps.plot_daily:
             plt = daily_precipitation(prec, la, lo)
             plt.show()
 
-        elif args.plot_weekly:
+        elif inps.plot_weekly:
             precipitation_values = weekly_precipitation(prec, la, lo)
 
-        elif args.plot_monthly:
+        elif inps.plot_monthly:
             precipitation_values = monthly_precipitation(prec)
 
     bar_plot(precipitation_values, la, lo)
