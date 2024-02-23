@@ -27,7 +27,7 @@ parser.add_argument('--end-date', metavar='DATE', help='End date of the search')
 parser.add_argument('--path', metavar='ORBIT', help='Relative Orbit Path')
 parser.add_argument('--download', metavar='FOLDER', nargs='?', const='', default=None, help='Specify path to download the data, if not specified, the data will be downloaded either in SCRATCHDIR or HOME directory')
 
-args = parser.parse_args()
+inps = parser.parse_args()
 # (asf.constants.PRODUCT_TYPE)
 
 sdate = None
@@ -36,20 +36,20 @@ polygon = None
 orbit = None
 path = None
 
-if args.start_date is not None:
-    sdate = datetime.datetime.strptime(args.start_date, '%Y-%m-%d').date()
+if inps.start_date is not None:
+    sdate = datetime.datetime.strptime(inps.start_date, '%Y-%m-%d').date()
 
-if args.end_date is not None:
-    edate = datetime.datetime.strptime(args.end_date, '%Y-%m-%d').date()
+if inps.end_date is not None:
+    edate = datetime.datetime.strptime(inps.end_date, '%Y-%m-%d').date()
 
-if args.polygon is not None:
-    polygon = args.polygon
+if inps.polygon is not None:
+    polygon = inps.polygon
 
-if args.path is not None:
-    orbit = args.path
+if inps.path is not None:
+    orbit = inps.path
 
-if args.download is not None:
-    path = args.download
+if inps.download is not None:
+    path = inps.download
 
 results = asf.search(
     platform= asf.PLATFORM.SENTINEL1,
