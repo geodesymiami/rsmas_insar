@@ -94,8 +94,9 @@ def create_parser_new():
         epilog=EXAMPLE)
     
     parser.add_argument('--download', 
-                        nargs='+', 
-                        metavar=('STARTDATE', 'ENDDATE'), 
+                        nargs='*', 
+                        metavar=('STARTDATE', 'ENDDATE'),
+                        default=None,
                         help='Download data')
     parser.add_argument('--volcano', 
                         nargs=1, 
@@ -163,17 +164,20 @@ def create_parser_new():
 
     inps.end_date = datetime.strptime(inps.end_date[0], '%Y%m%d').date() if inps.end_date else datetime.today().date() - relativedelta(days=1)
 
-    if inps.download:
-        if len(inps.download) == 1:
-            inps.download = inps.download[0], (datetime.today().date() - relativedelta(days=1))
+    if inps.download is None:
+        pass
 
-        elif len(inps.download) == 2:
-            inps.download = [datetime.strptime(inps.download[0], '%Y%m%d').date(), datetime.strptime(inps.download[1], '%Y%m%d').date()]
+    elif len(inps.download) == 0:
+        inps.download = datetime.strptime('20000601', '%Y%m%d').date(), (datetime.today().date() - relativedelta(days=1))
 
-        else:
-            inps.download[0] = datetime.strptime('20000601', '%Y%m%d').date()
-            
-            inps.download[1] = (datetime.today().date() - relativedelta(days=1))
+    elif len(inps.download) == 1:
+        inps.download = inps.download[0], (datetime.today().date() - relativedelta(days=1))
+
+    elif len(inps.download) == 2:
+        inps.download = [datetime.strptime(inps.download[0], '%Y%m%d').date(), datetime.strptime(inps.download[1], '%Y%m%d').date()]
+
+    else:
+        parser.error("--download requires 0, 1 or 2 arguments")
 
     if not inps.polygon:
         
@@ -245,6 +249,7 @@ def prompt_subplots(inps):
         inps.latitude, inps.longitude = adapt_coordinates(inps.latitude, inps.longitude)
 
     if inps.download:
+        date_list = generate_date_list(inps.download[0], inps.download[1])
         dload_site_list(inps.dir, date_list)
         prompt_plots.append('download')
     
