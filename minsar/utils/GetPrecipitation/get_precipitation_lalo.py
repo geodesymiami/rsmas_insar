@@ -250,7 +250,8 @@ def prompt_subplots(inps):
 
     if inps.download:
         date_list = generate_date_list(inps.download[0], inps.download[1])
-        dload_site_list(inps.dir, date_list)
+        dload_site_list(inps.dir + '/gpm_data', date_list)
+        crontab_volcano_json(inps.dir + '/' + jsonVolcano)
         prompt_plots.append('download')
     
     if inps.plot_daily:
@@ -812,7 +813,7 @@ def plot_precipitaion_nc4(longitude, latitude, date_list, folder):
 
 def generate_date_list(start, end=None):
         if isinstance(start, str):
-            sdate = datetime.strptime(start,'%Y-%m-%d').date()
+            sdate = datetime.strptime(start,'%Y%m%d').date()
 
         elif isinstance(start, date):
             try:
@@ -822,7 +823,7 @@ def generate_date_list(start, end=None):
                 sdate = start
 
         if isinstance(end, str):
-            edate = datetime.strptime(end,'%Y-%m-%d').date()
+            edate = datetime.strptime(end,'%Y%m%d').date()
 
         elif isinstance(end, date):
             try:
