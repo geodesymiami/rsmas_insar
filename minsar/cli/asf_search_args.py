@@ -31,6 +31,7 @@ parser.add_argument('--end-date', metavar='DATE', help='End date of the search')
 parser.add_argument('--path', metavar='ORBIT', help='Relative Orbit Path')
 parser.add_argument('--download', metavar='FOLDER', nargs='?', const='', default=None, help='Specify path to download the data, if not specified, the data will be downloaded either in SCRATCHDIR or HOME directory')
 parser.add_argument('--product', metavar='FILE', help='Choose the product type to download')
+parser.add_argument('--parallel', nargs=1, help='Download the data in parallel, specify the number of processes to use')
 
 inps = parser.parse_args()
 # (asf.constants.PRODUCT_TYPE)
@@ -51,20 +52,25 @@ if 'BURST' in inps.product:
 if 'CSLC' in inps.product or inps.product is None: 
     product.append(asf.PRODUCT_TYPE.CSLC)
 
-if inps.start_date is not None:
+if inps.start_date:
     sdate = datetime.datetime.strptime(inps.start_date, '%Y%m%d').date()
 
-if inps.end_date is not None:
+if inps.end_date:
     edate = datetime.datetime.strptime(inps.end_date, '%Y%m%d').date()
 
-if inps.polygon is not None:
+if inps.polygon :
     polygon = inps.polygon
 
-if inps.path is not None:
+if inps.path:
     orbit = inps.path
 
-if inps.download is not None:
+if inps.download:
     path = inps.download
+
+if inps.parallel:
+    par = int(inps.parallel[0])
+else:
+    par = 1
 
 results = asf.search(
     platform= asf.PLATFORM.SENTINEL1,
@@ -95,5 +101,6 @@ for r in results:
 if path != '' and path is not None:
     results.download(
          path = path,
-         session = asf.ASFSession()
+         session = asf.ASFSession(),
+         processes = par
     )
