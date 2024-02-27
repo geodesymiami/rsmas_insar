@@ -810,13 +810,21 @@ def generate_date_list(start, end=None):
             sdate = datetime.strptime(start,'%Y-%m-%d').date()
 
         elif isinstance(start, date):
-            sdate = start.date()
+            try:
+                sdate = start.date()
+
+            except:
+                sdate = start
 
         if isinstance(end, str):
             edate = datetime.strptime(end,'%Y-%m-%d').date()
 
         elif isinstance(end, date):
-            edate = end.date()
+            try:
+                edate = end.date()
+
+            except:
+                edate = end
 
         elif end is None:
             sdate = datetime(sdate.year, sdate.month, 1).date()
