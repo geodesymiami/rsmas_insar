@@ -57,6 +57,7 @@ json_download_url = 'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/wms?s
 #TODO add requirements.txt
 #TODO possible to go back to version 7 of Final Run 
 
+#TODO to remove
 def create_parser():
     """ Creates command line argument parser object. """
 
@@ -249,10 +250,11 @@ def prompt_subplots(inps):
         inps.latitude, inps.longitude = adapt_coordinates(inps.latitude, inps.longitude)
 
     if inps.download:
-        date_list = generate_date_list(inps.download[0], inps.download[1])
-        dload_site_list(inps.dir + '/gpm_data', date_list)
-        crontab_volcano_json(inps.dir + '/' + jsonVolcano)
-        prompt_plots.append('download')
+        dload_site_list_parallel(inps.dir + '/gpm_data', generate_date_list(inps.download[0], inps.download[1]))
+        # date_list = generate_date_list(inps.download[0], inps.download[1])
+        # dload_site_list(inps.dir + '/gpm_data', date_list)
+        # crontab_volcano_json(inps.dir + '/' + jsonVolcano)
+        # prompt_plots.append('download')
     
     if inps.plot_daily:
         inps.plot_daily[0], inps.plot_daily[1] = adapt_coordinates(inps.plot_daily[0], inps.plot_daily[1])
@@ -474,9 +476,6 @@ def date_to_decimal_year(date_str):
     decimal_year = round(decimal_year, 4)
     return decimal_year
 
-
-
-import calendar
 
 def days_in_month(date):
     """
@@ -754,7 +753,60 @@ def adapt_coordinates(latitude, longitude):
     return latitude, longitude
 
 
-# TODO to change to parellel download and create a list of urls
+def generealte_urls_list(date_list):
+    """
+    Generate a list of URLs for downloading precipitation data.
+
+    Parameters:
+    date_list (list): A list of dates for which the precipitation data will be downloaded.
+
+    Returns:
+    list: A list of URLs for downloading precipitation data.
+
+    """
+    urls = []
+
+    for date in date_list:
+        url = generate_url_download(date)
+        urls.append(url)
+
+    return urls
+
+
+def dload_site_list_parallel(folder, date_list):
+    """
+    Downloads files from a list of URLs in parallel using multiple threads.
+
+    Args:
+        folder (str): The folder path where the downloaded files will be saved.
+        date_list (list): A list of dates or URLs to download.
+
+    Returns:
+        None
+    """
+    import concurrent.futures
+    import subprocess
+    import threading
+
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
+    urls = generealte_urls_list(date_list)
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        for url in urls:
+            filename = os.path.basename(url)
+            file_path = os.path.join(folder, filename)
+
+            if not os.path.exists(file_path):
+                print(f"Starting download of {url} on {threading.current_thread().name}")
+                executor.submit(subprocess.run, ['wget', url, '-P', folder])
+                print(f"Finished download of {url} on {threading.current_thread().name}")
+            else:
+                print(f"File {filename} already exists, skipping download")
+
+
+# TODO to remove
 def dload_site_list(folder, date_list):
     """
     Download precipitation data for a list of dates and save them in the specified folder.
@@ -839,8 +891,9 @@ def create_map(latitude, longitude, date_list, folder):
             file = folder + '/' + f
 
             #Extract date from file name
-            d = re.search('\d{4}[-]\d{2}[-]\d{2}', file)
-            date = datetime.strptime(d.group(0), "%Y-%m-%d").date()
+            # d = re.search('\d{4}[-]\d{2}[-]\d{2}', file)
+            d = re.search('\d{8}', file)
+            date = datetime.strptime(d.group(0), "%Y%m%d").date()
 
             if date in date_list:
                 #Open the file
