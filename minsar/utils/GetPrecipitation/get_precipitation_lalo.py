@@ -311,7 +311,7 @@ def prompt_subplots(inps):
         prova = monthly_precipitation(prova)
         print(prova)
         
-        map_precipitation(prova, lo, la, date_list, inps.vlim)
+        map_precipitation(prova, lo, la, date_list, './ne_10m_land',inps.vlim)
 
     # TODO dynamic plot
     # if prompt_plots != []:
@@ -323,14 +323,23 @@ def prompt_subplots(inps):
 
 
 
-'''
-Parse for polygon
-'''
 def parse_polygon(polygon):
+    """
+    Parses a polygon string retreive from ASF vertex tool and extracts the latitude and longitude coordinates.
+
+    Args:
+        polygon (str): The polygon string in the format "POLYGON((lon1 lat1, lon2 lat2, ...))".
+
+    Returns:
+        tuple: A tuple containing the latitude and longitude coordinates as lists.
+               The latitude list contains the minimum and maximum latitude values.
+               The longitude list contains the minimum and maximum longitude values.
+    """
     latitude = []
     longitude = []
     pol = polygon.replace("POLYGON((", "").replace("))", "")
 
+    # Split the string into a list of coordinates
     for word in pol.split(','):
         if (float(word.split(' ')[1])) not in latitude:
             latitude.append(float(word.split(' ')[1]))
@@ -343,11 +352,20 @@ def parse_polygon(polygon):
     return latitude, longitude
 
 
-'''
-Parse for bar plotting
-'''
 def parse_plot(plot, latitudes, longitudes, start_date=None, end_date=None):
+    """
+    Parses the plot parameters for precipitation data.
 
+    Args:
+        plot (list): The plot input parameters.
+        latitudes (list): The latitude values.
+        longitudes (list): The longitude values.
+        start_date (datetime, optional): The start date. Defaults to None.
+        end_date (datetime, optional): The end date. Defaults to None.
+
+    Returns:
+        list: The parsed plot parameters.
+    """
     if len(plot) == 1:
         print("--plot-[daily, weekly, monthly, yearly] requires at least LATITUDE LONGITUDE arguments \n"
                      " --plot-daily LATITUDE LONGITUDE arguments \n"
@@ -388,10 +406,21 @@ def parse_plot(plot, latitudes, longitudes, start_date=None, end_date=None):
     return plot
 
 
-'''
-Convert the coordinates to list of floats
-'''
+
 def parse_coordinates(coordinates):
+    """
+    Parse the given coordinates string and convert it into a list of floats.
+
+    Args:
+        coordinates (str): The coordinates string to be parsed.
+
+    Returns:
+        list: A list of floats representing the parsed coordinates.
+
+    Raises:
+        ValueError: If the coordinates string is invalid.
+
+    """
     coordinates = coordinates.replace("'", '').replace('"', '')
 
     try:
@@ -419,13 +448,23 @@ def parse_coordinates(coordinates):
     return coordinates
 
 
-'''
-Convert date string to decimal year
-'''
+
 def date_to_decimal_year(date_str):
+    """
+    Converts a date string or date object to a decimal year.
+
+    Parameters:
+    date_str (str or datetime.date): The date string in the format 'YYYY-MM-DD' or a datetime.date object.
+
+    Returns:
+    float: The decimal year representation of the input date.
+
+    Example:
+    >>> date_to_decimal_year('2022-01-01')
+    2022.0
+    """
     if type(date_str) == str:
         date_obj = datetime.strptime(date_str, '%Y-%m-%d')
-
     else:
         date_obj = date_str
 
@@ -436,10 +475,23 @@ def date_to_decimal_year(date_str):
     return decimal_year
 
 
-'''
-Count days in a month
-'''
+
+import calendar
+
 def days_in_month(date):
+    """
+    Get the number of days in a given month.
+
+    Args:
+        date (str or datetime.date): The date in the format "YYYY-MM-DD" or a datetime.date object.
+
+    Returns:
+        int: The number of days in the month.
+
+    Raises:
+        ValueError: If the date is not in the correct format.
+
+    """
     try:
         year, month, day = map(int, date.split("-"))
     except:
@@ -450,7 +502,19 @@ def days_in_month(date):
     return num_days
 
 
-def generate_coordinate_array(longitude = [- 179.95], latitude = [- 89.95]):
+def generate_coordinate_array(longitude=[-179.95], latitude=[-89.95]):
+    """
+    Generate an array of coordinates based on the given longitude and latitude ranges.
+
+    Args:
+        longitude (list, optional): A list containing the minimum and maximum longitude values. Defaults to [-179.95].
+        latitude (list, optional): A list containing the minimum and maximum latitude values. Defaults to [-89.95].
+
+    Returns:
+        tuple: A tuple containing the generated longitude and latitude arrays.
+
+    The default list generated is used to reference the indexes of the precipitation array in the netCDF4 file.
+    """
     try:
         lon = np.round(np.arange(longitude[0], longitude[1], 0.1), 2)
         lat = np.round(np.arange(latitude[0], latitude[1], 0.1), 2)
@@ -463,6 +527,15 @@ def generate_coordinate_array(longitude = [- 179.95], latitude = [- 89.95]):
 
 
 def volcanoes_list(jsonfile):
+    """
+    Retrieves a list of volcano names from a JSON file.
+
+    Args:
+        jsonfile (str): The path to the JSON file containing volcano data.
+
+    Returns:
+        None
+    """
     ############################## Alternative API but only with significant eruptions ##############################
     
     # r = requests.get('https://www.ngdc.noaa.gov/hazel/hazard-service/api/v1/volcanoes?nameInclude=Cerro')
@@ -496,6 +569,18 @@ def volcanoes_list(jsonfile):
 
 
 def crontab_volcano_json(json_path):
+    """
+    Downloads a JSON file containing volcano eruption data from a specified URL and saves it to the given file path.
+
+    Args:
+        json_path (str): The file path where the JSON file will be saved.
+
+    Raises:
+        requests.exceptions.HTTPError: If an HTTP error occurs while downloading the JSON file.
+
+    Returns:
+        None
+    """
     # TODO add crontab to update json file every ???
     json_download_url = 'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/wms?service=WFS&version=1.0.0&request=GetFeature&typeName=GVP-VOTW:E3WebApp_Eruptions1960&outputFormat=application%2Fjson'
     
@@ -523,6 +608,16 @@ def crontab_volcano_json(json_path):
 
 
 def extract_volcanoes_info(jsonfile, volcanoName):
+    """
+    Extracts information about a specific volcano from a JSON file.
+
+    Args:
+        jsonfile (str): The path to the JSON file containing volcano data.
+        volcanoName (str): The name of the volcano to extract information for.
+
+    Returns:
+        tuple: A tuple containing the start dates of eruptions, a date list, and the coordinates of the volcano.
+    """
     if not os.path.exists(jsonfile):
         crontab_volcano_json(jsonfile)
 
@@ -567,6 +662,15 @@ def extract_volcanoes_info(jsonfile, volcanoName):
 
 
 def plot_eruptions(start_date):
+    """
+    Plot vertical lines on a graph to indicate eruption dates.
+
+    Parameters:
+    start_date (list): A list of eruption start dates.
+
+    Returns:
+    None
+    """
     for date in start_date:
         plt.axvline(x = date_to_decimal_year(str(date)), color='red', linestyle='--', label='Eruption Date')
 
@@ -605,6 +709,20 @@ def generate_url_download(date):
 
 
 def adapt_coordinates(latitude, longitude):
+    """
+    Adjusts the latitude and longitude coordinates to ensure they fall within the valid range (GPM dataset resolution).
+
+    Parameters:
+    latitude (float or str or list): The latitude coordinate(s) to be adjusted.
+    longitude (float or str or list): The longitude coordinate(s) to be adjusted.
+
+    Returns:
+    tuple: A tuple containing the adjusted latitude and longitude coordinates.
+
+    Raises:
+    ValueError: If any of the latitude or longitude values are not within the valid range.
+
+    """
     if isinstance(longitude, float) or isinstance(longitude, str):
         longitude = [longitude, longitude]
 
@@ -638,6 +756,19 @@ def adapt_coordinates(latitude, longitude):
 
 # TODO to change to parellel download and create a list of urls
 def dload_site_list(folder, date_list):
+    """
+    Download precipitation data for a list of dates and save them in the specified folder.
+
+    Args:
+        folder (str): The folder path where the downloaded files will be saved.
+        date_list (list): A list of dates for which the precipitation data will be downloaded.
+
+    Raises:
+        requests.exceptions.HTTPError: If an HTTP error occurs during the download.
+
+    Returns:
+        None
+    """
     if not os.path.exists(folder):
         os.makedirs(folder)
 
@@ -684,45 +815,57 @@ def dload_site_list(folder, date_list):
 
 
 def create_map(latitude, longitude, date_list, folder):
-        finaldf = {}
-        df = pd.DataFrame()
-        dictionary = {}
+    """
+    Creates a map of precipitation data for a given latitude, longitude, and date range.
 
-        lon, lat = generate_coordinate_array()
-        # For each file in the data folder that has nc4 extension
-        for f in os.listdir(folder):
+    Parameters:
+    latitude (list): A list containing the minimum and maximum latitude values.
+    longitude (list): A list containing the minimum and maximum longitude values.
+    date_list (list): A list of dates to include in the map.
+    folder (str): The path to the folder containing the data files.
 
-            if f.endswith('.nc4'):
-                file = folder + '/' + f
+    Returns:
+    pandas.DataFrame: A DataFrame containing the precipitation data for the specified location and dates to be plotted.
+    """
+    finaldf = {}
+    df = pd.DataFrame()
+    dictionary = {}
 
-                #Extract date from file name
-                d = re.search('\d{4}[-]\d{2}[-]\d{2}', file)
-                date = datetime.strptime(d.group(0), "%Y-%m-%d").date()
+    lon, lat = generate_coordinate_array()
+    # For each file in the data folder that has nc4 extension
+    for f in os.listdir(folder):
 
-                if date in date_list:
-                    #Open the file
-                    ds = nc.Dataset(file)
+        if f.endswith('.nc4'):
+            file = folder + '/' + f
 
-                    dictionary[str(date)] = {}
-                    data = ds['precipitationCal'] if 'precipitationCal' in ds.variables else ds['precipitation']
+            #Extract date from file name
+            d = re.search('\d{4}[-]\d{2}[-]\d{2}', file)
+            date = datetime.strptime(d.group(0), "%Y-%m-%d").date()
 
-                    subset = data[:, np.where(lon == longitude[0])[0][0]:np.where(lon == longitude[1])[0][0]+1, np.where(lat == latitude[0])[0][0]:np.where(lat == latitude[1])[0][0]+1]
-                    dictionary[str(date)] = subset.astype(float)
+            if date in date_list:
+                #Open the file
+                ds = nc.Dataset(file)
 
-                    df1 = pd.DataFrame(dictionary.items(), columns=['Date', 'Precipitation'])
-                    finaldf = pd.concat([df,df1], ignore_index=True, sort=False)
+                dictionary[str(date)] = {}
+                data = ds['precipitationCal'] if 'precipitationCal' in ds.variables else ds['precipitation']
 
-                    df.sort_index()
-                    df.sort_index(ascending=False)
+                subset = data[:, np.where(lon == longitude[0])[0][0]:np.where(lon == longitude[1])[0][0]+1, np.where(lat == latitude[0])[0][0]:np.where(lat == latitude[1])[0][0]+1]
+                dictionary[str(date)] = subset.astype(float)
+
+                df1 = pd.DataFrame(dictionary.items(), columns=['Date', 'Precipitation'])
+                finaldf = pd.concat([df,df1], ignore_index=True, sort=False)
+
+                df.sort_index()
+                df.sort_index(ascending=False)
 
 
-                    ds.close()
+                ds.close()
 
-                else: continue
+            else: continue
 
-        finaldf = finaldf.sort_values(by='Date', ascending=True)
+    finaldf = finaldf.sort_values(by='Date', ascending=True)
 
-        return finaldf
+    return finaldf
 
 
 #TODO to remove, for now create_map works fine
@@ -812,37 +955,49 @@ def plot_precipitaion_nc4(longitude, latitude, date_list, folder):
 
 
 def generate_date_list(start, end=None):
-        if isinstance(start, str):
-            sdate = datetime.strptime(start,'%Y%m%d').date()
+    """
+    Generate a list of dates between the start and end dates.
 
-        elif isinstance(start, date):
-            try:
-                sdate = start.date()
+    Args:
+        start (str or date): The start date in the format 'YYYYMMDD' or a date object.
+        end (str or date, optional): The end date in the format 'YYYYMMDD' or a date object. 
+            If not provided, the end date will be set to the last day of the month of the start date.
 
-            except:
-                sdate = start
+    Returns:
+        list: A list of dates between the start and end dates.
 
-        if isinstance(end, str):
-            edate = datetime.strptime(end,'%Y%m%d').date()
+    """
+    if isinstance(start, str):
+        sdate = datetime.strptime(start,'%Y%m%d').date()
 
-        elif isinstance(end, date):
-            try:
-                edate = end.date()
+    elif isinstance(start, date):
+        try:
+            sdate = start.date()
 
-            except:
-                edate = end
+        except:
+            sdate = start
 
-        elif end is None:
-            sdate = datetime(sdate.year, sdate.month, 1).date()
-            edate = datetime(sdate.year, sdate.month, days_in_month(sdate)).date()
+    if isinstance(end, str):
+        edate = datetime.strptime(end,'%Y%m%d').date()
 
-        if edate >= datetime.today().date():
-            edate = datetime.today().date() - relativedelta(days=1)
+    elif isinstance(end, date):
+        try:
+            edate = end.date()
 
-        #Create a date range with the input dates, from start_date to end_date
-        date_list = pd.date_range(start = sdate,end = edate).date
+        except:
+            edate = end
 
-        return date_list
+    elif end is None:
+        sdate = datetime(sdate.year, sdate.month, 1).date()
+        edate = datetime(sdate.year, sdate.month, days_in_month(sdate)).date()
+
+    if edate >= datetime.today().date():
+        edate = datetime.today().date() - relativedelta(days=1)
+
+    # Create a date range with the input dates, from start_date to end_date
+    date_list = pd.date_range(start=sdate, end=edate).date
+
+    return date_list
 
 
 def bar_plot(precipitation, lat, lon, volcano=''):
@@ -937,7 +1092,7 @@ def yearly_precipitation(dictionary):
     return yearly_precipitation
 
 
-def map_precipitation(precipitation_series, lo, la, date, vlim=None):
+def map_precipitation(precipitation_series, lo, la, date, work_dir, vlim=None):
     '''
     Example of global precipitations given by Nasa at: https://gpm.nasa.gov/data/tutorials
     '''  
@@ -960,10 +1115,8 @@ def map_precipitation(precipitation_series, lo, la, date, vlim=None):
     plt.imshow(precip, vmin=vmin, vmax=vmax, extent=[lo[0],lo[1],la[0],la[1]])
     plt.ylim(la[0], la[1])
     plt.xlim(lo[0], lo[1])
-    
-    mapEarth = '/Users/giacomo/Desktop/ne_10m_land/ne_10m_land.shp'
 
-    island_boundary = gpd.read_file(mapEarth)
+    island_boundary = gpd.read_file(work_dir)
     geometry = island_boundary['geometry']
 
     # Extract coordinates
