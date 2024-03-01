@@ -6,8 +6,6 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib import dates as dt
 import os
-from os import path
-import h5py
 import re
 from datetime import datetime, date
 import requests
@@ -17,7 +15,10 @@ import json
 import netCDF4 as nc
 from dateutil.relativedelta import relativedelta
 import geopandas as gpd
-from matplotlib.path import Path
+import concurrent.futures
+import subprocess
+import threading
+
 
 
 EXAMPLE = """
@@ -39,8 +40,8 @@ Example:
   get_precipitation_lalo.py --download 20190101 20210929 --dir '/home/user/Downloads'
   get_precipitation_lalo.py --volcano-daily 'Cerro Azul'
   get_precipitation_lalo.py --list
-  get_precipitation_lalo.py --colormap 20000601 --latitude 19.5 --longitude -156.5
-  get_precipitation_lalo.py --colormap 20000601 --latitude 19.5 --longitude -156.5 --vlim 0 10
+  get_precipitation_lalo.py --colormap 20000601 --latitude=-2.11:2.35 --longitude=-92.68:-88.49
+  get_precipitation_lalo.py --colormap 20000601 --latitude 19.5:20.05 --longitude 156.5:158.05 --vlim 0 10
   get_precipitation_lalo.py --colormap 20000601 --polygon 'POLYGON((113.4496 -8.0893,113.7452 -8.0893,113.7452 -7.817,113.4496 -7.817,113.4496 -8.0893))'
 
 """
@@ -53,8 +54,6 @@ path_data = '/Users/giacomo/Library/CloudStorage/OneDrive-UniversityofMiami/GetP
 jsonVolcano = 'volcanoes.json'
 json_download_url = 'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/wms?service=WFS&version=1.0.0&request=GetFeature&typeName=GVP-VOTW:E3WebApp_Eruptions1960&outputFormat=application%2Fjson'
 
-#TODO Adapt the script for hdf5 files too as it has been done for nc4
-#TODO add requirements.txt
 #TODO possible to go back to version 7 of Final Run 
 
 #TODO to remove
@@ -251,15 +250,10 @@ def prompt_subplots(inps):
 
     if inps.download:
         dload_site_list_parallel(inps.dir + '/gpm_data', generate_date_list(inps.download[0], inps.download[1]))
-        # date_list = generate_date_list(inps.download[0], inps.download[1])
-        # dload_site_list(inps.dir + '/gpm_data', date_list)
-        # crontab_volcano_json(inps.dir + '/' + jsonVolcano)
-        # prompt_plots.append('download')
     
     if inps.plot_daily:
         inps.plot_daily[0], inps.plot_daily[1] = adapt_coordinates(inps.plot_daily[0], inps.plot_daily[1])
         date_list = generate_date_list(inps.plot_daily[2], inps.plot_daily[3])
-        # prec = extract_precipitation(inps.plot_daily[0], inps.plot_daily[1], date_list, inps.dir + '/gpm_data')
         prec = create_map(inps.plot_daily[0], inps.plot_daily[1], date_list, inps.dir + '/gpm_data')
         bar_plot(prec, inps.plot_daily[0], inps.plot_daily[1])
         prompt_plots.append('plot_daily')
@@ -268,7 +262,7 @@ def prompt_subplots(inps):
         inps.plot_weekly[0], inps.plot_weekly[1] = adapt_coordinates(inps.plot_weekly[0], inps.plot_weekly[1])
         date_list = generate_date_list(inps.plot_weekly[2], inps.plot_weekly[3])
         prec = create_map(inps.plot_weekly[0], inps.plot_weekly[1], date_list, inps.dir + '/gpm_data')
-        prec = weekly_precipitation(prec)
+        prec = weekly_monthly_yearly_precipitation(prec, "W")
         bar_plot(prec, inps.plot_weekly[0], inps.plot_weekly[1])
         prompt_plots.append('plot_weekly')
 
@@ -276,7 +270,7 @@ def prompt_subplots(inps):
         inps.plot_monthly[0], inps.plot_monthly[1] = adapt_coordinates(inps.plot_monthly[0], inps.plot_monthly[1])
         date_list = generate_date_list(inps.plot_monthly[2], inps.plot_monthly[3])
         prec = create_map(inps.plot_monthly[0], inps.plot_monthly[1], date_list, inps.dir + '/gpm_data')
-        prec = monthly_precipitation(prec)
+        prec = weekly_monthly_yearly_precipitation(prec, "M")
         bar_plot(prec, inps.plot_monthly[0], inps.plot_monthly[1])
         prompt_plots.append('plot_monthly')
 
@@ -284,7 +278,7 @@ def prompt_subplots(inps):
         inps.plot_yearly[2], inps.plot_yearly[3] = adapt_coordinates(inps.plot_yearly[2], inps.plot_yearly[3])
         date_list = generate_date_list(inps.plot_yearly[0], inps.plot_yearly[1])
         prec = create_map(inps.plot_yearly[2], inps.plot_yearly[3], date_list, inps.dir + '/gpm_data')
-        prec = yearly_precipitation(prec)
+        prec = yearly_precipitation(prec) #weekly_monthly_yearly_precipitation(prec, "Y")
         bar_plot(prec, inps.plot_yearly[2], inps.plot_yearly[3])
         prompt_plots.append('plot_yearly')
 
@@ -784,9 +778,6 @@ def dload_site_list_parallel(folder, date_list):
     Returns:
         None
     """
-    import concurrent.futures
-    import subprocess
-    import threading
 
     if not os.path.exists(folder):
         os.makedirs(folder)
@@ -806,67 +797,29 @@ def dload_site_list_parallel(folder, date_list):
                 print(f"File {filename} already exists, skipping download")
 
 
-# TODO to remove
-def dload_site_list(folder, date_list):
-    """
-    Download precipitation data for a list of dates and save them in the specified folder.
+###################### NEW PARALLEL MAP FUNCTION ######################
+                
+def process_file(file, date_list, lon, lat, longitude, latitude):
+    # Extract date from file name
+    d = re.search('\d{8}', file)
+    date = datetime.strptime(d.group(0), "%Y%m%d").date()
 
-    Args:
-        folder (str): The folder path where the downloaded files will be saved.
-        date_list (list): A list of dates for which the precipitation data will be downloaded.
+    if date not in date_list:
+        return None
 
-    Raises:
-        requests.exceptions.HTTPError: If an HTTP error occurs during the download.
+    # Open the file
+    ds = nc.Dataset(file)
 
-    Returns:
-        None
-    """
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+    data = ds['precipitationCal'] if 'precipitationCal' in ds.variables else ds['precipitation']
 
-    for date in date_list:
-        url = generate_url_download(date)
-        filename = folder + '/' + str(date) + '.nc4'
-        cnt = 0
+    subset = data[:, np.where(lon == longitude[0])[0][0]:np.where(lon == longitude[1])[0][0]+1, np.where(lat == latitude[0])[0][0]:np.where(lat == latitude[1])[0][0]+1]
+    subset = subset.astype(float)
 
-        # Try download 4 times before sending an error
-        while cnt < 4:
-            if not os.path.exists(filename):
-                result = requests.get(url.strip())
+    ds.close()
 
-                try:
-                    result.raise_for_status()
-                    f = open(filename, 'wb')
-                    f.write(result.content)
-                    f.close()
+    return (str(date), subset)
 
-                    if os.path.exists(filename):
-                        print('Contents of URL written to ' + filename)
-                        break
-
-                    # Retry
-                    else:
-                        cnt += 1
-
-                except requests.exceptions.HTTPError as err:
-                    if err.response.status_code == 404:
-                        print(f'Error: {err.response.status_code} Url Not Found')
-                        cnt = 4
-                    else:
-                        print('An HTTP error occurred: ' + str(err.response.status_code))
-                        cnt += 1
-
-            else:
-                print(f'File: {filename} already exists')
-                break
-
-        # Number of download retry exceeded
-        if cnt >= 4:
-            print(f'Failed to download file for date: {date} after 4 attempts. Exiting...')
-            sys.exit(1)
-
-
-def create_map(latitude, longitude, date_list, folder):
+def create_map(latitude, longitude, date_list, folder): #parallel
     """
     Creates a map of precipitation data for a given latitude, longitude, and date range.
 
@@ -879,46 +832,88 @@ def create_map(latitude, longitude, date_list, folder):
     Returns:
     pandas.DataFrame: A DataFrame containing the precipitation data for the specified location and dates to be plotted.
     """
-    finaldf = {}
-    df = pd.DataFrame()
+    finaldf = pd.DataFrame()
     dictionary = {}
 
     lon, lat = generate_coordinate_array()
-    # For each file in the data folder that has nc4 extension
-    for f in os.listdir(folder):
 
-        if f.endswith('.nc4'):
-            file = folder + '/' + f
+    # Get a list of all .nc4 files in the data folder
+    files = [folder + '/' + f for f in os.listdir(folder) if f.endswith('.nc4')]
 
-            #Extract date from file name
-            # d = re.search('\d{4}[-]\d{2}[-]\d{2}', file)
-            d = re.search('\d{8}', file)
-            date = datetime.strptime(d.group(0), "%Y%m%d").date()
+    # Create a thread pool and process the files in parallel
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        results = executor.map(process_file, files, [date_list]*len(files), [lon]*len(files), [lat]*len(files), [longitude]*len(files), [latitude]*len(files))
 
-            if date in date_list:
-                #Open the file
-                ds = nc.Dataset(file)
+    # Filter out None results and update the dictionary
+    for result in results:
+        if result is not None:
+            dictionary[result[0]] = result[1]
 
-                dictionary[str(date)] = {}
-                data = ds['precipitationCal'] if 'precipitationCal' in ds.variables else ds['precipitation']
+    df1 = pd.DataFrame(dictionary.items(), columns=['Date', 'Precipitation'])
+    finaldf = pd.concat([finaldf, df1], ignore_index=True, sort=False)
 
-                subset = data[:, np.where(lon == longitude[0])[0][0]:np.where(lon == longitude[1])[0][0]+1, np.where(lat == latitude[0])[0][0]:np.where(lat == latitude[1])[0][0]+1]
-                dictionary[str(date)] = subset.astype(float)
-
-                df1 = pd.DataFrame(dictionary.items(), columns=['Date', 'Precipitation'])
-                finaldf = pd.concat([df,df1], ignore_index=True, sort=False)
-
-                df.sort_index()
-                df.sort_index(ascending=False)
-
-
-                ds.close()
-
-            else: continue
+    finaldf.sort_index()
+    finaldf.sort_index(ascending=False)
 
     finaldf = finaldf.sort_values(by='Date', ascending=True)
 
     return finaldf
+
+###################### END NEW PARALLEL MAP FUNCTION ######################
+
+# TODO to remove, we have parallel
+# def create_map(latitude, longitude, date_list, folder):
+#     """
+#     Creates a map of precipitation data for a given latitude, longitude, and date range.
+
+#     Parameters:
+#     latitude (list): A list containing the minimum and maximum latitude values.
+#     longitude (list): A list containing the minimum and maximum longitude values.
+#     date_list (list): A list of dates to include in the map.
+#     folder (str): The path to the folder containing the data files.
+
+#     Returns:
+#     pandas.DataFrame: A DataFrame containing the precipitation data for the specified location and dates to be plotted.
+#     """
+#     finaldf = {}
+#     df = pd.DataFrame()
+#     dictionary = {}
+
+#     lon, lat = generate_coordinate_array()
+#     # For each file in the data folder that has nc4 extension
+#     for f in os.listdir(folder):
+
+#         if f.endswith('.nc4'):
+#             file = folder + '/' + f
+
+#             #Extract date from file name
+#             d = re.search('\d{8}', file)
+#             date = datetime.strptime(d.group(0), "%Y%m%d").date()
+
+#             if date in date_list:
+#                 #Open the file
+#                 ds = nc.Dataset(file)
+
+#                 dictionary[str(date)] = {}
+#                 data = ds['precipitationCal'] if 'precipitationCal' in ds.variables else ds['precipitation']
+
+#                 subset = data[:, np.where(lon == longitude[0])[0][0]:np.where(lon == longitude[1])[0][0]+1, np.where(lat == latitude[0])[0][0]:np.where(lat == latitude[1])[0][0]+1]
+#                 dictionary[str(date)] = subset.astype(float)
+
+#                 df1 = pd.DataFrame(dictionary.items(), columns=['Date', 'Precipitation'])
+#                 finaldf = pd.concat([df,df1], ignore_index=True, sort=False)
+
+#                 df.sort_index()
+#                 df.sort_index(ascending=False)
+
+
+#                 ds.close()
+
+#             else: continue
+
+#     finaldf = finaldf.sort_values(by='Date', ascending=True)
+
+#     return finaldf
 
 
 #TODO to remove, for now create_map works fine
@@ -956,55 +951,6 @@ def extract_precipitation(latitude, longitude, date_list, folder):
                 dictionary[str(file_date)] = subset.astype(float)
     print(dictionary)
     return dictionary
-
-# TODO remove this function
-def plot_precipitaion_nc4(longitude, latitude, date_list, folder):
-
-    finaldf = {}
-    df = pd.DataFrame()
-    dictionary = {}
-
-    lon, lat = generate_coordinate_array()
-
-    lon_index = np.where(lon == longitude)[0][0]
-    lat_index = np.where(lat == latitude)[0][0]
-
-    # For each file in the data folder that has nc4 extension
-    for f in os.listdir(folder):
-
-        if f.endswith('.nc4'):
-            file = folder + '/' + f
-
-            #Extract date from file name
-            d = re.search('\d{4}[-]\d{2}[-]\d{2}', file)
-            date = datetime.strptime(d.group(0), "%Y-%m-%d").date()
-
-            if date in date_list:
-                #Open the file
-                ds = nc.Dataset(file)
-
-                dictionary[str(date)] = {}
-
-                data = ds['precipitationCal'] if 'precipitationCal' in ds.variables else ds['precipitation']
-
-                data[0,lon_index,lat_index]
-
-                dictionary[str(date)] = float(data[0,lon_index,lat_index])
-
-                df1 = pd.DataFrame(dictionary.items(), columns=['Date', 'Precipitation'])
-                finaldf = pd.concat([df,df1], ignore_index=True, sort=False)
-
-                df.sort_index()
-                df.sort_index(ascending=False)
-
-
-                ds.close()
-
-            else: continue
-
-    finaldf = finaldf.sort_values(by='Date', ascending=True)
-
-    return finaldf
 
 
 def generate_date_list(start, end=None):
@@ -1092,6 +1038,34 @@ def bar_plot(precipitation, lat, lon, volcano=''):
 
     plt.xticks(rotation=90)
     plt.show()
+
+
+def weekly_monthly_yearly_precipitation(dictionary, time_period):
+    """
+    Resamples the precipitation data in the given dictionary by the specified time period.
+
+    Args:
+        dictionary (dict): A dictionary containing precipitation data.
+        time_period (str): The time period to resample the data by (e.g., 'W' for weekly, 'M' for monthly, 'Y' for yearly).
+
+    Returns:
+        pandas.DataFrame: The resampled precipitation data.
+
+    Raises:
+        KeyError: If the 'Precipitation' field is not found in the dictionary.
+    """
+    df = pd.DataFrame.from_dict(dictionary)
+    df['Date'] = pd.to_datetime(df['Date'])
+    df['Date_copy'] = df['Date']  # Create a copy of the 'Date' column
+    df.set_index('Date_copy', inplace=True)
+
+    if 'Precipitation' in df:
+        # Resample the data by month and calculate the mean
+        precipitation = df.resample(time_period).mean()
+    else:
+        raise KeyError('Error: Precipitation field not found in the dictionary')
+
+    return precipitation
 
 
 def weekly_precipitation(dictionary):
@@ -1195,7 +1169,7 @@ def map_precipitation(precipitation_series, lo, la, date, work_dir, vlim=None):
     plt.show()
     print('DONE')
 
-###################### TEST ##########################
+###################### TEST AREA ##########################
 # lo, la = adapt_coordinates([(-93.680)+1,(-87.4981)-1], [(-3.113)+1, (3.353)-1])
 # lo, la = adapt_coordinates([92.05, 92.05], [0.05, 0.05])
 # date_list = generate_date_list('2000-06-01', '2000-06-30')
@@ -1210,7 +1184,7 @@ def map_precipitation(precipitation_series, lo, la, date, work_dir, vlim=None):
 
 # sys.exit(0)
 
-#################### END TEST ########################
+#################### END TEST AREA ########################
 
 ################    NEW MAIN    #######################
 
