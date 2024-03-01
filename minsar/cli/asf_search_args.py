@@ -5,28 +5,36 @@ import datetime
 import argparse
 import os
 
-# Define the description and epilog of the script
-EXAMPLE = """example:
-  
-Date format: YYYYMMDD
-
-asf_search_args.py --polygon "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"
-asf_search_args.py --start-date 20190101 --end-date 20210929 --path 59 --download $SCRATCHDIR/asf_product --product CSLC
-asf_search_args.py --start-date 20200101 --end-date 20201231 --path 45 --download $SCRATCHDIR/asf_product --product SLC
-asf_search_args.py --start-date 20180101 --end-date 20181231 --path 30 --download $SCRATCHDIR/asf_product --product GRD
-asf_search_args.py --polygon "POLYGON ((50 20, 60 50, 40 50, 30 30, 50 20))" --download $SCRATCHDIR/asf_product --product SLC
-asf_search_args.py --start-date 20170101 --end-date 20171231 --path 25 --download $SCRATCHDIR/asf_product --product GRD
-asf_search_args.py --start-date 20160101 --end-date 20161231 --path 35 --download $SCRATCHDIR/asf_product --product SLC
-asf_search_args.py --polygon "POLYGON ((60 30, 70 60, 50 60, 40 40, 60 30))" --download $SCRATCHDIR/asf_product --product CSLC
-
-"""
-
 workDir = 'SCRATCHDIR'
 
+# Define the description and epilog of the script
+EXAMPLE = """Command line client for searching with the ASF Federated API, 
+downloading data, and more.  See the options and 
+descriptions below for details and usage examples.
+"""
+
+epi = """
+Usage Examples:
+    These will do the search and download data:
+        asf_search_args.py --product=SLC --start-date=20030101 --end-date=20080101 --path=170 --download=$SCRATCHDIR/asf_product
+        asf_search_args.py --product=CSLC --start-date=20030101 --end-date=20080101 --path=170 --download=$SCRATCHDIR/asf_product
+        asf_search_args.py --product=SLC --start-date=20030101 --end-date=20080101 --polygon="POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))" --download=$SCRATCHDIR/asf_product
+        asf_search_args.py --product=CSLC --start-date=20030101 --end-date=20080101 --polygon="POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))" --download=$SCRATCHDIR/asf_product
+
+    To use parallel downloads:
+        asf_search_args.py --product=SLC --start-date=20030101 --end-date=20080101 --path=170 --download=$SCRATCHDIR/asf_product --parallel=4
+
+    To search for a specific date range:
+        asf_search_args.py --product=SLC --start-date=20030101 --end-date=20080101 --download=$SCRATCHDIR/asf_product
+
+    To search for a specific polygon area:
+        asf_search_args.py --product=SLC --start-date=20030101 --end-date=20080101 --polygon="POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))" --download=$SCRATCHDIR/asf_product
+"""
+
 # Create an ArgumentParser object
-parser = argparse.ArgumentParser(description='Download or list Sentinel-1 data from the Alaska Satellite Facility',
-        formatter_class=argparse.RawTextHelpFormatter,
-        epilog=EXAMPLE)
+parser = argparse.ArgumentParser(description=EXAMPLE,
+                formatter_class=argparse.RawTextHelpFormatter,
+                epilog=epi)
 
 # Define your optional arguments
 parser.add_argument('--polygon', metavar='POLYGON', help='Poligon of the wanted area to intersect with the search')
