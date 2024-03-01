@@ -2,8 +2,6 @@
 
 import asf_search as asf
 import datetime
-import argparse# Import necessary libraries
-import datetime
 import argparse
 import os
 
@@ -14,6 +12,12 @@ Date format: YYYYMMDD
 
 asf_search_args.py --polygon "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"
 asf_search_args.py --start-date 20190101 --end-date 20210929 --path 59 --download $SCRATCHDIR/asf_product --product CSLC
+asf_search_args.py --start-date 20200101 --end-date 20201231 --path 45 --download $SCRATCHDIR/asf_product --product SLC
+asf_search_args.py --start-date 20180101 --end-date 20181231 --path 30 --download $SCRATCHDIR/asf_product --product GRD
+asf_search_args.py --polygon "POLYGON ((50 20, 60 50, 40 50, 30 30, 50 20))" --download $SCRATCHDIR/asf_product --product SLC
+asf_search_args.py --start-date 20170101 --end-date 20171231 --path 25 --download $SCRATCHDIR/asf_product --product GRD
+asf_search_args.py --start-date 20160101 --end-date 20161231 --path 35 --download $SCRATCHDIR/asf_product --product SLC
+asf_search_args.py --polygon "POLYGON ((60 30, 70 60, 50 60, 40 40, 60 30))" --download $SCRATCHDIR/asf_product --product CSLC
 
 """
 
@@ -34,7 +38,6 @@ parser.add_argument('--product', metavar='FILE', help='Choose the product type t
 parser.add_argument('--parallel', nargs=1, help='Download the data in parallel, specify the number of processes to use')
 
 inps = parser.parse_args()
-# (asf.constants.PRODUCT_TYPE)
 
 sdate = None
 edate = None
@@ -72,26 +75,25 @@ if inps.parallel:
 else:
     par = 1
 
+print("Searching for Sentinel-1 data...")
 results = asf.search(
-    platform= asf.PLATFORM.SENTINEL1,
+    platform=asf.PLATFORM.SENTINEL1,
     processingLevel=product,
-    start = sdate,
-    end = edate,
-    intersectsWith = polygon,
-    relativeOrbit = orbit
+    start=sdate,
+    end=edate,
+    intersectsWith=polygon,
+    relativeOrbit=orbit
 )
 
 if workDir in os.environ:
     work_dir = os.getenv(workDir)
-
 else:
     work_dir = os.getenv('HOME')
 
 if path == '':
     path = work_dir
 
-# print(results[0].properties['startTime'], (results[0].properties['stopTime']), results[0].geometry)
-# print(results[-1].properties['startTime'], (results[-1].properties['stopTime']), results[-1].geometry)
+print(f"Found {len(results)} results.")
 for r in results:
     print('--------------------------------------------------------------------------------------------------------------------------')
     print(f"Start date: {r.properties['startTime']}")
