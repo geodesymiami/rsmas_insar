@@ -285,7 +285,7 @@ def prompt_subplots(inps):
     if inps.volcano:
         eruption_dates, date_list, lalo = extract_volcanoes_info(inps.dir + '/' + jsonVolcano, inps.volcano[0])
         la, lo = adapt_coordinates(lalo[0], lalo[1])
-        dload_site_list(inps.dir, date_list)
+        dload_site_list_parallel(inps.dir, date_list)
         prec = create_map(lo, la, date_list, inps.dir)
         bar_plot(prec, la, lo, volcano=inps.volcano[0])
         plot_eruptions(eruption_dates)
