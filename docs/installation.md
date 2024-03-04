@@ -1,10 +1,11 @@
 # Installation guide
-How to install RSMAS InSAR code.
 
 * Set `$RSMASINSAR_HOME` in your [.bashrc](https://github.com/falkamelung/rsmas_insar/blob/master/docs/bashrc_contents.md) 
 and [.bash_profile](./bash_profile.md).  You may want to set your variables in an external file as we do in Miami (see [example](https://gist.github.com/falkamelung/f1281c38e301a3296ab0483f946cac4b)).
 
 * Create an ~/accounts directory with your data download credentials (for contents see [here](./accounts_info.md)). If you have access to the RSMAS accounts repo clone it into your /home or `$WORK2` directory 
+
+## How to install RSMAS InSAR code with **HTTPS** protocol.
 
 ```
 git clone https://github.com/geodesymiami/accounts.git ~/accounts ;
@@ -38,11 +39,10 @@ git clone https://github.com/geodesymiami/geodmod.git tools/geodmod ;
 git clone https://github.com/geodesymiami/SSARA.git tools/SSARA ;
 git clone https://github.com/TACC/launcher.git tools/launcher ;
 git clone https://github.com/geodesymiami/PlotData tools/PlotData
-git clone https://github.com/geodesymiami/viewPS tools/viewPS
 git clone https://github.com/geodesymiami/precip tools/precip
 
 ### Install credential files ###############
-./install_credential_files.bash;
+./setup/install_credential_files.bash;
 
 ### Install python #########################
 cd setup
@@ -110,6 +110,127 @@ mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 echo "Installation DONE"
 ```
 
+## How to install RSMAS InSAR code with **SSH** protocol.
+
+```
+git clone git@github.com:geodesymiami/accounts.git ~/accounts ;
+```
+
+* Go to the area where you want to install the code:
+
+```
+cd $WORK2/code
+```
+
+* Install the code using the commands below (there could be copy-paste issues if copying too many lines ). 
+
+* Create an ~/accounts directory with your data download credentials (for contents see [here](./accounts_info.md)). If you have access to the RSMAS accounts repo clone it into your /home or `$WORK2` directory 
+
+```
+git clone https://github.com/geodesymiami/accounts.git ~/accounts ;
+```
+
+* Go to the area where you want to install the code:
+
+```
+cd $WORK2/code
+```
+
+* Install the code using the commands below (there could be copy-paste issues if copying too many lines ). 
+
+```
+bash
+if [ "$(uname)" == "Linux" ]; then
+   module purge
+   export PATH=/bin
+fi
+git clone git@github.com:geodesymiami/rsmas_insar.git ;
+cd rsmas_insar
+
+########### Clone the required code  #################
+git clone git@github.com:insarlab/MintPy.git tools/MintPy ;
+git clone git@github.com:insarlab/MiaplPy.git tools/MiaplPy ;
+git clone git@github.com:geodesymiami/insarmaps_scripts.git tools/insarmaps_scripts ;
+git clone git@github.com:isce-framework/isce2.git tools/isce2
+git clone git@github.com:geodesymiami/MimtPy.git tools/MimtPy ;
+git clone git@github.com:geodesymiami/PlotData.git tools/PlotData ;
+git clone git@github.com:geodesymiami/geodmod.git tools/geodmod ;
+git clone git@github.com:geodesymiami/SSARA.git tools/SSARA ;
+git clone git@github.com:TACC/launcher.git tools/launcher ;
+git clone git@github.com:geodesymiami/PlotData tools/PlotData
+git clone git@github.com:geodesymiami/precip tools/precip
+
+### Install credential files ###############
+./setup/install_credential_files.bash;
+
+### Install python #########################
+cd setup
+rm -rf ../tools/miniconda3
+miniconda_version=Miniconda3-latest-Linux-x86_64.sh
+if [ "$(uname)" == "Darwin" ]; then miniconda_version=Miniconda3-latest-MacOSX-arm64.sh ; fi
+wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate -O $miniconda_version #; if ($? != 0) exit; 
+chmod 755 $miniconda_version
+bash ./$miniconda_version -b -p ../tools/miniconda3
+
+### Source the environment  #################
+source ~/accounts/platforms_defaults.bash;
+export RSMASINSAR_HOME=$(dirname $PWD)
+source environment.bash;
+
+### Install c-dependencies (isce fails on Mac) ###
+conda install conda-libmamba-solver --yes
+conda install --file ../minsar/environment.yml --solver libmamba --yes                      # first install c-code
+conda install --file ../tools/insarmaps_scripts/environment.yml --solver libmamba --yes     # first install c-code
+conda install isce2 -c conda-forge  --solver libmamba --yes 
+
+### Install python code and dependencies  ########
+pip install -e ../tools/MintPy
+pip install -e ../tools/MiaplPy
+pip install -r ../minsar/requirements.txt
+pip install -r ../tools/insarmaps_scripts/requirements.txt
+pip install -r ../tools/PlotData/requirements.txt
+
+###  Reduce miniconda3 directory size #################
+rm -rf ../tools/miniconda3/pkgs
+
+###  Install SNAPHU #################
+wget --no-check-certificate  https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/snaphu-v2.0.5.tar.gz
+tar -xvf snaphu-v2.0.5.tar.gz
+mv snaphu-v2.0.5 ../tools/snaphu
+sed -i 's/\/usr\/local/$(PWD)\/snaphu/g' ../tools/snaphu/src/Makefile
+cc=../../../miniconda3/bin/cc
+make -C ../tools/snaphu/src
+# cd  ../tools/snaphu/src; make
+# cd ../../../setup/
+
+### Adding not-commited MintPy fixes
+cp -p ../minsar/additions/mintpy/save_hdfeos5.py ../tools/MintPy/src/mintpy/
+cp -p ../minsar/additions/mintpy/cli/save_hdfeos5.py ../tools/MintPy/src/mintpy/cli/
+
+### Adding MiaplPy fix which Sara says she is going to fix
+cp -p ../minsar/additions/miaplpy/prep_slc_isce.py ../tools/MiaplPy/src/miaplpy
+
+### Adding ISCE fixes and copying checked-out ISCE version (the latest) into miniconda directory ###
+cp -p ../minsar/additions/isce/logging.conf ../tools/miniconda3/lib/python3.?/site-packages/isce/defaults/logging/logging.conf
+cp -p ../minsar/additions/isce2/topsStack/FilterAndCoherence.py ../tools/isce2/contrib/stack/topsStack
+cp -p ../minsar/additions/isce2/stripmapStack/prepRawCSK.py ../tools/isce2/contrib/stack/stripmapStack
+cp -p ../minsar/additions/isce2/stripmapStack/unpackFrame_TSX.py ../tools/isce2/contrib/stack/stripmapStack
+cp -p ../minsar/additions/isce2/DemStitcher.py ../tools/isce2/contrib/demUtils/demstitcher
+
+### Copying ISCE fixes into miniconda directory ###
+cp -r ../tools/isce2/contrib/stack/* ../tools/miniconda3/share/isce2
+cp -r ../tools/isce2/components/isceobj/Sensor/TOPS ../tools/miniconda3/share/isce2 
+cp ../tools/isce2/components/isceobj/Sensor/TOPS/TOPSSwathSLCProduct.py ../tools/miniconda3/lib/python3.?/site-packages/isce/components/isceobj/Sensor/TOPS
+cp ../tools/isce2/contrib/demUtils/demstitcher/DemStitcher.py  ../tools/miniconda3/lib/python3.??/site-packages/isce/components/contrib/demUtils 
+
+### Create orbits and aux directories
+mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
+
+echo "Installation DONE"
+```
+
+---
+
 ### #Orbits and aux files
 This has created directories for the orbits for Sentinel-1 (`$SENTINEL_ORBITS`), which The can be downloaded using `dloadOrbits.py`. The IPF calibration files (`SENTINEL_AUX`) are downloaded from: https://qc.sentinel1.eo.esa.int/aux_cal/ .
 
@@ -142,4 +263,3 @@ drwxrws-w-+ 2 famelung insarlab       4096 Jan 17 16:58 test
 
 
 ### *. [Set-up in Miami](./set_up_miami.md) ###
-

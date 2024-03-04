@@ -289,12 +289,12 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-# always use --no-tmp on stampede2
-if [[ $HOSTNAME == *"stampede2"* ]] && [[ $copy_to_tmp == "--tmp" ]]; then
+# always use --no-tmp on stampede3
+if [[ $HOSTNAME == *"stampede3"* ]] && [[ $copy_to_tmp == "--tmp" ]]; then
    copy_to_tmp="--no-tmp"
    runfiles_dir="run_files"
    configs_dir="configs"
-   echo "Running on stampede2: switched from --tmp to --no-tmp because of too slow copying to /tmp"
+   echo "Running on stampede3: switched from --tmp to --no-tmp because of too slow copying to /tmp"
 fi
 miaplpy_tmp_flag=$copy_to_tmp   
 

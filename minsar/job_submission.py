@@ -776,7 +776,7 @@ class JOB_SUBMIT:
         #         job_file_lines.append( "# copy infiles to local /tmp and adjust *.xml  #\n" )
         #         job_file_lines.append( "################################################\n" )
 
-        #         if 'stampede2' in hostname:
+        #         if 'stampede3' in hostname:
         #             job_file_lines.append( 'export CDTOOL=/scratch/01255/siliu/collect_distribute\n' )
         #         elif 'frontera' in hostname:
         #             job_file_lines.append( 'export CDTOOL=/scratch1/01255/siliu/collect_distribute\n' )
@@ -1391,7 +1391,7 @@ def set_job_queue_values(args):
                 #    else:
                 #        break
 
-    if platform_name in ['stampede2', 'frontera', 'comet']:
+    if platform_name in ['stampede3', 'frontera', 'comet']:
         scheduler = 'SLURM'
     elif platform_name in ['pegasus']:
         scheduler = 'LSF'
