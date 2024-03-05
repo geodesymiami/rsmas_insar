@@ -38,7 +38,7 @@ Example:
   get_precipitation_lalo.py --plot-daily 20190101 20210929 --polygon 'POLYGON((113.4496 -8.0893,113.7452 -8.0893,113.7452 -7.817,113.4496 -7.817,113.4496 -8.0893))'
   get_precipitation_lalo.py --download 20190101 20210929
   get_precipitation_lalo.py --download 20190101 20210929 --dir '/home/user/Downloads'
-  get_precipitation_lalo.py --volcano-daily 'Cerro Azul'
+  get_precipitation_lalo.py --volcano 'Cerro Azul'
   get_precipitation_lalo.py --list
   get_precipitation_lalo.py --colormap 20000601 --latitude=-2.11:2.35 --longitude=-92.68:-88.49
   get_precipitation_lalo.py --colormap 20000601 --latitude 19.5:20.05 --longitude 156.5:158.05 --vlim 0 10
@@ -283,10 +283,10 @@ def prompt_subplots(inps):
         prompt_plots.append('plot_yearly')
 
     if inps.volcano:
-        eruption_dates, date_list, lalo = extract_volcanoes_info(inps.dir + '/' + jsonVolcano, inps.volcano[0])
-        la, lo = adapt_coordinates(lalo[0], lalo[1])
-        dload_site_list_parallel(inps.dir, date_list)
-        prec = create_map(lo, la, date_list, inps.dir)
+        eruption_dates, date_list, lola = extract_volcanoes_info(inps.dir + '/' + jsonVolcano, inps.volcano[0])
+        lo, la = adapt_coordinates(lola[0], lola[1])
+        dload_site_list_parallel(inps.dir + '/gpm_data', date_list)
+        prec = create_map(lo, la, date_list, inps.dir + '/gpm_data')
         bar_plot(prec, la, lo, volcano=inps.volcano[0])
         plot_eruptions(eruption_dates)
 
@@ -844,6 +844,7 @@ def create_map(latitude, longitude, date_list, folder): #parallel
     with concurrent.futures.ThreadPoolExecutor() as executor:
         results = executor.map(process_file, files, [date_list]*len(files), [lon]*len(files), [lat]*len(files), [longitude]*len(files), [latitude]*len(files))
 
+    # results = process_file(files, date_list, lon, lat, longitude, latitude)
     # Filter out None results and update the dictionary
     for result in results:
         if result is not None:
@@ -949,7 +950,7 @@ def extract_precipitation(latitude, longitude, date_list, folder):
                 
                 subset = data[:, np.where(lon == longitude[0])[0][0]:np.where(lon == last_longitude)[0][0]+1, np.where(lat == latitude[0])[0][0]:np.where(lat == last_latitude)[0][0]+1]
                 dictionary[str(file_date)] = subset.astype(float)
-    print(dictionary)
+    # print(dictionary)
     return dictionary
 
 
@@ -1008,6 +1009,7 @@ def bar_plot(precipitation, lat, lon, volcano=''):
     precipitation.sort_values(by='Date', ascending=True, inplace=True)
     print(precipitation['Date'])
     # Convert date strings to decimal years
+    #TODO to complete
     if 'Non mensile o annuale':
         precipitation['Decimal_Year'] = precipitation['Date'].apply(date_to_decimal_year)
         precipitation_field = 'Decimal_Year'
