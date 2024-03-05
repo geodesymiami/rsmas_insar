@@ -841,7 +841,7 @@ def create_map(latitude, longitude, date_list, folder): #parallel
     files = [folder + '/' + f for f in os.listdir(folder) if f.endswith('.nc4')]
 
     # Create a thread pool and process the files in parallel
-    with concurrent.futures.ThreadPoolExecutor() as executor:
+    with concurrent.futures.ProcessPoolExecutor() as executor:
         results = executor.map(process_file, files, [date_list]*len(files), [lon]*len(files), [lat]*len(files), [longitude]*len(files), [latitude]*len(files))
 
     # results = process_file(files, date_list, lon, lat, longitude, latitude)
