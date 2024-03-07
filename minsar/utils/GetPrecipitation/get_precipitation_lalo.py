@@ -18,7 +18,9 @@ import geopandas as gpd
 import concurrent.futures
 import subprocess
 import threading
-
+import sys
+import time
+import subprocess
 
 
 EXAMPLE = """
@@ -56,32 +58,6 @@ json_download_url = 'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/wms?s
 
 #TODO possible to go back to version 7 of Final Run 
 
-#TODO to remove
-def create_parser():
-    """ Creates command line argument parser object. """
-
-    parser = argparse.ArgumentParser(
-        description='Plot precipitation data from GPM dataset for a specific location at a given date range',
-        formatter_class=argparse.RawTextHelpFormatter,
-        epilog=EXAMPLE)
-    
-    group = parser.add_mutually_exclusive_group(required=True)
-
-    group.add_argument('-d', '--download', nargs=2, metavar=('start_date', 'end_date'), help='download data')
-
-    group.add_argument('--plot-daily', nargs=4, metavar=( 'latitude', 'longintude', 'start_date', 'end_date'))
-
-    group.add_argument('--plot-weekly', nargs=4, metavar=( 'latitude', 'longitude', 'start_date', 'end_date'))
-
-    group.add_argument('--plot-monthly', nargs=4, metavar=( 'latitude', 'longitude', 'start_date', 'end_date'))
-
-    group.add_argument('-vd', '--volcano-daily', nargs=1, metavar=( 'NAME'), help='plot eruption dates and precipitation levels')
-
-    group.add_argument('-ls', '--list', action='store_true', help='list volcanoes')
-
-    group.add_argument('--map', nargs=1, metavar=('date'),help='Heat map of precipitation')
-
-    return parser
 
 ###################### NEW PARSER ######################
 
@@ -120,11 +96,9 @@ def create_parser_new():
                         help='Bar plot with yearly precipitation data')
     parser.add_argument('--start-date', 
                         metavar='DATE', 
-                        type=datetime, 
                         help='Start date of the search')
     parser.add_argument('--end-date', 
                         metavar='DATE', 
-                        type=datetime, 
                         help='End date of the search')
     parser.add_argument('--latitude', 
                         nargs='+',  
@@ -154,6 +128,12 @@ def create_parser_new():
     parser.add_argument('--polygon', 
                         metavar='POLYGON', 
                         help='Poligon of the wanted area (Format from ASF Vertex Tool https://search.asf.alaska.edu/#/)')
+    parser.add_argument('--interpolate', 
+                        action='store_true', 
+                        help='Interpolate data')
+    parser.add_argument('--check', 
+                        action='store_true', 
+                        help='Check if the file is corrupted')
 
     inps = parser.parse_args()
 
@@ -308,6 +288,9 @@ def prompt_subplots(inps):
         print(prova)
         
         map_precipitation(prova, lo, la, date_list, './ne_10m_land',inps.vlim)
+
+    if inps.check:
+        check_nc4_files(inps.dir + '/gpm_data')
 
     # TODO dynamic plot
     # if prompt_plots != []:
@@ -767,6 +750,7 @@ def generealte_urls_list(date_list):
     return urls
 
 
+# TODO check if the file has been downlaoded every time
 def dload_site_list_parallel(folder, date_list):
     """
     Downloads files from a list of URLs in parallel using multiple threads.
@@ -791,8 +775,19 @@ def dload_site_list_parallel(folder, date_list):
 
             if not os.path.exists(file_path):
                 print(f"Starting download of {url} on {threading.current_thread().name}")
-                executor.submit(subprocess.run, ['wget', url, '-P', folder])
-                print(f"Finished download of {url} on {threading.current_thread().name}")
+                attempts = 0
+                while attempts < 3:
+                    try:
+                        subprocess.run(['wget', url, '-P', folder], check=True)
+                        print(f"Finished download of {url} on {threading.current_thread().name}")
+                        break
+                    except subprocess.CalledProcessError:
+                        attempts += 1
+                        print(f"Download attempt {attempts} failed for {url}. Retrying...")
+                        time.sleep(1)
+                else:
+                    print(f"Failed to download {url} after {attempts} attempts. Exiting...")
+                    sys.exit(1)
             else:
                 print(f"File {filename} already exists, skipping download")
 
@@ -819,6 +814,29 @@ def process_file(file, date_list, lon, lat, longitude, latitude):
 
     return (str(date), subset)
 
+
+def check_nc4_files(folder):
+    # Get a list of all .nc4 files in the directory
+    files = [folder + '/' + f for f in os.listdir(folder) if f.endswith('.nc4')]
+
+    # Check if each file exists and is not corrupted
+    for file in files:
+        try:
+            # Try to open the file with netCDF4
+            ds = nc.Dataset(file)
+            ds.close()
+            print(f"File exists and is not corrupted: {file}")
+
+        except:
+            print(f"File is corrupted: {file}")
+            # Delete the corrupted file
+            os.remove(file)
+            print(f"Corrupted file has been deleted: {file}")
+
+
+# def interpolate_map(dataframe):
+    
+
 def create_map(latitude, longitude, date_list, folder): #parallel
     """
     Creates a map of precipitation data for a given latitude, longitude, and date range.
@@ -840,15 +858,29 @@ def create_map(latitude, longitude, date_list, folder): #parallel
     # Get a list of all .nc4 files in the data folder
     files = [folder + '/' + f for f in os.listdir(folder) if f.endswith('.nc4')]
 
-    # Create a thread pool and process the files in parallel
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = executor.map(process_file, files, [date_list]*len(files), [lon]*len(files), [lat]*len(files), [longitude]*len(files), [latitude]*len(files))
+    # Check for duplicate files
+    if len(files) != len(set(files)):
+        print("There are duplicate files in the list.")
+    else:
+        print("There are no duplicate files in the list.")
 
-    # results = process_file(files, date_list, lon, lat, longitude, latitude)
-    # Filter out None results and update the dictionary
-    for result in results:
+    dictionary = {}
+
+    for file in files:
+        result = process_file(file, date_list, lon, lat, longitude, latitude)
         if result is not None:
             dictionary[result[0]] = result[1]
+
+
+    #     # Create a thread pool and process the files in parallel
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = executor.map(process_file, files, [date_list]*len(files), [lon]*len(files), [lat]*len(files), [longitude]*len(files), [latitude]*len(files))
+
+    # # Filter out None results and update the dictionary
+    # for result in results:
+    #     if result is not None:
+    #         dictionary[result[0]] = result[1]
+
 
     df1 = pd.DataFrame(dictionary.items(), columns=['Date', 'Precipitation'])
     finaldf = pd.concat([finaldf, df1], ignore_index=True, sort=False)
