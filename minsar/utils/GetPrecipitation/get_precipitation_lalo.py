@@ -128,8 +128,9 @@ def create_parser_new():
     parser.add_argument('--polygon', 
                         metavar='POLYGON', 
                         help='Poligon of the wanted area (Format from ASF Vertex Tool https://search.asf.alaska.edu/#/)')
-    parser.add_argument('--interpolate', 
-                        action='store_true', 
+    parser.add_argument('--interpolate',
+                        nargs=1,
+                        metavar=('GRANULARITY'), 
                         help='Interpolate data')
     parser.add_argument('--check', 
                         action='store_true', 
@@ -285,20 +286,15 @@ def prompt_subplots(inps):
 
         #TODO condition monthly, yearly, maybe specific date range
         prova = monthly_precipitation(prova)
+
+        if inps.interpolate:
+            prova = interpolate_map(prova, int(inps.interpolate[0]))
+        # sys.exit(0)
         
         map_precipitation(prova, lo, la, date_list, './ne_10m_land', inps.vlim)
 
     if inps.check:
         check_nc4_files(inps.dir + '/gpm_data')
-
-    # TODO dynamic plot
-    # if prompt_plots != []:
-    #     inps.plot_weekly[0], inps.plot_weekly[1] = adapt_coordinates(inps.plot_weekly[0], inps.plot_weekly[1])
-    #     date_list = generate_date_list(inps.plot_weekly[2], inps.plot_weekly[3])
-    #     prec = create_map(inps.plot_weekly[0], inps.plot_weekly[1], date_list, inps.dir + '/gpm_data')
-    #     prec = weekly_precipitation(prec)
-    #     bar_plot(prec, inps.plot_weekly[0], inps.plot_weekly[1])
-
 
 
 def parse_polygon(polygon):
@@ -831,9 +827,30 @@ def check_nc4_files(folder):
             print(f"Corrupted file has been deleted: {file}")
 
 
-# def interpolate_map(dataframe):
-    
+def interpolate_map(dataframe, resolution=5):
+    from scipy.interpolate import interp2d
 
+    values = dataframe.get('Precipitation')[0][0]
+    x = np.arange(values.shape[1])
+    y = np.arange(values.shape[0])
+    # Create the interpolator function
+    interpolator = interp2d(x, y, values)
+
+    # Define the new x and y values with double the resolution
+    new_x = np.linspace(x.min(), x.max(), values.shape[1]*resolution)
+    new_y = np.linspace(y.min(), y.max(), values.shape[0]*resolution)
+
+    # Perform the interpolation
+    new_values = interpolator(new_x, new_y)
+    # new_values = new_values.T
+
+    # plt.imshow(new_values, origin='lower')
+    # plt.colorbar(label='Precipitation')
+    # plt.show()
+    print(type(new_values))
+    return new_values
+
+    
 def create_map(latitude, longitude, date_list, folder): #parallel
     """
     Creates a map of precipitation data for a given latitude, longitude, and date range.
@@ -863,20 +880,20 @@ def create_map(latitude, longitude, date_list, folder): #parallel
 
     dictionary = {}
 
-    for file in files:
-        result = process_file(file, date_list, lon, lat, longitude, latitude)
-        if result is not None:
-            dictionary[result[0]] = result[1]
-
-
-    #     # Create a thread pool and process the files in parallel
-    # with concurrent.futures.ThreadPoolExecutor() as executor:
-    #     results = executor.map(process_file, files, [date_list]*len(files), [lon]*len(files), [lat]*len(files), [longitude]*len(files), [latitude]*len(files))
-
-    # # Filter out None results and update the dictionary
-    # for result in results:
+    # for file in files:
+    #     result = process_file(file, date_list, lon, lat, longitude, latitude)
     #     if result is not None:
     #         dictionary[result[0]] = result[1]
+
+
+    # Create a thread pool and process the files in parallel
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        results = executor.map(process_file, files, [date_list]*len(files), [lon]*len(files), [lat]*len(files), [longitude]*len(files), [latitude]*len(files))
+
+    # Filter out None results and update the dictionary
+    for result in results:
+        if result is not None:
+            dictionary[result[0]] = result[1]
 
 
     df1 = pd.DataFrame(dictionary.items(), columns=['Date', 'Precipitation'])
@@ -980,7 +997,7 @@ def bar_plot(precipitation, lat, lon, volcano=''):
     # Convert array into single values
     precipitation['Precipitation'] = precipitation['Precipitation'].apply(lambda x: x[0][0][0])
     precipitation.sort_values(by='Date', ascending=True, inplace=True)
-    print(precipitation['Date'])
+    
     # Convert date strings to decimal years
     #TODO to complete
     if 'Non mensile o annuale':
@@ -1101,7 +1118,11 @@ def map_precipitation(precipitation_series, lo, la, date, work_dir, vlim=None):
 
     elif type(precipitation_series) == dict:
         precip = precipitation_series[date[0].strftime('%Y-%m-%d')]
-        
+
+    else:
+        precip = precipitation_series
+
+    print(precip)
     precip = np.flip(precip.transpose(), axis=0)
 
     if not vlim:
@@ -1172,66 +1193,3 @@ if __name__ == "__main__":
 sys.exit(0)
 
 ################    END NEW MAIN    #######################
-
-if __name__ == "__main__":
-    parser = create_parser()
-    inps = parser.parse_args()
-
-    if inps.download:
-        dload_site_list(work_dir, generate_date_list(inps.download[0], inps.download[1]))
-        crontab_volcano_json(work_dir + '/' + jsonVolcano)  # TODO modify path
-
-    else:
-        if inps.plot_daily:
-            la, lo = adapt_coordinates(inps.plot_daily[1], inps.plot_daily[0])
-            start_date = inps.plot_daily[2]
-            end_date = inps.plot_daily[3]
-
-        elif inps.plot_weekly:
-            la, lo = adapt_coordinates(inps.plot_weekly[1], inps.plot_weekly[0])
-            start_date = inps.plot_weekly[2]
-            end_date = inps.plot_weekly[3]
-
-        elif inps.plot_monthly:
-            la, lo = adapt_coordinates(inps.plot_monthly[1], inps.plot_monthly[0])
-            start_date = inps.plot_monthly[2]
-            end_date = inps.plot_monthly[3]
-
-        elif inps.volcano_daily:
-            eruption_dates, date_list, lon_lat = extract_volcanoes_info(inps.dir + '/' + jsonVolcano, inps.volcano_daily[0])
-            la, lo = adapt_coordinates(lon_lat[0], lon_lat[1])
-
-            dload_site_list(inps.dir, date_list)
-            prec = plot_precipitaion_nc4(lo, la, date_list, inps.dir)
-            plt = daily_precipitation(prec, la, lo, volcano=inps.volcano_daily[0])
-            plot_eruptions(eruption_dates)
-            plt.show()
-            sys.exit(0)
-
-        elif inps.list:
-            volcanoes_list(inps.dir + '/' + jsonVolcano)
-            sys.exit(0)
-        #TODO restructure the code
-        elif inps.map:
-            map_precipitation(inps.dir, inps.map[0])
-            sys.exit(0)
-
-        else:
-            print('Error: no plot frequency specified')
-            sys.exit(1)
-
-        date_list = generate_date_list(start_date, end_date)
-        dload_site_list(work_dir, date_list)
-        prec = plot_precipitaion_nc4(lo, la, date_list, work_dir)
-
-        if inps.plot_daily:
-            plt = daily_precipitation(prec, la, lo)
-            plt.show()
-
-        elif inps.plot_weekly:
-            precipitation_values = weekly_precipitation(prec, la, lo)
-
-        elif inps.plot_monthly:
-            precipitation_values = monthly_precipitation(prec)
-
-    bar_plot(precipitation_values, la, lo)
