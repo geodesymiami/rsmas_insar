@@ -268,8 +268,8 @@ def prompt_subplots(inps):
         dload_site_list_parallel(inps.dir + '/gpm_data', date_list)
         prec = create_map(lo, la, date_list, inps.dir + '/gpm_data')
         bar_plot(prec, la, lo, volcano=inps.volcano[0])
-        plot_eruptions(eruption_dates)
-
+        plot_eruptions(eruption_dates) 
+        plt.show()
         prompt_plots.append('volcano')
 
     if inps.list:
@@ -285,9 +285,8 @@ def prompt_subplots(inps):
 
         #TODO condition monthly, yearly, maybe specific date range
         prova = monthly_precipitation(prova)
-        print(prova)
         
-        map_precipitation(prova, lo, la, date_list, './ne_10m_land',inps.vlim)
+        map_precipitation(prova, lo, la, date_list, './ne_10m_land', inps.vlim)
 
     if inps.check:
         check_nc4_files(inps.dir + '/gpm_data')
@@ -791,8 +790,6 @@ def dload_site_list_parallel(folder, date_list):
             else:
                 print(f"File {filename} already exists, skipping download")
 
-
-###################### NEW PARALLEL MAP FUNCTION ######################
                 
 def process_file(file, date_list, lon, lat, longitude, latitude):
     # Extract date from file name
@@ -818,6 +815,7 @@ def process_file(file, date_list, lon, lat, longitude, latitude):
 def check_nc4_files(folder):
     # Get a list of all .nc4 files in the directory
     files = [folder + '/' + f for f in os.listdir(folder) if f.endswith('.nc4')]
+    print('Checking for corrupted files...')
 
     # Check if each file exists and is not corrupted
     for file in files:
@@ -825,7 +823,6 @@ def check_nc4_files(folder):
             # Try to open the file with netCDF4
             ds = nc.Dataset(file)
             ds.close()
-            print(f"File exists and is not corrupted: {file}")
 
         except:
             print(f"File is corrupted: {file}")
@@ -891,62 +888,6 @@ def create_map(latitude, longitude, date_list, folder): #parallel
     finaldf = finaldf.sort_values(by='Date', ascending=True)
 
     return finaldf
-
-###################### END NEW PARALLEL MAP FUNCTION ######################
-
-# TODO to remove, we have parallel
-# def create_map(latitude, longitude, date_list, folder):
-#     """
-#     Creates a map of precipitation data for a given latitude, longitude, and date range.
-
-#     Parameters:
-#     latitude (list): A list containing the minimum and maximum latitude values.
-#     longitude (list): A list containing the minimum and maximum longitude values.
-#     date_list (list): A list of dates to include in the map.
-#     folder (str): The path to the folder containing the data files.
-
-#     Returns:
-#     pandas.DataFrame: A DataFrame containing the precipitation data for the specified location and dates to be plotted.
-#     """
-#     finaldf = {}
-#     df = pd.DataFrame()
-#     dictionary = {}
-
-#     lon, lat = generate_coordinate_array()
-#     # For each file in the data folder that has nc4 extension
-#     for f in os.listdir(folder):
-
-#         if f.endswith('.nc4'):
-#             file = folder + '/' + f
-
-#             #Extract date from file name
-#             d = re.search('\d{8}', file)
-#             date = datetime.strptime(d.group(0), "%Y%m%d").date()
-
-#             if date in date_list:
-#                 #Open the file
-#                 ds = nc.Dataset(file)
-
-#                 dictionary[str(date)] = {}
-#                 data = ds['precipitationCal'] if 'precipitationCal' in ds.variables else ds['precipitation']
-
-#                 subset = data[:, np.where(lon == longitude[0])[0][0]:np.where(lon == longitude[1])[0][0]+1, np.where(lat == latitude[0])[0][0]:np.where(lat == latitude[1])[0][0]+1]
-#                 dictionary[str(date)] = subset.astype(float)
-
-#                 df1 = pd.DataFrame(dictionary.items(), columns=['Date', 'Precipitation'])
-#                 finaldf = pd.concat([df,df1], ignore_index=True, sort=False)
-
-#                 df.sort_index()
-#                 df.sort_index(ascending=False)
-
-
-#                 ds.close()
-
-#             else: continue
-
-#     finaldf = finaldf.sort_values(by='Date', ascending=True)
-
-#     return finaldf
 
 
 #TODO to remove, for now create_map works fine
@@ -1057,8 +998,6 @@ def bar_plot(precipitation, lat, lon, volcano=''):
     plt.bar(precipitation[precipitation_field], precipitation['Precipitation'], color='maroon', width=0.00001 * len(precipitation))
     plt.ylabel("Precipitation [mm]")
 
-    print(precipitation)
-
     precipitation.plot(precipitation_field, 'cum', secondary_y=True, ax=ax)
 
     if volcano == '':
@@ -1071,7 +1010,7 @@ def bar_plot(precipitation, lat, lon, volcano=''):
     ax.get_legend().remove()
 
     plt.xticks(rotation=90)
-    plt.show()
+    # plt.show()
 
 
 def weekly_monthly_yearly_precipitation(dictionary, time_period):
