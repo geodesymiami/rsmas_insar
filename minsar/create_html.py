@@ -41,7 +41,6 @@ class Inps:
 def build_html(directory_path):
     print('DIRECTORY_PATH:', directory_path )    
     file_list = [file for file in os.listdir(directory_path) if file.lower().endswith(('.png', '.pdf','.template'))]
-    png_files = [file for file in file_list if file.lower().endswith('.png')]
     pdf_files = [file for file in file_list if file.lower().endswith('.pdf')]
     template_files = [file for file in file_list if file.lower().endswith('.template')]
 
@@ -56,6 +55,9 @@ def build_html(directory_path):
             # Add the .png extension
             png_file = f'{base_name}.png'
             image.save(png_file, 'PNG')
+
+    file_list = [file for file in os.listdir(directory_path) if file.lower().endswith(('.png', '.pdf','.template'))]
+    png_files = [file for file in file_list if file.lower().endswith('.png')]
 
     # Check if there are any PNG files in the directory
     if not png_files:
