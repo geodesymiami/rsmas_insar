@@ -17,6 +17,7 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 [ -z ${SENTINEL_ORBITS} ] && export SENTINEL_ORBITS=${WORKDIR}/S1orbits
 [ -z ${SENTINEL_AUX} ] && export SENTINEL_AUX=${WORKDIR}/S1aux
 [ -z ${WEATHER_DIR} ] && export WEATHER_DIR=${WORKDIR}/WEATHER
+[ -z ${PRECIP_DIR} ] && export PRECIP_DIR=${WORKDIR}/PRECIP
 [ -z ${TESTDATA_ISCE} ] && export TESTDATA_ISCE=${WORKDIR}/TESTDATA_ISCE
 
 ############ FOR PROCESSING  #########
@@ -90,7 +91,7 @@ export PATH=${PATH}:${RSMASINSAR_HOME}/minsar/utils
 export PATH=${PATH}:${MINTPY_HOME}/src/mintpy/cli
 export PATH=${PATH}:${PLOTDATA_HOME}/src/plotdata/cli
 export PATH=${PATH}:${MIAPLPY_HOME}/src/miaplpy
-export PATH=${PATH}:${PRECIP_HOME}/src/cli
+export PATH=${PATH}:${PRECIP_HOME}/src/precip/cli
 export PATH=${PATH}:${MIMTPY_HOME}/mimtpy
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/snaphu/bin
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/insarmaps_scripts
