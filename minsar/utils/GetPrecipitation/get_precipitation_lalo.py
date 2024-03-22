@@ -285,7 +285,7 @@ def prompt_subplots(inps):
         la, lo = adapt_coordinates(inps.colormap[1], inps.colormap[2])
         date_list = generate_date_list(inps.colormap[0])
         #TODO Hard coded dates, to remove
-        date_list = generate_date_list(datetime.strptime('20000601', '%Y%m%d').date(), datetime.strptime('20231231', '%Y%m%d').date())
+        date_list = generate_date_list(datetime.strptime('20000601', '%Y%m%d').date(), datetime.strptime('20000701', '%Y%m%d').date())
         # prova = extract_precipitation(la, lo, date_list, inps.dir + '/gpm_data')
         prova = create_map(la, lo, date_list, inps.dir + '/gpm_data')
 
@@ -844,11 +844,12 @@ def interpolate_map(dataframe, resolution=5):
     Returns:
     numpy.ndarray: The interpolated precipitation map.
     """
+    
     try:
         values = dataframe.get('Precipitation')[0][0]
 
     except:
-        values = dataframe[0][0]
+        values = dataframe[0]
 
     x = np.arange(values.shape[1])
     y = np.arange(values.shape[0])
