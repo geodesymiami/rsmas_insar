@@ -848,8 +848,8 @@ def interpolate_map(dataframe, resolution=5):
         values = dataframe.get('Precipitation')[0][0]
 
     except:
-        values = dataframe.get('Precipitation')[0][0]
-        
+        values = dataframe[0][0]
+
     x = np.arange(values.shape[1])
     y = np.arange(values.shape[0])
     # Create the interpolator function
