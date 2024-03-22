@@ -21,6 +21,8 @@ import threading
 import sys
 import time
 import subprocess
+from scipy.interpolate import interp2d
+
 
 
 EXAMPLE = """
@@ -44,6 +46,7 @@ Example:
   get_precipitation_lalo.py --list
   get_precipitation_lalo.py --colormap 20000601 --latitude=-2.11:2.35 --longitude=-92.68:-88.49
   get_precipitation_lalo.py --colormap 20000601 --latitude 19.5:20.05 --longitude 156.5:158.05 --vlim 0 10
+  get_precipitation_lalo.py --colormap 20000601 --latitude 19.5:20.05 --longitude 156.5:158.05 --vlim 0 10 --interpolate 5
   get_precipitation_lalo.py --colormap 20000601 --polygon 'POLYGON((113.4496 -8.0893,113.7452 -8.0893,113.7452 -7.817,113.4496 -7.817,113.4496 -8.0893))'
 
 """
@@ -281,15 +284,18 @@ def prompt_subplots(inps):
     if inps.colormap:
         la, lo = adapt_coordinates(inps.colormap[1], inps.colormap[2])
         date_list = generate_date_list(inps.colormap[0])
+        #TODO Hard coded dates, to remove
+        date_list = generate_date_list(datetime.strptime('20000601', '%Y%m%d').date(), datetime.strptime('20231231', '%Y%m%d').date())
         # prova = extract_precipitation(la, lo, date_list, inps.dir + '/gpm_data')
         prova = create_map(la, lo, date_list, inps.dir + '/gpm_data')
 
         #TODO condition monthly, yearly, maybe specific date range
-        prova = monthly_precipitation(prova)
+        #TODO if no time_period here, it will avarage the whole period
+        # prova = weekly_monthly_yearly_precipitation(prova, 'M')
+        prova = weekly_monthly_yearly_precipitation(prova)
 
         if inps.interpolate:
             prova = interpolate_map(prova, int(inps.interpolate[0]))
-        # sys.exit(0)
         
         map_precipitation(prova, lo, la, date_list, './ne_10m_land', inps.vlim)
 
@@ -763,7 +769,7 @@ def dload_site_list_parallel(folder, date_list):
 
     urls = generealte_urls_list(date_list)
 
-    with concurrent.futures.ThreadPoolExecutor() as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         for url in urls:
             filename = os.path.basename(url)
             file_path = os.path.join(folder, filename)
@@ -828,7 +834,16 @@ def check_nc4_files(folder):
 
 
 def interpolate_map(dataframe, resolution=5):
-    from scipy.interpolate import interp2d
+    """
+    Interpolates a precipitation map using scipy.interpolate.interp2d.
+
+    Parameters:
+    dataframe (pandas.DataFrame): The input dataframe containing the precipitation data.
+    resolution (int): The resolution factor for the interpolated map. Default is 5.
+
+    Returns:
+    numpy.ndarray: The interpolated precipitation map.
+    """
 
     values = dataframe.get('Precipitation')[0][0]
     x = np.arange(values.shape[1])
@@ -842,12 +857,7 @@ def interpolate_map(dataframe, resolution=5):
 
     # Perform the interpolation
     new_values = interpolator(new_x, new_y)
-    # new_values = new_values.T
 
-    # plt.imshow(new_values, origin='lower')
-    # plt.colorbar(label='Precipitation')
-    # plt.show()
-    print(type(new_values))
     return new_values
 
     
@@ -940,7 +950,7 @@ def extract_precipitation(latitude, longitude, date_list, folder):
                 
                 subset = data[:, np.where(lon == longitude[0])[0][0]:np.where(lon == last_longitude)[0][0]+1, np.where(lat == latitude[0])[0][0]:np.where(lat == last_latitude)[0][0]+1]
                 dictionary[str(file_date)] = subset.astype(float)
-    # print(dictionary)
+
     return dictionary
 
 
@@ -991,6 +1001,19 @@ def generate_date_list(start, end=None):
 
 
 def bar_plot(precipitation, lat, lon, volcano=''):
+    """
+    Generate a bar plot of precipitation data.
+
+    Parameters:
+    - precipitation (dict or DataFrame): Dictionary or DataFrame containing precipitation data.
+    - lat (float): Latitude value.
+    - lon (float): Longitude value.
+    - volcano (str, optional): Name of the volcano. Defaults to an empty string.
+
+    Returns:
+    None
+    """
+
     if type(precipitation) == dict:
         precipitation = pd.DataFrame(precipitation.items(), columns=['Date', 'Precipitation'])
 
@@ -1027,10 +1050,9 @@ def bar_plot(precipitation, lat, lon, volcano=''):
     ax.get_legend().remove()
 
     plt.xticks(rotation=90)
-    # plt.show()
 
 
-def weekly_monthly_yearly_precipitation(dictionary, time_period):
+def weekly_monthly_yearly_precipitation(dictionary, time_period=None):
     """
     Resamples the precipitation data in the given dictionary by the specified time period.
 
@@ -1050,12 +1072,20 @@ def weekly_monthly_yearly_precipitation(dictionary, time_period):
     df.set_index('Date_copy', inplace=True)
 
     if 'Precipitation' in df:
-        # Resample the data by month and calculate the mean
-        precipitation = df.resample(time_period).mean()
+        if time_period is None:
+            # Calculate the mean of the 'Precipitation' column
+            average_precipitation = df['Precipitation'].mean()
+
+            return average_precipitation
+        
+        else:
+            # Resample the data by the time period and calculate the mean
+            precipitation = df.resample(time_period).mean()
+
+            return precipitation
+        
     else:
         raise KeyError('Error: Precipitation field not found in the dictionary')
-
-    return precipitation
 
 
 def weekly_precipitation(dictionary):
@@ -1088,7 +1118,7 @@ def monthly_precipitation(dictionary):
     else:
         print('Error: Precipitation field not found in the dictionary')
         sys.exit(1)
-
+    print(monthly_precipitation)
     return monthly_precipitation
 
 
@@ -1106,13 +1136,28 @@ def yearly_precipitation(dictionary):
         print('Error: Precipitation field not found in the dictionary')
         sys.exit(1)
 
+    print(yearly_precipitation)
     return yearly_precipitation
 
 
 def map_precipitation(precipitation_series, lo, la, date, work_dir, vlim=None):
     '''
-    Example of global precipitations given by Nasa at: https://gpm.nasa.gov/data/tutorials
-    '''  
+    Maps the precipitation data on a given region.
+
+    Args:
+        precipitation_series (pd.DataFrame or dict or ndarray): The precipitation data series.
+            If a pd.DataFrame, it should have a column named 'Precipitation' containing the data.
+            If a dict, it should have date strings as keys and precipitation data as values.
+            If an ndarray, it should contain the precipitation data directly.
+        lo (list): The longitude range of the region.
+        la (list): The latitude range of the region.
+        date (list): The date of the precipitation data.
+        work_dir (str): The path to the shapefile for plotting the island boundary.
+        vlim (tuple, optional): The minimum and maximum values for the color scale. Defaults to None.
+
+    Returns:
+        None
+    '''
     if type(precipitation_series) == pd.DataFrame:
         precip = precipitation_series.get('Precipitation')[0][0]
 
@@ -1122,7 +1167,6 @@ def map_precipitation(precipitation_series, lo, la, date, work_dir, vlim=None):
     else:
         precip = precipitation_series
 
-    print(precip)
     precip = np.flip(precip.transpose(), axis=0)
 
     if not vlim:
