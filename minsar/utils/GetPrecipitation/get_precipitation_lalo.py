@@ -48,6 +48,7 @@ Example:
   get_precipitation_lalo.py --colormap 20000601 --latitude 19.5:20.05 --longitude 156.5:158.05 --vlim 0 10
   get_precipitation_lalo.py --colormap 20000601 --latitude 19.5:20.05 --longitude 156.5:158.05 --vlim 0 10 --interpolate 5
   get_precipitation_lalo.py --colormap 20000601 --polygon 'POLYGON((113.4496 -8.0893,113.7452 -8.0893,113.7452 -7.817,113.4496 -7.817,113.4496 -8.0893))'
+  get_precipitation_lalo.py --colormap 20000601 --latitude=-2.11:2.35 --longitude=-92.68:-88.49 --colorbar jet
 
 """
 workDir = 'WORKDIR'
@@ -115,7 +116,7 @@ def create_parser_new():
                         action='store_true', 
                         help='List volcanoes')
     parser.add_argument('--colormap', 
-                        nargs=1, 
+                        nargs='+', 
                         metavar=('DATE, use polygon or latitude/longitude args'), 
                         help='Heat map of precipitation')
     parser.add_argument('--dir', 
@@ -135,14 +136,26 @@ def create_parser_new():
                         nargs=1,
                         metavar=('GRANULARITY'), 
                         help='Interpolate data')
+    parser.add_argument('--average', 
+                        nargs=1, 
+                        metavar=('TIME_PERIOD'), 
+                        help='Average data')
     parser.add_argument('--check', 
                         action='store_true', 
                         help='Check if the file is corrupted')
+    parser.add_argument('--colorbar', 
+                        nargs=1,
+                        metavar=('COLORBAR'), 
+                        help='Colorbar')
 
     inps = parser.parse_args()
 
     if not inps.dir:
         inps.dir = (os.getenv(workDir)) if workDir in os.environ else (os.getenv('HOME'))
+        inps.dir = inps.dir + '/gpm_data'
+
+    else:
+        inps.dir = inps.dir[0]
 
     inps.start_date = datetime.strptime(inps.start_date[0], '%Y%m%d').date() if inps.start_date else datetime.strptime('20000601', '%Y%m%d').date()
 
@@ -203,22 +216,25 @@ def create_parser_new():
     if inps.colormap:
         if len(inps.colormap) == 1:
             try:
-                inps.colormap = datetime.strptime(inps.colormap[0], '%Y%m%d').date(), inps.latitude, inps.longitude
+                inps.colormap = datetime.strptime(inps.colormap[0], '%Y%m%d').date(), None
 
             except ValueError:
                 print('Error: Date format not valid, if only 1 argument is given, it must be in the format YYYYMMDD')
                 sys.exit(1)
 
         elif len(inps.colormap) == 2:
-            parser.error("--colormap 2 arguments are ambiguous, requires 1 or 3 arguments")
-        
-        elif len(inps.colormap) == 3:
             try:
-                inps.colormap = datetime.strptime(inps.colormap[0], '%Y%m%d').date(), parse_coordinates(inps.colormap[1]), parse_coordinates(inps.colormap[2])
-
+                inps.colormap = datetime.strptime(inps.colormap[0], '%Y%m%d').date(), datetime.strptime(inps.colormap[1], '%Y%m%d').date()
+            
             except ValueError:
                 print('Error: Date format not valid, if only 1 argument is given, it must be in the format YYYYMMDD')
                 sys.exit(1)
+     
+        else:
+            parser.error("--colormap requires 1 or 2 arguments")
+
+    if not inps.colorbar:
+        inps.colorbar = 'viridis'
 
     return inps
 
@@ -228,24 +244,26 @@ Prompt images
 '''
 def prompt_subplots(inps):
     prompt_plots = []
+    gpm_dir = inps.dir
+    volcano_json_dir = inps.dir + '/' + jsonVolcano
 
     if inps.latitude and inps.longitude:
         inps.latitude, inps.longitude = adapt_coordinates(inps.latitude, inps.longitude)
 
     if inps.download:
-        dload_site_list_parallel(inps.dir + '/gpm_data', generate_date_list(inps.download[0], inps.download[1]))
+        dload_site_list_parallel(gpm_dir, generate_date_list(inps.download[0], inps.download[1]))
     
     if inps.plot_daily:
         inps.plot_daily[0], inps.plot_daily[1] = adapt_coordinates(inps.plot_daily[0], inps.plot_daily[1])
         date_list = generate_date_list(inps.plot_daily[2], inps.plot_daily[3])
-        prec = create_map(inps.plot_daily[0], inps.plot_daily[1], date_list, inps.dir + '/gpm_data')
+        prec = create_map(inps.plot_daily[0], inps.plot_daily[1], date_list, gpm_dir)
         bar_plot(prec, inps.plot_daily[0], inps.plot_daily[1])
         prompt_plots.append('plot_daily')
 
     if inps.plot_weekly:
         inps.plot_weekly[0], inps.plot_weekly[1] = adapt_coordinates(inps.plot_weekly[0], inps.plot_weekly[1])
         date_list = generate_date_list(inps.plot_weekly[2], inps.plot_weekly[3])
-        prec = create_map(inps.plot_weekly[0], inps.plot_weekly[1], date_list, inps.dir + '/gpm_data')
+        prec = create_map(inps.plot_weekly[0], inps.plot_weekly[1], date_list, gpm_dir)
         prec = weekly_monthly_yearly_precipitation(prec, "W")
         bar_plot(prec, inps.plot_weekly[0], inps.plot_weekly[1])
         prompt_plots.append('plot_weekly')
@@ -253,7 +271,7 @@ def prompt_subplots(inps):
     if inps.plot_monthly:
         inps.plot_monthly[0], inps.plot_monthly[1] = adapt_coordinates(inps.plot_monthly[0], inps.plot_monthly[1])
         date_list = generate_date_list(inps.plot_monthly[2], inps.plot_monthly[3])
-        prec = create_map(inps.plot_monthly[0], inps.plot_monthly[1], date_list, inps.dir + '/gpm_data')
+        prec = create_map(inps.plot_monthly[0], inps.plot_monthly[1], date_list, gpm_dir)
         prec = weekly_monthly_yearly_precipitation(prec, "M")
         bar_plot(prec, inps.plot_monthly[0], inps.plot_monthly[1])
         prompt_plots.append('plot_monthly')
@@ -261,46 +279,46 @@ def prompt_subplots(inps):
     if inps.plot_yearly:    
         inps.plot_yearly[2], inps.plot_yearly[3] = adapt_coordinates(inps.plot_yearly[2], inps.plot_yearly[3])
         date_list = generate_date_list(inps.plot_yearly[0], inps.plot_yearly[1])
-        prec = create_map(inps.plot_yearly[2], inps.plot_yearly[3], date_list, inps.dir + '/gpm_data')
+        prec = create_map(inps.plot_yearly[2], inps.plot_yearly[3], date_list, gpm_dir)
         prec = yearly_precipitation(prec) #weekly_monthly_yearly_precipitation(prec, "Y")
         bar_plot(prec, inps.plot_yearly[2], inps.plot_yearly[3])
         prompt_plots.append('plot_yearly')
 
     if inps.volcano:
-        eruption_dates, date_list, lola = extract_volcanoes_info(inps.dir + '/' + jsonVolcano, inps.volcano[0])
+        eruption_dates, date_list, lola = extract_volcanoes_info(volcano_json_dir, inps.volcano[0])
         lo, la = adapt_coordinates(lola[0], lola[1])
-        dload_site_list_parallel(inps.dir + '/gpm_data', date_list)
-        prec = create_map(lo, la, date_list, inps.dir + '/gpm_data')
+        dload_site_list_parallel(gpm_dir, date_list)
+        prec = create_map(lo, la, date_list, gpm_dir)
         bar_plot(prec, la, lo, volcano=inps.volcano[0])
         plot_eruptions(eruption_dates) 
         plt.show()
         prompt_plots.append('volcano')
 
     if inps.list:
-        volcanoes_list(inps.dir + '/' + jsonVolcano)
+        volcanoes_list(volcano_json_dir)
 
         prompt_plots.append('list')
 
     if inps.colormap:
-        la, lo = adapt_coordinates(inps.colormap[1], inps.colormap[2])
-        date_list = generate_date_list(inps.colormap[0])
-        #TODO Hard coded dates, to remove
-        date_list = generate_date_list(datetime.strptime('20000601', '%Y%m%d').date(), datetime.strptime('20000701', '%Y%m%d').date())
-        # prova = extract_precipitation(la, lo, date_list, inps.dir + '/gpm_data')
-        prova = create_map(la, lo, date_list, inps.dir + '/gpm_data')
+        la, lo = adapt_coordinates(inps.latitude, inps.longitude)
+        date_list = generate_date_list(inps.colormap[0], inps.colormap[1])
+        print(date_list[0], date_list[-1])
+        prova = create_map(la, lo, date_list, gpm_dir)
 
         #TODO condition monthly, yearly, maybe specific date range
         #TODO if no time_period here, it will avarage the whole period
         # prova = weekly_monthly_yearly_precipitation(prova, 'M')
-        prova = weekly_monthly_yearly_precipitation(prova)
+        print(prova)
+        prova = weekly_monthly_yearly_precipitation(prova, inps.average)
+        print(prova)
 
         if inps.interpolate:
             prova = interpolate_map(prova, int(inps.interpolate[0]))
-        
-        map_precipitation(prova, lo, la, date_list, './ne_10m_land', inps.vlim)
+
+        map_precipitation(prova, lo, la, date_list, './ne_10m_land', inps.colorbar,inps.vlim)
 
     if inps.check:
-        check_nc4_files(inps.dir + '/gpm_data')
+        check_nc4_files(gpm_dir)
 
 
 def parse_polygon(polygon):
@@ -792,26 +810,6 @@ def dload_site_list_parallel(folder, date_list):
             else:
                 print(f"File {filename} already exists, skipping download")
 
-                
-def process_file(file, date_list, lon, lat, longitude, latitude):
-    # Extract date from file name
-    d = re.search('\d{8}', file)
-    date = datetime.strptime(d.group(0), "%Y%m%d").date()
-
-    if date not in date_list:
-        return None
-
-    # Open the file
-    ds = nc.Dataset(file)
-
-    data = ds['precipitationCal'] if 'precipitationCal' in ds.variables else ds['precipitation']
-
-    subset = data[:, np.where(lon == longitude[0])[0][0]:np.where(lon == longitude[1])[0][0]+1, np.where(lat == latitude[0])[0][0]:np.where(lat == latitude[1])[0][0]+1]
-    subset = subset.astype(float)
-
-    ds.close()
-
-    return (str(date), subset)
 
 
 def check_nc4_files(folder):
@@ -865,7 +863,28 @@ def interpolate_map(dataframe, resolution=5):
 
     return new_values
 
+
+def process_file(file, date_list, lon, lat, longitude, latitude):
+    # Extract date from file name
+    d = re.search('\d{8}', file)
+    date = datetime.strptime(d.group(0), "%Y%m%d").date()
+
+    if date not in date_list:
+        return None
+
+    # Open the file
+    ds = nc.Dataset(file)
+
+    data = ds['precipitationCal'] if 'precipitationCal' in ds.variables else ds['precipitation']
+
+    subset = data[:, np.where(lon == longitude[0])[0][0]:np.where(lon == longitude[1])[0][0]+1, np.where(lat == latitude[0])[0][0]:np.where(lat == latitude[1])[0][0]+1]
+    subset = subset.astype(float)
+
+    ds.close()
+
+    return (str(date), subset)
     
+
 def create_map(latitude, longitude, date_list, folder): #parallel
     """
     Creates a map of precipitation data for a given latitude, longitude, and date range.
@@ -895,18 +914,8 @@ def create_map(latitude, longitude, date_list, folder): #parallel
 
     dictionary = {}
 
-    # for file in files:
-    #     result = process_file(file, date_list, lon, lat, longitude, latitude)
-    #     if result is not None:
-    #         dictionary[result[0]] = result[1]
-
-
-    # Create a thread pool and process the files in parallel
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-        results = executor.map(process_file, files, [date_list]*len(files), [lon]*len(files), [lat]*len(files), [longitude]*len(files), [latitude]*len(files))
-
-    # Filter out None results and update the dictionary
-    for result in results:
+    for file in files:
+        result = process_file(file, date_list, lon, lat, longitude, latitude)
         if result is not None:
             dictionary[result[0]] = result[1]
 
@@ -1085,7 +1094,7 @@ def weekly_monthly_yearly_precipitation(dictionary, time_period=None):
         
         else:
             # Resample the data by the time period and calculate the mean
-            precipitation = df.resample(time_period).mean()
+            precipitation = df.resample(time_period[0]).mean()
 
             return precipitation
         
@@ -1145,7 +1154,7 @@ def yearly_precipitation(dictionary):
     return yearly_precipitation
 
 
-def map_precipitation(precipitation_series, lo, la, date, work_dir, vlim=None):
+def map_precipitation(precipitation_series, lo, la, date, work_dir, colorbar, vlim=None):
     '''
     Maps the precipitation data on a given region.
 
@@ -1163,6 +1172,7 @@ def map_precipitation(precipitation_series, lo, la, date, work_dir, vlim=None):
     Returns:
         None
     '''
+
     if type(precipitation_series) == pd.DataFrame:
         precip = precipitation_series.get('Precipitation')[0][0]
 
@@ -1182,7 +1192,7 @@ def map_precipitation(precipitation_series, lo, la, date, work_dir, vlim=None):
         vmin = vlim[0]
         vmax = vlim[1]
 
-    plt.imshow(precip, vmin=vmin, vmax=vmax, extent=[lo[0],lo[1],la[0],la[1]])
+    plt.imshow(precip, vmin=vmin, vmax=vmax, extent=[lo[0],lo[1],la[0],la[1]],cmap=colorbar)
     plt.ylim(la[0], la[1])
     plt.xlim(lo[0], lo[1])
 
@@ -1207,7 +1217,7 @@ def map_precipitation(precipitation_series, lo, la, date, work_dir, vlim=None):
 
     # -- add a color bar
     cbar = plt.colorbar( )
-    cbar.set_label('millimeters')
+    cbar.set_label('mm/day')
 
     plt.show()
     print('DONE')
@@ -1225,7 +1235,56 @@ def map_precipitation(precipitation_series, lo, la, date, work_dir, vlim=None):
 # prompt_subplots(inps)
 # print(inps)
 
-# sys.exit(0)
+import numpy as np
+import matplotlib.pyplot as plt
+import requests
+
+# Function to fetch altitude data using the Google Maps Elevation API
+def get_altitude(lat, lon, api_key):
+    url = "https://maps.googleapis.com/maps/api/elevation/json"
+    params = {
+        "locations": f"{lat},{lon}",
+        "key": api_key
+    }
+    response = requests.get(url, params=params)
+    data = response.json()
+    if data['results']:
+        return data['results'][0]['elevation']
+    else:
+        print("No altitude data found for the given coordinates.")
+        return None
+
+# Function to create a grid of coordinates within a bounding box
+def create_grid(top_left, bottom_right, grid_size):
+    latitudes = np.linspace(top_left[0], bottom_right[0], 100)
+    longitudes = np.linspace(top_left[1], bottom_right[1], 100)
+    return np.array(np.meshgrid(latitudes, longitudes)).T.reshape(-1, 2)
+
+# Function to fetch altitude data for the grid
+def fetch_altitude_data(coords, api_key):
+    return np.array([get_altitude(lat, lon, api_key) for lat, lon in coords])
+
+# Function to plot isolines
+def plot_isolines(coords, altitudes, grid_size):
+    altitudes = altitudes.reshape(100, 100)
+    plt.contour(altitudes, colors='black')
+    plt.title('Altitude Isolines')
+    plt.xlabel('Latitude')
+    plt.ylabel('Longitude')
+    plt.show()
+
+# Example usage
+api_key = "AIzaSyD9ZZ_N0lxrIsWa4LNR9l4CL-lkz5Zs0IE" # Replace with your actual API key
+top_left = (40.7128, -74.0060) # Example: Top-left corner of the bounding box
+bottom_right = (40.7028, -74.0160) # Example: Bottom-right corner of the bounding box
+grid_size = 0.1 # Example: 0.1 degrees grid size
+
+coords = create_grid(top_left, bottom_right, grid_size)
+altitudes = fetch_altitude_data(coords, api_key)
+plot_isolines(coords, altitudes, grid_size)
+
+
+sys.exit(0)
 
 #################### END TEST AREA ########################
 
