@@ -22,7 +22,7 @@ import sys
 import time
 import subprocess
 from scipy.interpolate import interp2d
-
+import pygmt
 
 
 EXAMPLE = """
@@ -136,6 +136,10 @@ def create_parser_new():
                         nargs=1,
                         metavar=('GRANULARITY'), 
                         help='Interpolate data')
+    parser.add_argument('--isolines',
+                        nargs=1,
+                        metavar=('LEVELS'),
+                        help='Number of isolines to be plotted on the map')
     parser.add_argument('--average', 
                         nargs=1, 
                         metavar=('TIME_PERIOD'), 
@@ -315,7 +319,7 @@ def prompt_subplots(inps):
         if inps.interpolate:
             prova = interpolate_map(prova, int(inps.interpolate[0]))
 
-        map_precipitation(prova, lo, la, date_list, './ne_10m_land', inps.colorbar,inps.vlim)
+        map_precipitation(prova, lo, la, date_list, './ne_10m_land', inps.colorbar, inps.isolines ,inps.vlim)
 
     if inps.check:
         check_nc4_files(gpm_dir)
@@ -1153,8 +1157,27 @@ def yearly_precipitation(dictionary):
     print(yearly_precipitation)
     return yearly_precipitation
 
+def add_isolines(region, levels=1, inline=False):
+    grid = pygmt.datasets.load_earth_relief(resolution="01m", region=region)
+    levels = int(levels[0])
 
-def map_precipitation(precipitation_series, lo, la, date, work_dir, colorbar, vlim=None):
+    # Convert the DataArray to a numpy array
+    grid_np = grid.values
+
+    # Perform the operation
+    grid_np[grid_np < 0] = 0
+
+    # Convert the numpy array back to a DataArray
+    grid[:] = grid_np
+
+    # Plot the data
+    cont = plt.contour(grid, levels=levels, colors='white', extent=region)
+    plt.clabel(cont, inline=inline, fontsize=8)
+    
+    return plt
+
+
+def map_precipitation(precipitation_series, lo, la, date, work_dir, colorbar, levels,vlim=None):
     '''
     Maps the precipitation data on a given region.
 
@@ -1192,99 +1215,31 @@ def map_precipitation(precipitation_series, lo, la, date, work_dir, colorbar, vl
         vmin = vlim[0]
         vmax = vlim[1]
 
-    plt.imshow(precip, vmin=vmin, vmax=vmax, extent=[lo[0],lo[1],la[0],la[1]],cmap=colorbar)
+    region = [lo[0],lo[1],la[0],la[1]]
+
+    # Add contour lines
+    if not levels:
+        plt = add_isolines(region)
+    else:
+        plt = add_isolines(region, levels, inline=True)
+
+    plt.imshow(precip, vmin=vmin, vmax=vmax, extent=region,cmap=colorbar)
     plt.ylim(la[0], la[1])
     plt.xlim(lo[0], lo[1])
 
-    island_boundary = gpd.read_file(work_dir)
-    geometry = island_boundary['geometry']
-
-    # Extract coordinates
-    coordinates = []
-    for geom in geometry:
-        # Check the type of the geometry and extract coordinates accordingly
-        if geom.geom_type == 'Polygon':
-            # For polygons, extract exterior coordinates
-            coords = geom.exterior.coords[:]
-            coordinates.append(coords)
-        elif geom.geom_type == 'MultiPolygon':
-            # For multi-polygons, extract exterior coordinates for each polygon
-            for polygon in geom.geoms:  # Use the 'geoms' attribute to iterate over polygons
-                coords = polygon.exterior.coords[:]
-                coordinates.append(coords)
-
-    island_boundary.plot(ax=plt.gca(), edgecolor='white', facecolor='none') #plot shapefile
-
-    # -- add a color bar
-    cbar = plt.colorbar( )
+    # add a color bar
+    cbar = plt.colorbar()
     cbar.set_label('mm/day')
-
+    
     plt.show()
     print('DONE')
 
 ###################### TEST AREA ##########################
-# lo, la = adapt_coordinates([(-93.680)+1,(-87.4981)-1], [(-3.113)+1, (3.353)-1])
-# lo, la = adapt_coordinates([92.05, 92.05], [0.05, 0.05])
-# date_list = generate_date_list('2000-06-01', '2000-06-30')
-# prova = extract_precipitation(lo, la, date_list, work_dir)
 
-# prova = monthly_precipitation(prova)
-
-# bar_plot(prova, la, lo)
-# inps = create_parser_new()
-# prompt_subplots(inps)
-# print(inps)
-
-import numpy as np
-import matplotlib.pyplot as plt
-import requests
-
-# Function to fetch altitude data using the Google Maps Elevation API
-def get_altitude(lat, lon, api_key):
-    url = "https://maps.googleapis.com/maps/api/elevation/json"
-    params = {
-        "locations": f"{lat},{lon}",
-        "key": api_key
-    }
-    response = requests.get(url, params=params)
-    data = response.json()
-    if data['results']:
-        return data['results'][0]['elevation']
-    else:
-        print("No altitude data found for the given coordinates.")
-        return None
-
-# Function to create a grid of coordinates within a bounding box
-def create_grid(top_left, bottom_right, grid_size):
-    latitudes = np.linspace(top_left[0], bottom_right[0], 100)
-    longitudes = np.linspace(top_left[1], bottom_right[1], 100)
-    return np.array(np.meshgrid(latitudes, longitudes)).T.reshape(-1, 2)
-
-# Function to fetch altitude data for the grid
-def fetch_altitude_data(coords, api_key):
-    return np.array([get_altitude(lat, lon, api_key) for lat, lon in coords])
-
-# Function to plot isolines
-def plot_isolines(coords, altitudes, grid_size):
-    altitudes = altitudes.reshape(100, 100)
-    plt.contour(altitudes, colors='black')
-    plt.title('Altitude Isolines')
-    plt.xlabel('Latitude')
-    plt.ylabel('Longitude')
-    plt.show()
-
-# Example usage
-api_key = "AIzaSyD9ZZ_N0lxrIsWa4LNR9l4CL-lkz5Zs0IE" # Replace with your actual API key
-top_left = (40.7128, -74.0060) # Example: Top-left corner of the bounding box
-bottom_right = (40.7028, -74.0160) # Example: Bottom-right corner of the bounding box
-grid_size = 0.1 # Example: 0.1 degrees grid size
-
-coords = create_grid(top_left, bottom_right, grid_size)
-altitudes = fetch_altitude_data(coords, api_key)
-plot_isolines(coords, altitudes, grid_size)
-
-
-sys.exit(0)
+# region = [-86.2861 ,-63.532, 15.7464,24.3224]
+# plt = add_isolines(region, levels=10, inline=False)
+# plt.show()
+# sys.exit(0)
 
 #################### END TEST AREA ########################
 
