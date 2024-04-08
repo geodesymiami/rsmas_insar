@@ -240,6 +240,9 @@ def create_parser_new():
     if not inps.colorbar:
         inps.colorbar = 'viridis'
 
+    if inps.colormap[1]:
+        inps.average = None
+
     return inps
 
 ###################### END NEW PARSER ######################
@@ -305,17 +308,15 @@ def prompt_subplots(inps):
 
     if inps.colormap:
         la, lo = adapt_coordinates(inps.latitude, inps.longitude)
-        date_list = generate_date_list(inps.colormap[0], inps.colormap[1])
+        date_list = generate_date_list(inps.colormap[0], inps.colormap[1], inps.average)
         print(date_list[0], date_list[-1])
         prova = create_map(la, lo, date_list, gpm_dir)
 
         #TODO condition monthly, yearly, maybe specific date range
         #TODO if no time_period here, it will avarage the whole period
         # prova = weekly_monthly_yearly_precipitation(prova, 'M')
-        print(prova)
         prova = weekly_monthly_yearly_precipitation(prova, inps.average)
         print(prova)
-
         if inps.interpolate:
             prova = interpolate_map(prova, int(inps.interpolate[0]))
 
@@ -972,7 +973,7 @@ def extract_precipitation(latitude, longitude, date_list, folder):
     return dictionary
 
 
-def generate_date_list(start, end=None):
+def generate_date_list(start, end=None, average='M'):
     """
     Generate a list of dates between the start and end dates.
 
@@ -1006,8 +1007,13 @@ def generate_date_list(start, end=None):
             edate = end
 
     elif end is None:
-        sdate = datetime(sdate.year, sdate.month, 1).date()
-        edate = datetime(sdate.year, sdate.month, days_in_month(sdate)).date()
+        if average[0] == 'M':
+            sdate = datetime(sdate.year, sdate.month, 1).date()
+            edate = datetime(sdate.year, sdate.month, days_in_month(sdate)).date()
+        
+        elif average[0] == 'Y':
+            sdate = datetime(sdate.year, 1, 1).date()
+            edate = datetime(sdate.year, 12, 31).date()
 
     if edate >= datetime.today().date():
         edate = datetime.today().date() - relativedelta(days=1)
@@ -1088,13 +1094,13 @@ def weekly_monthly_yearly_precipitation(dictionary, time_period=None):
     df['Date'] = pd.to_datetime(df['Date'])
     df['Date_copy'] = df['Date']  # Create a copy of the 'Date' column
     df.set_index('Date_copy', inplace=True)
-
+    print(df['Date'])
     if 'Precipitation' in df:
         if time_period is None:
             # Calculate the mean of the 'Precipitation' column
-            average_precipitation = df['Precipitation'].mean()
+            cumulative_precipitation = df['Precipitation'].cumsum().sum()
 
-            return average_precipitation
+            return cumulative_precipitation
         
         else:
             # Resample the data by the time period and calculate the mean
@@ -1195,6 +1201,8 @@ def map_precipitation(precipitation_series, lo, la, date, work_dir, colorbar, le
     Returns:
         None
     '''
+    m_y = [28,29,30,31,365]
+
 
     if type(precipitation_series) == pd.DataFrame:
         precip = precipitation_series.get('Precipitation')[0][0]
@@ -1229,7 +1237,11 @@ def map_precipitation(precipitation_series, lo, la, date, work_dir, colorbar, le
 
     # add a color bar
     cbar = plt.colorbar()
-    cbar.set_label('mm/day')
+
+    if len(date) in m_y:
+        cbar.set_label('mm/day')
+    else :
+        cbar.set_label(f'cumulative precipitation of {len(date)} days')
     
     plt.show()
     print('DONE')
@@ -1239,6 +1251,12 @@ def map_precipitation(precipitation_series, lo, la, date, work_dir, colorbar, le
 # region = [-86.2861 ,-63.532, 15.7464,24.3224]
 # plt = add_isolines(region, levels=10, inline=False)
 # plt.show()
+    
+# z1 = 2 + 10j
+# print("Magnitude of z1:", np.abs(z1))  # Outputs: 2.23606797749979
+# print("Angle of z1 in radians:", np.angle(z1))  # Outputs: 1.1071487177940904
+# print("Angle of z1 in degrees:", np.degrees(np.angle(z1)))  # Outputs: 63.43494882292201
+
 # sys.exit(0)
 
 #################### END TEST AREA ########################
