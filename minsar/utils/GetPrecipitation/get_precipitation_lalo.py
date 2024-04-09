@@ -309,18 +309,17 @@ def prompt_subplots(inps):
     if inps.colormap:
         la, lo = adapt_coordinates(inps.latitude, inps.longitude)
         date_list = generate_date_list(inps.colormap[0], inps.colormap[1], inps.average)
-        print(date_list[0], date_list[-1])
-        prova = create_map(la, lo, date_list, gpm_dir)
+       
+        dataset = create_map(la, lo, date_list, gpm_dir)
 
-        #TODO condition monthly, yearly, maybe specific date range
-        #TODO if no time_period here, it will avarage the whole period
-        # prova = weekly_monthly_yearly_precipitation(prova, 'M')
-        prova = weekly_monthly_yearly_precipitation(prova, inps.average)
-        print(prova)
+        # Readapt date_list if dataset is does not cover the whole period
+        date_list = generate_date_list(dataset['Date'].iloc[0], dataset['Date'].iloc[-1], inps.average)
+        dataset = weekly_monthly_yearly_precipitation(dataset, inps.average)
+
         if inps.interpolate:
-            prova = interpolate_map(prova, int(inps.interpolate[0]))
+            dataset = interpolate_map(dataset, int(inps.interpolate[0]))
 
-        map_precipitation(prova, lo, la, date_list, './ne_10m_land', inps.colorbar, inps.isolines ,inps.vlim)
+        map_precipitation(dataset, lo, la, date_list, './ne_10m_land', inps.colorbar, inps.isolines ,inps.vlim)
 
     if inps.check:
         check_nc4_files(gpm_dir)
@@ -912,6 +911,8 @@ def create_map(latitude, longitude, date_list, folder): #parallel
     files = [folder + '/' + f for f in os.listdir(folder) if f.endswith('.nc4')]
 
     # Check for duplicate files
+    print("Checking for duplicate files...")
+    
     if len(files) != len(set(files)):
         print("There are duplicate files in the list.")
     else:
@@ -928,10 +929,11 @@ def create_map(latitude, longitude, date_list, folder): #parallel
     df1 = pd.DataFrame(dictionary.items(), columns=['Date', 'Precipitation'])
     finaldf = pd.concat([finaldf, df1], ignore_index=True, sort=False)
 
-    finaldf.sort_index()
-    finaldf.sort_index(ascending=False)
+    # finaldf.sort_index()
+    # finaldf.sort_index(ascending=False)
 
     finaldf = finaldf.sort_values(by='Date', ascending=True)
+    finaldf = finaldf.reset_index(drop=True)
 
     return finaldf
 
@@ -986,8 +988,19 @@ def generate_date_list(start, end=None, average='M'):
         list: A list of dates between the start and end dates.
 
     """
+    if average:
+        if isinstance(average, tuple) or isinstance(average, list):
+            average = average[0]
+            print('HERE')
+    else:
+        average = 'M'
+
     if isinstance(start, str):
-        sdate = datetime.strptime(start,'%Y%m%d').date()
+        try:
+            sdate = datetime.strptime(start,'%Y%m%d').date()
+
+        except:
+            sdate = datetime.strptime(start,'%Y-%m-%d').date()
 
     elif isinstance(start, date):
         try:
@@ -997,7 +1010,11 @@ def generate_date_list(start, end=None, average='M'):
             sdate = start
 
     if isinstance(end, str):
-        edate = datetime.strptime(end,'%Y%m%d').date()
+        try:
+            edate = datetime.strptime(end,'%Y%m%d').date()
+
+        except:
+            edate = datetime.strptime(end,'%Y-%m-%d').date()
 
     elif isinstance(end, date):
         try:
@@ -1007,11 +1024,11 @@ def generate_date_list(start, end=None, average='M'):
             edate = end
 
     elif end is None:
-        if average[0] == 'M':
+        if average == 'M':
             sdate = datetime(sdate.year, sdate.month, 1).date()
             edate = datetime(sdate.year, sdate.month, days_in_month(sdate)).date()
         
-        elif average[0] == 'Y':
+        elif average == 'Y':
             sdate = datetime(sdate.year, 1, 1).date()
             edate = datetime(sdate.year, 12, 31).date()
 
@@ -1020,6 +1037,7 @@ def generate_date_list(start, end=None, average='M'):
 
     # Create a date range with the input dates, from start_date to end_date
     date_list = pd.date_range(start=sdate, end=edate).date
+    print('Generated date list ranging from', sdate, 'to', edate, 'containing', len(date_list), 'days')
 
     return date_list
 
@@ -1090,21 +1108,28 @@ def weekly_monthly_yearly_precipitation(dictionary, time_period=None):
     Raises:
         KeyError: If the 'Precipitation' field is not found in the dictionary.
     """
+    m_y = [28,29,30,31,365]
     df = pd.DataFrame.from_dict(dictionary)
     df['Date'] = pd.to_datetime(df['Date'])
-    df['Date_copy'] = df['Date']  # Create a copy of the 'Date' column
-    df.set_index('Date_copy', inplace=True)
-    print(df['Date'])
-    if 'Precipitation' in df:
-        if time_period is None:
-            # Calculate the mean of the 'Precipitation' column
-            cumulative_precipitation = df['Precipitation'].cumsum().sum()
+    # df['Date_copy'] = df['Date']  # Create a copy of the 'Date' column
+    # df.set_index('Date_copy', inplace=True)
+    df.set_index('Date', inplace=True)
+    print(df)
 
+    if 'Precipitation' in df:
+        if time_period is None or len(df) not in m_y:
+            # Calculate the mean of the 'Precipitation' column
+            print('Calculating the cumulative precipitation...')
+            cumulative_precipitation = df['Precipitation'].cumsum().sum()
+            print('-------------------------------------------------------')
+            
             return cumulative_precipitation
         
         else:
             # Resample the data by the time period and calculate the mean
+            print('Averaging the precipitation data...')
             precipitation = df.resample(time_period[0]).mean()
+            print('-------------------------------------------------------')
 
             return precipitation
         
@@ -1163,9 +1188,11 @@ def yearly_precipitation(dictionary):
     print(yearly_precipitation)
     return yearly_precipitation
 
-def add_isolines(region, levels=1, inline=False):
+def add_isolines(region, levels=0, inline=False):
     grid = pygmt.datasets.load_earth_relief(resolution="01m", region=region)
-    levels = int(levels[0])
+
+    if not isinstance(levels, int):
+        levels = int(levels[0])
 
     # Convert the DataArray to a numpy array
     grid_np = grid.values
@@ -1178,7 +1205,10 @@ def add_isolines(region, levels=1, inline=False):
 
     # Plot the data
     cont = plt.contour(grid, levels=levels, colors='white', extent=region)
-    plt.clabel(cont, inline=inline, fontsize=8)
+
+    if levels !=0:
+        plt.clabel(cont, inline=inline, fontsize=8)
+        print(inline)
     
     return plt
 
@@ -1202,7 +1232,7 @@ def map_precipitation(precipitation_series, lo, la, date, work_dir, colorbar, le
         None
     '''
     m_y = [28,29,30,31,365]
-
+    print(precipitation_series)
 
     if type(precipitation_series) == pd.DataFrame:
         precip = precipitation_series.get('Precipitation')[0][0]
