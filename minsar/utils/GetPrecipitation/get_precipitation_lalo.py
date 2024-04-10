@@ -18,7 +18,11 @@ import geopandas as gpd
 import concurrent.futures
 import subprocess
 import threading
-
+import sys
+import time
+import subprocess
+from scipy.interpolate import interp2d
+import pygmt
 
 
 EXAMPLE = """
@@ -42,7 +46,9 @@ Example:
   get_precipitation_lalo.py --list
   get_precipitation_lalo.py --colormap 20000601 --latitude=-2.11:2.35 --longitude=-92.68:-88.49
   get_precipitation_lalo.py --colormap 20000601 --latitude 19.5:20.05 --longitude 156.5:158.05 --vlim 0 10
+  get_precipitation_lalo.py --colormap 20000601 --latitude 19.5:20.05 --longitude 156.5:158.05 --vlim 0 10 --interpolate 5
   get_precipitation_lalo.py --colormap 20000601 --polygon 'POLYGON((113.4496 -8.0893,113.7452 -8.0893,113.7452 -7.817,113.4496 -7.817,113.4496 -8.0893))'
+  get_precipitation_lalo.py --colormap 20000601 --latitude=-2.11:2.35 --longitude=-92.68:-88.49 --colorbar jet
 
 """
 workDir = 'WORKDIR'
@@ -56,32 +62,6 @@ json_download_url = 'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/wms?s
 
 #TODO possible to go back to version 7 of Final Run 
 
-#TODO to remove
-def create_parser():
-    """ Creates command line argument parser object. """
-
-    parser = argparse.ArgumentParser(
-        description='Plot precipitation data from GPM dataset for a specific location at a given date range',
-        formatter_class=argparse.RawTextHelpFormatter,
-        epilog=EXAMPLE)
-    
-    group = parser.add_mutually_exclusive_group(required=True)
-
-    group.add_argument('-d', '--download', nargs=2, metavar=('start_date', 'end_date'), help='download data')
-
-    group.add_argument('--plot-daily', nargs=4, metavar=( 'latitude', 'longintude', 'start_date', 'end_date'))
-
-    group.add_argument('--plot-weekly', nargs=4, metavar=( 'latitude', 'longitude', 'start_date', 'end_date'))
-
-    group.add_argument('--plot-monthly', nargs=4, metavar=( 'latitude', 'longitude', 'start_date', 'end_date'))
-
-    group.add_argument('-vd', '--volcano-daily', nargs=1, metavar=( 'NAME'), help='plot eruption dates and precipitation levels')
-
-    group.add_argument('-ls', '--list', action='store_true', help='list volcanoes')
-
-    group.add_argument('--map', nargs=1, metavar=('date'),help='Heat map of precipitation')
-
-    return parser
 
 ###################### NEW PARSER ######################
 
@@ -120,11 +100,9 @@ def create_parser_new():
                         help='Bar plot with yearly precipitation data')
     parser.add_argument('--start-date', 
                         metavar='DATE', 
-                        type=datetime, 
                         help='Start date of the search')
     parser.add_argument('--end-date', 
                         metavar='DATE', 
-                        type=datetime, 
                         help='End date of the search')
     parser.add_argument('--latitude', 
                         nargs='+',  
@@ -138,7 +116,7 @@ def create_parser_new():
                         action='store_true', 
                         help='List volcanoes')
     parser.add_argument('--colormap', 
-                        nargs=1, 
+                        nargs='+', 
                         metavar=('DATE, use polygon or latitude/longitude args'), 
                         help='Heat map of precipitation')
     parser.add_argument('--dir', 
@@ -154,11 +132,34 @@ def create_parser_new():
     parser.add_argument('--polygon', 
                         metavar='POLYGON', 
                         help='Poligon of the wanted area (Format from ASF Vertex Tool https://search.asf.alaska.edu/#/)')
+    parser.add_argument('--interpolate',
+                        nargs=1,
+                        metavar=('GRANULARITY'), 
+                        help='Interpolate data')
+    parser.add_argument('--isolines',
+                        nargs=1,
+                        metavar=('LEVELS'),
+                        help='Number of isolines to be plotted on the map')
+    parser.add_argument('--average', 
+                        nargs=1, 
+                        metavar=('TIME_PERIOD'), 
+                        help='Average data')
+    parser.add_argument('--check', 
+                        action='store_true', 
+                        help='Check if the file is corrupted')
+    parser.add_argument('--colorbar', 
+                        nargs=1,
+                        metavar=('COLORBAR'), 
+                        help='Colorbar')
 
     inps = parser.parse_args()
 
     if not inps.dir:
         inps.dir = (os.getenv(workDir)) if workDir in os.environ else (os.getenv('HOME'))
+        inps.dir = inps.dir + '/gpm_data'
+
+    else:
+        inps.dir = inps.dir[0]
 
     inps.start_date = datetime.strptime(inps.start_date[0], '%Y%m%d').date() if inps.start_date else datetime.strptime('20000601', '%Y%m%d').date()
 
@@ -219,22 +220,28 @@ def create_parser_new():
     if inps.colormap:
         if len(inps.colormap) == 1:
             try:
-                inps.colormap = datetime.strptime(inps.colormap[0], '%Y%m%d').date(), inps.latitude, inps.longitude
+                inps.colormap = datetime.strptime(inps.colormap[0], '%Y%m%d').date(), None
 
             except ValueError:
                 print('Error: Date format not valid, if only 1 argument is given, it must be in the format YYYYMMDD')
                 sys.exit(1)
 
         elif len(inps.colormap) == 2:
-            parser.error("--colormap 2 arguments are ambiguous, requires 1 or 3 arguments")
-        
-        elif len(inps.colormap) == 3:
             try:
-                inps.colormap = datetime.strptime(inps.colormap[0], '%Y%m%d').date(), parse_coordinates(inps.colormap[1]), parse_coordinates(inps.colormap[2])
-
+                inps.colormap = datetime.strptime(inps.colormap[0], '%Y%m%d').date(), datetime.strptime(inps.colormap[1], '%Y%m%d').date()
+            
             except ValueError:
                 print('Error: Date format not valid, if only 1 argument is given, it must be in the format YYYYMMDD')
                 sys.exit(1)
+     
+        else:
+            parser.error("--colormap requires 1 or 2 arguments")
+
+    if not inps.colorbar:
+        inps.colorbar = 'viridis'
+
+    if inps.colormap[1]:
+        inps.average = None
 
     return inps
 
@@ -244,24 +251,26 @@ Prompt images
 '''
 def prompt_subplots(inps):
     prompt_plots = []
+    gpm_dir = inps.dir
+    volcano_json_dir = inps.dir + '/' + jsonVolcano
 
     if inps.latitude and inps.longitude:
         inps.latitude, inps.longitude = adapt_coordinates(inps.latitude, inps.longitude)
 
     if inps.download:
-        dload_site_list_parallel(inps.dir + '/gpm_data', generate_date_list(inps.download[0], inps.download[1]))
+        dload_site_list_parallel(gpm_dir, generate_date_list(inps.download[0], inps.download[1]))
     
     if inps.plot_daily:
         inps.plot_daily[0], inps.plot_daily[1] = adapt_coordinates(inps.plot_daily[0], inps.plot_daily[1])
         date_list = generate_date_list(inps.plot_daily[2], inps.plot_daily[3])
-        prec = create_map(inps.plot_daily[0], inps.plot_daily[1], date_list, inps.dir + '/gpm_data')
+        prec = create_map(inps.plot_daily[0], inps.plot_daily[1], date_list, gpm_dir)
         bar_plot(prec, inps.plot_daily[0], inps.plot_daily[1])
         prompt_plots.append('plot_daily')
 
     if inps.plot_weekly:
         inps.plot_weekly[0], inps.plot_weekly[1] = adapt_coordinates(inps.plot_weekly[0], inps.plot_weekly[1])
         date_list = generate_date_list(inps.plot_weekly[2], inps.plot_weekly[3])
-        prec = create_map(inps.plot_weekly[0], inps.plot_weekly[1], date_list, inps.dir + '/gpm_data')
+        prec = create_map(inps.plot_weekly[0], inps.plot_weekly[1], date_list, gpm_dir)
         prec = weekly_monthly_yearly_precipitation(prec, "W")
         bar_plot(prec, inps.plot_weekly[0], inps.plot_weekly[1])
         prompt_plots.append('plot_weekly')
@@ -269,7 +278,7 @@ def prompt_subplots(inps):
     if inps.plot_monthly:
         inps.plot_monthly[0], inps.plot_monthly[1] = adapt_coordinates(inps.plot_monthly[0], inps.plot_monthly[1])
         date_list = generate_date_list(inps.plot_monthly[2], inps.plot_monthly[3])
-        prec = create_map(inps.plot_monthly[0], inps.plot_monthly[1], date_list, inps.dir + '/gpm_data')
+        prec = create_map(inps.plot_monthly[0], inps.plot_monthly[1], date_list, gpm_dir)
         prec = weekly_monthly_yearly_precipitation(prec, "M")
         bar_plot(prec, inps.plot_monthly[0], inps.plot_monthly[1])
         prompt_plots.append('plot_monthly')
@@ -277,46 +286,43 @@ def prompt_subplots(inps):
     if inps.plot_yearly:    
         inps.plot_yearly[2], inps.plot_yearly[3] = adapt_coordinates(inps.plot_yearly[2], inps.plot_yearly[3])
         date_list = generate_date_list(inps.plot_yearly[0], inps.plot_yearly[1])
-        prec = create_map(inps.plot_yearly[2], inps.plot_yearly[3], date_list, inps.dir + '/gpm_data')
+        prec = create_map(inps.plot_yearly[2], inps.plot_yearly[3], date_list, gpm_dir)
         prec = yearly_precipitation(prec) #weekly_monthly_yearly_precipitation(prec, "Y")
         bar_plot(prec, inps.plot_yearly[2], inps.plot_yearly[3])
         prompt_plots.append('plot_yearly')
 
     if inps.volcano:
-        eruption_dates, date_list, lola = extract_volcanoes_info(inps.dir + '/' + jsonVolcano, inps.volcano[0])
+        eruption_dates, date_list, lola = extract_volcanoes_info(volcano_json_dir, inps.volcano[0])
         lo, la = adapt_coordinates(lola[0], lola[1])
-        dload_site_list_parallel(inps.dir + '/gpm_data', date_list)
-        prec = create_map(lo, la, date_list, inps.dir + '/gpm_data')
+        dload_site_list_parallel(gpm_dir, date_list)
+        prec = create_map(lo, la, date_list, gpm_dir)
         bar_plot(prec, la, lo, volcano=inps.volcano[0])
-        plot_eruptions(eruption_dates)
-
+        plot_eruptions(eruption_dates) 
+        plt.show()
         prompt_plots.append('volcano')
 
     if inps.list:
-        volcanoes_list(inps.dir + '/' + jsonVolcano)
+        volcanoes_list(volcano_json_dir)
 
         prompt_plots.append('list')
 
     if inps.colormap:
-        la, lo = adapt_coordinates(inps.colormap[1], inps.colormap[2])
-        date_list = generate_date_list(inps.colormap[0])
-        # prova = extract_precipitation(la, lo, date_list, inps.dir + '/gpm_data')
-        prova = create_map(la, lo, date_list, inps.dir + '/gpm_data')
+        la, lo = adapt_coordinates(inps.latitude, inps.longitude)
+        date_list = generate_date_list(inps.colormap[0], inps.colormap[1], inps.average)
+       
+        dataset = create_map(la, lo, date_list, gpm_dir)
 
-        #TODO condition monthly, yearly, maybe specific date range
-        prova = monthly_precipitation(prova)
-        print(prova)
-        
-        map_precipitation(prova, lo, la, date_list, './ne_10m_land',inps.vlim)
+        # Readapt date_list if dataset is does not cover the whole period
+        date_list = generate_date_list(dataset['Date'].iloc[0], dataset['Date'].iloc[-1], inps.average)
+        dataset = weekly_monthly_yearly_precipitation(dataset, inps.average)
 
-    # TODO dynamic plot
-    # if prompt_plots != []:
-    #     inps.plot_weekly[0], inps.plot_weekly[1] = adapt_coordinates(inps.plot_weekly[0], inps.plot_weekly[1])
-    #     date_list = generate_date_list(inps.plot_weekly[2], inps.plot_weekly[3])
-    #     prec = create_map(inps.plot_weekly[0], inps.plot_weekly[1], date_list, inps.dir + '/gpm_data')
-    #     prec = weekly_precipitation(prec)
-    #     bar_plot(prec, inps.plot_weekly[0], inps.plot_weekly[1])
+        if inps.interpolate:
+            dataset = interpolate_map(dataset, int(inps.interpolate[0]))
 
+        map_precipitation(dataset, lo, la, date_list, './ne_10m_land', inps.colorbar, inps.isolines ,inps.vlim)
+
+    if inps.check:
+        check_nc4_files(gpm_dir)
 
 
 def parse_polygon(polygon):
@@ -767,6 +773,7 @@ def generealte_urls_list(date_list):
     return urls
 
 
+# TODO check if the file has been downlaoded every time
 def dload_site_list_parallel(folder, date_list):
     """
     Downloads files from a list of URLs in parallel using multiple threads.
@@ -784,21 +791,83 @@ def dload_site_list_parallel(folder, date_list):
 
     urls = generealte_urls_list(date_list)
 
-    with concurrent.futures.ThreadPoolExecutor() as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         for url in urls:
             filename = os.path.basename(url)
             file_path = os.path.join(folder, filename)
 
             if not os.path.exists(file_path):
                 print(f"Starting download of {url} on {threading.current_thread().name}")
-                executor.submit(subprocess.run, ['wget', url, '-P', folder])
-                print(f"Finished download of {url} on {threading.current_thread().name}")
+                attempts = 0
+                while attempts < 3:
+                    try:
+                        subprocess.run(['wget', url, '-P', folder], check=True)
+                        print(f"Finished download of {url} on {threading.current_thread().name}")
+                        break
+                    except subprocess.CalledProcessError:
+                        attempts += 1
+                        print(f"Download attempt {attempts} failed for {url}. Retrying...")
+                        time.sleep(1)
+                else:
+                    print(f"Failed to download {url} after {attempts} attempts. Exiting...")
+                    sys.exit(1)
             else:
                 print(f"File {filename} already exists, skipping download")
 
 
-###################### NEW PARALLEL MAP FUNCTION ######################
-                
+
+def check_nc4_files(folder):
+    # Get a list of all .nc4 files in the directory
+    files = [folder + '/' + f for f in os.listdir(folder) if f.endswith('.nc4')]
+    print('Checking for corrupted files...')
+
+    # Check if each file exists and is not corrupted
+    for file in files:
+        try:
+            # Try to open the file with netCDF4
+            ds = nc.Dataset(file)
+            ds.close()
+
+        except:
+            print(f"File is corrupted: {file}")
+            # Delete the corrupted file
+            os.remove(file)
+            print(f"Corrupted file has been deleted: {file}")
+
+
+def interpolate_map(dataframe, resolution=5):
+    """
+    Interpolates a precipitation map using scipy.interpolate.interp2d.
+
+    Parameters:
+    dataframe (pandas.DataFrame): The input dataframe containing the precipitation data.
+    resolution (int): The resolution factor for the interpolated map. Default is 5.
+
+    Returns:
+    numpy.ndarray: The interpolated precipitation map.
+    """
+    
+    try:
+        values = dataframe.get('Precipitation')[0][0]
+
+    except:
+        values = dataframe[0]
+
+    x = np.arange(values.shape[1])
+    y = np.arange(values.shape[0])
+    # Create the interpolator function
+    interpolator = interp2d(x, y, values)
+
+    # Define the new x and y values with double the resolution
+    new_x = np.linspace(x.min(), x.max(), values.shape[1]*resolution)
+    new_y = np.linspace(y.min(), y.max(), values.shape[0]*resolution)
+
+    # Perform the interpolation
+    new_values = interpolator(new_x, new_y)
+
+    return new_values
+
+
 def process_file(file, date_list, lon, lat, longitude, latitude):
     # Extract date from file name
     d = re.search('\d{8}', file)
@@ -818,6 +887,7 @@ def process_file(file, date_list, lon, lat, longitude, latitude):
     ds.close()
 
     return (str(date), subset)
+    
 
 def create_map(latitude, longitude, date_list, folder): #parallel
     """
@@ -840,81 +910,32 @@ def create_map(latitude, longitude, date_list, folder): #parallel
     # Get a list of all .nc4 files in the data folder
     files = [folder + '/' + f for f in os.listdir(folder) if f.endswith('.nc4')]
 
-    # Create a thread pool and process the files in parallel
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = executor.map(process_file, files, [date_list]*len(files), [lon]*len(files), [lat]*len(files), [longitude]*len(files), [latitude]*len(files))
+    # Check for duplicate files
+    print("Checking for duplicate files...")
+    
+    if len(files) != len(set(files)):
+        print("There are duplicate files in the list.")
+    else:
+        print("There are no duplicate files in the list.")
 
-    # results = process_file(files, date_list, lon, lat, longitude, latitude)
-    # Filter out None results and update the dictionary
-    for result in results:
+    dictionary = {}
+
+    for file in files:
+        result = process_file(file, date_list, lon, lat, longitude, latitude)
         if result is not None:
             dictionary[result[0]] = result[1]
+
 
     df1 = pd.DataFrame(dictionary.items(), columns=['Date', 'Precipitation'])
     finaldf = pd.concat([finaldf, df1], ignore_index=True, sort=False)
 
-    finaldf.sort_index()
-    finaldf.sort_index(ascending=False)
+    # finaldf.sort_index()
+    # finaldf.sort_index(ascending=False)
 
     finaldf = finaldf.sort_values(by='Date', ascending=True)
+    finaldf = finaldf.reset_index(drop=True)
 
     return finaldf
-
-###################### END NEW PARALLEL MAP FUNCTION ######################
-
-# TODO to remove, we have parallel
-# def create_map(latitude, longitude, date_list, folder):
-#     """
-#     Creates a map of precipitation data for a given latitude, longitude, and date range.
-
-#     Parameters:
-#     latitude (list): A list containing the minimum and maximum latitude values.
-#     longitude (list): A list containing the minimum and maximum longitude values.
-#     date_list (list): A list of dates to include in the map.
-#     folder (str): The path to the folder containing the data files.
-
-#     Returns:
-#     pandas.DataFrame: A DataFrame containing the precipitation data for the specified location and dates to be plotted.
-#     """
-#     finaldf = {}
-#     df = pd.DataFrame()
-#     dictionary = {}
-
-#     lon, lat = generate_coordinate_array()
-#     # For each file in the data folder that has nc4 extension
-#     for f in os.listdir(folder):
-
-#         if f.endswith('.nc4'):
-#             file = folder + '/' + f
-
-#             #Extract date from file name
-#             d = re.search('\d{8}', file)
-#             date = datetime.strptime(d.group(0), "%Y%m%d").date()
-
-#             if date in date_list:
-#                 #Open the file
-#                 ds = nc.Dataset(file)
-
-#                 dictionary[str(date)] = {}
-#                 data = ds['precipitationCal'] if 'precipitationCal' in ds.variables else ds['precipitation']
-
-#                 subset = data[:, np.where(lon == longitude[0])[0][0]:np.where(lon == longitude[1])[0][0]+1, np.where(lat == latitude[0])[0][0]:np.where(lat == latitude[1])[0][0]+1]
-#                 dictionary[str(date)] = subset.astype(float)
-
-#                 df1 = pd.DataFrame(dictionary.items(), columns=['Date', 'Precipitation'])
-#                 finaldf = pd.concat([df,df1], ignore_index=True, sort=False)
-
-#                 df.sort_index()
-#                 df.sort_index(ascending=False)
-
-
-#                 ds.close()
-
-#             else: continue
-
-#     finaldf = finaldf.sort_values(by='Date', ascending=True)
-
-#     return finaldf
 
 
 #TODO to remove, for now create_map works fine
@@ -950,11 +971,11 @@ def extract_precipitation(latitude, longitude, date_list, folder):
                 
                 subset = data[:, np.where(lon == longitude[0])[0][0]:np.where(lon == last_longitude)[0][0]+1, np.where(lat == latitude[0])[0][0]:np.where(lat == last_latitude)[0][0]+1]
                 dictionary[str(file_date)] = subset.astype(float)
-    # print(dictionary)
+
     return dictionary
 
 
-def generate_date_list(start, end=None):
+def generate_date_list(start, end=None, average='M'):
     """
     Generate a list of dates between the start and end dates.
 
@@ -967,8 +988,19 @@ def generate_date_list(start, end=None):
         list: A list of dates between the start and end dates.
 
     """
+    if average:
+        if isinstance(average, tuple) or isinstance(average, list):
+            average = average[0]
+            print('HERE')
+    else:
+        average = 'M'
+
     if isinstance(start, str):
-        sdate = datetime.strptime(start,'%Y%m%d').date()
+        try:
+            sdate = datetime.strptime(start,'%Y%m%d').date()
+
+        except:
+            sdate = datetime.strptime(start,'%Y-%m-%d').date()
 
     elif isinstance(start, date):
         try:
@@ -978,7 +1010,11 @@ def generate_date_list(start, end=None):
             sdate = start
 
     if isinstance(end, str):
-        edate = datetime.strptime(end,'%Y%m%d').date()
+        try:
+            edate = datetime.strptime(end,'%Y%m%d').date()
+
+        except:
+            edate = datetime.strptime(end,'%Y-%m-%d').date()
 
     elif isinstance(end, date):
         try:
@@ -988,26 +1024,45 @@ def generate_date_list(start, end=None):
             edate = end
 
     elif end is None:
-        sdate = datetime(sdate.year, sdate.month, 1).date()
-        edate = datetime(sdate.year, sdate.month, days_in_month(sdate)).date()
+        if average == 'M':
+            sdate = datetime(sdate.year, sdate.month, 1).date()
+            edate = datetime(sdate.year, sdate.month, days_in_month(sdate)).date()
+        
+        elif average == 'Y':
+            sdate = datetime(sdate.year, 1, 1).date()
+            edate = datetime(sdate.year, 12, 31).date()
 
     if edate >= datetime.today().date():
         edate = datetime.today().date() - relativedelta(days=1)
 
     # Create a date range with the input dates, from start_date to end_date
     date_list = pd.date_range(start=sdate, end=edate).date
+    print('Generated date list ranging from', sdate, 'to', edate, 'containing', len(date_list), 'days')
 
     return date_list
 
 
 def bar_plot(precipitation, lat, lon, volcano=''):
+    """
+    Generate a bar plot of precipitation data.
+
+    Parameters:
+    - precipitation (dict or DataFrame): Dictionary or DataFrame containing precipitation data.
+    - lat (float): Latitude value.
+    - lon (float): Longitude value.
+    - volcano (str, optional): Name of the volcano. Defaults to an empty string.
+
+    Returns:
+    None
+    """
+
     if type(precipitation) == dict:
         precipitation = pd.DataFrame(precipitation.items(), columns=['Date', 'Precipitation'])
 
     # Convert array into single values
     precipitation['Precipitation'] = precipitation['Precipitation'].apply(lambda x: x[0][0][0])
     precipitation.sort_values(by='Date', ascending=True, inplace=True)
-    print(precipitation['Date'])
+    
     # Convert date strings to decimal years
     #TODO to complete
     if 'Non mensile o annuale':
@@ -1025,8 +1080,6 @@ def bar_plot(precipitation, lat, lon, volcano=''):
     plt.bar(precipitation[precipitation_field], precipitation['Precipitation'], color='maroon', width=0.00001 * len(precipitation))
     plt.ylabel("Precipitation [mm]")
 
-    print(precipitation)
-
     precipitation.plot(precipitation_field, 'cum', secondary_y=True, ax=ax)
 
     if volcano == '':
@@ -1039,10 +1092,9 @@ def bar_plot(precipitation, lat, lon, volcano=''):
     ax.get_legend().remove()
 
     plt.xticks(rotation=90)
-    plt.show()
 
 
-def weekly_monthly_yearly_precipitation(dictionary, time_period):
+def weekly_monthly_yearly_precipitation(dictionary, time_period=None):
     """
     Resamples the precipitation data in the given dictionary by the specified time period.
 
@@ -1056,18 +1108,33 @@ def weekly_monthly_yearly_precipitation(dictionary, time_period):
     Raises:
         KeyError: If the 'Precipitation' field is not found in the dictionary.
     """
+    m_y = [28,29,30,31,365]
     df = pd.DataFrame.from_dict(dictionary)
     df['Date'] = pd.to_datetime(df['Date'])
-    df['Date_copy'] = df['Date']  # Create a copy of the 'Date' column
-    df.set_index('Date_copy', inplace=True)
+    # df['Date_copy'] = df['Date']  # Create a copy of the 'Date' column
+    # df.set_index('Date_copy', inplace=True)
+    df.set_index('Date', inplace=True)
+    print(df)
 
     if 'Precipitation' in df:
-        # Resample the data by month and calculate the mean
-        precipitation = df.resample(time_period).mean()
+        if time_period is None or len(df) not in m_y:
+            # Calculate the mean of the 'Precipitation' column
+            print('Calculating the cumulative precipitation...')
+            cumulative_precipitation = df['Precipitation'].cumsum().sum()
+            print('-------------------------------------------------------')
+            
+            return cumulative_precipitation
+        
+        else:
+            # Resample the data by the time period and calculate the mean
+            print('Averaging the precipitation data...')
+            precipitation = df.resample(time_period[0]).mean()
+            print('-------------------------------------------------------')
+
+            return precipitation
+        
     else:
         raise KeyError('Error: Precipitation field not found in the dictionary')
-
-    return precipitation
 
 
 def weekly_precipitation(dictionary):
@@ -1100,7 +1167,7 @@ def monthly_precipitation(dictionary):
     else:
         print('Error: Precipitation field not found in the dictionary')
         sys.exit(1)
-
+    print(monthly_precipitation)
     return monthly_precipitation
 
 
@@ -1118,19 +1185,64 @@ def yearly_precipitation(dictionary):
         print('Error: Precipitation field not found in the dictionary')
         sys.exit(1)
 
+    print(yearly_precipitation)
     return yearly_precipitation
 
+def add_isolines(region, levels=0, inline=False):
+    grid = pygmt.datasets.load_earth_relief(resolution="01m", region=region)
 
-def map_precipitation(precipitation_series, lo, la, date, work_dir, vlim=None):
+    if not isinstance(levels, int):
+        levels = int(levels[0])
+
+    # Convert the DataArray to a numpy array
+    grid_np = grid.values
+
+    # Perform the operation
+    grid_np[grid_np < 0] = 0
+
+    # Convert the numpy array back to a DataArray
+    grid[:] = grid_np
+
+    # Plot the data
+    cont = plt.contour(grid, levels=levels, colors='white', extent=region)
+
+    if levels !=0:
+        plt.clabel(cont, inline=inline, fontsize=8)
+        print(inline)
+    
+    return plt
+
+
+def map_precipitation(precipitation_series, lo, la, date, work_dir, colorbar, levels,vlim=None):
     '''
-    Example of global precipitations given by Nasa at: https://gpm.nasa.gov/data/tutorials
-    '''  
+    Maps the precipitation data on a given region.
+
+    Args:
+        precipitation_series (pd.DataFrame or dict or ndarray): The precipitation data series.
+            If a pd.DataFrame, it should have a column named 'Precipitation' containing the data.
+            If a dict, it should have date strings as keys and precipitation data as values.
+            If an ndarray, it should contain the precipitation data directly.
+        lo (list): The longitude range of the region.
+        la (list): The latitude range of the region.
+        date (list): The date of the precipitation data.
+        work_dir (str): The path to the shapefile for plotting the island boundary.
+        vlim (tuple, optional): The minimum and maximum values for the color scale. Defaults to None.
+
+    Returns:
+        None
+    '''
+    m_y = [28,29,30,31,365]
+    print(precipitation_series)
+
     if type(precipitation_series) == pd.DataFrame:
         precip = precipitation_series.get('Precipitation')[0][0]
 
     elif type(precipitation_series) == dict:
         precip = precipitation_series[date[0].strftime('%Y-%m-%d')]
-        
+
+    else:
+        precip = precipitation_series
+
     precip = np.flip(precip.transpose(), axis=0)
 
     if not vlim:
@@ -1141,48 +1253,39 @@ def map_precipitation(precipitation_series, lo, la, date, work_dir, vlim=None):
         vmin = vlim[0]
         vmax = vlim[1]
 
-    plt.imshow(precip, vmin=vmin, vmax=vmax, extent=[lo[0],lo[1],la[0],la[1]])
+    region = [lo[0],lo[1],la[0],la[1]]
+
+    # Add contour lines
+    if not levels:
+        plt = add_isolines(region)
+    else:
+        plt = add_isolines(region, levels, inline=True)
+
+    plt.imshow(precip, vmin=vmin, vmax=vmax, extent=region,cmap=colorbar)
     plt.ylim(la[0], la[1])
     plt.xlim(lo[0], lo[1])
 
-    island_boundary = gpd.read_file(work_dir)
-    geometry = island_boundary['geometry']
+    # add a color bar
+    cbar = plt.colorbar()
 
-    # Extract coordinates
-    coordinates = []
-    for geom in geometry:
-        # Check the type of the geometry and extract coordinates accordingly
-        if geom.geom_type == 'Polygon':
-            # For polygons, extract exterior coordinates
-            coords = geom.exterior.coords[:]
-            coordinates.append(coords)
-        elif geom.geom_type == 'MultiPolygon':
-            # For multi-polygons, extract exterior coordinates for each polygon
-            for polygon in geom.geoms:  # Use the 'geoms' attribute to iterate over polygons
-                coords = polygon.exterior.coords[:]
-                coordinates.append(coords)
-
-    island_boundary.plot(ax=plt.gca(), edgecolor='white', facecolor='none') #plot shapefile
-
-    # -- add a color bar
-    cbar = plt.colorbar( )
-    cbar.set_label('millimeters')
-
+    if len(date) in m_y:
+        cbar.set_label('mm/day')
+    else :
+        cbar.set_label(f'cumulative precipitation of {len(date)} days')
+    
     plt.show()
     print('DONE')
 
 ###################### TEST AREA ##########################
-# lo, la = adapt_coordinates([(-93.680)+1,(-87.4981)-1], [(-3.113)+1, (3.353)-1])
-# lo, la = adapt_coordinates([92.05, 92.05], [0.05, 0.05])
-# date_list = generate_date_list('2000-06-01', '2000-06-30')
-# prova = extract_precipitation(lo, la, date_list, work_dir)
 
-# prova = monthly_precipitation(prova)
-
-# bar_plot(prova, la, lo)
-# inps = create_parser_new()
-# prompt_subplots(inps)
-# print(inps)
+# region = [-86.2861 ,-63.532, 15.7464,24.3224]
+# plt = add_isolines(region, levels=10, inline=False)
+# plt.show()
+    
+# z1 = 2 + 10j
+# print("Magnitude of z1:", np.abs(z1))  # Outputs: 2.23606797749979
+# print("Angle of z1 in radians:", np.angle(z1))  # Outputs: 1.1071487177940904
+# print("Angle of z1 in degrees:", np.degrees(np.angle(z1)))  # Outputs: 63.43494882292201
 
 # sys.exit(0)
 
@@ -1201,66 +1304,3 @@ if __name__ == "__main__":
 sys.exit(0)
 
 ################    END NEW MAIN    #######################
-
-if __name__ == "__main__":
-    parser = create_parser()
-    inps = parser.parse_args()
-
-    if inps.download:
-        dload_site_list(work_dir, generate_date_list(inps.download[0], inps.download[1]))
-        crontab_volcano_json(work_dir + '/' + jsonVolcano)  # TODO modify path
-
-    else:
-        if inps.plot_daily:
-            la, lo = adapt_coordinates(inps.plot_daily[1], inps.plot_daily[0])
-            start_date = inps.plot_daily[2]
-            end_date = inps.plot_daily[3]
-
-        elif inps.plot_weekly:
-            la, lo = adapt_coordinates(inps.plot_weekly[1], inps.plot_weekly[0])
-            start_date = inps.plot_weekly[2]
-            end_date = inps.plot_weekly[3]
-
-        elif inps.plot_monthly:
-            la, lo = adapt_coordinates(inps.plot_monthly[1], inps.plot_monthly[0])
-            start_date = inps.plot_monthly[2]
-            end_date = inps.plot_monthly[3]
-
-        elif inps.volcano_daily:
-            eruption_dates, date_list, lon_lat = extract_volcanoes_info(inps.dir + '/' + jsonVolcano, inps.volcano_daily[0])
-            la, lo = adapt_coordinates(lon_lat[0], lon_lat[1])
-
-            dload_site_list(inps.dir, date_list)
-            prec = plot_precipitaion_nc4(lo, la, date_list, inps.dir)
-            plt = daily_precipitation(prec, la, lo, volcano=inps.volcano_daily[0])
-            plot_eruptions(eruption_dates)
-            plt.show()
-            sys.exit(0)
-
-        elif inps.list:
-            volcanoes_list(inps.dir + '/' + jsonVolcano)
-            sys.exit(0)
-        #TODO restructure the code
-        elif inps.map:
-            map_precipitation(inps.dir, inps.map[0])
-            sys.exit(0)
-
-        else:
-            print('Error: no plot frequency specified')
-            sys.exit(1)
-
-        date_list = generate_date_list(start_date, end_date)
-        dload_site_list(work_dir, date_list)
-        prec = plot_precipitaion_nc4(lo, la, date_list, work_dir)
-
-        if inps.plot_daily:
-            plt = daily_precipitation(prec, la, lo)
-            plt.show()
-
-        elif inps.plot_weekly:
-            precipitation_values = weekly_precipitation(prec, la, lo)
-
-        elif inps.plot_monthly:
-            precipitation_values = monthly_precipitation(prec)
-
-    bar_plot(precipitation_values, la, lo)
