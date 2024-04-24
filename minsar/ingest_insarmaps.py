@@ -83,6 +83,13 @@ def main(iargs=None):
     if status is not 0:
         raise Exception('ERROR in json_mbtiles2insarmaps.py')
 
+    # write insarmaps command into insarmaps.log
+    base_name = os.path.basename(mbtiles_file)
+    name_without_extension = os.path.splitext(base_name)[0]
+    str = f"https://insarmaps.miami.edu/start/25.78/-80.3/11.0?flyToDatasetCenter=true&startDataset={name_without_extension}\n"
+    with open('insarmaps.log', 'w') as f:
+            f.write(str)
+    print("writing to insarmaps.log:\n",str)
     # Email insarmaps results:
     if inps.email:
         message_rsmas.log(inps.work_dir, 'email_results.py --insarmaps ' + inps.custom_template_file)
