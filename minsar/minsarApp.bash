@@ -620,15 +620,20 @@ if [[ $jobfiles_flag == "1" ]]; then
     if [[ $template_file == *"Sen"*  ]]; then 
        echo "Preparing to download latest poe and res orbits from ASF..."
        year=$(date +%Y)
+       current_month=$(date +%Y%m)
+       previous_month=$(date -d'-1 month' +%Y%m)
+
        cd $WORKDIR/S1orbits
        curl --ftp-ssl-reqd --silent --use-ascii --ftp-method nocwd --list-only https://s1qc.asf.alaska.edu/aux_poeorb/ > ASF_poeorb.txt
        curl --ftp-ssl-reqd --silent --use-ascii --ftp-method nocwd --list-only https://s1qc.asf.alaska.edu/aux_resorb/ > ASF_resorb.txt
        cat ASF_poeorb.txt | awk '{printf "! test -f %s && wget -c https://s1qc.asf.alaska.edu/aux_poeorb/%s\n", substr($0,10,77), substr($0,10,77)}' | grep $year > ASF_poeorb_latest.txt
-       cat ASF_resorb.txt | awk '{printf "! test -f %s && wget -c https://s1qc.asf.alaska.edu/aux_resorb/%s\n", substr($0,10,77), substr($0,10,77)}' | grep $year > ASF_resorb_latest.txt
+       #cat ASF_resorb.txt | awk '{printf "! test -f %s && wget -c https://s1qc.asf.alaska.edu/aux_resorb/%s\n", substr($0,10,77), substr($0,10,77)}' | grep $year > ASF_resorb_latest.txt
+       cat ASF_resorb.txt | awk '{printf "! test -f %s && wget -c https://s1qc.asf.alaska.edu/aux_resorb/%s\n", substr($0,10,77), substr($0,10,77)}' | grep $current_month  >  ASF_resorb_latest.txt
+       cat ASF_resorb.txt | awk '{printf "! test -f %s && wget -c https://s1qc.asf.alaska.edu/aux_resorb/%s\n", substr($0,10,77), substr($0,10,77)}' | grep $previous_month >> ASF_resorb_latest.txt
        echo "Downloading poe orbits: running bash ASF_poeorb_latest.txt in orbit directory  $SENTINEL_ORBITS  ..."
        bash ASF_poeorb_latest.txt
-       #echo "Downloading res orbits: running bash ASF_resorb_latest.txt in orbit directory  $SENTINEL_ORBITS  ..."
-       #bash ASF_resorb_latest.txt
+       echo "Downloading res orbits: running bash ASF_resorb_latest.txt in orbit directory  $SENTINEL_ORBITS  ..."
+       bash ASF_resorb_latest.txt
        cd -
     fi
     
@@ -866,7 +871,7 @@ if [[ $miaplpy_flag == "1" ]]; then
 fi
 
 if [[ $upload_flag == "1" ]]; then
-    cmd="upload_data_products.py $template_file --dir mintpy"
+    cmd="upload_data_products.py --dir mintpy"
     echo "Running.... $cmd"
     echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
     $cmd 2>out_upload_data_products.e 1>out_upload_data_products.o & 
