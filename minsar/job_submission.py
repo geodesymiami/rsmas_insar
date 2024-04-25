@@ -319,8 +319,9 @@ class JOB_SUBMIT:
         output_job = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
 
         if job_num_exists:
-            job_number = re.findall('\d+', output_job.decode("utf-8"))
-            job_number = str(max([int(x) for x in job_number]))
+            # job_number = re.findall('\d+', output_job.decode("utf-8"))
+            # job_number = str(max([int(x) for x in job_number]))            # FA 4/2024: previous code seemed to work when job_number is highest number
+            job_number = re.findall('\d+', output_job.decode("utf-8"))[-1]
         else:
             job_number = 'None'
 
