@@ -50,7 +50,6 @@ git clone git@github.com:insarlab/MiaplPy.git tools/MiaplPy ;
 git clone git@github.com:geodesymiami/insarmaps_scripts.git tools/insarmaps_scripts ;
 git clone git@github.com:isce-framework/isce2.git tools/isce2
 git clone git@github.com:geodesymiami/MimtPy.git tools/MimtPy ;
-git clone git@github.com:geodesymiami/PlotData.git tools/PlotData ;
 git clone git@github.com:geodesymiami/geodmod.git tools/geodmod ;
 git clone git@github.com:geodesymiami/SSARA.git tools/SSARA ;
 git clone git@github.com:TACC/launcher.git tools/launcher ;
