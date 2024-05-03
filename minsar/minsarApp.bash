@@ -818,13 +818,16 @@ if [[ $miaplpy_flag == "1" ]]; then
     sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.vrt merged/SLC/*/*.vrt  
     sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.xml merged/SLC/*/*.xml  
 
-    miaplpy_dir_name=$(get_miaplpy_dir_name)
-
     # unset $miaplpy_tmp_flag for --no-tmp as miaplpyApp.py does not understand --no-tmp option 
     if [[ $miaplpy_tmp_flag == "--no-tmp" ]]; then
        unset miaplpy_tmp_flag
     fi
 
+    miaplpy_dir_name=$(get_miaplpy_dir_name)
+    network_type=$(get_network_type)
+    network_dir=${miaplpy_dir_name}/network_${network_type}
+
+    # create miaplpy jobfiles
     cmd="miaplpyApp.py $template_file --dir $miaplpy_dir_name --jobfiles $miaplpy_tmp_flag"
     echo "Running.... $cmd"
     echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
@@ -835,6 +838,17 @@ if [[ $miaplpy_flag == "1" ]]; then
        exit 1;
     fi
 
+    # create the save_hdfeos5_radar jobfile (to run after miaplpy)
+    cmd="create_save_hdf5_jobfile.py  $template_file $network_dir --queue $QUEUENAME --walltime 0:30"
+    echo "Running.... $cmd"
+    $cmd
+    exit_status="$?"
+    if [[ $exit_status -ne 0 ]]; then
+       echo "$cmd with a non-zero exit code ($exit_status). Exiting."
+       exit 1;
+    fi
+
+    # run miaplpy jobfiles
     cmd="run_workflow.bash $template_file --append --dostep miaplpy --dir $miaplpy_dir_name"
     echo "Running.... $cmd"
     $cmd
@@ -844,10 +858,12 @@ if [[ $miaplpy_flag == "1" ]]; then
        exit 1;
     fi
 
-    # the following should be moved to miaplpy (or run_workflow)
-    network_type=$(get_network_type)
-    network_dir=${miaplpy_dir_name}/network_${network_type}
+    # run save_hdfeos5_radar jobfile
+    test -f save_hdfeos5_radar.job && sbatch save_hdfeos5_radar.job
+    echo "Need to modify code to use run_workflow.bash to wait for completion"
+    #submit_jobs.bash save_hdfeos5_radar.job  #should use this to wait but did not work (8/23)
 
+    # create index.html with all images
     cmd="create_html.py ${network_dir}/pic"
     echo "Running.... $cmd"
     $cmd
@@ -856,21 +872,10 @@ if [[ $miaplpy_flag == "1" ]]; then
        echo "$cmd with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
-
-    cmd="create_save_hdf5_runfile.py  ${network_dir}/inputs/*.template $network_dir --queue $QUEUENAME --walltime 0:30"
-    echo "Running.... $cmd"
-    $cmd
-    exit_status="$?"
-    if [[ $exit_status -ne 0 ]]; then
-       echo "$cmd with a non-zero exit code ($exit_status). Exiting."
-       exit 1;
-    fi
-    sbatch save_hdfeos5_radar_coord.job
-    echo "Need to modify code to use submit_jobs.bash to wait for completion"
-    #submit_jobs.bash save_hdfeos5_radar_coord.job  #should use this to wait but did not work (8/23)
 fi
 
 if [[ $upload_flag == "1" ]]; then
+
     cmd="upload_data_products.py --dir mintpy"
     echo "Running.... $cmd"
     echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
@@ -880,7 +885,23 @@ if [[ $upload_flag == "1" ]]; then
        echo "upload_data_products.py exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
-fi
+
+    if [[ $miaplpy_flag == "1" ]]; then
+       miaplpy_dir_name=$(get_miaplpy_dir_name)
+       network_type=$(get_network_type)
+       network_dir=${miaplpy_dir_name}/network_${network_type}
+       cmd="upload_data_products.py --dir $network_dir"
+       echo "Running.... $cmd"
+       echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
+       $cmd 2>out_upload_data_products.e 1>out_upload_data_products.o & 
+       exit_status="$?"
+       if [[ $exit_status -ne 0 ]]; then
+          echo "upload_data_products.py exited with a non-zero exit code ($exit_status). Exiting."
+          exit 1;
+       fi
+    fi
+
+fi   
 
 if [[ $insarmaps_flag == "1" ]]; then
     cmd="run_workflow.bash $PWD --append --dostep insarmaps $copy_to_tmp"
@@ -916,6 +937,15 @@ if [[ $finishup_flag == "1" ]]; then
     echo "Last processed image date: $last_date"
     unset IFS
 fi
+
+echo
+echo "network_dir: <$network_dir>"
+echo
+echo "hdfeos5 files produced:"
+ls mintpy/*he5 2>/dev/null
+ls $network_dir/*he5 2>/dev/null
+echo "Implement waiting for completion of  save_hdfeos5_radar.job to list radar coordinate files" 
+echo
 
 echo "Yup! That's all from minsarApp.bash."
 
