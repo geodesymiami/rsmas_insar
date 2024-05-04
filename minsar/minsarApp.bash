@@ -212,6 +212,7 @@ download_flag=1
 dem_flag=1
 ifgram_flag=1
 mintpy_flag=1
+miaplpy_flag=0
 upload_flag=1
 insarmaps_flag=1
 finishup_flag=1
@@ -241,8 +242,20 @@ do
             mintpy_flag=1
             shift
             ;;
+        --no-mintpy)
+            mintpy_flag=0
+            shift
+            ;;
         --miaplpy)
             miaplpy_flag=1
+            shift
+            ;;
+        --no-upload)
+            upload_flag=0
+            shift
+            ;;
+        --no-insarmaps)
+            insarmaps_flag=0
             shift
             ;;
 	--sleep)
@@ -309,18 +322,18 @@ if [ ! -z ${sleep_time+x} ]; then
   sleep $sleep_time
 fi
 
-if [[ -v mintpy_flag ]]; then lock_mintpy_flag=1; fi
-mintpy_flag=1
-if [[ -v miaplpy_flag ]]; then  
-    miaplpy_flag=1;
-   if [[ -v lock_mintpy_flag ]]; then
-      mintpy_flag=1; 
-   else
-      mintpy_flag=0; 
-   fi
-else
-    miaplpy_flag=0;
-fi
+#if [[ -v mintpy_flag ]]; then lock_mintpy_flag=1; fi
+#mintpy_flag=1
+#if [[ -v miaplpy_flag ]]; then  
+#    miaplpy_flag=1;
+#   if [[ -v lock_mintpy_flag ]]; then
+#      mintpy_flag=1; 
+#   else
+#      mintpy_flag=0; 
+#   fi
+#else
+#    miaplpy_flag=0;
+#fi
 
 if [[ $startstep == "download" ]]; then
     download_flag=1
@@ -789,8 +802,10 @@ if [[ $ifgram_flag == "1" ]]; then
     sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.xml merged/SLC/*/*.xml   merged/interferograms/*/*xml
 fi
 
+########################
+#       MintPy         #
+########################
 if [[ $mintpy_flag == "1" ]]; then
-
     if [[ $download_ECMWF_before_mintpy_flag == "1" ]]  && [[ "$template_file" == *"SenAT"* || "$template_file" == *"SenDT"* ]]; then
         #download weather models - run mintpy after downnload is completed
         cmd="download_ERA5_data.py --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR"
@@ -803,6 +818,7 @@ if [[ $mintpy_flag == "1" ]]; then
         fi
     fi
 
+    # run MintPy 
     cmd="run_workflow.bash $template_file --append --dostep mintpy $copy_to_tmp"
     echo "Running.... $cmd"
     $cmd
@@ -811,10 +827,25 @@ if [[ $mintpy_flag == "1" ]]; then
        echo "$cmd exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
+
+    # upload mintpy directory 
+    if [[ $upload_flag == "1" ]]; then
+        cmd="upload_data_products.py --dir mintpy"
+        echo "Running.... $cmd"
+        echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
+        $cmd 2>out_upload_mintpy_data_products.e 1>out_upload_mintpy_data_products.o & 
+        exit_status="$?"
+        if [[ $exit_status -ne 0 ]]; then
+           echo "upload_data_products.py exited with a non-zero exit code ($exit_status). Exiting."
+           exit 1;
+        fi
+    fi
 fi
 
+########################
+#       MiaplPy        #
+########################
 if [[ $miaplpy_flag == "1" ]]; then
-
     # correct *xml and *vrt files (if skipped in ifgram step because of unwrap problems) (skipping merged/interferograms because it takes long)
     sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.vrt merged/SLC/*/*.vrt  
     sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.xml merged/SLC/*/*.xml  
@@ -869,24 +900,9 @@ if [[ $miaplpy_flag == "1" ]]; then
        echo "$cmd with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
-fi
 
-if [[ $upload_flag == "1" ]]; then
-
-    cmd="upload_data_products.py --dir mintpy"
-    echo "Running.... $cmd"
-    echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
-    $cmd 2>out_upload_data_products.e 1>out_upload_data_products.o & 
-    exit_status="$?"
-    if [[ $exit_status -ne 0 ]]; then
-       echo "upload_data_products.py exited with a non-zero exit code ($exit_status). Exiting."
-       exit 1;
-    fi
-
-    if [[ $miaplpy_flag == "1" ]]; then
-       miaplpy_dir_name=$(get_miaplpy_dir_name)
-       network_type=$(get_network_type)
-       network_dir=${miaplpy_dir_name}/network_${network_type}
+    # upload data products
+    if [[ $upload_flag == "1" ]]; then
        cmd="upload_data_products.py --dir $network_dir"
        echo "Running.... $cmd"
        echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
@@ -896,9 +912,9 @@ if [[ $upload_flag == "1" ]]; then
           echo "upload_data_products.py exited with a non-zero exit code ($exit_status). Exiting."
           exit 1;
        fi
-    fi
+    fi   
+fi
 
-fi   
 
 if [[ $insarmaps_flag == "1" ]]; then
     cmd="run_workflow.bash $PWD --append --dostep insarmaps $copy_to_tmp"
