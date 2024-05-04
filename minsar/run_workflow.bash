@@ -62,6 +62,8 @@ usage: run_workflow.bash custom_template_file [--start] [--stop] [--dostep] [--h
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dostep miaplpy    \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --miaplpy    \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dir miaplpy_2015_2021  \n\
+      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dir miaplpy_2015_2021 --start 9 \n\
+      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dir miaplpy_2015_2021 --start timeseries_correction \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --miaplpy --start load_ifgram    \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --miaplpy --dostep generate_ifgram    \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --append    \n\
@@ -83,8 +85,8 @@ usage: run_workflow.bash custom_template_file [--start] [--stop] [--dostep] [--h
    --miaplpy:  the run_files directory is determined by the *template file       \n\
    --dir:      for --miaplpy only (see  miaplpyApp.py --help)                    \n\
    --miaplpy --start --end options:                                               \n\
-              'load_data', 'phase_linking', 'concatenate_patches', 'generate_ifgram'                         \n\
-              'unwrap_ifgram', 'load_ifgram', 'ifgram_correction', 'invert_network', 'timeseries_correction' \n
+              'load_data', 'phase_linking', 'concatenate_patches', 'generate_ifgram', 'unwrap_ifgram'       \n\
+              'load_ifgram', 'ifgram_correction', 'invert_network', 'timeseries_correction'  [1-9] \n
    "
     printf "$helptext"
     exit 0;
@@ -324,7 +326,6 @@ job_file_arr=(ls $RUNFILES_DIR/run_*_0.job)
 last_job_file=${job_file_arr[-1]}
 last_job_file=${last_job_file##*/}
 last_job_file_number=${last_job_file:4:2}
-#last_job_file_number=$( echo $last_job_file_number | sed 's/^0*// ')     # FA 9/21 sed command did not always work well
 last_job_file_number=$(echo $((10#${last_job_file_number})))
 echo last_job_file_number: $last_job_file_number
 
@@ -358,16 +359,30 @@ for (( i=$startstep; i<=$stopstep; i++ )) do
     globlist+=("$fname")
 done
 
+# If joblist contains run_0* files remove smallbaseline_wrapper.job and insarmaps.job 
+# 5/24 FA removing smallbaseline_wrapper.job and insarmaps.job above did not work
+if [[ "${globlist[*]}" == *"run_"* ]]; then
+    globlist=("${globlist[@]/$WORKDIR\/smallbaseline_wrapper.job/}")
+    globlist=("${globlist[@]/$WORKDIR\/insarmaps.job/}")
+    # Remove any empty elements
+    globlist=("${globlist[@]//}")
+fi
+
+echo "Full list of jobfiles to submit: ${globlist[@]}"
+
 defaults_file="${RSMASINSAR_HOME}/minsar/defaults/job_defaults.cfg"
 
 echo "Started at: $(date +"%Y-%m-%d %H:%M:%S")"
 for g in "${globlist[@]}"; do
-    files=($(ls -1v $g ))
+    if [[ -n $g ]]; then
+        files=($(ls -1v $g))
+    fi
+
     if $randomorder; then
         files=( $(echo "${files[@]}" | sed -r 's/(.[^;]*;)/ \1 /g' | tr " " "\n" | shuf | tr -d " " ) )
     fi
 
-    echo "Jobfiles to run:"
+    echo "Jobfiles to submit:"
     printf "%s\n" "${files[@]}"
 
     jobnumbers=()
@@ -383,6 +398,13 @@ for g in "${globlist[@]}"; do
         sbc_command="$sbc_command --rapid"
         echo "Rapid job submission enabled."
     fi
+
+    ###############################
+    # Here the jobs are submitted #
+    ###############################
+    echo "Job submission command:"
+    echo "$sbc_command"
+
     jns=$($sbc_command)
 
     exit_status="$?"
