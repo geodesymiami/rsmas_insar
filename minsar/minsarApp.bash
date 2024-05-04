@@ -107,27 +107,29 @@ helptext="                                                                      
       minsarApp.bash  $TE/GalapagosSenDT128.template                             \n\
       minsarApp.bash  $TE/GalapagosSenDT128.template --dostep dem                \n\
       minsarApp.bash  $TE/GalapagosSenDT128.template --start  ifgram            \n\
-      minsarApp.bash  $TE/GalapagosSenDT128.template --dostep upload             \n\
       minsarApp.bash  $TE/GalapagosSenDT128.template --start jobfiles --mintpy --miaplpy\n\
-      minsarApp.bash  $TE/GalapagosSenDT128.template                             \n\
+      minsarApp.bash  $TE/GalapagosSenDT128.template --no-insarmaps                             \n\
                                                                                  \n\
   Processing steps (start/end/dostep): \n\
    Command line options for steps processing with names are chosen from the following list: \n\
                                                                                  \n\
-   ['download', 'dem', 'jobfiles', 'ifgram', 'mintpy', 'miaplpy', 'insarmaps', 'upload']             \n\
+   ['download', 'dem', 'jobfiles', 'ifgram', 'mintpy', 'miaplpy']                \n\
+                                                                                 \n\
+   --upload    [--no-upload]    upload data products to jetstream (default)      \n\
+   --insarmaps [--no-insarmaps] ingest into insarmaps (default is yes for mintpy no for miaplpy)  \n\
                                                                                  \n\
    In order to use either --start or --dostep, it is necessary that a            \n\
    previous run was done using one of the steps options to process at least      \n\
    through the step immediately preceding the starting step of the current run.  \n\
                                                                                  \n\
-   --start STEP     start processing at the named step [default: download].      \n\
+   --start STEP          start processing at the named step [default: download]. \n\
    --end STEP, --stop STEP                                                       \n\
-                    end processing at the named step [default: upload]           \n\
-   --dostep STEP    run processing at the named step only                        \n\
+   --dostep STEP         run processing at the named step only                   \n\
                                                                                  \n\
-   --mintpy         use smallbaselineApp.py for time series [default]            \n\
-   --miaplpy         use miaplpyApp.py                                           \n\
-   --mintpy --miaplpy    both                                                    \n\
+   --mintpy              use smallbaselineApp.py for time series [default]       \n\
+   --miaplpy             use miaplpyApp.py                                       \n\
+   --mintpy --miaplpy    use smallbaselineApp.py and miaplpyApp.py               \n\
+   --no-mintpy --miaplpy use only miaplpyApp.py                                  \n\
                                                                                  \n\
    --sleep SECS     sleep seconds before running                                 \n\
    --select_reference     select reference date [default].                       \n\
@@ -136,7 +138,12 @@ helptext="                                                                      
    --no_download_ECMWF    don't download while processing                        \n\
    --chunks         process in form of multiple chunks.                          \n\
    --tmp            copy code and data to local /tmp [default].                  \n\
-   --no-tmp         no copying to local /tmp. This can be                        \n 
+   --no-tmp         no copying to local /tmp.                                    \n\
+                                                                                 \n\
+   Coding To Do:                                                                 \n\
+       - move bash functions into minsarApp_functions.bash                       \n\
+       - create a command execution function (cmd_exec)                          \n\
+       - create .minsarrc for defaults                                           \n 
      "
     printf "$helptext"
     exit 0;
@@ -840,6 +847,19 @@ if [[ $mintpy_flag == "1" ]]; then
            exit 1;
         fi
     fi
+
+    # insarmaps
+    if [[ $insarmaps_flag == "1" ]]; then
+        cmd="run_workflow.bash $PWD --append --dostep insarmaps $copy_to_tmp"
+        echo "Running.... $cmd"
+        echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
+        $cmd
+        exit_status="$?"
+        if [[ $exit_status -ne 0 ]]; then
+           echo "run_workflow.bash --dostep insarmaps exited with a non-zero exit code ($exit_status). Exiting."
+           exit 1;
+        fi
+    fi
 fi
 
 ########################
@@ -904,7 +924,7 @@ if [[ $miaplpy_flag == "1" ]]; then
     # upload data products
     if [[ $upload_flag == "1" ]]; then
        cmd="upload_data_products.py --dir $network_dir"
-       echo "Running.... $cmd"
+       echo "\nRunning.... $cmd"
        echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
        $cmd 2>out_upload_data_products.e 1>out_upload_data_products.o & 
        exit_status="$?"
@@ -913,18 +933,19 @@ if [[ $miaplpy_flag == "1" ]]; then
           exit 1;
        fi
     fi   
-fi
 
-
-if [[ $insarmaps_flag == "1" ]]; then
-    cmd="run_workflow.bash $PWD --append --dostep insarmaps $copy_to_tmp"
-    echo "Running.... $cmd"
-    echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
-    $cmd
-    exit_status="$?"
-    if [[ $exit_status -ne 0 ]]; then
-       echo "run_workflow.bash --dostep insarmaps exited with a non-zero exit code ($exit_status). Exiting."
-       exit 1;
+    ## insarmaps
+    if [[ $insarmaps_flag == "1" ]]; then
+         echo "insarmaps not implemented for miaplpy"
+    #    cmd="run_workflow.bash $PWD --append --dostep insarmaps $copy_to_tmp"
+    #    echo "Running.... $cmd"
+    #    echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
+    #    $cmd
+    #    exit_status="$?"
+    #    if [[ $exit_status -ne 0 ]]; then
+    #       echo "run_workflow.bash --dostep insarmaps exited with a non-zero exit code ($exit_status). Exiting."
+    #       exit 1;
+    #    fi
     fi
 fi
 
