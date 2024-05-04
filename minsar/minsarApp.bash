@@ -180,14 +180,6 @@ new_reference_flag=0
 download_ECMWF_flag=1
 download_ECMWF_before_mintpy_flag=0
 
-#Steps
-download_flag=1
-dem_flag=1
-ifgram_flag=1
-upload_flag=1
-insarmaps_flag=1
-finishup_flag=1
-
 copy_to_tmp="--tmp"
 runfiles_dir="run_files_tmp"
 configs_dir="configs_tmp"
@@ -214,6 +206,15 @@ fi
 ##################################
 
 args=( "$@" )    # copy of command line arguments
+
+# Default steps
+download_flag=1
+dem_flag=1
+ifgram_flag=1
+mintpy_flag=1
+upload_flag=1
+insarmaps_flag=1
+finishup_flag=1
 
 while [[ $# -gt 0 ]]
 do
@@ -838,7 +839,7 @@ if [[ $miaplpy_flag == "1" ]]; then
        exit 1;
     fi
 
-    # create the save_hdfeos5_radar jobfile (to run after miaplpy)
+    # create the save_hdfeos5_radar jobfile and copy into network_*/runfiles (to run after miaplpy)
     cmd="create_save_hdf5_jobfile.py  $template_file $network_dir --queue $QUEUENAME --walltime 0:30"
     echo "Running.... $cmd"
     $cmd
@@ -847,6 +848,7 @@ if [[ $miaplpy_flag == "1" ]]; then
        echo "$cmd with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
+    mv save_hdfeos5_radar.job $network_dir/run_files/run_10_save_hdfeos5_radar_0.job
 
     # run miaplpy jobfiles
     cmd="run_workflow.bash $template_file --append --dostep miaplpy --dir $miaplpy_dir_name"
@@ -857,11 +859,6 @@ if [[ $miaplpy_flag == "1" ]]; then
        echo "$cmd with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
-
-    # run save_hdfeos5_radar jobfile
-    test -f save_hdfeos5_radar.job && sbatch save_hdfeos5_radar.job
-    echo "Need to modify code to use run_workflow.bash to wait for completion"
-    #submit_jobs.bash save_hdfeos5_radar.job  #should use this to wait but did not work (8/23)
 
     # create index.html with all images
     cmd="create_html.py ${network_dir}/pic"
