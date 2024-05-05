@@ -87,12 +87,12 @@ def main(iargs=None):
     job_file_name = job_name
 
     cmd1 = f'save_hdfeos5.py timeseries_*demErr.h5 --tc temporalCoherence.h5 --asc avgSpatialCoh.h5 -m ../maskPS.h5 -g inputs/geometryRadar.h5 -t smallbaselineApp.cfg --suffix {prefix}PS &'
-    cmd2 = f'save_hdfeos5.py timeseries_*demErr.h5 --tc temporalCoherence.h5 --asc avgSpatialCoh.h5 -m maskTempCoh.h5 -g inputs/geometryRadar.h5 -t smallbaselineApp.cfg --suffix {prefix}PSDS &'
+    cmd2 = f'save_hdfeos5.py timeseries_*demErr.h5 --tc temporalCoherence.h5 --asc avgSpatialCoh.h5 -m maskTempCoh.h5 -g inputs/geometryRadar.h5 -t smallbaselineApp.cfg --suffix {prefix}DS &'
 
     cmd_source = 'source ' + os.path.dirname(os.path.abspath(__file__)) + '/utils/minsar_functions.bash'
 
     cmd1a=f'h5file=`ls *_??????_??????_???????_???????*_{prefix}PS.he5` ; add_ref_lalo_to_file $h5file'
-    cmd2a=f'h5file=`ls *_??????_??????_???????_???????*_{prefix}PSDS.he5` ; add_ref_lalo_to_file $h5file'
+    cmd2a=f'h5file=`ls *_??????_??????_???????_???????*_{prefix}DS.he5` ; add_ref_lalo_to_file $h5file'
     
     # command = ['cd ' + processing_dir + '\n' + cmd1 + '\n' + cmd2 + '\nwait']
     command = ['cd ' + processing_dir + '\n' + cmd1 + '\n' + cmd2 + '\n\n\nwait\n' + cmd_source + '\n' + cmd1a + '\n' + cmd2a + '\nwait']
