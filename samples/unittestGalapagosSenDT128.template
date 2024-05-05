@@ -7,6 +7,7 @@ ssaraopt.platform               = SENTINEL-1A,SENTINEL-1B
 ssaraopt.relativeOrbit          = 128
 ssaraopt.startDate              = 20160601
 ssaraopt.endDate                = 20160831
+minsar.upload_flag              = False    # [True / False ], upload to jetstream (Default: False)
 minsar.insarmaps_flag           = False    # [True / False ], ingest into insarmaps (Default: False)
 minsar.insarmaps_dataset        = DS       # [PS,DS,PSDS,geo,all], miaplpy dataset to ingest (Default: geo) (MintPy is always geo)
 

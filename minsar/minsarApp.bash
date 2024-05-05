@@ -211,6 +211,9 @@ finishup_flag=1
 if [[ ${template[minsar.insarmaps_flag]} == "False" ]]; then
    insarmaps_flag=0
 fi
+if [[ ${template[minsar.upload_flag]} == "False" ]]; then
+   upload_flag=0
+fi
 
 # get minsar variables from *template
 if [[ -n ${template[minsar.insarmaps_dataset]} ]]; then

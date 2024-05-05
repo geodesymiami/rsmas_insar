@@ -389,7 +389,6 @@ if [[ $jobfile_flag == "true" ]]; then
      globlist=("$jobfile")
 fi
 
-echo "QQQQQ  ${globlist[@]}"
 for g in "${globlist[@]}"; do
     if [[ -n $g ]]; then
         files=($(ls -1v $g))
