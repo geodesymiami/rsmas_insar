@@ -1,4 +1,4 @@
-#_#! /bin/bash
+#! /bin/bash
 ##################################################################################
 function create_template_array() {
 mapfile -t array < <(grep -e ^minsar -e ^mintpy -e ^miaplpy $1)
@@ -143,6 +143,7 @@ helptext="                                                                      
    Coding To Do:                                                                 \n\
        - clean up run_workflow (remove smallbaseline.job insarmaps.job)          \n\
        - move bash functions into minsarApp_functions.bash                       \n\
+       - change flags from 0/1 to False/True for reading from template file      \n\
        - create a command execution function (cmd_exec)                          \n\
        - create .minsarrc for defaults                                           \n 
      "
@@ -193,27 +194,6 @@ copy_to_tmp="--tmp"
 runfiles_dir="run_files_tmp"
 configs_dir="configs_tmp"
 
-##################################
-# adjust some switches according to template options
-str_insarmaps_flag=($(grep ^insarmaps $template_file | cut -d "=" -f 2 | xargs))
-length_str_insarmaps_flag=$(wc -w <<< $str_insarmaps_flag)
-[[ $length_str_insarmaps_flag == '0' ]] && str_insarmaps_flag=False 
-str_insarmaps_flag=${str_insarmaps_flag[-1]}
-if [[ $str_insarmaps_flag == "False" ]]; then
-   insarmaps_flag=0
-fi
-#if [[ ! -z $(grep "^topsStack.referenceDate" $template_file) ]];  then
-#   select_reference_flag=0
-#fi
-if [[ ! -z $(grep "^mintpy.troposphericDelay.method" $template_file) ]];  then
-   tropo_correction_method=$(grep -E "^mintpy.troposphericDelay.method" $template_file | awk -F = '{printf "%s\n",$2}' | sed 's/ //' | awk -F ' '  '{print $1}')
-   if [[ $tropo_correction_method == "height_correlation" || $tropo_correction_method == "no" ]]; then
-      download_ECMWF_flag=0
-      download_ECMWF_before_mintpy_flag=0
-   fi
-fi
-##################################
-
 args=( "$@" )    # copy of command line arguments
 
 # Default steps
@@ -223,8 +203,22 @@ ifgram_flag=1
 mintpy_flag=1
 miaplpy_flag=0
 upload_flag=1
-insarmaps_flag=1
+insarmaps_flag=0
 finishup_flag=1
+
+##################################
+# adjust some switches according to template options
+if [[ ${template[minsar.insarmaps_flag]} == "False" ]]; then
+   insarmaps_flag=0
+fi
+
+# get minsar variables from *template
+if [[ -n ${template[minsar.insarmaps_dataset]} ]]; then
+   insarmaps_dataset=${template[minsar.insarmaps_dataset]}
+else
+   insarmaps_dataset=geo
+fi
+##################################
 
 while [[ $# -gt 0 ]]
 do
@@ -290,14 +284,6 @@ do
             ;;
         --no_select_reference)
             select_reference_flag=0
-            shift
-            ;;
-        --download_ECMWF)
-            download_ECMWF_flag=1
-            shift
-            ;;
-        --no_download_ECMWF)
-            download_ECMWF_flag=0
             shift
             ;;
         --chunks)
@@ -938,17 +924,8 @@ if [[ $miaplpy_flag == "1" ]]; then
 
     ## insarmaps
     if [[ $insarmaps_flag == "1" ]]; then
-        cmd="create_insarmaps_jobfile.py $network_dir --dataset geo"
-        echo "Running.... $cmd"
-        echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
-        $cmd
-        exit_status="$?"
-        if [[ $exit_status -ne 0 ]]; then
-           echo "$cmd exited with a non-zero exit code ($exit_status). Exiting."
-           exit 1;
-        fi
-        
-        cmd="create_insarmaps_jobfile.py $network_dir --dataset PSDS"
+
+        cmd="create_insarmaps_jobfile.py $network_dir --dataset $insarmaps_dataset"
         echo "Running.... $cmd"
         echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
         $cmd
@@ -959,7 +936,8 @@ if [[ $miaplpy_flag == "1" ]]; then
         fi
 
         # run insarmaps jobfiles
-        cmd="run_workflow.bash $template_file --jobfile $PWD/insarmaps_miaplpy_geo.job"
+        insarmaps_jobfile=$(ls -t insar*job | head -n 1)
+        cmd="run_workflow.bash $template_file --jobfile $PWD/$insarmaps_jobfile"
         echo "Running.... $cmd"
         test -f insarmaps_miaplpy_geo.job && $cmd
         exit_status="$?"
@@ -967,16 +945,6 @@ if [[ $miaplpy_flag == "1" ]]; then
            echo "$cmd with a non-zero exit code ($exit_status). Exiting."
            exit 1;
         fi
-
-        cmd="run_workflow.bash $template_file --jobfile $PWD/insarmaps_miaplpy_PSDS.job"
-        echo "Running.... $cmd"
-        test -f insarmaps_miaplpy_PSDS.job && $cmd
-        exit_status="$?"
-        if [[ $exit_status -ne 0 ]]; then
-           echo "$cmd with a non-zero exit code ($exit_status). Exiting."
-           exit 1;
-        fi
-
     fi
 fi
 

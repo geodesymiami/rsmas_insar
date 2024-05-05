@@ -1,11 +1,14 @@
+#####################################################
+# If  the data are in $TESTDATA_ISCE, run using
+# minsarApp.bash /work2/05861/tg851601/stampede2/code/rsmas_insar/samples/unittestGalapagosSenDT128.template --miaplpy --start dem
 ######################################################
 cleanopt                        = 0   # [ 0 / 1 / 2 / 3 / 4]   0,1: none 2: keep merged,geom_master,SLC 3: keep MINTPY 4: everything
 ssaraopt.platform               = SENTINEL-1A,SENTINEL-1B
 ssaraopt.relativeOrbit          = 128
 ssaraopt.startDate              = 20160601
 ssaraopt.endDate                = 20160831
-insarmaps_flag                  = False
-image_products_flag             = False
+minsar.insarmaps_flag           = False    # [True / False ], ingest into insarmaps (Default: False)
+minsar.insarmaps_dataset        = DS       # [PS,DS,PSDS,geo,all], miaplpy dataset to ingest (Default: geo) (MintPy is always geo)
 
 ######################################################
 
