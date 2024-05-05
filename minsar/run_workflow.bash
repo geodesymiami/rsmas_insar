@@ -51,7 +51,8 @@ if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 helptext="                                                                         \n\
 Job submission script
 usage: run_workflow.bash custom_template_file [--start] [--stop] [--dostep] [--help]\n\
-                                                                                   \n\
+       run_workflow.bash \$PWD --jobfile insarmaps_miaplpy_geo.job                  \n\
+                                                                                    \n\
   Examples:                                                                        \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template              \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --start 2    \n\
@@ -66,6 +67,7 @@ usage: run_workflow.bash custom_template_file [--start] [--stop] [--dostep] [--h
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dir miaplpy_2015_2021 --start timeseries_correction \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --miaplpy --start load_ifgram    \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --miaplpy --dostep generate_ifgram    \n\
+      run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --jobfile insarmaps.job    \n\
       run_workflow.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --append    \n\
                                                                                    \n\
  Processing steps (start/end/dostep): \n\
@@ -81,12 +83,13 @@ usage: run_workflow.bash custom_template_file [--start] [--stop] [--dostep] [--h
                          end processing at the named step [default: upload]      \n\
    --dostep STEP         run processing at the named step only                   \n\
                                                                                  \n\
-   
    --miaplpy:  the run_files directory is determined by the *template file       \n\
    --dir:      for --miaplpy only (see  miaplpyApp.py --help)                    \n\
    --miaplpy --start --end options:                                               \n\
               'load_data', 'phase_linking', 'concatenate_patches', 'generate_ifgram', 'unwrap_ifgram'       \n\
-              'load_ifgram', 'ifgram_correction', 'invert_network', 'timeseries_correction'  [1-9] \n
+              'load_ifgram', 'ifgram_correction', 'invert_network', 'timeseries_correction'  [1-9] \n\
+                                                                                 \n\
+   --jobfile filename.job: run individual job and wait for completion            \n
    "
     printf "$helptext"
     exit 0;
@@ -130,6 +133,7 @@ else
 fi
 echo "$(date +"%Y%m%d:%H-%M") * run_workflow.bash $template_print_name ${@:2}" >> "${WORKDIR}"/log
 
+jobfile_flag=0
 while [[ $# -gt 0 ]]
 do
     key="$1"
@@ -168,6 +172,11 @@ do
             miaplpy_flag=true
             shift
             ;;
+        --jobfile)
+            jobfile_flag=true
+            jobfile="$2"
+            shift
+            ;;
         --dir)
             miaplpy_flag=true
             dir_flag=true
@@ -198,6 +207,7 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 if [[ $startstep == "miaplpy" ]]; then
    miaplpy_flag=true
 fi
+
 # set startstep, stopstep if miaplpy options are given
 echo "startstep, stopstep:<$startstep> <$stopstep>"
 if [[ $miaplpy_flag == "true" ]]; then 
@@ -322,36 +332,36 @@ fi
 
 #set -xv
 #find the last job (11 for 'geometry' and 16 for 'NESD', 9 for stripmap) and remove leading zero
-job_file_arr=(ls $RUNFILES_DIR/run_*_0.job)
-last_job_file=${job_file_arr[-1]}
-last_job_file=${last_job_file##*/}
-last_job_file_number=${last_job_file:4:2}
-last_job_file_number=$(echo $((10#${last_job_file_number})))
-echo last_job_file_number: $last_job_file_number
+jobfile_arr=(ls $RUNFILES_DIR/run_*_0.job)
+last_jobfile=${jobfile_arr[-1]}
+last_jobfile=${last_jobfile##*/}
+last_jobfile_number=${last_jobfile:4:2}
+last_jobfile_number=$(echo $((10#${last_jobfile_number})))
+echo last_jobfile_number: $last_jobfile_number
 
 
 if [[ $startstep == "ifgram" || $startstep == "miaplpy" ]]; then
     startstep=1
 elif [[ $startstep == "mintpy" ]]; then
-    startstep=$((last_job_file_number+1))
+    startstep=$((last_jobfile_number+1))
 elif [[ $startstep == "insarmaps" ]]; then
-    startstep=$((last_job_file_number+2))
+    startstep=$((last_jobfile_number+2))
 fi
 
 if [[ $stopstep == "ifgram" || $stopstep == "miaplpy" || -z ${stopstep+x}  ]]; then
-    stopstep=$last_job_file_number
+    stopstep=$last_jobfile_number
 elif [[ $stopstep == "mintpy" ]]; then
-    stopstep=$((last_job_file_number+1))
+    stopstep=$((last_jobfile_number+1))
 elif [[ $stopstep == "insarmaps" ]]; then
-    stopstep=$((last_job_file_number+2))
+    stopstep=$((last_jobfile_number+2))
 fi
 
-echo "last_job_file_number: $last_job_file_number, startstep: $startstep, stopstep: $stopstep"
+echo "last_jobfile_number: $last_jobfile_number, startstep: $startstep, stopstep: $stopstep"
 for (( i=$startstep; i<=$stopstep; i++ )) do
     stepnum="$(printf "%02d" ${i})"
-    if [[ $i -le $last_job_file_number ]]; then
+    if [[ $i -le $last_jobfile_number ]]; then
         fname="$RUNFILES_DIR/run_${stepnum}_*.job"
-    elif [[ $i -eq $((last_job_file_number+1)) ]]; then
+    elif [[ $i -eq $((last_jobfile_number+1)) ]]; then
         fname="$WORKDIR/smallbaseline_wrapper.job"
     else
         fname="$WORKDIR/insarmaps.job"
@@ -373,6 +383,13 @@ echo "Full list of jobfiles to submit: ${globlist[@]}"
 defaults_file="${RSMASINSAR_HOME}/minsar/defaults/job_defaults.cfg"
 
 echo "Started at: $(date +"%Y-%m-%d %H:%M:%S")"
+
+# 5/2024 hack to be able to run one jobfile
+if [[ $jobfile_flag == "true" ]]; then
+     globlist=("$jobfile")
+fi
+
+echo "QQQQQ  ${globlist[@]}"
 for g in "${globlist[@]}"; do
     if [[ -n $g ]]; then
         files=($(ls -1v $g))
@@ -387,8 +404,12 @@ for g in "${globlist[@]}"; do
 
     jobnumbers=()
     file_pattern=$(echo "${files[0]}" | grep -oP "(.*)(?=_\d{1,}.job)|insarmaps|smallbaseline_wrapper")
-
+    
     sbc_command="submit_jobs.bash $file_pattern"
+    
+    if [[ $jobfile_flag == "true" ]]; then
+        sbc_command="submit_jobs.bash $jobfile"
+    fi
 
     if $randomorder; then
         sbc_command="$sbc_command --random"
@@ -493,7 +514,6 @@ for g in "${globlist[@]}"; do
 
         printf "%s, %s, %-7s: %-12s, %-10s, %-10s, %-12s.\n" "$PROJECT_NAME" "$step_name_long" "$num_jobs jobs" "$num_complete COMPLETED" "$num_running RUNNING" "$num_pending PENDING" "$num_waiting WAITING"
     done
-
 
     # Run check_job_output.py on all files
     cmd="check_job_outputs.py  ${files[@]} $tmp_flag_str"

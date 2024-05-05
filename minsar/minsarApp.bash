@@ -45,9 +45,9 @@ function get_miaplpy_dir_name() {
 # assign miaplpyDir.Addition  lalo,dirname or 'miaplpy' for 'auto'
 date_str=$(get_date_str)
 if [ -z ${template[minsar.miaplpyDir.addition]} ] || [ ${template[minsar.miaplpyDir.addition]} == "auto" ]; then
-   miaply_dir_name="miaplpy"
+   miaplpy_dir_name="miaplpy"
 elif [ ${template[minsar.miaplpyDir.addition]} == "date" ]; then
-   miaply_dir_name=miaplpy_${date_str}
+   miaplpy_dir_name=miaplpy_${date_str}
 elif [ ${template[minsar.miaplpyDir.addition]} == "lalo" ]; then
    if  [ ! -z ${template[miaplpy.subset.lalo]} ]; then
        subset_lalo="${template[miaplpy.subset.lalo]}"
@@ -64,12 +64,12 @@ elif [ ${template[minsar.miaplpyDir.addition]} == "lalo" ]; then
    lon_min=${lon_array[0]}
    lon_max=${lon_array[1]}
    lalo_str=$(printf "%.2f_%.2f_%.2f_%.2f\n" "$lat_min" "$lat_max" "$lon_min" "$lon_max")
-   miaply_dir_name="miaplpy_${lalo_str}_$date_str"
+   miaplpy_dir_name="miaplpy_${lalo_str}_$date_str"
 else
-   miaply_dir_name=miaplpy_"${template[minsar.miaplpyDir.addition]}"_${date_str}
+   miaplpy_dir_name=miaplpy_"${template[minsar.miaplpyDir.addition]}"_${date_str}
 fi
 unset IFS
-echo $miaply_dir_name
+echo $miaplpy_dir_name
 }
 ###########################################
 function get_network_type {
@@ -141,6 +141,7 @@ helptext="                                                                      
    --no-tmp         no copying to local /tmp.                                    \n\
                                                                                  \n\
    Coding To Do:                                                                 \n\
+       - clean up run_workflow (remove smallbaseline.job insarmaps.job)          \n\
        - move bash functions into minsarApp_functions.bash                       \n\
        - create a command execution function (cmd_exec)                          \n\
        - create .minsarrc for defaults                                           \n 
@@ -178,6 +179,7 @@ else
     template_print_name="$template_file"
 fi
 echo "$(date +"%Y%m%d:%H-%M") * minsarApp.bash $template_print_name ${@:2}" | tee -a "${WORK_DIR}"/log
+minsarApp_command=$(echo minsarApp.bash $template_print_name ${@:2})
 
 #Switches
 chunks_flag=0
@@ -926,26 +928,55 @@ if [[ $miaplpy_flag == "1" ]]; then
        cmd="upload_data_products.py --dir $network_dir"
        echo "\nRunning.... $cmd"
        echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
-       $cmd 2>out_upload_data_products.e 1>out_upload_data_products.o & 
+       $cmd 2>out_upload_miaplpy_data_products.e 1>out_upload__miaplpy_data_products.o & 
        exit_status="$?"
        if [[ $exit_status -ne 0 ]]; then
-          echo "upload_data_products.py exited with a non-zero exit code ($exit_status). Exiting."
+          echo "$cmd exited with a non-zero exit code ($exit_status). Exiting."
           exit 1;
        fi
     fi   
 
     ## insarmaps
     if [[ $insarmaps_flag == "1" ]]; then
-         echo "insarmaps not implemented for miaplpy"
-    #    cmd="run_workflow.bash $PWD --append --dostep insarmaps $copy_to_tmp"
-    #    echo "Running.... $cmd"
-    #    echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
-    #    $cmd
-    #    exit_status="$?"
-    #    if [[ $exit_status -ne 0 ]]; then
-    #       echo "run_workflow.bash --dostep insarmaps exited with a non-zero exit code ($exit_status). Exiting."
-    #       exit 1;
-    #    fi
+        cmd="create_insarmaps_jobfile.py $network_dir --dataset geo"
+        echo "Running.... $cmd"
+        echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
+        $cmd
+        exit_status="$?"
+        if [[ $exit_status -ne 0 ]]; then
+           echo "$cmd exited with a non-zero exit code ($exit_status). Exiting."
+           exit 1;
+        fi
+        
+        cmd="create_insarmaps_jobfile.py $network_dir --dataset PSDS"
+        echo "Running.... $cmd"
+        echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
+        $cmd
+        exit_status="$?"
+        if [[ $exit_status -ne 0 ]]; then
+           echo "$cmd exited with a non-zero exit code ($exit_status). Exiting."
+           exit 1;
+        fi
+
+        # run insarmaps jobfiles
+        cmd="run_workflow.bash $template_file --jobfile $PWD/insarmaps_miaplpy_geo.job"
+        echo "Running.... $cmd"
+        test -f insarmaps_miaplpy_geo.job && $cmd
+        exit_status="$?"
+        if [[ $exit_status -ne 0 ]]; then
+           echo "$cmd with a non-zero exit code ($exit_status). Exiting."
+           exit 1;
+        fi
+
+        cmd="run_workflow.bash $template_file --jobfile $PWD/insarmaps_miaplpy_PSDS.job"
+        echo "Running.... $cmd"
+        test -f insarmaps_miaplpy_PSDS.job && $cmd
+        exit_status="$?"
+        if [[ $exit_status -ne 0 ]]; then
+           echo "$cmd with a non-zero exit code ($exit_status). Exiting."
+           exit 1;
+        fi
+
     fi
 fi
 
@@ -978,8 +1009,9 @@ echo
 echo "hdfeos5 files produced:"
 ls mintpy/*he5 2>/dev/null
 ls $network_dir/*he5 2>/dev/null
-echo "Implement waiting for completion of  save_hdfeos5_radar.job to list radar coordinate files" 
 echo
-
+echo "Done:  $minsarApp_command" 
+echo
 echo "Yup! That's all from minsarApp.bash."
+echo
 
