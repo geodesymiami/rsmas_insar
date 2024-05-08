@@ -32,6 +32,7 @@ git clone https://github.com/geodesymiami/rsmas_tools.git ;
 ```
 Useful Jupyter Notebooks:
 ```
+mkdir -p $RSMAS_INSAR/notebooks;
 cd $RSMAS_INSAR/notebooks
 git clone https://github.com/insarlab/MintPy-tutorial.git 
 git clone https://github.com/insarlab/MiaplPy_notebooks.git
@@ -41,4 +42,5 @@ git clone https://github.com/geodesymiami/Yunjun_et_al-2019-MintPy.git
 git clone https://github.com/geodesymiami/PlotData-notebooks.git
 git clone https://github.com/geodesymiami/viewPS-notebooks.git
 git clone https://github.com/geodesymiami/precip-notebooks.git
+git clone https://github.com/isce-framework/isce2-docs.git
 ```
