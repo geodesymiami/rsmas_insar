@@ -43,6 +43,7 @@ git clone https://github.com/geodesymiami/PlotData-notebooks.git
 git clone https://github.com/geodesymiami/viewPS-notebooks.git
 git clone https://github.com/geodesymiami/precip-notebooks.git
 git clone https://github.com/isce-framework/isce2-docs.git
+git clone https://github.com/parosen/Geo-SInC
 ```
 You may want to keep your `launch.json` from `$RSMASINSAR_HOME/.vscode` on github. I keep it next to TEMPLATES:
 ```
