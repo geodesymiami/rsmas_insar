@@ -196,31 +196,6 @@ configs_dir="configs_tmp"
 
 args=( "$@" )    # copy of command line arguments
 
-# Default steps
-download_flag=1
-dem_flag=1
-ifgram_flag=1
-mintpy_flag=1
-miaplpy_flag=0
-upload_flag=1
-insarmaps_flag=0
-finishup_flag=1
-
-##################################
-# adjust some switches according to template options
-if [[ ${template[minsar.insarmaps_flag]} == "False" ]]; then
-   insarmaps_flag=0
-fi
-if [[ ${template[minsar.upload_flag]} == "False" ]]; then
-   upload_flag=0
-fi
-
-# get minsar variables from *template
-if [[ -n ${template[minsar.insarmaps_dataset]} ]]; then
-   insarmaps_dataset=${template[minsar.insarmaps_dataset]}
-else
-   insarmaps_dataset=geo
-fi
 ##################################
 
 while [[ $# -gt 0 ]]
@@ -256,12 +231,20 @@ do
             miaplpy_flag=1
             shift
             ;;
-        --no-upload)
-            upload_flag=0
+        --insarmaps)
+            insarmaps_flag=1
             shift
             ;;
         --no-insarmaps)
             insarmaps_flag=0
+            shift
+            ;;
+        --upload)
+            upload_flag=0
+            shift
+            ;;
+        --no-upload)
+            upload_flag=0
             shift
             ;;
 	--sleep)
@@ -301,7 +284,39 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-# always use --no-tmp on stampede3
+# FA 5/2025 commented out as we now have --insarmaps option. It can be removed, I think.
+if [[ ${#POSITIONAL[@]} -gt 1 ]]; then
+    echo "Unknown parameters provided."
+    exit 1;
+fi
+
+##################################
+# Set default steps (insarmaps_flag and upload_flag are set to 0 and 1 if not given on command line 
+# insarmaps_flag and upload_flag are set to 0 if not given on command line or in template file 
+download_flag=1
+dem_flag=1
+ifgram_flag=1
+mintpy_flag=1
+miaplpy_flag=0
+finishup_flag=1
+
+# adjust switches according to template options if given
+if [[ ! -v insarmaps_flag ]]; then
+   if [[ ${template[minsar.insarmaps_flag]} == "False" || ! -v ${template[minsar.insarmaps_flag]} ]]; then
+      insarmaps_flag=0        # default
+   elif [[ ${template[minsar.insarmaps_flag]} == "True" ]]; then
+      insarmaps_flag=1
+   fi
+fi
+if [[ ! -v upload_flag ]]; then
+   if [[ ${template[minsar.upload_flag]} == "False" || ! -v ${template[minsar.upload_flag]} ]]; then
+      upload_flag=1           # default
+   elif [[ ${template[minsar.upload_flag]} == "True" ]]; then
+      upload_flag=1
+   fi
+fi
+
+### always use --no-tmp on stampede3
 if [[ $HOSTNAME == *"stampede3"* ]] && [[ $copy_to_tmp == "--tmp" ]]; then
    copy_to_tmp="--no-tmp"
    runfiles_dir="run_files"
@@ -310,15 +325,18 @@ if [[ $HOSTNAME == *"stampede3"* ]] && [[ $copy_to_tmp == "--tmp" ]]; then
 fi
 miaplpy_tmp_flag=$copy_to_tmp   
 
-if [[ ${#POSITIONAL[@]} -gt 1 ]]; then
-    echo "Unknown parameters provided."
-    exit 1;
-fi
-
 if [ ! -z ${sleep_time+x} ]; then
   echo "sleeping $sleep_time secs before starting ..."
   sleep $sleep_time
 fi
+
+### get minsar variables from *template
+if [[ -n ${template[minsar.insarmaps_dataset]} ]]; then
+   insarmaps_dataset=${template[minsar.insarmaps_dataset]}
+else
+   insarmaps_dataset=geo
+fi
+
 
 #if [[ -v mintpy_flag ]]; then lock_mintpy_flag=1; fi
 #mintpy_flag=1
@@ -978,8 +996,8 @@ echo
 echo "network_dir: <$network_dir>"
 echo
 echo "hdfeos5 files produced:"
-ls mintpy/*he5 2>/dev/null
-ls $network_dir/*he5 2>/dev/null
+ls -sh mintpy/*he5 2>/dev/null
+ls -sh $network_dir/*he5 2>/dev/null
 echo
 echo "Done:  $minsarApp_command" 
 echo
