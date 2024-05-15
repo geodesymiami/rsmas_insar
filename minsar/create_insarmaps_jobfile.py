@@ -31,7 +31,7 @@ def create_parser():
     parser.add_argument('data_dir', nargs=1, help='Directory with hdf5eos file.\n')
     parser.add_argument('--dataset', dest='dataset', choices=['PS', 'DS', 'PSDS', 'geo', 'all'], default='PS', help='Plot data as image or scatter (default: %(default)s).')
     parser.add_argument("--queue", dest="queue", metavar="QUEUE", default=os.getenv('QUEUENAME'), help="Name of queue to submit job to")
-    parser.add_argument('--walltime', dest='wall_time', metavar="WALLTIME (HH:MM)", default='0:45', help='job walltime (default=0:45)')
+    parser.add_argument('--walltime', dest='wall_time', metavar="WALLTIME (HH:MM)", default='1:00', help='job walltime (default=1:00)')
    
     inps = parser.parse_args()
     return inps
@@ -82,7 +82,7 @@ def main(iargs=None):
     i = 0
     for file in files:
         command.append( f'rm -r {inps.data_dir[0]}/JSON_{i}\n' )
-        command.append( f'hdfeos5_2json_mbtiles.py {file} {inps.work_dir}/{inps.data_dir[0]}/JSON_{i} --num-workers 8 &\n' )
+        command.append( f'hdfeos5_2json_mbtiles.py {file} {inps.work_dir}/{inps.data_dir[0]}/JSON_{i} --num-workers 8\n' )
         i+=1
     
     command.append('wait\n\n')
@@ -91,11 +91,12 @@ def main(iargs=None):
         path_obj = Path(file)
         mbtiles_file = f"{path_obj.parent}/JSON_{i}/{path_obj.name}"
         mbtiles_file = mbtiles_file.replace('he5','mbtiles')
-        command.append( f'json_mbtiles2insarmaps.py --num-workers 8 -u {password.insaruser} -p {password.insarpass} --host insarmaps.miami.edu -P rsmastest -U rsmas\@gmail.com --json_folder {inps.work_dir}/{inps.data_dir[0]}/JSON_{i} --mbtiles_file {mbtiles_file} &\n' )
+        command.append( f'json_mbtiles2insarmaps.py --num-workers 8 -u {password.insaruser} -p {password.insarpass} --host insarmaps.miami.edu -P rsmastest -U rsmas\@gmail.com --json_folder {inps.work_dir}/{inps.data_dir[0]}/JSON_{i} --mbtiles_file {mbtiles_file}\n' )
         i+=1
     
     command.append('wait\n\n')
-    str = [f'cat > insarmaps_miaplpy.log <<EOF\n']
+    str = [f'cat >> insarmaps_miaplpy.log<<EOF\n']
+    str.append(f"\n{inps.data_dir[0]}:\n")
     for file in files:
         base_name = os.path.basename(file)
         name_without_extension = os.path.splitext(base_name)[0]

@@ -387,6 +387,7 @@ echo "Started at: $(date +"%Y-%m-%d %H:%M:%S")"
 # 5/2024 hack to be able to run one jobfile
 if [[ $jobfile_flag == "true" ]]; then
      globlist=("$jobfile")
+     echo "--jobfile hack applies: replaced full list by jobfile $jobfile"
 fi
 
 for g in "${globlist[@]}"; do
