@@ -55,28 +55,43 @@ def main(iargs=None):
     input_arguments = sys.argv[1::]
     message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
     
-    ##### geometry: copy/rename files
+    ##### geometry: copy files
+    print('\nCopying *files in geometry dir ...\n')
     dem_file = glob.glob(f"geometry/*.hgt")[0]
     date = os.path.basename(dem_file).split(".")[0]     # assumes name diff_filt_240401_240420_4rlks.unw
     dem_par_file = f"geometry/{date}.diff.par"
+    lookup_table_file = glob.glob(f"geometry/*{date}.lt_fine")[0]
+    lookup_table_par_file = glob.glob(f"geometry/*.dem.par")[0]
 
     new_dem_file =  f"geometry/sim_{date}.rdc.dem"
     new_dem_par_file = f"geometry/sim_{date}.diff_par"
+    new_lookup_table_file = f"geometry/sim_{date}.UTM_TO_RDC"
+    new_lookup_table_par_file = f"geometry/sim_{date}.utm.dem.par"
 
     if not os.path.isfile(dem_file):
-        raise FileNotFoundError(f"No such file: '{dem_file}'")
+        raise FileNotFoundError(f"No such file: {dem_file}")
     if not os.path.isfile(dem_par_file):
-        raise FileNotFoundError(f"No such file: '{dem_par_file}'")
+        raise FileNotFoundError(f"No such file: {dem_par_file}")
+    if not os.path.isfile(lookup_table_file):
+        raise FileNotFoundError(f"No such file: {lookup_table_file}")
+    if not os.path.isfile(lookup_table_par_file):
+        raise FileNotFoundError(f"No such file: {lookup_table_par_file}")
 
     shutil.copy(dem_file, new_dem_file)
     shutil.copy(dem_par_file, new_dem_par_file)
+    shutil.copy(lookup_table_file, new_lookup_table_file)
+    shutil.copy(lookup_table_par_file, new_lookup_table_par_file)
    
-    ##### interferograms: copy/rename files
-    ifgram_dirs = glob.glob(inps.ifgram_dir + "/*")  
+    ##### interferograms: copy files
+    ifgram_dirs = glob.glob(inps.ifgram_dir + "/IFGRAM*")  
     ifgram_dirs = [dir for dir in ifgram_dirs if os.path.isdir(dir)]  
+
+    print('Copying *par_files in',inps.ifgram_dir,':\n')
+    print(ifgram_dirs) 
 
     for dir in ifgram_dirs:
 
+        print('Working on: ',dir)
         unw_file =  os.path.basename(glob.glob(dir + "/diff*rlks.unw")[0])
         unw_file_without_ext = os.path.splitext(unw_file)[0]
 
@@ -101,6 +116,7 @@ def main(iargs=None):
         new_corner_full_file =  f"{dir}/{date1}_{rlks_str}.amp.corner_full"
         new_cor_file =  f"{dir}/filt_{date1}_{date2}_{rlks_str}.cor"
         
+        # FA 5/2024: I am not sure this checking for file existence works.  I woudl think to use glob.glob in a try except structure but this was suggesed by copilot.
         if not os.path.isfile(par_file1):
             raise FileNotFoundError(f"No such file: '{par_file1}'")
         if not os.path.isfile(par_file2):
