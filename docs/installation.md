@@ -54,7 +54,7 @@ git clone git@github.com:geodesymiami/geodmod.git tools/geodmod ;
 git clone git@github.com:geodesymiami/SSARA.git tools/SSARA ;
 git clone git@github.com:TACC/launcher.git tools/launcher ;
 git clone git@github.com:geodesymiami/PlotData tools/PlotData
-git clone git@github.com:geodesymiami/precip tools/precip
+git clone git@github.com:geodesymiami/precip tools/Precip
 
 ### Install credential files ###############
 ./setup/install_credential_files.bash;
