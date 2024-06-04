@@ -85,6 +85,7 @@ pip install -e ../tools/MiaplPy
 pip install -r ../minsar/requirements.txt
 pip install -r ../tools/insarmaps_scripts/requirements.txt
 pip install -r ../tools/PlotData/requirements.txt
+pip install -r ../tools/Precip/requirements.txt
 
 ###  Reduce miniconda3 directory size #################
 rm -rf ../tools/miniconda3/pkgs
