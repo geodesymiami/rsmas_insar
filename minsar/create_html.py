@@ -40,8 +40,9 @@ class Inps:
 
 def build_html(directory_path):
     print('DIRECTORY_PATH:', directory_path )    
-    file_list = [file for file in os.listdir(directory_path) if file.lower().endswith(('.png', '.pdf','.template'))]
+    file_list = [file for file in os.listdir(directory_path) if file.lower().endswith(('.png', '.pdf','.kmz','.template'))]
     pdf_files = [file for file in file_list if file.lower().endswith('.pdf')]
+    kmz_files = [file for file in file_list if file.lower().endswith('.kmz')]
     template_files = [file for file in file_list if file.lower().endswith('.template')]
 
     os.chdir(directory_path)
@@ -114,6 +115,11 @@ def build_html(directory_path):
     print('QQ cwd:', os.getcwd())
     with open(txt_file, 'r') as file:
         html_content += header_tag + '<pre>\n' + file.read() + '</pre>\n'
+
+    for kmz_file in kmz_files:
+        header_tag = f'<h2>{kmz_file}</h2>\n'
+        download_link = f'<a href="{kmz_file}" download>Download file.</a>\n'
+        html_content += header_tag + download_link
 
     for template_file in template_files:
         header_tag = f'  <h2>{template_file}</h2>\n'
