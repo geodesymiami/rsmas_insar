@@ -857,15 +857,27 @@ if [[ $mintpy_flag == "1" ]]; then
         fi
     fi
 
-    # insarmaps
+    ## insarmaps
     if [[ $insarmaps_flag == "1" ]]; then
-        cmd="run_workflow.bash $PWD --append --dostep insarmaps $copy_to_tmp"
+        # create jobfile
+        cmd="create_insarmaps_jobfile.py mintpy --dataset geo"
         echo "Running.... $cmd"
-        echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
+        echo "$(date +"%Y%m%d:%H-%M") + $cmd" | tee -a log
         $cmd
         exit_status="$?"
         if [[ $exit_status -ne 0 ]]; then
-           echo "run_workflow.bash --dostep insarmaps exited with a non-zero exit code ($exit_status). Exiting."
+           echo "$cmd exited with a non-zero exit code ($exit_status). Exiting."
+           exit 1;
+        fi
+
+        # run jobfile
+        insarmaps_jobfile=$(ls -t insar*job | head -n 1)
+        cmd="run_workflow.bash $template_file --jobfile $PWD/$insarmaps_jobfile"
+        echo "Running.... $cmd"
+        $cmd
+        exit_status="$?"
+        if [[ $exit_status -ne 0 ]]; then
+           echo "$cmd with a non-zero exit code ($exit_status). Exiting."
            exit 1;
         fi
     fi
@@ -899,6 +911,16 @@ if [[ $miaplpy_flag == "1" ]]; then
        exit 1;
     fi
 
+    # run miaplpy jobfiles
+    cmd="run_workflow.bash $template_file --append --dostep miaplpy --dir $miaplpy_dir_name"
+    echo "Running.... $cmd"
+    $cmd
+    exit_status="$?"
+    if [[ $exit_status -ne 0 ]]; then
+       echo "$cmd with a non-zero exit code ($exit_status). Exiting."
+       exit 1;
+    fi
+
     # create the save_hdfeos5_radar jobfile and copy into network_*/runfiles (to run after miaplpy)
     cmd="create_save_hdf5_jobfile.py  $template_file $network_dir --queue $QUEUENAME --walltime 0:30"
     echo "Running.... $cmd"
@@ -909,16 +931,6 @@ if [[ $miaplpy_flag == "1" ]]; then
        exit 1;
     fi
     mv save_hdfeos5_radar.job $network_dir/run_files/run_10_save_hdfeos5_radar_0.job
-
-    # run miaplpy jobfiles
-    cmd="run_workflow.bash $template_file --append --dostep miaplpy --dir $miaplpy_dir_name"
-    echo "Running.... $cmd"
-    $cmd
-    exit_status="$?"
-    if [[ $exit_status -ne 0 ]]; then
-       echo "$cmd with a non-zero exit code ($exit_status). Exiting."
-       exit 1;
-    fi
 
     # create index.html with all images
     cmd="create_html.py ${network_dir}/pic"
@@ -934,7 +946,7 @@ if [[ $miaplpy_flag == "1" ]]; then
     if [[ $upload_flag == "1" ]]; then
        cmd="upload_data_products.py --dir $network_dir"
        echo "\nRunning.... $cmd"
-       echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
+       echo "$(date +"%Y%m%d:%H-%M") + $cmd" | tee -a log
        $cmd 2>out_upload_miaplpy_data_products.e 1>out_upload__miaplpy_data_products.o & 
        exit_status="$?"
        if [[ $exit_status -ne 0 ]]; then
@@ -945,10 +957,10 @@ if [[ $miaplpy_flag == "1" ]]; then
 
     ## insarmaps
     if [[ $insarmaps_flag == "1" ]]; then
-
+        # create jobfile
         cmd="create_insarmaps_jobfile.py $network_dir --dataset $insarmaps_dataset"
         echo "Running.... $cmd"
-        echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
+        echo "$(date +"%Y%m%d:%H-%M") + $cmd" | tee -a log
         $cmd
         exit_status="$?"
         if [[ $exit_status -ne 0 ]]; then
@@ -956,11 +968,11 @@ if [[ $miaplpy_flag == "1" ]]; then
            exit 1;
         fi
 
-        # run insarmaps jobfiles
+        # run jobfiles
         insarmaps_jobfile=$(ls -t insar*job | head -n 1)
         cmd="run_workflow.bash $template_file --jobfile $PWD/$insarmaps_jobfile"
         echo "Running.... $cmd"
-        test -f insarmaps_miaplpy_geo.job && $cmd
+        $cmd
         exit_status="$?"
         if [[ $exit_status -ne 0 ]]; then
            echo "$cmd with a non-zero exit code ($exit_status). Exiting."
