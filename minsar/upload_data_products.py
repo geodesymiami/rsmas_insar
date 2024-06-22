@@ -39,6 +39,8 @@ def create_parser():
     parser.add_argument('--geo', dest='geo_flag', action='store_true', default=False, help='uploads geo  directory')
     parser.add_argument('--slcStack', dest='slcStack_flag', action='store_true', default=False, help='uploads miaplpy*/inputs directory')
     parser.add_argument('--all', dest='all_flag', action='store_true', default=False, help='uploads full directory')
+    #parser.add_argument('--triplets', dest='triplets_flag', action='store_true', default=False, help='uploads numTriNonzeroIntAmbiguity.h5')
+    parser.add_argument('--triplets', dest='triplets_flag', action='store_true', default=True, help='uploads numTriNonzeroIntAmbiguity.h5')
 
     return parser
 
@@ -105,13 +107,13 @@ def main(iargs=None):
     for data_dir in inps.data_dirs:
         data_dir = data_dir.rstrip('/')
         if inps.mintpy_flag:
-            create_html_if_needed(data_dir + '/pic')
+            if os.path.isdir(data_dir + '/pic'):
+               create_html_if_needed(data_dir + '/pic')
             scp_list.extend([
             '/'+ data_dir +'/*.he5',
             '/'+ data_dir +'/timeseries*demErr.h5',
             '/'+ data_dir +'/pic',
             '/'+ data_dir +'/inputs/geometryRadar.h5',
-#            '/'+ data_dir +'/inputs/ifgramStack.h5',            # removed becasue I never rerran based of ifgramStack.h5
             '/'+ data_dir +'/inputs/smallbaselineApp.cfg',
             '/'+ data_dir +'/inputs/*.template',
             '/'+ data_dir +'/geo/geo_velocity.h5'
@@ -125,6 +127,10 @@ def main(iargs=None):
                '/'+ data_dir +'/geo/geo_timeseries_demErr.h5'
                #'/'+ data_dir +'/geo/geo_velocity.h5'             # already included earlier
                ])
+            if inps.triplets_flag:
+                   scp_list.extend([
+                   '/'+ data_dir +'/numTriNonzeroIntAmbiguity.h5',
+                   ])
 
         if inps.miaplpy_flag:
             if 'network_' in data_dir:
@@ -157,6 +163,10 @@ def main(iargs=None):
                    '/'+ network_dir +'/geo/geo_timeseries_*demErr.h5'
                    #'/'+ network_dir +'/geo/geo_velocity.h5'             # already included earlier
                    ])
+                if inps.triplets_flag:
+                   scp_list.extend([
+                   '/'+ network_dir +'/numTriNonzeroIntAmbiguity.h5',
+                   ])
                 if inps.all_flag:
                     scp_list.extend([
                     '/'+ network_dir +'/numInvIfgram.h5',
@@ -170,20 +180,21 @@ def main(iargs=None):
                     ])
 
             # After completion of network_* loops
+            #print('QQ',data_dir,os.path.dirname(data_dir))
             scp_list.extend([
-            '/'+ os.path.basename(data_dir) +'/maskPS.h5',
-            '/'+ os.path.basename(data_dir) +'/miaplpyApp.cfg',
-            #'/'+ os.path.basename(data_dir) +'/inputs/slcStack.h5',
-            '/'+ os.path.basename(data_dir) +'/inputs/geometryRadar.h5',
-            '/'+ os.path.basename(data_dir) +'/inputs/baselines', 
-            '/'+ os.path.basename(data_dir) +'/inputs/*.template', 
-            '/'+ os.path.basename(data_dir) +'/inverted/tempCoh_average*', 
-            #'/'+ os.path.basename(data_dir) +'/inverted/phase_series.h5', 
-            '/'+ os.path.basename(data_dir) +'/inverted/tempCoh_full*' 
+            '/'+ os.path.dirname(data_dir) +'/maskPS.h5',
+            '/'+ os.path.dirname(data_dir) +'/miaplpyApp.cfg',
+            '/'+ os.path.dirname(data_dir) +'/inputs/geometryRadar.h5',
+            '/'+ os.path.dirname(data_dir) +'/inputs/baselines', 
+            '/'+ os.path.dirname(data_dir) +'/inputs/*.template', 
+            '/'+ os.path.dirname(data_dir) +'/inverted/tempCoh_average*', 
+            #'/'+ os.path.dirname(data_dir) +'/inputs/slcStack.h5',
+            #'/'+ os.path.dirname(data_dir) +'/inverted/phase_series.h5', 
+            '/'+ os.path.dirname(data_dir) +'/inverted/tempCoh_full*' 
             ])
             if inps.slcStack_flag:
                 scp_list.extend([
-                '/'+ os.path.basename(data_dir) +'/inputs/slcStack.h5'
+                '/'+ os.path.dirname(data_dir) +'/inputs/slcStack.h5'
                 ])
 
     print('################')
@@ -233,6 +244,8 @@ def main(iargs=None):
 ##########################################
     remote_url = 'http://' + DATA_SERVER.split('@')[1] + REMOTE_DIR + '/' + project_name + '/' + data_dir + '/pic'
     print('Data at:\n',remote_url)
+    with open('remote_url.log', 'a') as f:
+        f.write(remote_url + "\n")
 ##########################################
 
         #for pattern in rsync_list:
