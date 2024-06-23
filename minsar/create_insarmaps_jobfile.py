@@ -60,7 +60,7 @@ def main(iargs=None):
         else:
             file_geo = file
     
-    job_name = f"insarmaps_miaplpy_{inps.dataset}"
+    job_name = f"insarmaps_{inps.dataset}"
     job_file_name = job_name
 
     files = []
@@ -95,7 +95,7 @@ def main(iargs=None):
         i+=1
     
     command.append('wait\n\n')
-    str = [f'cat >> insarmaps_miaplpy.log<<EOF\n']
+    str = [f'cat >> insarmaps.log<<EOF\n']
     str.append(f"\n{inps.data_dir[0]}:\n")
     for file in files:
         base_name = os.path.basename(file)

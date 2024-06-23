@@ -36,7 +36,7 @@ def log(logdir, msg):
     callingFunction  = os.path.basename(inspect.stack()[1][1])
     dateStr=datetime.datetime.strftime(datetime.datetime.now(), '%Y%m%d:%H-%M') 
     msg = insert_environment_variables_into_path( msg )
-    string = dateStr + " * " + msg
+    string = dateStr + " + " + msg
     print(string)
     f.write(string + "\n")
     f.close()
