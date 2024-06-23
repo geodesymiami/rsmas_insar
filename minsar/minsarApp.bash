@@ -524,17 +524,25 @@ if [[ $download_flag == "1" ]]; then
     fi
     cd $download_dir
     cat ../ssara_command.txt
+    cmd=$(cat ../ssara_command.txt)
     echo "Running.... 'cat ../ssara_command.txt'"
-    bash ../ssara_command.txt
+    echo $cmd
+    $cmd
     exit_status="$?"
+    if [ $exit_status -ne 0 ]; then
+       echo "ssara_federated_query.bash failed with exit status $exit_status. Exiting."
+       exit 1
+    fi
+    # FA 6/2024: The error checking is now done in ssara_federated_query.bash  which I think is better
+    #echo "exit status of ssara_federated_query.bash: $exit_status"
+    #grep -q "urllib.error.HTTPError: HTTP Error 502: Proxy Error" ssara.e && { echo "Download problem: HTTP Error 502"; exit 1; }
    
     runs=1
     while [ $exit_status -ne 0 ] && [ $runs -le 4 ]; do
-        echo "ssara_federated_query.bash exited with a non-zero exit code ($exit_status). Trying again in 2 hours."
-        echo "$(date +"%Y%m%d:%H-%m") * Something went wrong. Exit code was ${exit_status}. Trying again in 2 hours" | tee -a log | tee -a ../log
-
-        sleep 7200 # sleep for 2 hours
-        bash ../ssara_command.txt
+        echo "ssara_federated_query.bash exited with a non-zero exit code ($exit_status). Trying again in 2 minutes."
+        echo "$(date +"%Y%m%d:%H-%m") * Something went wrong. Exit code was ${exit_status}. Trying again in 2 minutes" | tee -a log | tee -a ../log
+        sleep 120 # sleep for 2 minutes
+        $cmd
         exit_status="$?"
         runs=$((runs+1))
     done
@@ -862,7 +870,7 @@ if [[ $mintpy_flag == "1" ]]; then
         # create jobfile
         cmd="create_insarmaps_jobfile.py mintpy --dataset geo"
         echo "Running.... $cmd"
-        echo "$(date +"%Y%m%d:%H-%M") + $cmd" | tee -a log
+        echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
         $cmd
         exit_status="$?"
         if [[ $exit_status -ne 0 ]]; then
@@ -946,8 +954,8 @@ if [[ $miaplpy_flag == "1" ]]; then
     if [[ $upload_flag == "1" ]]; then
        cmd="upload_data_products.py --dir $network_dir"
        echo "\nRunning.... $cmd"
-       echo "$(date +"%Y%m%d:%H-%M") + $cmd" | tee -a log
-       $cmd 2>out_upload_miaplpy_data_products.e 1>out_upload__miaplpy_data_products.o & 
+       echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
+       $cmd 2>out_upload_miaplpy_data_products.e 1>out_upload_miaplpy_data_products.o & 
        exit_status="$?"
        if [[ $exit_status -ne 0 ]]; then
           echo "$cmd exited with a non-zero exit code ($exit_status). Exiting."
@@ -960,7 +968,7 @@ if [[ $miaplpy_flag == "1" ]]; then
         # create jobfile
         cmd="create_insarmaps_jobfile.py $network_dir --dataset $insarmaps_dataset"
         echo "Running.... $cmd"
-        echo "$(date +"%Y%m%d:%H-%M") + $cmd" | tee -a log
+        echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
         $cmd
         exit_status="$?"
         if [[ $exit_status -ne 0 ]]; then
