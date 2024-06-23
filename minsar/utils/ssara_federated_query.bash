@@ -19,7 +19,8 @@ for i in "${!copy[@]}"; do
     if [[ ${copy[$i]} == *intersectsWith=* ]]; then
         tmp1=${copy[$i]:0:17}
         tmp2=${copy[$i]:17:${#copy[$i]}}
-        copy[$i]="$tmp1'$tmp2'"
+        #copy[$i]="$tmp1'$tmp2'"       
+        copy[$i]="$tmp1$tmp2"     # FA 6/2025: previous command this created for ManamSenDT60 an extra ''   --intersectsWith=''Polygon((142.00'
         #copy[$i]="$tmp1\"$tmp2\""
     elif [[ ${copy[$i]} == *collectionName=* ]]; then
         tmp1=${copy[$i]:0:17}
@@ -56,16 +57,18 @@ rm -f ssara_listing.txt
 argv=( "$@" )
 string_for_display=$(printf " %s" "${copy[@]}")
 string_for_display=${string_for_display:1}
-#echo $string_for_display
+#echo "QQ string_fo_display: $string_for_display"
 
 asfResponseTimeout_opt="--asfResponseTimeout=300"
 if [[ $string_for_display == *TSX* ]] || [[ $string_for_display == *CSK* ]]; then
    asfResponseTimeout_opt=""
 fi
 
-cmd="ssara_federated_query.py $string_for_display $asfResponseTimeout_opt --kml --print  > ssara_listing.txt"
+#cmd="ssara_federated_query.py $string_for_display $asfResponseTimeout_opt --kml --print  > ssara_listing.txt"
+cmd="ssara_federated_query.py $string_for_display $asfResponseTimeout_opt --kml --print  > ssara_listing.txt 2>ssara.e"
 echo "Running ... $cmd"
 eval "$cmd"
+grep -q "urllib.error.HTTPError: HTTP Error 502: Proxy Error" ssara.e && { echo "Download problem: urllib.error.HTTPError: HTTP Error 502: Proxy Error"; exit 1; }
 
 downloads_num=$(grep Found ssara_listing.txt | cut -d " " -f 2)
 echo "Number of granules: $downloads_num"
