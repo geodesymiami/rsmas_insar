@@ -1024,14 +1024,24 @@ echo "Done:  $minsarApp_command"
 echo
 
 # Summarize results
+if [[ "$insarmaps_dataset" == "PS" || "$insarmaps_dataset" == "DS" ||  "$insarmaps_dataset" == "geo" ]]; then
+    num=2
+fi
+if [[ "$insarmaps_dataset" == "PSDS" ]]; then
+    num=4
+fi
+if [[ "$insarmaps_dataset" == "all" ]]; then
+    num=6
+fi
+
 echo "Data products uploaded to:"
 if [ -f "upload.log" ]; then
-    tail -n 1 upload.log
+    tail -n -1 upload.log
 else
     echo "upload.log does not exist."
 fi
 if [ -f "insarmaps.log" ]; then
-    tail -n 1 insarmaps.log
+    tail -n $num insarmaps.log
 else
     echo "insarmaps.log does not exist."
 fi

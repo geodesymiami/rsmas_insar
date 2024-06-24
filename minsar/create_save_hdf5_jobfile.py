@@ -90,35 +90,28 @@ def main(iargs=None):
     job_file_name = job_name
 
     mask_thresh = 0.7
-    cmd0 = f'cd {processing_dir}'
-    cmd1 = f'spatial_filter.py temporalCoherence.h5 -f lowpass_gaussian -p {inps.filter_par} &'
-    cmd2 = f'generate_mask.py temporalCoherence_lowpass_gaussian.h5 -m {mask_thresh} &'
-    cmd3 = f'save_hdfeos5.py timeseries_*demErr.h5 --tc temporalCoherence.h5 --asc avgSpatialCoh.h5 -m ../maskPS.h5 -g inputs/geometryRadar.h5 -t smallbaselineApp.cfg --suffix {prefix}PS &'
-
-    #cmd4 = f'save_hdfeos5.py timeseries_*demErr.h5 --tc temporalCoherence.h5 --asc avgSpatialCoh.h5 -m maskTempCoh.h5 -g inputs/geometryRadar.h5 -t smallbaselineApp.cfg --suffix {prefix}DS &'
-    cmd4 = f'save_hdfeos5.py timeseries_*demErr.h5 --tc temporalCoherence.h5 --asc avgSpatialCoh.h5 -m maskTempCoh_lowpass_gaussian.h5  -g inputs/geometryRadar.h5 -t smallbaselineApp.cfg --suffix {prefix}DS &'
-
-    cmd_source = 'source ' + os.path.dirname(os.path.abspath(__file__)) + '/utils/minsar_functions.bash'
-
-    cmd3a=f'h5file=`ls *_??????_??????_???????_???????*_{prefix}PS.he5` ; add_ref_lalo_to_file $h5file'
-    cmd4a=f'h5file=`ls *_??????_??????_???????_???????*_{prefix}DS.he5` ; add_ref_lalo_to_file $h5file'
-    
     command = []
-    command.append(cmd0)
-    command.append(cmd1)
-    command.append("wait")
-    command.append(cmd2)
-    command.append("wait")
-    command.append(cmd3)
-    command.append(cmd4)
-    command.append("wait")
-    command.append(cmd_source)
-    command.append(cmd3a)
-    command.append(cmd4a)
-    command.append("wait")
+    command.append( f'cd {processing_dir}' )
+    command.append( f'spatial_filter.py temporalCoherence.h5 -f lowpass_gaussian -p {inps.filter_par} &' )
+    command.append( f'wait' )
+    command.append( f'generate_mask.py temporalCoherence_lowpass_gaussian.h5 -m {mask_thresh} &' )
+    command.append( f'wait' )
+
+    command.append( f'save_hdfeos5.py timeseries_*demErr.h5 --tc temporalCoherence.h5 --asc avgSpatialCoh.h5 -m ../maskPS.h5 -g inputs/geometryRadar.h5 -t smallbaselineApp.cfg --suffix {prefix}PS &' )
+    #command.append( f'save_hdfeos5.py timeseries_*demErr.h5 --tc temporalCoherence.h5 --asc avgSpatialCoh.h5 -m maskTempCoh.h5 -g inputs/geometryRadar.h5 -t smallbaselineApp.cfg --suffix {prefix}DS &' )
+    command.append( f'save_hdfeos5.py timeseries_*demErr.h5 --tc temporalCoherence.h5 --asc avgSpatialCoh.h5 -m maskTempCoh_lowpass_gaussian.h5  -g inputs/geometryRadar.h5 -t smallbaselineApp.cfg --suffix {prefix}DS &' )
+    command.append( f'geocode.py temporalCoherence_lowpass_gaussian.h5  --outdir geo &' )
+    command.append( f'geocode.py maskTempCoh_lowpass_gaussian.h5  --outdir geo &' )
+    command.append( f'wait' )
+
+    command.append( 'source ' + os.path.dirname(os.path.abspath(__file__)) + '/utils/minsar_functions.bash' )
+    command.append( f'h5file=`ls *_??????_??????_???????_???????*_{prefix}PS.he5` ; add_ref_lalo_to_file $h5file' )
+    command.append( f'h5file=`ls *_??????_??????_???????_???????*_{prefix}DS.he5` ; add_ref_lalo_to_file $h5file' )
+    command.append( f'wait' )
+    
     # Join the list into a string with linefeeds
-    final_command_str = '\n'.join(command)
-    final_command = [final_command_str]
+    final_command =[ '\n'.join(command) ]
+    #final_command = [final_command_str]
 
     job_obj.submit_script(job_name, job_file_name, final_command, writeOnly='True')
     print('jobfile created: ',job_file_name + '.job')
