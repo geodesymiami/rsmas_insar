@@ -120,13 +120,17 @@ def main(iargs=None):
             ])
             if inps.geo_flag:
                scp_list.extend([
-               '/'+ data_dir +'/geo/geo_avgSpatialCoh.h5',
-               '/'+ data_dir +'/geo/geo_geometryRadar.h5',
-               '/'+ data_dir +'/geo/geo_maskTempCoh.h5',
-               '/'+ data_dir +'/geo/geo_temporalCoherence.h5',
-               '/'+ data_dir +'/geo/geo_timeseries_demErr.h5'
-               #'/'+ data_dir +'/geo/geo_velocity.h5'             # already included earlier
+               '/'+ data_dir +'/geo/geo_*.h5'
                ])
+            #if inps.geo_flag:
+            #   scp_list.extend([
+            #   '/'+ data_dir +'/geo/geo_avgSpatialCoh.h5',
+            #   '/'+ data_dir +'/geo/geo_geometryRadar.h5',
+            #   '/'+ data_dir +'/geo/geo_maskTempCoh.h5',
+            #   '/'+ data_dir +'/geo/geo_temporalCoherence.h5',
+            #   '/'+ data_dir +'/geo/geo_timeseries_demErr.h5'
+            #   #'/'+ data_dir +'/geo/geo_velocity.h5'             # already included earlier
+            #   ])
             if inps.triplets_flag:
                    scp_list.extend([
                    '/'+ data_dir +'/numTriNonzeroIntAmbiguity.h5',
@@ -156,13 +160,17 @@ def main(iargs=None):
                 ])
                 if inps.geo_flag:
                    scp_list.extend([
-                   '/'+ network_dir +'/geo/geo_avgSpatialCoh.h5',
-                   '/'+ network_dir +'/geo/geo_geometryRadar.h5',
-                   '/'+ network_dir +'/geo/geo_maskTempCoh.h5',
-                   '/'+ network_dir +'/geo/geo_temporalCoherence.h5',
-                   '/'+ network_dir +'/geo/geo_timeseries_*demErr.h5'
-                   #'/'+ network_dir +'/geo/geo_velocity.h5'             # already included earlier
+                   '/'+ data_dir +'/geo/geo_*.h5'
                    ])
+                #if inps.geo_flag:
+                #   scp_list.extend([
+                #   '/'+ network_dir +'/geo/geo_avgSpatialCoh.h5',
+                #   '/'+ network_dir +'/geo/geo_geometryRadar.h5',
+                #   '/'+ network_dir +'/geo/geo_maskTempCoh.h5',
+                #   '/'+ network_dir +'/geo/geo_temporalCoherence.h5',
+                #   '/'+ network_dir +'/geo/geo_timeseries_*demErr.h5'
+                #   #'/'+ network_dir +'/geo/geo_velocity.h5'             # already included earlier
+                #   ])
                 if inps.triplets_flag:
                    scp_list.extend([
                    '/'+ network_dir +'/numTriNonzeroIntAmbiguity.h5',
@@ -180,7 +188,6 @@ def main(iargs=None):
                     ])
 
             # After completion of network_* loops
-            #print('QQ',data_dir,os.path.dirname(data_dir))
             scp_list.extend([
             '/'+ os.path.dirname(data_dir) +'/maskPS.h5',
             '/'+ os.path.dirname(data_dir) +'/miaplpyApp.cfg',
@@ -234,12 +241,20 @@ def main(iargs=None):
                 raise Exception('ERROR uploading using scp -r  in upload_data_products.py')
 
             # adjust permissions
-            print ('\nAdjusting permissions:')
-            command = 'ssh ' + DATA_SERVER + ' chmod -R u=rwX,go=rX ' + REMOTE_DIR + project_name  + pattern
-            print (command)
-            status = subprocess.Popen(command, shell=True).wait()
-            if status is not 0:
-                raise Exception('ERROR adjusting permissions in upload_data_products.py')
+            #print ('\nAdjusting permissions:')
+            #command = 'ssh ' + DATA_SERVER + ' chmod -R u=rwX,go=rX ' + REMOTE_DIR + project_name  + pattern
+            #print (command)
+            #status = subprocess.Popen(command, shell=True).wait()
+            #if status is not 0:
+            #    raise Exception('ERROR adjusting permissions in upload_data_products.py')
+
+    # adjust permissions
+    print ('\nAdjusting permissions:')
+    command = 'ssh ' + DATA_SERVER + ' chmod -R u=rwX,go=rX ' + REMOTE_DIR + project_name  + '/' + os.path.dirname(data_dir)
+    print (command)
+    status = subprocess.Popen(command, shell=True).wait()
+    if status is not 0:
+        raise Exception('ERROR adjusting permissions in upload_data_products.py')
 
 ##########################################
     remote_url = 'http://' + DATA_SERVER.split('@')[1] + REMOTE_DIR + '/' + project_name + '/' + data_dir + '/pic'
