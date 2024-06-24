@@ -853,7 +853,7 @@ if [[ $mintpy_flag == "1" ]]; then
 
     # upload mintpy directory 
     if [[ $upload_flag == "1" ]]; then
-        cmd="upload_data_products.py --dir mintpy"
+        cmd="upload_data_products.py --dir mintpy ${template[minsar.upload_option]}"
         echo "Running.... $cmd"
         echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
         $cmd 2>out_upload_mintpy_data_products.e 1>out_upload_mintpy_data_products.o & 
@@ -931,7 +931,10 @@ if [[ $miaplpy_flag == "1" ]]; then
     # run miaplpy jobfiles ( after create_save_hdf5_jobfile.py to include run_10_save_hdfeos5_radar_0.job )
     cmd="run_workflow.bash $template_file --append --dostep miaplpy --dir $miaplpy_dir_name"
     echo "Running.... $cmd"
+    ###############################
+    ### Disable miaplpy here  ####
     $cmd
+    ###############################
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
        echo "$cmd with a non-zero exit code ($exit_status). Exiting."
@@ -952,8 +955,7 @@ if [[ $miaplpy_flag == "1" ]]; then
 
     # upload data products
     if [[ $upload_flag == "1" ]]; then
-       cmd="upload_data_products.py --dir $network_dir"
-       cmd="upload_data_products.py --dir $network_dir --geo"
+       cmd="upload_data_products.py --dir $network_dir ${template[minsar.upload_option]}"
        echo "\nRunning.... $cmd"
        echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
        $cmd 2>out_upload_miaplpy_data_products.e 1>out_upload_miaplpy_data_products.o & 
