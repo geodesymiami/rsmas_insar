@@ -100,7 +100,7 @@ def main(iargs=None):
     for file in files:
         base_name = os.path.basename(file)
         name_without_extension = os.path.splitext(base_name)[0]
-        str.append(f"https://insarmaps.miami.edu/start/25.78/-80.3/11.0?flyToDatasetCenter=true&startDataset={name_without_extension}\n")
+        str.append(f"https://insarmaps.miami.edu/start/25.78/-80.3/11.0?flyToDatasetCenter=true&startDataset={name_without_extension}")
 
     str.append( 'EOF' ) 
     command.append( "".join(str) )

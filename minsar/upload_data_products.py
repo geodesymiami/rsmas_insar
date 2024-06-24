@@ -244,7 +244,7 @@ def main(iargs=None):
 ##########################################
     remote_url = 'http://' + DATA_SERVER.split('@')[1] + REMOTE_DIR + '/' + project_name + '/' + data_dir + '/pic'
     print('Data at:\n',remote_url)
-    with open('remote_url.log', 'a') as f:
+    with open('upload.log', 'a') as f:
         f.write(remote_url + "\n")
 ##########################################
 

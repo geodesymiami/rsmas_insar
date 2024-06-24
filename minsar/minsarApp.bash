@@ -197,6 +197,15 @@ configs_dir="configs_tmp"
 args=( "$@" )    # copy of command line arguments
 
 ##################################
+# set defaults steps (insarmaps_flag and upload_flag are set to 0 if not given on command line or in template file )
+download_flag=1
+dem_flag=1
+ifgram_flag=1
+mintpy_flag=1
+miaplpy_flag=0
+finishup_flag=1
+
+##################################
 
 while [[ $# -gt 0 ]]
 do
@@ -289,16 +298,6 @@ if [[ ${#POSITIONAL[@]} -gt 1 ]]; then
     echo "Unknown parameters provided."
     exit 1;
 fi
-
-##################################
-# Set default steps (insarmaps_flag and upload_flag are set to 0 and 1 if not given on command line 
-# insarmaps_flag and upload_flag are set to 0 if not given on command line or in template file 
-download_flag=1
-dem_flag=1
-ifgram_flag=1
-mintpy_flag=1
-miaplpy_flag=0
-finishup_flag=1
 
 # adjust switches according to template options if given
 if [[ ! -v insarmaps_flag ]]; then
@@ -919,7 +918,17 @@ if [[ $miaplpy_flag == "1" ]]; then
        exit 1;
     fi
 
-    # run miaplpy jobfiles
+    cmd="create_save_hdf5_jobfile.py  $template_file $network_dir --queue $QUEUENAME --walltime 0:30"
+    echo "Running.... $cmd"
+    $cmd
+    exit_status="$?"
+    if [[ $exit_status -ne 0 ]]; then
+       echo "$cmd with a non-zero exit code ($exit_status). Exiting."
+       exit 1;
+    fi
+    mv save_hdfeos5_radar.job $network_dir/run_files/run_10_save_hdfeos5_radar_0.job
+
+    # run miaplpy jobfiles ( after create_save_hdf5_jobfile.py to include run_10_save_hdfeos5_radar_0.job )
     cmd="run_workflow.bash $template_file --append --dostep miaplpy --dir $miaplpy_dir_name"
     echo "Running.... $cmd"
     $cmd
@@ -930,15 +939,6 @@ if [[ $miaplpy_flag == "1" ]]; then
     fi
 
     # create the save_hdfeos5_radar jobfile and copy into network_*/runfiles (to run after miaplpy)
-    cmd="create_save_hdf5_jobfile.py  $template_file $network_dir --queue $QUEUENAME --walltime 0:30"
-    echo "Running.... $cmd"
-    $cmd
-    exit_status="$?"
-    if [[ $exit_status -ne 0 ]]; then
-       echo "$cmd with a non-zero exit code ($exit_status). Exiting."
-       exit 1;
-    fi
-    mv save_hdfeos5_radar.job $network_dir/run_files/run_10_save_hdfeos5_radar_0.job
 
     # create index.html with all images
     cmd="create_html.py ${network_dir}/pic"
@@ -953,6 +953,7 @@ if [[ $miaplpy_flag == "1" ]]; then
     # upload data products
     if [[ $upload_flag == "1" ]]; then
        cmd="upload_data_products.py --dir $network_dir"
+       cmd="upload_data_products.py --dir $network_dir --geo"
        echo "\nRunning.... $cmd"
        echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
        $cmd 2>out_upload_miaplpy_data_products.e 1>out_upload_miaplpy_data_products.o & 
@@ -1020,6 +1021,21 @@ ls -sh mintpy/*he5 2>/dev/null
 ls -sh $network_dir/*he5 2>/dev/null
 echo
 echo "Done:  $minsarApp_command" 
+echo
+
+# Summarize results
+echo "Data products uploaded to:"
+if [ -f "upload.log" ]; then
+    tail -n 1 upload.log
+else
+    echo "upload.log does not exist."
+fi
+if [ -f "insarmaps.log" ]; then
+    tail -n 1 insarmaps.log
+else
+    echo "insarmaps.log does not exist."
+fi
+
 echo
 echo "Yup! That's all from minsarApp.bash."
 echo
