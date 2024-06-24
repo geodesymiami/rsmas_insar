@@ -64,35 +64,40 @@ def main(iargs=None):
     job_file_name = job_name
 
     files = []
+    suffixes = []
     if inps.dataset == "geo":
-        files.append(file_geo)
+          files.append(file_geo)
+     
     if inps.dataset == "PS":
         files.append(file_PS)
+        suffixes.append("")
     if inps.dataset == "DS":
         files.append(file_DS)
+        suffixes.append("DS")
     if inps.dataset == "PSDS":
         files.append(file_PS)
         files.append(file_DS)
+        suffixes.append("PS")
+        suffixes.append("DS")
     if inps.dataset == "all":
         files.append(file_geo)
         files.append(file_PS)
         files.append(file_DS)
+        suffixes.append("")
+        suffixes.append("PS")
+        suffixes.append("DS")
 
     command = []
-    i = 0
-    for file in files:
-        command.append( f'rm -r {inps.data_dir[0]}/JSON_{i}\n' )
-        command.append( f'hdfeos5_2json_mbtiles.py {file} {inps.work_dir}/{inps.data_dir[0]}/JSON_{i} --num-workers 8\n' )
-        i+=1
+    for file, suffix in zip(files, suffixes):
+        command.append( f'rm -r {inps.data_dir[0]}/JSON_{suffix}\n' )
+        command.append( f'hdfeos5_2json_mbtiles.py {file} {inps.work_dir}/{inps.data_dir[0]}/JSON_{suffix} --num-workers 8\n' )
     
     command.append('wait\n\n')
-    i = 0
-    for file in files:
+    for file, suffix in zip(files, suffixes):
         path_obj = Path(file)
-        mbtiles_file = f"{path_obj.parent}/JSON_{i}/{path_obj.name}"
+        mbtiles_file = f"{path_obj.parent}/JSON_{suffix}/{path_obj.name}"
         mbtiles_file = mbtiles_file.replace('he5','mbtiles')
-        command.append( f'json_mbtiles2insarmaps.py --num-workers 8 -u {password.insaruser} -p {password.insarpass} --host insarmaps.miami.edu -P rsmastest -U rsmas\@gmail.com --json_folder {inps.work_dir}/{inps.data_dir[0]}/JSON_{i} --mbtiles_file {mbtiles_file}\n' )
-        i+=1
+        command.append( f'json_mbtiles2insarmaps.py --num-workers 8 -u {password.insaruser} -p {password.insarpass} --host insarmaps.miami.edu -P rsmastest -U rsmas\@gmail.com --json_folder {inps.work_dir}/{inps.data_dir[0]}/JSON_{suffix} --mbtiles_file {mbtiles_file}\n' )
     
     command.append('wait\n\n')
     str = [f'cat >> insarmaps.log<<EOF\n']
