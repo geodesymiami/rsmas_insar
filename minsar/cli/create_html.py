@@ -29,12 +29,6 @@ def create_parser():
 
 ###################################################################################  
 def main(iargs=None):
-    if len(sys.argv) == 1:
-        cmd = 'create_html.py /Users/famelung/onedrive/scratch/MaunaLoaSenDT87/mintpy_5_20/pic'
-        cmd = 'create_html.py $SCRATCHDIR/unittestGalapagosSenDT128/mintpy/pic'
-        cmd = os.path.expandvars(cmd)
-        cmd = re.sub(' +', ' ', cmd) .rstrip()
-        sys.argv = cmd.split()
 
     message_rsmas.log(os.getcwd(), os.path.basename(__file__) + ' ' + ' '.join(sys.argv[1:]))
 

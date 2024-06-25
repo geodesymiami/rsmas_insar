@@ -45,6 +45,9 @@ def build_html(directory_path):
     kmz_files = [file for file in file_list if file.lower().endswith('.kmz')]
     template_files = [file for file in file_list if file.lower().endswith('.template')]
 
+    # keep copy of directory name for later display
+    orig_dir = os.path.relpath(directory_path, os.getcwd())
+
     os.chdir(directory_path)
 
     # Convert each PDF file to PNG
@@ -65,18 +68,22 @@ def build_html(directory_path):
         print("No PNG files found in the specified directory.")
         exit()
 
-    # Define the preferred order of images
-    preferred_order = ['geo_velocity.png', 'geo_temporalCoherence.png', 'geo_maskTempCoh.png', 'geo_avgSpatialCoh.png',
-                    'network.png','coherenceHistory.png','coherenceMatrix.png','rms_timeseries*.png',
-                    'temporalCoherence.png', 'maskTempCoh.png', 'avgSpatialCoh.png', 'maskConnComp.png',
-                    'numTriNonzeroIntAmbiguity.png','numInvIfgram.png',
-                    'velocity.png','geometryRadar.png',
-                    'coherence_?.png', 'coherence_??.png',
-                    'unwrapPhase_wrap_?.png','unwrapPhase_wrap_??.png',
-                    'unwrapPhase_?.png', 'unwrapPhase_??.png',
-                    'connectComponent_?.png', 'connectComponent_??.png',
-                    'timeseries_*_wrap10_?.png', 'geo_timeseries_*_wrap10_?.png']
-                    
+    # Define the preferred order of images (temporalCoherence_lowpass_gaussian can be handy for miaplpy DS to eliminate indiviudal high temporal coherence pixels)
+    preferred_order = ['geo_velocity.png',  
+                       'geo_temporalCoherence.png', 'geo_temporalCoherence_lowpass_gaussian.png', 
+                       'geo_maskTempCoh.png','geo_maskTempCoh_lowpass_gaussian.png',
+                       'temporalCoherence.png','temporalCoherence_lowpass_gaussian.png',
+                       'maskTempCoh.png','maskTempCoh_lowpass_gaussian.png',
+                       'geo_avgSpatialCoh.png','avgSpatialCoh.png',
+                       'maskConnComp.png',
+                       'network.png','coherenceHistory.png','coherenceMatrix.png','rms_timeseries*.png',
+                       'numTriNonzeroIntAmbiguity.png','numInvIfgram.png',
+                       'velocity.png','geometryRadar.png',
+                       'coherence_?.png', 'coherence_??.png',
+                       'unwrapPhase_wrap_?.png','unwrapPhase_wrap_??.png',
+                       'unwrapPhase_?.png', 'unwrapPhase_??.png',
+                       'connectComponent_?.png', 'connectComponent_??.png',
+                       'timeseries_*_wrap10_?.png', 'geo_timeseries_*_wrap10_?.png']
 
     def sort_key(filename):
         for i, pattern in enumerate(preferred_order):
@@ -90,7 +97,7 @@ def build_html(directory_path):
 
     png_files.sort(key=sort_key)
 
-    # get project_name and network_type for header
+    # get project_name and network_type for header (uses minsar.putils)
     inps = Inps(directory_path + '/' + template_files[0])
     inps = putils.create_or_update_template(inps)
     try:
@@ -102,8 +109,10 @@ def build_html(directory_path):
     # Create the HTML file with headers and image tags
     html_content = "<html><body>"
     html_content += f'  <h1>{project_name}</h1>\n'
-    if 'miaplpy' in directory_path:
-       html_content += f'  <h2>network: {network_type}</h2>\n'
+
+    html_content += f'  <h2>{orig_dir}</h2>\n'
+    #if 'miaplpy' in directory_path:
+    #   html_content += f'  <h2>network: {network_type}</h2>\n'
 
     for png_file in png_files:
         header_tag = f'  <h2>{png_file}</h2>\n'
@@ -112,7 +121,6 @@ def build_html(directory_path):
 
     txt_file = 'reference_date.txt'
     header_tag = f'  <h2>{txt_file}</h2>\n'
-    print('QQ cwd:', os.getcwd())
     with open(txt_file, 'r') as file:
         html_content += header_tag + '<pre>\n' + file.read() + '</pre>\n'
 
