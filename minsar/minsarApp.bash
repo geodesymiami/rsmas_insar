@@ -918,7 +918,7 @@ if [[ $miaplpy_flag == "1" ]]; then
        exit 1;
     fi
 
-    cmd="create_save_hdf5_jobfile.py  $template_file $network_dir --queue $QUEUENAME --walltime 0:30"
+    cmd="create_save_hdf5_jobfile.py  $template_file $network_dir --outdir $network_dir/run_files --outfile run_10_save_hdfeos5_radar_0 --queue $QUEUENAME --walltime 0:30"
     echo "Running.... $cmd"
     $cmd
     exit_status="$?"
@@ -926,7 +926,6 @@ if [[ $miaplpy_flag == "1" ]]; then
        echo "$cmd with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
-    mv save_hdfeos5_radar.job $network_dir/run_files/run_10_save_hdfeos5_radar_0.job
 
     # run miaplpy jobfiles ( after create_save_hdf5_jobfile.py to include run_10_save_hdfeos5_radar_0.job )
     cmd="run_workflow.bash $template_file --append --dostep miaplpy --dir $miaplpy_dir_name"
@@ -979,7 +978,7 @@ if [[ $miaplpy_flag == "1" ]]; then
            exit 1;
         fi
 
-        # run jobfiles
+        # run jobfile
         insarmaps_jobfile=$(ls -t insar*job | head -n 1)
         cmd="run_workflow.bash $template_file --jobfile $PWD/$insarmaps_jobfile"
         echo "Running.... $cmd"

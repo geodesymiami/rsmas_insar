@@ -71,9 +71,9 @@ def build_html(directory_path):
     # Define the preferred order of images (temporalCoherence_lowpass_gaussian can be handy for miaplpy DS to eliminate indiviudal high temporal coherence pixels)
     preferred_order = ['geo_velocity.png',  
                        'geo_temporalCoherence.png', 'geo_temporalCoherence_lowpass_gaussian.png', 
-                       'geo_maskTempCoh.png','geo_maskTempCoh_lowpass_gaussian.png',
+                       'geo_maskTempCoh.png','geo_maskTempCoh_lowpass_gaussian.png','geo_maskPS.png',
                        'temporalCoherence.png','temporalCoherence_lowpass_gaussian.png',
-                       'maskTempCoh.png','maskTempCoh_lowpass_gaussian.png',
+                       'maskTempCoh.png','maskTempCoh_lowpass_gaussian.png', 'maskPS.png',
                        'geo_avgSpatialCoh.png','avgSpatialCoh.png',
                        'maskConnComp.png',
                        'network.png','coherenceHistory.png','coherenceMatrix.png','rms_timeseries*.png',

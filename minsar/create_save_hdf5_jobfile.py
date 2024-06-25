@@ -11,6 +11,8 @@ from minsar.objects import message_rsmas
 from minsar.objects.auto_defaults import PathFind
 import minsar.utils.process_utilities as putils
 from minsar.job_submission import JOB_SUBMIT
+from minsar.objects.dataset_template import Template
+import minsar.utils.process_utilities as putils
 
 pathObj = PathFind()
 
@@ -21,6 +23,8 @@ def create_parser():
     parser.add_argument(dest='processing_dir', default=None, help='miaplpy network_* directory with data for hdf5 file\n')
     parser.add_argument('--filter', dest='filter_par', type=float, default=0.7, help='Set the filtering parameter (default: 0.7)')
     parser.add_argument('--no-filter', dest='filter_par', action='store_const', const=None, help='Disable filtering')
+    parser.add_argument('--outdir', dest='outdir', type=str, default=os.getcwd(), help='Output directory (Default: current directory.)')
+    parser.add_argument('--outfile', dest='outfile', type=str, default='save_hdfeos5_radar', help='job file name (Default: save_hdfeos5_radar')
 
     return parser
 
@@ -73,6 +77,14 @@ def main(iargs=None):
 
     message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
 
+    inps = putils.create_or_update_template(inps)
+    try:
+       #min_temp_coh =  inps.template['miaplpy.timeseries.minTempCoh']
+       min_temp_coh =  inps.template['mintpy.networkInversion.minTempCoh']
+    except:
+       min_temp_coh = 0.7
+
+    #num_worker = dataset_template.options['mintpy.compute.numWorker']
     inps.num_data = 1
     inps.prefix = 'tops'   # in create_runfiles.py it was just there
 
@@ -86,10 +98,10 @@ def main(iargs=None):
     processing_dir = inps.work_dir +  '/' + inps.processing_dir
     processing_dir = processing_dir.rstrip(os.path.sep)
     
-    job_name = 'save_hdfeos5_radar'
+    job_name = f'{inps.outdir}/{inps.outfile}'
     job_file_name = job_name
 
-    mask_thresh = 0.7
+    mask_thresh = min_temp_coh
     command = []
     command.append( f'cd {processing_dir}' )
     command.append( f'spatial_filter.py temporalCoherence.h5 -f lowpass_gaussian -p {inps.filter_par} &' )
@@ -98,16 +110,25 @@ def main(iargs=None):
     command.append( f'wait' )
 
     command.append( f'save_hdfeos5.py timeseries_*demErr.h5 --tc temporalCoherence.h5 --asc avgSpatialCoh.h5 -m ../maskPS.h5 -g inputs/geometryRadar.h5 -t smallbaselineApp.cfg --suffix {prefix}PS &' )
-    #command.append( f'save_hdfeos5.py timeseries_*demErr.h5 --tc temporalCoherence.h5 --asc avgSpatialCoh.h5 -m maskTempCoh.h5 -g inputs/geometryRadar.h5 -t smallbaselineApp.cfg --suffix {prefix}DS &' )
-    command.append( f'save_hdfeos5.py timeseries_*demErr.h5 --tc temporalCoherence.h5 --asc avgSpatialCoh.h5 -m maskTempCoh_lowpass_gaussian.h5  -g inputs/geometryRadar.h5 -t smallbaselineApp.cfg --suffix {prefix}DS &' )
+    command.append( f'save_hdfeos5.py timeseries_*demErr.h5 --tc temporalCoherence.h5 --asc avgSpatialCoh.h5 -m maskTempCoh.h5 -g inputs/geometryRadar.h5 -t smallbaselineApp.cfg --suffix nofilt{prefix}DS &' )
+    command.append( f'save_hdfeos5.py timeseries_*demErr.h5 --tc temporalCoherence_lowpass_gaussian.h5 --asc avgSpatialCoh.h5 -m maskTempCoh_lowpass_gaussian.h5  -g inputs/geometryRadar.h5 -t smallbaselineApp.cfg --suffix {prefix}DS &' )
     command.append( f'geocode.py temporalCoherence_lowpass_gaussian.h5  --outdir geo &' )
     command.append( f'geocode.py maskTempCoh_lowpass_gaussian.h5  --outdir geo &' )
+    command.append( f'geocode.py ../maskPS.h5  --outdir geo &' )
     command.append( f'wait' )
 
     command.append( 'source ' + os.path.dirname(os.path.abspath(__file__)) + '/utils/minsar_functions.bash' )
     command.append( f'h5file=`ls *_??????_??????_???????_???????*_{prefix}PS.he5` ; add_ref_lalo_to_file $h5file' )
     command.append( f'h5file=`ls *_??????_??????_???????_???????*_{prefix}DS.he5` ; add_ref_lalo_to_file $h5file' )
+
+    command.append( f'view.py --dpi 150 --noverbose --nodisplay --update --memory 4.0 temporalCoherence_lowpass_gaussian.h5 -c gray -v 0 1 &')
+    command.append( f'view.py --dpi 150 --noverbose --nodisplay --update --memory 4.0 maskTempCoh_lowpass_gaussian.h5 -c gray -v 0 1 &')
+    command.append( f'view.py --dpi 150 --noverbose --nodisplay --update --memory 4.0 geo/geo_temporalCoherence_lowpass_gaussian.h5 -c gray -v 0 1 &')
+    command.append( f'view.py --dpi 150 --noverbose --nodisplay --update --memory 4.0 geo/geo_maskTempCoh_lowpass_gaussian.h5 -c gray -v 0 1 &')
+    command.append( f'view.py --dpi 150 --noverbose --nodisplay --update --memory 4.0 ../maskPS.h5 -c gray -v 0 1 &')
+    command.append( f'view.py --dpi 150 --noverbose --nodisplay --update --memory 4.0 geo/geo_maskPS.h5 -c gray -v 0 1 &')
     command.append( f'wait' )
+    command.append( f'mv *png pic')
     
     # Join the list into a string with linefeeds
     final_command =[ '\n'.join(command) ]
