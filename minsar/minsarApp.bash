@@ -116,7 +116,8 @@ helptext="                                                                      
    ['download', 'dem', 'jobfiles', 'ifgram', 'mintpy', 'miaplpy']                \n\
                                                                                  \n\
    --upload    [--no-upload]    upload data products to jetstream (default)      \n\
-   --insarmaps [--no-insarmaps] ingest into insarmaps (default is yes for mintpy no for miaplpy)  \n\
+   --insarmaps [--no-insarmaps] ingest into insarmaps (default is no)            \n\
+               overwrites minsar.insarmaps_flag, minsar.upload_flag              \n\
                                                                                  \n\
    In order to use either --start or --dostep, it is necessary that a            \n\
    previous run was done using one of the steps options to process at least      \n\
@@ -143,7 +144,6 @@ helptext="                                                                      
    Coding To Do:                                                                 \n\
        - clean up run_workflow (remove smallbaseline.job insarmaps.job)          \n\
        - move bash functions into minsarApp_functions.bash                       \n\
-       - change flags from 0/1 to False/True for reading from template file      \n\
        - create a command execution function (cmd_exec)                          \n\
        - create .minsarrc for defaults                                           \n 
      "
@@ -197,13 +197,16 @@ configs_dir="configs_tmp"
 args=( "$@" )    # copy of command line arguments
 
 ##################################
-# set defaults steps (insarmaps_flag and upload_flag are set to 0 if not given on command line or in template file )
+# set default flags (insarmaps_flag and upload_flag can also be set as
+# minsar.insarmaps_flag and minsar_upload_flag in template file
 download_flag=1
 dem_flag=1
 ifgram_flag=1
 mintpy_flag=1
 miaplpy_flag=0
 finishup_flag=1
+upload_flag_default=1
+insarmaps_flag_default=0
 
 ##################################
 
@@ -249,7 +252,7 @@ do
             shift
             ;;
         --upload)
-            upload_flag=0
+            upload_flag=1
             shift
             ;;
         --no-upload)
@@ -299,21 +302,45 @@ if [[ ${#POSITIONAL[@]} -gt 1 ]]; then
     exit 1;
 fi
 
-# adjust switches according to template options if given
+# test if insarmaps_flag is set by --insarmaps command line option. If not, set to 1, 0 or default according to minsar.insarmaps_flag
 if [[ ! -v insarmaps_flag ]]; then
-   if [[ ${template[minsar.insarmaps_flag]} == "False" || ! -v ${template[minsar.insarmaps_flag]} ]]; then
-      insarmaps_flag=0        # default
-   elif [[ ${template[minsar.insarmaps_flag]} == "True" ]]; then
-      insarmaps_flag=1
+   ## test if minsar.insarmaps_flag is set
+   if [[ -n ${template[minsar.insarmaps_flag]+_} ]]; then
+       # set to 1 for True, dedault for auto, 0 for False or anything else
+       if [[ ${template[minsar.insarmaps_flag]} == "True" ]]; then
+           insarmaps_flag=1
+       elif [[ ${template[minsar.insarmaps_flag]} == "auto" ]]; then
+           insarmaps_flag=$insarmaps_flag_default
+       else
+           insarmaps_flag=0
+       fi
+   else
+       insarmaps_flag=$insarmaps_flag_default
    fi
 fi
+
+# adjust switches according to template options if upload_flag is not set
 if [[ ! -v upload_flag ]]; then
-   if [[ ${template[minsar.upload_flag]} == "False" || ! -v ${template[minsar.upload_flag]} ]]; then
-      upload_flag=1           # default
-   elif [[ ${template[minsar.upload_flag]} == "True" ]]; then
-      upload_flag=1
+   echo "QQ1 upload_flag not set because --upload option was not given"
+   if [[ -n ${template[minsar.upload_flag]+_} ]]; then
+       if [[ ${template[minsar.upload_flag]} == "True" ]]; then
+           upload_flag=1
+       elif [[ ${template[minsar.upload_flag]} == "auto" ]]; then
+           upload_flag=$upload_flag_default
+       else
+           upload_flag=0
+       fi
+   else
+       upload_flag=$upload_flag_default
    fi
 fi
+#if [[ ! -v upload_flag ]]; then
+#   if [[ ${template[minsar.upload_flag]} == "False" || ! -v ${template[minsar.upload_flag]} ]]; then
+#      upload_flag=1           # default
+#   elif [[ ${template[minsar.upload_flag]} == "True" ]]; then
+#      upload_flag=1
+#   fi
+#fi
 
 ### always use --no-tmp on stampede3
 if [[ $HOSTNAME == *"stampede3"* ]] && [[ $copy_to_tmp == "--tmp" ]]; then
@@ -465,6 +492,7 @@ echo "    $download_flag     $dem_flag      $jobfiles_flag       $ifgram_flag   
 #############################################################
 # check weather python can load matplotlib.pyplot which occasionaly does not work for unknown reasons
 
+sleep 10
 echo Testing ... python -c \"import matplotlib.pyplot\" using check_matplotlib_pyplot
 check_matplotlib_pyplot;
 exit_status="$?"
@@ -932,7 +960,7 @@ if [[ $miaplpy_flag == "1" ]]; then
     echo "Running.... $cmd"
     ###############################
     ### Disable miaplpy here  ####
-    $cmd
+    #$cmd
     ###############################
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
