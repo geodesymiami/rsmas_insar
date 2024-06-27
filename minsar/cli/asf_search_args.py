@@ -107,6 +107,7 @@ for r in results:
     print(f"Start date: {r.properties['startTime']}")
     print(f"End date: {(r.properties['stopTime'])}")
     print(f"{r.geometry['type']}: {r.geometry['coordinates']}")
+    print(f"Relative Orbit: {r.properties['pathNumber']}")
 
 if path != '' and path is not None:
     results.download(
