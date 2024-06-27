@@ -101,7 +101,6 @@ def main(iargs=None):
     
     command.append('wait\n\n')
     str = [f'cat >> insarmaps.log<<EOF\n']
-    str.append(f"Dir: {inps.data_dir[0]}:\n")
     for file in files:
         base_name = os.path.basename(file)
         name_without_extension = os.path.splitext(base_name)[0]

@@ -1046,13 +1046,13 @@ echo
 
 # Summarize results
 if [[ "$insarmaps_dataset" == "PS" || "$insarmaps_dataset" == "DS" ||  "$insarmaps_dataset" == "geo" ]]; then
-    num=2
+    num=1
 fi
 if [[ "$insarmaps_dataset" == "PSDS" ]]; then
-    num=4
+    num=2
 fi
 if [[ "$insarmaps_dataset" == "all" ]]; then
-    num=6
+    num=3
 fi
 
 echo "Data products uploaded to:"
