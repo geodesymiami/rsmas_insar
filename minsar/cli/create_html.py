@@ -8,8 +8,9 @@ import re
 import argparse
 from minsar.objects import message_rsmas
 
-EXAMPLE = """example:
-    create_html.py MaunaLoaSenDT87/mintpy_5_20/pic
+EXAMPLE = """examples:
+    create_html.py mintpy/pic
+    create_html.py miaplpy_SN_201606_201608/network_single_reference/pic
 """
 
 DESCRIPTION = (

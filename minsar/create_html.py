@@ -8,35 +8,8 @@ import argparse
 import re
 import fnmatch
 from pdf2image import convert_from_path
+from mintpy.utils import readfile
 from minsar.objects import message_rsmas
-import minsar.utils.process_utilities as putils
-
-
-
-
-EXAMPLE = """examples:
-    create_html.py MaunaLoaSenDT87/mintpy_5_20/pic
-    create_html.py unittestGalapagosSenDT128/miaplpy_SN_201606_201608/network_single_reference/pic
-"""
-
-DESCRIPTION = (
-    "Creates index.html file to display images in the mintpy/pic folder."
-)
-
-def create_parser():
-    parser = argparse.ArgumentParser(
-        description=DESCRIPTION, epilog=EXAMPLE,
-        formatter_class=argparse.RawTextHelpFormatter
-    )
-    parser.add_argument(
-        "dir", type=str, help="mintpy/pic directory path"
-    )
-    inps = parser.parse_args()
-    return inps
-    
-class Inps:
-    def __init__(self, template_file):
-        self.custom_template_file = template_file
 
 def build_html(directory_path):
     print('DIRECTORY_PATH:', directory_path )    
@@ -97,11 +70,9 @@ def build_html(directory_path):
 
     png_files.sort(key=sort_key)
 
-    # get project_name and network_type for header (uses minsar.putils)
-    inps = Inps(directory_path + '/' + template_files[0])
-    inps = putils.create_or_update_template(inps)
+    template_dict = readfile.read_template(template_files[0])
     try:
-       network_type = inps.template['miaplpy.interferograms.networkType']
+       network_type = template_dict.get('miaplpy.interferograms.networkType', None)
     except:
        network_type = 'single_reference'
     project_name = template_files[0].split('.')[0]
