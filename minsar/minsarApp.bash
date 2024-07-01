@@ -938,15 +938,6 @@ if [[ $miaplpy_flag == "1" ]]; then
        exit 1;
     fi
 
-    cmd="create_save_hdf5_jobfile.py  $template_file $network_dir --outdir $network_dir/run_files --outfile run_10_save_hdfeos5_radar_0 --queue $QUEUENAME --walltime 0:30"
-    echo "Running.... $cmd"
-    $cmd
-    exit_status="$?"
-    if [[ $exit_status -ne 0 ]]; then
-       echo "$cmd with a non-zero exit code ($exit_status). Exiting."
-       exit 1;
-    fi
-
     # run miaplpy jobfiles ( after create_save_hdf5_jobfile.py to include run_10_save_hdfeos5_radar_0.job )
     cmd="run_workflow.bash $template_file --append --dostep miaplpy --dir $miaplpy_dir_name"
     echo "Running.... $cmd"
@@ -960,7 +951,26 @@ if [[ $miaplpy_flag == "1" ]]; then
        exit 1;
     fi
 
-    # create the save_hdfeos5_radar jobfile and copy into network_*/runfiles (to run after miaplpy)
+    # create save_hdf5 jobfile
+    cmd="create_save_hdf5_jobfile.py  $template_file $network_dir --outdir $network_dir/run_files --outfile run_10_save_hdfeos5_radar_0 --queue $QUEUENAME --walltime 0:30"
+    echo "Running.... $cmd"
+    $cmd
+    exit_status="$?"
+    if [[ $exit_status -ne 0 ]]; then
+       echo "$cmd with a non-zero exit code ($exit_status). Exiting."
+       exit 1;
+    fi
+
+    # run save_hdfeos5_radar jobfile 
+    cmd="run_workflow.bash $template_file --dir $miaplpy_dir_name --start 10"
+    echo "QQ1 Running.... $cmd"
+    $cmd
+    exit_status="$?"
+    if [[ $exit_status -ne 0 ]]; then
+       echo "$cmd with a non-zero exit code ($exit_status). Exiting."
+       exit 1;
+    fi
+
 
     # create index.html with all images
     cmd="create_html.py ${network_dir}/pic"
@@ -972,6 +982,8 @@ if [[ $miaplpy_flag == "1" ]]; then
        exit 1;
     fi
 
+    echo QQ
+    sleep 10
     # upload data products
     if [[ $upload_flag == "1" ]]; then
        cmd="upload_data_products.py --dir $network_dir ${template[minsar.upload_option]}"
