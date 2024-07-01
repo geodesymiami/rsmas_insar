@@ -37,21 +37,24 @@ parser = argparse.ArgumentParser(description=EXAMPLE,
                 epilog=epi)
 
 # Define your optional arguments
-parser.add_argument('--polygon', metavar='POLYGON', help='Poligon of the wanted area to intersect with the search')
+parser.add_argument('--intersectsWith', metavar='POLYGON', help='Poligon of the wanted area of interest to intersect with the search')
 parser.add_argument('--start-date', metavar='DATE', help='Start date of the search')
 parser.add_argument('--end-date', metavar='DATE', help='End date of the search')
-parser.add_argument('--path', metavar='ORBIT', help='Relative Orbit Path')
+parser.add_argument('--node', metavar='NODE', help='Flight direction of the satellite')
+parser.add_argument('--relativeOrbit', metavar='ORBIT', help='Relative Orbit Path')
 parser.add_argument('--download', metavar='FOLDER', nargs='?', const='', default=None, help='Specify path to download the data, if not specified, the data will be downloaded either in SCRATCHDIR or HOME directory')
 parser.add_argument('--product', metavar='FILE', help='Choose the product type to download')
 parser.add_argument('--parallel', nargs=1, help='Download the data in parallel, specify the number of processes to use')
+parser.add_argument('--print', action='store_true', help='Print the search results')
 
 inps = parser.parse_args()
 
 sdate = None
 edate = None
 polygon = None
+node = None
 orbit = None
-path = None
+relative_orbit = None
 product = []
 
 if 'SLC' in inps.product:
@@ -69,14 +72,29 @@ if inps.start_date:
 if inps.end_date:
     edate = datetime.datetime.strptime(inps.end_date, '%Y%m%d').date()
 
-if inps.polygon :
-    polygon = inps.polygon
+if inps.intersectsWith :
+    polygon = inps.intersectsWith
 
-if inps.path:
-    orbit = inps.path
+if inps.relativeOrbit:
+    relative_orbit = int(inps.relativeOrbit)
 
-if inps.download:
-    path = inps.download
+if inps.node:
+    if inps.node in ['ASCENDING', 'ASC', 'A']:
+        node = asf.FLIGHT_DIRECTION.ASCENDING
+
+    elif inps.node in ['DESCENDING', 'DESC', 'D']:
+        node = asf.FLIGHT_DIRECTION.DESCENDING
+
+if inps.download is not None:
+    
+    if len(inps.download) == 0:
+        path = './'
+
+    else:
+        path = inps.download
+
+else:
+    path = None
 
 if inps.parallel:
     par = int(inps.parallel[0])
@@ -90,7 +108,8 @@ results = asf.search(
     start=sdate,
     end=edate,
     intersectsWith=polygon,
-    relativeOrbit=orbit
+    flightDirection=node,
+    relativeOrbit=relative_orbit
 )
 
 if workDir in os.environ:
@@ -107,9 +126,16 @@ for r in results:
     print(f"Start date: {r.properties['startTime']}")
     print(f"End date: {(r.properties['stopTime'])}")
     print(f"{r.geometry['type']}: {r.geometry['coordinates']}")
-    print(f"Relative Orbit: {r.properties['pathNumber']}")
+    print(f"Path of satellite: {r.properties['pathNumber']}")
+    print(f"Granule:  {r.properties['granuleType']}")
+
+    if inps.print:
+        print('')
+        print(r)
+
 
 if path != '' and path is not None:
+    print(f"Downloading {len(results)} results")
     results.download(
          path = path,
          session = asf.ASFSession(),
