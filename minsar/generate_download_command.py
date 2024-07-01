@@ -3,23 +3,62 @@
 import os
 import sys
 import time
-import subprocess
 import datetime
 import argparse
 from minsar.objects.dataset_template import Template
-from minsar.objects.rsmas_logging import RsmasLogger, loglevel
 from minsar.objects import message_rsmas
-from minsar.utils import process_utilities as putils
 from minsar.objects.auto_defaults import PathFind
-from minsar.job_submission import JOB_SUBMIT
+from minsar.utils import process_utilities as putils
 
 pathObj = PathFind()
 inps = None
 
+##############################################################################
+EXAMPLE = """example:
+    generate_download_command.py $TE/GalapagosSenDT128.template
+
+   very  old  download data options (don't work)
+       --delta_lat DELTA_LAT
+                        delta to add to latitude from boundingBox field, default is 0.0
+       --seasonalStartDate SEASONALSTARTDATE
+                        seasonal start date to specify download dates within start and end dates, example: a seasonsal start date of January 1 would be added as --seasonalEndDate 0101
+       --seasonalEndDate SEASONALENDDATE
+                        seasonal end date to specify download dates within start and end dates, example: a seasonsal end date of December 31 would be added as --seasonalEndDate 1231
+       --parallel PARALLEL   determines whether a parallel download is required with a yes/no
+       --processes PROCESSES
+                        specifies number of processes for the parallel download, if no value is provided then the number of processors from os.cpu_count() is used
+"""
+
+DESCRIPTION = (
+    "Creates data download commands"
+)
+
+def create_parser():
+    synopsis = 'Create download commands'
+    parser = argparse.ArgumentParser(description=synopsis, epilog=EXAMPLE, formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('custom_template_file', nargs='?', help='custom template with option settings.\n')
+    parser.add_argument('--triplets', dest='triplets_flag', action='store_true', default=True, help='uploads numTriNonzeroIntAmbiguity.h5')
+    parser.add_argument('--delta_lat', dest='delta_lat', default='0.0', type=float, help='delta to add to latitude from boundingBox field, default is 0.0')
+    parser.add_argument('--seasonalStartDate', dest='seasonalStartDate', type=str,
+                             help='seasonal start date to specify download dates within start and end dates, example: a seasonsal start date of January 1 would be added as --seasonalEndDate 0101')
+    parser.add_argument('--seasonalEndDate', dest='seasonalEndDate', type=str,
+                             help='seasonal end date to specify download dates within start and end dates, example: a seasonsal end date of December 31 would be added as --seasonalEndDate 1231')
+
+    inps = parser.parse_args()
+
+    inps.project_name = putils.get_project_name(inps.custom_template_file)
+    print("Project Name: ", inps.project_name)
+
+    inps.work_dir = putils.get_work_directory(None, inps.project_name)
+    print("Work Dir: ", inps.work_dir)
+
+
+    return inps
 
 def main(iargs=None):
 
-    inps = putils.cmd_line_parse(iargs, script='generate_download_command')
+    # parse
+    inps = create_parser()
 
     if not iargs is None:
         input_arguments = iargs
@@ -28,29 +67,25 @@ def main(iargs=None):
 
     message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
 
-    logfile_name = inps.work_dir + '/ssara_rsmas.log'
-    logger = RsmasLogger(file_name=logfile_name)
+    #if not inps.template[inps.prefix + 'Stack.slcDir'] is None:
+    #    inps.download_dir = inps.template[inps.prefix + 'Stack.slcDir']
+ 
+    #if 'COSMO' in inps.template['ssaraopt.platform']:
+    #    inps.download_dir = os.path.join(inps.work_dir, 'RAW_data')
+    #elif 'TSX' in inps.template['ssaraopt.collectionName']:
+    #    inps.download_dir = os.path.join(inps.work_dir, 'SLC_ORIG')
+    #else:
+    #    inps.download_dir = os.path.join(inps.work_dir, 'SLC')
 
-    #import pdb; pdb.set_trace()
-    if not inps.template[inps.prefix + 'Stack.slcDir'] is None:
-        inps.download_dir = inps.template[inps.prefix + 'Stack.slcDir']
+    #if not os.path.isdir(inps.download_dir):
+    #    os.makedirs(inps.download_dir)
+    #os.chdir(inps.download_dir)
 
-    if 'COSMO' in inps.template['ssaraopt.platform']:
-        inps.download_dir = os.path.join(inps.work_dir, 'RAW_data')
-    elif 'TSX' in inps.template['ssaraopt.collectionName']:
-        inps.download_dir = os.path.join(inps.work_dir, 'SLC_ORIG')
-    else:
-        inps.download_dir = os.path.join(inps.work_dir, 'SLC')
-
-    if not os.path.isdir(inps.download_dir):
-        os.makedirs(inps.download_dir)
-    os.chdir(inps.download_dir)
-
-    succesful = run_ssara(inps.download_dir, inps.custom_template_file, logger)
+    generate_command(inps.custom_template_file)
 
     return None
 
-def run_ssara(download_dir, template, logger, run_number=1):
+def generate_command(template):
     """ generate ssara download options to use """
 
     dataset_template = Template(template)
@@ -62,11 +97,18 @@ def run_ssara(download_dir, template, logger, run_number=1):
     if 'ssaraopt.intersectsWith' not in dataset_template.get_options():
        intersects_string = generate_intersects_string(dataset_template)
        ssaraopt.insert(2, intersects_string)
+       ssaraopt.append('--maxResults=20000')
 
-    ssara_call = ['ssara_federated_query.bash'] + ssaraopt + ['--maxResults=20000']
+    ssara_cmd_bash = ['ssara_federated_query.bash'] + ssaraopt 
+    ssara_cmd_python = ['ssara_federated_query.py'] + ssaraopt + ['--asfResponseTimeout=300', '--kml', '--print', '--download']
+    asf_cmd_python = ['asf_search_args.py'] + ssaraopt + ['--Product', 'SLC', '--print', '--download']
 
-    with open('../ssara_command.txt', 'w') as f:
-        f.write(' '.join(ssara_call) + '\n')
+    with open('ssara_command_bash.txt', 'w') as f:
+        f.write(' '.join(ssara_cmd_bash) + '\n')
+    with open('ssara_command_python.txt', 'w') as f:
+        f.write(' '.join(ssara_cmd_python) + '\n')
+    with open('asf_command_python.txt', 'w') as f:
+        f.write(' '.join(ssara_cmd_python) + '\n')
 
     return 
 
@@ -130,56 +172,5 @@ def convert_bounding_box_to_intersects_string(string_bbox, delta_lat):
 
    return intersects_string
    
-#def add_polygon_to_ssaraopt(dataset_template, ssaraopt, delta_lat):
-#    """calculates intersectsWith polygon from bbox and miaplpy.subset.lalo and adds to ssaraopt"""
-#    
-#    if not 'acquisition_mode' in dataset_template:
-#        print('WARNING: "acquisition_mode" is not given --> default: tops   (available options: tops, stripmap)')
-#        prefix = 'tops'
-#    else:
-#        prefix = dataset_template['acquisition_mode']
-#
-#    intersects_string_subset_lalo = convert_subset_lalo_to_intersects_string(dataset_template['miaplpy.subset.lalo'])
-#    intersects_string_boundingBox = convert_bounding_box_to_intersects_string(dataset_template[prefix + 'Stack.boundingBox'], delta_lat)
-#
-#    if 'intersectsWith' in dataset_template:
-#       print("Using intersectsWith from *template")
-#       intersects_string = dataset_template['ssaraopt.intersectWith']
-#    elif 'miaplpy.subset.lalo' in dataset_template:
-#       print("Using intersectsWith from miaplpy.subset.lalo")
-#       intersects_string = intersects_string_subset_lalo 
-#    else:
-#       print("Using intersectsWith from *Stack.boundingBox")
-#       intersects_string = intersects_string_boundingBox
-#
-#    # add --intersectsWith option to ssaraopt string
-#    ssaraopt.insert(2, intersects_string)
-#
-#    return ssaraopt
-#
-#def add_point_to_ssaraopt(dataset_template, ssaraopt):
-#    """calculates intersectsWith polygon from bbox and replace frame in ssaraopt if give"""
-#    
-#    if not 'acquisition_mode' in dataset_template:
-#        print('WARNING: "acquisition_mode" is not given --> default: tops   (available options: tops, stripmap)')
-#        prefix = 'tops'
-#    else:
-#        prefix = dataset_template['acquisition_mode']
-#
-#    point = dataset_template['ssaraopt.intersectsWithPoint'].split(' ')
-#    bbox_list = dataset_template[prefix + 'Stack.boundingBox'].split(' ')
-#
-#    point[0] = point[0].replace("\'", '')   # this does ["'-8.75", '-7.8', '115.0', "115.7'"] (needed for run_operations.py, run_operations
-#    point[1] = point[1].replace("\'", '')   # -->       ['-8.75',  '-7.8', '115.0', '115.7']  (should be modified so that this is not needed)
-#
-#    point = '--intersectsWith=\'Point({:.2f} {:.2f})\''.format( float(point[0]), float(point[1]))
-#
-#    # add --point and remove --frame option
-#    ssaraopt.insert(2, point)
-#
-#    ssaraopt = [x for x in ssaraopt if not x[0:7] == '--frame']
-#
-#    return ssaraopt
-
 if __name__ == "__main__":
     main()
