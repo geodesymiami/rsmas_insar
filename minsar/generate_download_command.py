@@ -42,19 +42,6 @@ def main(iargs=None):
     else:
         inps.download_dir = os.path.join(inps.work_dir, 'SLC')
 
-    #########################################
-    # Submit job
-    #########################################
-    if inps.submit_flag:
-        job_file_name = 'download_ssara_rsmas'
-        job_name = inps.custom_template_file.split(os.sep)[-1].split('.')[0]
-        job_obj = JOB_SUBMIT(inps)
-        if '--submit' in input_arguments:
-            input_arguments.remove('--submit')
-        command = [os.path.abspath(__file__)] + input_arguments
-        job_obj.submit_script(job_name, job_file_name, command)
-        sys.exit(0)
-
     if not os.path.isdir(inps.download_dir):
         os.makedirs(inps.download_dir)
     os.chdir(inps.download_dir)
@@ -92,24 +79,15 @@ def check_downloads(inps, run_number, args, logger):
 
     logger.log(loglevel.INFO, "Everything is there!")
 
-
 def run_ssara(download_dir, template, delta_lat, logger, run_number=1):
-    """ Runs ssara_federated_query-cj.py and checks for download issues.
-        Runs ssara_federated_query-cj.py and checks continuously for whether the data download has hung without
-        comleting or exited with an error code. If either of the above occur, the function is run again, for a
-        maxiumum of 10 times.
-        Parameters: run_number: int, the current iteration the wrapper is on (maxiumum 10 before quitting)
-        Returns: status_cod: int, the status of the donwload (0 for failed, 1 for success)
-    """
-
-    # Compute SSARA options to use
+    """ generate ssara download options to use """
 
     dataset_template = Template(template)
     dataset_template.options.update(pathObj.correct_for_ssara_date_format(dataset_template.options))
 
-    ssaraopt = dataset_template.generate_ssaraopt_string()
-    ssaraopt = ssaraopt.split(' ')
-    # add intersectWith to ssaraopt string
+    ssaraopt_string = dataset_template.generate_ssaraopt_string()
+    ssaraopt = ssaraopt_string.split(' ')
+    # add intersectWith to ssaraopt string            # FA 7/24:  instead of adding a polygon it should be returned and added using ssaraopt.append()
     ssaraopt = add_polygon_to_ssaraopt(dataset_template.get_options(), ssaraopt.copy(), delta_lat)
     ssara_call = ['ssara_federated_query.bash'] + ssaraopt + ['--maxResults=20000']
 
@@ -169,9 +147,14 @@ def add_polygon_to_ssaraopt(dataset_template, ssaraopt, delta_lat):
     intersects_string_subset_lalo = convert_subset_lalo_to_intersects_string(dataset_template['miaplpy.subset.lalo'])
     intersects_string_boundingBox = convert_bounding_box_to_intersects_string(dataset_template[prefix + 'Stack.boundingBox'], delta_lat)
 
-    try:
-       intersects_string_template = dataset_template['ssaraopt.intersectWithQQQ']
-    except:
+    if 'intersectsWith' in dataset_template:
+       print("Using intersectsWith from *template")
+       intersects_string = dataset_template['ssaraopt.intersectWith']
+    elif 'miaplpy.subset.lalo' in dataset_template:
+       print("Using intersectsWith from miaplpy.subset.lalo")
+       intersects_string = intersects_string_subset_lalo 
+    else:
+       print("Using intersectsWith from *Stack.boundingBox")
        intersects_string = intersects_string_boundingBox
 
     # add --intersectsWith option to ssaraopt string
