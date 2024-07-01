@@ -147,6 +147,9 @@ class Template:
             if 'ssaraopt.endDate' in self.options:
                 endDate = self.options['ssaraopt.endDate']
                 ssaraopt += ' --end={}'.format(endDate)
+            if 'ssaraopt.intersectsWith' in self.options:
+                intersectsWith = self.options['ssaraopt.intersectsWith']
+                ssaraopt += f" --intersectsWith='{intersectsWith}'"
             if 'ssaraopt.intersectsWithPoint' in self.options:
                 intersectsWithPoint = self.options['ssaraopt.intersectsWithPoint']
                 ssaraopt += """ --intersectsWith='POINT({})'""".format(intersectsWithPoint)
