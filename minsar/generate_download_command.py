@@ -42,6 +42,19 @@ def main(iargs=None):
     else:
         inps.download_dir = os.path.join(inps.work_dir, 'SLC')
 
+    #########################################
+    # Submit job
+    #########################################
+    if inps.submit_flag:
+        job_file_name = 'download_ssara_rsmas'
+        job_name = inps.custom_template_file.split(os.sep)[-1].split('.')[0]
+        job_obj = JOB_SUBMIT(inps)
+        if '--submit' in input_arguments:
+            input_arguments.remove('--submit')
+        command = [os.path.abspath(__file__)] + input_arguments
+        job_obj.submit_script(job_name, job_file_name, command)
+        sys.exit(0)
+
     if not os.path.isdir(inps.download_dir):
         os.makedirs(inps.download_dir)
     os.chdir(inps.download_dir)
@@ -79,15 +92,24 @@ def check_downloads(inps, run_number, args, logger):
 
     logger.log(loglevel.INFO, "Everything is there!")
 
+
 def run_ssara(download_dir, template, delta_lat, logger, run_number=1):
-    """ generate ssara download options to use """
+    """ Runs ssara_federated_query-cj.py and checks for download issues.
+        Runs ssara_federated_query-cj.py and checks continuously for whether the data download has hung without
+        comleting or exited with an error code. If either of the above occur, the function is run again, for a
+        maxiumum of 10 times.
+        Parameters: run_number: int, the current iteration the wrapper is on (maxiumum 10 before quitting)
+        Returns: status_cod: int, the status of the donwload (0 for failed, 1 for success)
+    """
+
+    # Compute SSARA options to use
 
     dataset_template = Template(template)
     dataset_template.options.update(pathObj.correct_for_ssara_date_format(dataset_template.options))
 
-    ssaraopt_string = dataset_template.generate_ssaraopt_string()
-    ssaraopt = ssaraopt_string.split(' ')
-    # add intersectWith to ssaraopt string            # FA 7/24:  instead of adding a polygon it should be returned and added using ssaraopt.append()
+    ssaraopt = dataset_template.generate_ssaraopt_string()
+    ssaraopt = ssaraopt.split(' ')
+    # add intersectWith to ssaraopt string
     ssaraopt = add_polygon_to_ssaraopt(dataset_template.get_options(), ssaraopt.copy(), delta_lat)
     ssara_call = ['ssara_federated_query.bash'] + ssaraopt + ['--maxResults=20000']
 
@@ -96,47 +118,8 @@ def run_ssara(download_dir, template, delta_lat, logger, run_number=1):
 
     return 
 
-def convert_subset_lalo_to_intersects_string(subset_lalo):
-   """ Converts a subset.lalo string in S:N,E:W format (e.g., "2.7:2.8,125.3:125.4") to an intersectsWith polygon string."""
-
-   lat_string = subset_lalo.split(',')[0] 
-   lon_string = subset_lalo.split(',')[1] 
-
-   min_lat = float(lat_string.split(':')[0])
-   max_lat = float(lat_string.split(':')[1])
-   min_lon = float(lon_string.split(':')[0])
-   max_lon = float(lon_string.split(':')[1])
-
-   intersects_string = '--intersectsWith=\'Polygon(({:.2f} {:.2f}, {:.2f} {:.2f}, {:.2f} {:.2f}, {:.2f} {:.2f}, ' \
-         '{:.2f} {:.2f}))\''.format(min_lon, min_lat, min_lon, max_lat, max_lon, max_lat, max_lon, min_lat, min_lon, min_lat)
-
-   return intersects_string
-
-def convert_bounding_box_to_intersects_string(string_bbox, delta_lat):
-   """ Converts a topsStack.boundingBox string  (e.g., 2.5 3.1 124.0 127.0) to an intersectsWith polygon string."""
-   # removing double whitespaces, FA 10/21: should be done where *template input is examined
-
-   string_bbox =  ' '.join(string_bbox.split())
-   bbox_list = string_bbox.split(' ')
-
-   bbox_list[0] = bbox_list[0].replace("\'", '')   # this does ["'-8.75", '-7.8', '115.0', "115.7'"] (needed for run_operations.py, run_operations
-   bbox_list[1] = bbox_list[1].replace("\'", '')   # -->       ['-8.75',  '-7.8', '115.0', '115.7']  (should be modified so that this is not needed)
-   bbox_list[2] = bbox_list[2].replace("\'", '')
-   bbox_list[3] = bbox_list[3].replace("\'", '')
-
-   delta_lon = delta_lat * 0.2
-   min_lat = float(bbox_list[0]) - delta_lat
-   max_lat = float(bbox_list[1]) + delta_lat
-   min_lon = float(bbox_list[2]) - delta_lon
-   max_lon = float(bbox_list[3]) + delta_lon
-
-   intersects_string = '--intersectsWith=\'Polygon(({:.2f} {:.2f}, {:.2f} {:.2f}, {:.2f} {:.2f}, {:.2f} {:.2f}, ' \
-          '{:.2f} {:.2f}))\''.format(min_lon, min_lat, min_lon, max_lat, max_lon, max_lat, max_lon, min_lat, min_lon, min_lat)
-
-   return intersects_string
-   
 def add_polygon_to_ssaraopt(dataset_template, ssaraopt, delta_lat):
-    """calculates intersectsWith polygon from bbox and miaplpy.subset.lalo and adds to ssaraopt"""
+    """calculates intersectsWith polygon from bbox and replace frame in ssaraopt if give"""
     
     if not 'acquisition_mode' in dataset_template:
         print('WARNING: "acquisition_mode" is not given --> default: tops   (available options: tops, stripmap)')
@@ -144,21 +127,29 @@ def add_polygon_to_ssaraopt(dataset_template, ssaraopt, delta_lat):
     else:
         prefix = dataset_template['acquisition_mode']
 
-    intersects_string_subset_lalo = convert_subset_lalo_to_intersects_string(dataset_template['miaplpy.subset.lalo'])
-    intersects_string_boundingBox = convert_bounding_box_to_intersects_string(dataset_template[prefix + 'Stack.boundingBox'], delta_lat)
+    # removing double whitespaces, FA 10/21: should be done where *tenplate inpput is examined
+    string = dataset_template[prefix + 'Stack.boundingBox'] 
+    string =  ' '.join(string.split())
+    bbox_list = string.split(' ')
 
-    if 'intersectsWith' in dataset_template:
-       print("Using intersectsWith from *template")
-       intersects_string = dataset_template['ssaraopt.intersectWith']
-    elif 'miaplpy.subset.lalo' in dataset_template:
-       print("Using intersectsWith from miaplpy.subset.lalo")
-       intersects_string = intersects_string_subset_lalo 
-    else:
-       print("Using intersectsWith from *Stack.boundingBox")
-       intersects_string = intersects_string_boundingBox
+    bbox_list[0] = bbox_list[0].replace("\'", '')   # this does ["'-8.75", '-7.8', '115.0', "115.7'"] (needed for run_operations.py, run_operations
+    bbox_list[1] = bbox_list[1].replace("\'", '')   # -->       ['-8.75',  '-7.8', '115.0', '115.7']  (should be modified so that this is not needed)
+    bbox_list[2] = bbox_list[2].replace("\'", '')
+    bbox_list[3] = bbox_list[3].replace("\'", '')
 
-    # add --intersectsWith option to ssaraopt string
-    ssaraopt.insert(2, intersects_string)
+    delta_lon = delta_lat * 0.2
+    min_lat = float(bbox_list[0]) - delta_lat
+    max_lat = float(bbox_list[1]) + delta_lat
+    min_lon = float(bbox_list[2]) - delta_lon
+    max_lon = float(bbox_list[3]) + delta_lon
+
+    polygon = '--intersectsWith=\'Polygon(({:.2f} {:.2f}, {:.2f} {:.2f}, {:.2f} {:.2f}, {:.2f} {:.2f}, ' \
+              '{:.2f} {:.2f}))\''.format(min_lon, min_lat, min_lon, max_lat, max_lon, max_lat, max_lon, min_lat,
+                                         min_lon, min_lat)
+
+    # add --polygon and remove --frame option
+    ssaraopt.insert(2, polygon)
+    ssaraopt = [x for x in ssaraopt if not x[0:7] == '--frame']
 
     return ssaraopt
 
