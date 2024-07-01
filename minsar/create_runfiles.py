@@ -164,11 +164,6 @@ def main(iargs=None):
             command = ['miaplpyApp.py', inps.custom_template_file, '--dir', 'miaplpy']
             job_obj.submit_script(job_name, job_file_name, command, writeOnly='True')
 
-        job_name = 'insarmaps'
-        job_file_name = job_name
-        command = ['ingest_insarmaps.py', inps.custom_template_file]
-        job_obj.submit_script(job_name, job_file_name, command, writeOnly='True')
-
     print("copy_to_tmp: {}".format(inps.copy_to_tmp))
     if inps.copy_to_tmp:
         #run_dir_tmp = os.path.join(inps.work_dir, 'run_files_tmp')
