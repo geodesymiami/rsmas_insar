@@ -1,4 +1,4 @@
-##!/bin/bash
+#!/usr/bin/env bash
 
 # Custom replacement for echo command that also
 # appends to a logfile when --verbose is on.
