@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#####!/usr/bin/env bash
 ###########################################
 function changequeuenormal() { 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
@@ -80,7 +80,12 @@ function countbursts(){
 ###########################################
 function check_matplotlib_pyplot(){ 
    #set -x
-   timeout 120 python -c "import matplotlib.pyplot"
+   #Check if 'timeout' command is available
+   if command -v timeout &> /dev/null; then
+      timeout 120 python -c "import matplotlib.pyplot"
+   else
+      gtimeout 120 python -c "import matplotlib.pyplot"
+   fi
    exit_status=$?
    if [[ $exit_status -ne 0 ]]; then
       echo "Can't import. Reason unknown. Try a new shell (exit_status: $exit_status)"
