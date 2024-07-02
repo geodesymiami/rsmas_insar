@@ -17,7 +17,7 @@ inps = None
 EXAMPLE = """example:
     generate_download_command.py $TE/GalapagosSenDT128.template
 
-   very  old  download data options (don't work)
+   OPTIONS NEED TO REVISTED (they don't work)
        --delta_lat DELTA_LAT
                         delta to add to latitude from boundingBox field, default is 0.0
        --seasonalStartDate SEASONALSTARTDATE
@@ -29,13 +29,17 @@ EXAMPLE = """example:
                         specifies number of processes for the parallel download, if no value is provided then the number of processors from os.cpu_count() is used
 """
 
-DESCRIPTION = (
-    "Creates data download commands"
-)
+DESCRIPTION = ("""
+     Creates download command ssara_command.txt containing intersectsWith='Polygon((...))'. 
+     If the string is not given in *template file, it will be created based on (in that order):
+         miaplpy.subset.lalo
+         mintpy.subset.lalo
+         topsStack.boundingBox
+""")
 
 def create_parser():
     synopsis = 'Create download commands'
-    parser = argparse.ArgumentParser(description=synopsis, epilog=EXAMPLE, formatter_class=argparse.RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(description=DESCRIPTION, epilog=EXAMPLE, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('custom_template_file', nargs='?', help='custom template with option settings.\n')
     parser.add_argument('--triplets', dest='triplets_flag', action='store_true', default=True, help='uploads numTriNonzeroIntAmbiguity.h5')
     parser.add_argument('--delta_lat', dest='delta_lat', default='0.0', type=float, help='delta to add to latitude from boundingBox field, default is 0.0')
@@ -52,66 +56,9 @@ def create_parser():
     inps.work_dir = putils.get_work_directory(None, inps.project_name)
     print("Work Dir: ", inps.work_dir)
 
-
     return inps
 
-def main(iargs=None):
-
-    # parse
-    inps = create_parser()
-
-    if not iargs is None:
-        input_arguments = iargs
-    else:
-        input_arguments = sys.argv[1::]
-
-    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
-
-    #if not inps.template[inps.prefix + 'Stack.slcDir'] is None:
-    #    inps.download_dir = inps.template[inps.prefix + 'Stack.slcDir']
- 
-    #if 'COSMO' in inps.template['ssaraopt.platform']:
-    #    inps.download_dir = os.path.join(inps.work_dir, 'RAW_data')
-    #elif 'TSX' in inps.template['ssaraopt.collectionName']:
-    #    inps.download_dir = os.path.join(inps.work_dir, 'SLC_ORIG')
-    #else:
-    #    inps.download_dir = os.path.join(inps.work_dir, 'SLC')
-
-    #if not os.path.isdir(inps.download_dir):
-    #    os.makedirs(inps.download_dir)
-    #os.chdir(inps.download_dir)
-
-    generate_command(inps.custom_template_file)
-
-    return None
-
-def generate_command(template):
-    """ generate ssara download options to use """
-
-    dataset_template = Template(template)
-    dataset_template.options.update(pathObj.correct_for_ssara_date_format(dataset_template.options))
-
-    ssaraopt_string = dataset_template.generate_ssaraopt_string()
-    ssaraopt = ssaraopt_string.split(' ')
-
-    if 'ssaraopt.intersectsWith' not in dataset_template.get_options():
-       intersects_string = generate_intersects_string(dataset_template)
-       ssaraopt.insert(2, intersects_string)
-       ssaraopt.append('--maxResults=20000')
-
-    ssara_cmd_bash = ['ssara_federated_query.bash'] + ssaraopt 
-    ssara_cmd_python = ['ssara_federated_query.py'] + ssaraopt + ['--asfResponseTimeout=300', '--kml', '--print', '--download']
-    asf_cmd_python = ['asf_search_args.py'] + ssaraopt + ['--Product', 'SLC', '--print', '--download']
-
-    with open('ssara_command_bash.txt', 'w') as f:
-        f.write(' '.join(ssara_cmd_bash) + '\n')
-    with open('ssara_command_python.txt', 'w') as f:
-        f.write(' '.join(ssara_cmd_python) + '\n')
-    with open('asf_command_python.txt', 'w') as f:
-        f.write(' '.join(ssara_cmd_python) + '\n')
-
-    return 
-
+###############################################
 def generate_intersects_string(dataset_template, delta_lat=0.0):
     """generates intersectsWith polygon string from miaplpy.subset.lalo or *Stack.boundingBox"""
     
@@ -121,18 +68,20 @@ def generate_intersects_string(dataset_template, delta_lat=0.0):
     else:
         prefix = dataset_template.get_options()['acquisition_mode']
 
-    intersects_string_subset_lalo = convert_subset_lalo_to_intersects_string(dataset_template.get_options()['miaplpy.subset.lalo'])
-    intersects_string_boundingBox = convert_bounding_box_to_intersects_string(dataset_template.get_options()[prefix + 'Stack.boundingBox'], delta_lat)
 
     if 'miaplpy.subset.lalo' in dataset_template.get_options():
        print("Creating intersectsWith string using miaplpy.subset.lalo")
-       intersects_string = intersects_string_subset_lalo 
+       intersects_string = convert_subset_lalo_to_intersects_string(dataset_template.get_options()['miaplpy.subset.lalo'])
+    elif 'mintpy.subset.lalo' in dataset_template.get_options():
+       print("Creating intersectsWith string using mintpy.subset.lalo")
+       intersects_string = convert_subset_lalo_to_intersects_string(dataset_template.get_options()['mintpy.subset.lalo'])
     else:
        print("Creating intersectsWith string using *Stack.boundingBox")
-       intersects_string = intersects_string_boundingBox
+       intersects_string = convert_bounding_box_to_intersects_string(dataset_template.get_options()[prefix + 'Stack.boundingBox'], delta_lat)
 
     return intersects_string
 
+###############################################
 def convert_subset_lalo_to_intersects_string(subset_lalo):
    """ Converts a subset.lalo string in S:N,E:W format (e.g., "2.7:2.8,125.3:125.4") to an intersectsWith polygon string."""
 
@@ -146,9 +95,12 @@ def convert_subset_lalo_to_intersects_string(subset_lalo):
 
    intersects_string = '--intersectsWith=\'Polygon(({:.2f} {:.2f}, {:.2f} {:.2f}, {:.2f} {:.2f}, {:.2f} {:.2f}, ' \
          '{:.2f} {:.2f}))\''.format(min_lon, min_lat, min_lon, max_lat, max_lon, max_lat, max_lon, min_lat, min_lon, min_lat)
+   intersects_string = '--intersectsWith=\'Polygon(({0} {1}, {0} {3}, {2} {3}, {2} {1}, {0} {1}))\''\
+                                        .format(min_lon, min_lat, max_lon, max_lat)
 
    return intersects_string
 
+###############################################
 def convert_bounding_box_to_intersects_string(string_bbox, delta_lat):
    """ Converts a topsStack.boundingBox string  (e.g., 2.5 3.1 124.0 127.0) to an intersectsWith polygon string."""
    # removing double whitespaces, FA 10/21: should be done where *template input is examined
@@ -171,6 +123,55 @@ def convert_bounding_box_to_intersects_string(string_bbox, delta_lat):
           '{:.2f} {:.2f}))\''.format(min_lon, min_lat, min_lon, max_lat, max_lon, max_lat, max_lon, min_lat, min_lon, min_lat)
 
    return intersects_string
+
+###############################################
+def generate_download_command(template):
+    """ generate ssara download options to use """
+
+    dataset_template = Template(template)
+    dataset_template.options.update(pathObj.correct_for_ssara_date_format(dataset_template.options))
+
+    ssaraopt_string = dataset_template.generate_ssaraopt_string()
+    ssaraopt = ssaraopt_string.split(' ')
+
+    if 'ssaraopt.intersectsWith' not in dataset_template.get_options():
+       intersects_string = generate_intersects_string(dataset_template)
+       ssaraopt.insert(2, intersects_string)
+       ssaraopt.append('--maxResults=20000')
+
+    ssara_cmd = ['ssara_federated_query.bash'] + ssaraopt 
+    ssara_cmd_python = ['ssara_federated_query.py'] + ssaraopt + ['--asfResponseTimeout=300', '--kml', '--print', '--download']
+    asf_cmd = ['asf_search_args.py'] + ssaraopt + ['--Product=SLC', '--print', '--download']
+
+    #asf_cmd = [item for item in asf_cmd if "SENTINEL" not in item]
+    asf_cmd = [item for item in asf_cmd if "maxResults" not in item]
+
+    with open('ssara_command.txt', 'w') as f:
+        f.write(' '.join(ssara_cmd) + '\n')
+#    with open('ssara_command_python.txt', 'w') as f:
+#        f.write(' '.join(ssara_cmd_python) + '\n')
+    with open('asf_command.txt', 'w') as f:
+        f.write(' '.join(asf_cmd) + '\n')
+
+    return 
    
+###############################################
+def main(iargs=None):
+
+    # parse
+    inps = create_parser()
+
+    if not iargs is None:
+        input_arguments = iargs
+    else:
+        input_arguments = sys.argv[1::]
+
+    message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
+
+    generate_download_command(inps.custom_template_file)
+
+    return None
+
+###############################################
 if __name__ == "__main__":
     main()
