@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/usr/bin/env bash
 ######### copy credentials to right place ##############
 
 # for ssara 
