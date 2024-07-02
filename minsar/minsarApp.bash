@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env bash
 ##################################################################################
 function create_template_array() {
 mapfile -t array < <(grep -e ^minsar -e ^mintpy -e ^miaplpy $1)
