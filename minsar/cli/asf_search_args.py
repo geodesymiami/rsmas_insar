@@ -16,36 +16,34 @@ descriptions below for details and usage examples.
 epi = """
 Usage Examples:
     These will do the search and download data:
-        asf_search_args.py --Product=SLC --start=2003-01-01 --end=2008-01-01 --relativeOrbit=170 --download --dir=PATH
-        asf_search_args.py --Product=CSLC --start=2003-01-01 --end=2008-01-01 --relativeOrbit=170 --download
-        asf_search_args.py --Product=SLC --start=2003-01-01 --end=2008-01-01 --polygon='POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))' --download --dir=PATH
-        asf_search_args.py --Product=CSLC --start=2003-01-01 --end=2008-01-01 --polygon='POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))' --download --dir=PATH
+        asf_search_args.py --Product=SLC --start-date=2014-10-04 --end-date=2015-10-05 --intersectsWith='POLYGON((-77.9853 0.7881,-77.9185 0.7881,-77.9185 0.8507,-77.9853 0.8507,-77.9853 0.7881))' --relativeOrbit 142 --download
+        asf_search_args.py --Product=SLC --start=2014-10-04 --end=2015-10-05 --platform SENTINEL1 --print --download
+        asf_search_args.py --Product=CSLC --start=20141004 --end=20151005 --polygon='POLYGON((-77.9853 0.7881,-77.9185 0.7881,-77.9185 0.8507,-77.9853 0.8507,-77.9853 0.7881))' --download --dir=PATH
+        asf_search_args.py --Product=CSLC --start=2014-10-04 --end=2015-10-05 --polygon='POLYGON((-77.9853 0.7881,-77.9185 0.7881,-77.9185 0.8507,-77.9853 0.8507,-77.9853 0.7881))' --download --dir=PATH
 
     To use parallel downloads:
-        asf_search_args.py --Product=SLC --start=2003-01-01 --end=2008-01-01 --relativeOrbit=170 --download --dir=PATH --parallel=4
+        asf_search_args.py --Product=SLC --start=2014-10-04 --end=2015-10-05 --relativeOrbit=170 --download --dir=PATH --parallel=4
 
     To search for a specific date range:
-        asf_search_args.py --Product=SLC --start=2003-01-01 --end=2008-01-01 --download --dir=PATH
+        asf_search_args.py --Product=SLC --start=2014-10-04 --end=2015-10-05 --download --dir=PATH
 
     To search for a specific polygon area:
-        asf_search_args.py --Product=SLC --start=2003-01-01 --end=2008-01-01 --polygon='POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))' --download --dir=PATH
+        asf_search_args.py --Product=SLC --polygon='POLYGON((-77.9853 0.7881,-77.9185 0.7881,-77.9185 0.8507,-77.9853 0.8507,-77.9853 0.7881))'
 """
 
-# Create an ArgumentParser object
 parser = argparse.ArgumentParser(description=EXAMPLE,
                 formatter_class=argparse.RawTextHelpFormatter,
                 epilog=epi)
 
-# Define your optional arguments
 parser.add_argument('--intersectsWith', metavar='POLYGON', help='Poligon of the wanted area of interest to intersect with the search')
-parser.add_argument('--start', metavar='YYYY-MM-DD', help='Start date of the search')
-parser.add_argument('--end', metavar='YYYY-MM-DD', help='End date of the search')
-parser.add_argument('--start-date', metavar='YYYY-MM-DD', help='Start date of the search')
-parser.add_argument('--end-date', metavar='YYYY-MM-DD', help='End date of the search')
+parser.add_argument('--start', metavar='YYYY-MM-DD or YYYYMMDD', help='Start date of the search')
+parser.add_argument('--end', metavar='YYYY-MM-DD or YYYYMMDD', help='End date of the search')
+parser.add_argument('--start-date', metavar='YYYY-MM-DD or YYYYMMDD', help='Start date of the search')
+parser.add_argument('--end-date', metavar='YYYY-MM-DD or YYYYMMDD', help='End date of the search')
 parser.add_argument('--node', metavar='NODE', help='Flight direction of the satellite (ASCENDING or DESCENDING)')
 parser.add_argument('--relativeOrbit', metavar='ORBIT', help='Relative Orbit Path')
 parser.add_argument('--Product', metavar='FILE', dest='product',help='Choose the product type to download')
-parser.add_argument('--platform', nargs='?',metavar='PLATFORM', help='Choose the platform to search')
+parser.add_argument('--platform', nargs='?',metavar='SENTINEL1, SENTINEL-1A, SENTINEL-1B', help='Choose the platform to search')
 parser.add_argument('--download', action='store_true', help='Download the data')
 parser.add_argument('--parallel', nargs=1, help='Download the data in parallel, specify the number of processes to use')
 parser.add_argument('--print', action='store_true', help='Print the search results')
@@ -78,7 +76,7 @@ if inps.start or inps.start_date:
 
 if inps.end or inps.end_date:
     try:
-        edate = datetime.datetime.strptime(inps.end if inps.end else inps.end_date, '%Y-%m%-d').date()
+        edate = datetime.datetime.strptime(inps.end if inps.end else inps.end_date, '%Y-%m-%d').date()
     except:
         edate = datetime.datetime.strptime(inps.end if inps.end else inps.end_date, '%Y%m%d').date()
 
@@ -136,6 +134,7 @@ results = asf.search(
 
 if workDir in os.environ:
     work_dir = os.getenv(workDir)
+
 else:
     work_dir = os.getenv('HOME')
 
