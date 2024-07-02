@@ -46,7 +46,7 @@ parser.add_argument('--node', metavar='NODE', help='Flight direction of the sate
 parser.add_argument('--relativeOrbit', metavar='ORBIT', help='Relative Orbit Path')
 parser.add_argument('--Product', metavar='FILE', dest='product',help='Choose the product type to download')
 parser.add_argument('--platform', nargs='?',metavar='PLATFORM', help='Choose the platform to search')
-parser.add_argument('--download', action='store', help='Download the data')
+parser.add_argument('--download', action='store_true', help='Download the data')
 parser.add_argument('--parallel', nargs=1, help='Download the data in parallel, specify the number of processes to use')
 parser.add_argument('--print', action='store_true', help='Print the search results')
 parser.add_argument('--dir', metavar='FOLDER', help='Specify path to download the data, if not specified, the data will be downloaded either in SCRATCHDIR or HOME directory')
@@ -71,10 +71,16 @@ if 'CSLC' in inps.product or inps.product is None:
     product.append(asf.PRODUCT_TYPE.CSLC)
 
 if inps.start or inps.start_date:
-    sdate = datetime.datetime.strptime(inps.start if inps.start else inps.start_date, '%Y-%m-%d').date()
+    try:
+        sdate = datetime.datetime.strptime(inps.start if inps.start else inps.start_date, '%Y-%m-%d').date()
+    except:
+        sdate = datetime.datetime.strptime(inps.start if inps.start else inps.start_date, '%Y%m%d').date()
 
 if inps.end or inps.end_date:
-    edate = datetime.datetime.strptime(inps.end if inps.end else inps.end_date, '%Y-%m%-d').date()
+    try:
+        edate = datetime.datetime.strptime(inps.end if inps.end else inps.end_date, '%Y-%m%-d').date()
+    except:
+        edate = datetime.datetime.strptime(inps.end if inps.end else inps.end_date, '%Y%m%d').date()
 
 if inps.intersectsWith :
     polygon = inps.intersectsWith
@@ -149,8 +155,7 @@ for r in results:
         print('')
         print(r)
 
-
-if inps.download:
+if inps.download == True:
     print(f"Downloading {len(results)} results")
     results.download(
          path = path,
