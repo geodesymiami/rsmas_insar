@@ -1,5 +1,6 @@
 .vscode
 .history
+.*
 log
 q
 qq
