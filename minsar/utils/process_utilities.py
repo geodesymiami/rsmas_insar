@@ -63,21 +63,22 @@ def cmd_line_parse(iargs=None, script=None):
 def add_common_parser(parser):
     commonp = parser.add_argument_group('General options:')
     commonp.add_argument('custom_template_file', nargs='?', help='custom template with option settings.\n')
-    commonp.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
-    commonp.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
-    commonp.add_argument('--walltime', dest='wall_time', metavar="WALLTIME (HH:MM)",
-                         help='walltime for submitting the script as a job')
-    commonp.add_argument("--queue", dest="queue", metavar="QUEUE", help="Name of queue to submit job to")
-    commonp.add_argument('--reserveNode', dest='reserve_node', type=int, default=1, help='number of nodes to reserve')
+    #commonp.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
+    #commonp.add_argument('--submit', dest='submit_flag', action='store_true', help='submits job')
+    #commonp.add_argument('--walltime', dest='wall_time', metavar="WALLTIME (HH:MM)",
+    #                     help='walltime for submitting the script as a job')
+    #commonp.add_argument("--queue", dest="queue", metavar="QUEUE", help="Name of queue to submit job to")
+    #commonp.add_argument('--reserveNode', dest='reserve_node', type=int, default=1, help='number of nodes to reserve')
     #commonp.add_argument('--wait', dest='wait_time', default='00:00', metavar="Wait time (hh:mm)",
     #                     help="wait time to submit a job")
-    commonp.add_argument('--remora', dest='remora', action='store_true', help='use remora to get job information')
+    #commonp.add_argument('--remora', dest='remora', action='store_true', help='use remora to get job information')
 
     return parser
 
 
 def add_create_runfiles(parser):
     run_parser = parser.add_argument_group('create run files and jobs options:')
+    run_parser.add_argument("--queue", dest="queue", metavar="QUEUE", help="Name of queue to submit job to")
     run_parser.add_argument('--tmp', dest='copy_to_tmp', action='store_true', default=True,
                             help='writes job files to run on /tmp rather than /scratch [default].')
     run_parser.add_argument('--no-tmp', dest='copy_to_tmp', action='store_false',
