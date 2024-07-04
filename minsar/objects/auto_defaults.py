@@ -36,7 +36,8 @@ class PathFind:
 
     def required_template_options(self, acquisition_mode):
         if acquisition_mode == 'tops':
-            return ['topsStack.subswath', 'topsStack.boundingBox']
+            return ['topsStack.subswath']
+
         elif acquisition_mode == 'stripmap':
             return ['stripmapStack.sensor', 'stripmapStack.boundingBox']
         else:

@@ -18,12 +18,46 @@ from minsar.objects.unpack_sensors import Sensors
 
 pathObj = PathFind()
 
+###############################################
+def convert_subset_lalo_to_boundingBox_string(subset_lalo, delta_lat, delta_lon):
+    """ Converts a subset.lalo string in SNEW format (e.g. "2.7:2.8,125.3:125.4") to a boundingBox string."""
+
+    lat_string = subset_lalo.split(',')[0]
+    lon_string = subset_lalo.split(',')[1]
+
+    min_lat = float(lat_string.split(':')[0]) - delta_lat
+    max_lat = float(lat_string.split(':')[1]) + delta_lat
+    min_lon = float(lon_string.split(':')[0]) - delta_lon
+    max_lon = float(lon_string.split(':')[1]) + delta_lon
+
+    boundingBox_string = '{:.1f} {:.1f} {:.1f} {:.1f}'.format(min_lat, max_lat, min_lon, max_lon)
+
+    return boundingBox_string
 
 ###########################################################################################
+def get_bbox_from_template(inps, delta_lat, delta_lon):
+    """generates boundingBox string from miaplpy.subset.lalo or mintpy.subset.lalo"""
 
+    if 'miaplpy.subset.lalo' in inps.template.keys():
+        print("Creating topsStack.boundingBox using miaplpy.subset.lalo")
+        boundingBox_string = convert_subset_lalo_to_boundingBox_string(inps.template['miaplpy.subset.lalo'], delta_lat, delta_lon)
+    elif 'mintpy.subset.lalo' in inps.template.keys():
+        print("Creating topsStack.boundingBox using mintpy.subset.lalo")
+        boundingBox_string = convert_subset_lalo_to_boundingBox_string(inps.template['mintpy.subset.lalo'], delta_lat, delta_lon)
+    else:
+        raise Exception("USER ERROR: miaplpy.subset.lalo or mintpy.subset.lalo not given")
 
+    return boundingBox_string
+
+###########################################################################################
 def main(iargs=None):
     inps = putils.cmd_line_parse(iargs, script='create_runfiles')
+
+    if inps.template['topsStack.boundingBox'] == 'None':
+        inps.template['topsStack.boundingBox'] = get_bbox_from_template(inps, delta_lat=0.15, delta_lon=3)
+
+    print('QQ0',inps.template['topsStack.boundingBox'])
+
     if not iargs is None:
         input_arguments = iargs
     else:
@@ -38,10 +72,8 @@ def main(iargs=None):
     inps.out_dir = inps.work_dir
     inps.num_data = 1
 
-    job_obj = JOB_SUBMIT(inps)
-    #########################################
-    # Submit job
-    #########################################
+
+    job_obj = JOB_SUBMIT(inps)  
 
     if inps.template[inps.prefix + 'Stack.demDir'] == 'None':
        dem_dir = 'DEM'
@@ -57,7 +89,8 @@ def main(iargs=None):
     slc_dir = inps.template[inps.prefix + 'Stack.slcDir']
     os.makedirs(slc_dir, exist_ok=True)
 
-    if int(get_size(slc_dir)/1024**2) < 500:   # calculate slc_dir size in MB and see if there are SLCs according to size
+    #if int(get_size(slc_dir)/1024**2) < 500:   # calculate slc_dir size in MB and see if there are SLCs according to size
+    if int(get_size(slc_dir)/1024**2) < -1:    # calculate slc_dir size in MB and see if there are SLCs according to size
 
         # Unpack Raw data:
         if not inps.template['raw_image_dir'] in [None, 'None']:

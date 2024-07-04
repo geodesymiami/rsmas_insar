@@ -359,7 +359,9 @@ def create_default_template(temp_inps):
     #     # FA 12/22  I wonder why updating the template file here. This causes an error in `download_data.py if a *template file exist 
     #     update_template_file(inps.template_file, custom_tempObj)
     # FA 2/2024:  Gives trouble in create_runfiles.py and create_html.py if corrupt *template in project_dir
-    # FA 2/2024:  Try always copying and then updating. ATTENTION: Is that OK?        
+    # FA 2/2024:  Try always copying and then updating. ATTENTION: Is that OK?
+    # FA 7/2024:  I don't understand why update_template_file is called immeadiately after copying, as there can't be any changes?!?
+    # FA 7/2024   I think the update_template_file command can be removed (inps.template_file is in project_dir).     
     shutil.copyfile(inps.custom_template_file, inps.template_file)
     update_template_file(inps.template_file, custom_tempObj)
 
