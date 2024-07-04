@@ -535,12 +535,15 @@ srun_cmd="srun -n1 -N1 -A $JOBSHEDULER_PROJECTNAME -p $QUEUENAME  -t 00:25:00 "
 if [[ $download_flag == "1" ]]; then
 
     echo "Running.... generate_download_command.py $template_file"
-    generate_download_command.py $template_file
+    cmd='generate_download_command.py $template_file'
+    eval "$cmd"
     exit_status="$?"
     if [[ $exit_status -ne 0 ]]; then
        echo "generate_download_command.py exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
+
+    mkdir -p $download_dir
     cd $download_dir
     cat ../ssara_command.txt
     cmd=$(cat ../ssara_command.txt)
