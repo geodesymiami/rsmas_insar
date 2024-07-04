@@ -49,12 +49,7 @@ def create_parser():
                              help='seasonal end date to specify download dates within start and end dates, example: a seasonsal end date of December 31 would be added as --seasonalEndDate 1231')
 
     inps = parser.parse_args()
-
-    inps.project_name = putils.get_project_name(inps.custom_template_file)
-    print("Project Name: ", inps.project_name)
-
-    inps.work_dir = putils.get_work_directory(None, inps.project_name)
-    print("Work Dir: ", inps.work_dir)
+    inps = putils.create_or_update_template(inps)
 
     return inps
 
