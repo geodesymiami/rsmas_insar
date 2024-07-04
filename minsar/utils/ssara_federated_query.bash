@@ -38,9 +38,11 @@ fi
 # run ssara_federated_query.py to create ssara_listing.txt
 rm -f ssara_listing.txt
 cmd="ssara_federated_query.py $cmd $asfResponseTimeout_opt --kml --print > ssara_listing.txt 2> ssara.e"
+
 echo "$(date +"%Y%m%d-%H:%m") * $cmd " >> log
 echo "Running.... $cmd"
 eval "$cmd"
+grep -q "urllib.error.HTTPError: HTTP Error 502: Proxy Error" ssara.e && { echo "Download problem: urllib.error.HTTPError: HTTP Error 502: Proxy Error"; exit 1; }
 
 # select password according to satellite
 if [[ $cmd == *SENTINEL* ]]; then
@@ -52,8 +54,6 @@ elif [[ $cmd == *COSMO-SKYMED* ]] || [[ $cmd == *ALOS-2* ]] || [[ $cmd == *TSX* 
    regex="https:\/\/imaging\.unavco\.\.org\/[a-zA-Z\/0-9\_]+\.tar\.gz"
    regex="https:\/\/imaging\.unavco\.\.org\/*\.gz"
 fi
-
-grep -q "urllib.error.HTTPError: HTTP Error 502: Proxy Error" ssara.e && { echo "Download problem: urllib.error.HTTPError: HTTP Error 502: Proxy Error"; exit 1; }
 
 downloads_num=$(grep Found ssara_listing.txt | cut -d " " -f 2)
 echo "Number of granules in ssara_listing.txt : $downloads_num"
