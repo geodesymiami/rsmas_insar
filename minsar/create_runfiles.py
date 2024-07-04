@@ -43,19 +43,10 @@ def main(iargs=None):
     # Submit job
     #########################################
 
-    if inps.submit_flag:
-        job_name = 'create_runfiles'
-        job_file_name = job_name
-        if '--submit' in input_arguments:
-            input_arguments.remove('--submit')
-        command = [os.path.abspath(__file__)] + input_arguments
-        job_obj.submit_script(job_name, job_file_name, command)
-        sys.exit(0)
-
-    try:
-       dem_dir = inps.template[inps.prefix + 'Stack.demDir']
-    except:
+    if inps.template[inps.prefix + 'Stack.demDir'] == 'None':
        dem_dir = 'DEM'
+    else:
+       dem_dir = inps.template[inps.prefix + 'Stack.demDir']
 
     try:
         dem_file = glob.glob(dem_dir + '/*.wgs84')[0]

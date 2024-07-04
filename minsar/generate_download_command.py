@@ -40,7 +40,7 @@ DESCRIPTION = ("""
 def create_parser():
     synopsis = 'Create download commands'
     parser = argparse.ArgumentParser(description=DESCRIPTION, epilog=EXAMPLE, formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('custom_template_file', nargs='?', help='custom template with option settings.\n')
+    parser.add_argument('custom_template_file', help='custom template with option settings.\n')
     parser.add_argument('--triplets', dest='triplets_flag', action='store_true', default=True, help='uploads numTriNonzeroIntAmbiguity.h5')
     parser.add_argument('--delta_lat', dest='delta_lat', default='0.0', type=float, help='delta to add to latitude from boundingBox field, default is 0.0')
     parser.add_argument('--seasonalStartDate', dest='seasonalStartDate', type=str,
