@@ -546,7 +546,7 @@ if [[ $download_flag == "1" ]]; then
     cmd=$(cat ../ssara_command.txt)
     echo "Running.... 'cat ../ssara_command.txt'"
     echo $cmd
-    $cmd
+    eval "$cmd"
     exit_status="$?"
     if [ $exit_status -ne 0 ]; then
        echo "ssara_federated_query.bash failed with exit status $exit_status. Exiting."
