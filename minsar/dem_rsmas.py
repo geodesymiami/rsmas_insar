@@ -20,26 +20,41 @@ import shutil
 import re
 import subprocess
 import math
+import argparse
 from minsar.objects import message_rsmas
-from minsar.old_generate_download_command import add_polygon_to_ssaraopt
-from minsar.utils.process_utilities import cmd_line_parse
+#from minsar.old_generate_download_command import add_polygon_to_ssaraopt
+#from minsar.utils.process_utilities import cmd_line_parse
+from minsar.utils import process_utilities as putils
 from minsar.utils import get_boundingBox_from_kml
-from minsar.job_submission import JOB_SUBMIT
-
-#from minsar.download_rsmas import ssh_with_commands
+from minsar.objects.dataset_template import Template
 
 EXAMPLE = """
   example:
-  dem_rsmas.py  $SAMPLES/GalapagosT128SenVVD.template --ssara_kml
+  dem_rsmas.py  $SAMPLES/GalapagosSenDT128.template
+  dem_rsmas.py  $SAMPLES/GalapagosSenDT128.template --ssara_kml
 """
 
+DESCRIPTION = (""" Creates a DEM based on ssara_*.kml file """)
 
-DESCRIPTION = ("""
-     Creates a DEM based on ssara_*.kml file
-""")
+def create_parser():
+    synopsis = 'Create download commands'
+    parser = argparse.ArgumentParser(description=DESCRIPTION, epilog=EXAMPLE, formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('custom_template_file', help='template file with option settings.\n')
+    parser.add_argument('--ssara_kml', action='store_true', help='Deprecated and not required anymore.')
 
+    inps = parser.parse_args()
+    inps = putils.create_or_update_template(inps)
+
+    #inps.project_name = putils.get_project_name(inps.custom_template_file)
+    #inps.work_dir = putils.get_work_directory(None, inps.project_name)
+
+    return inps
+
+##########################################
 def main(iargs=None):
-    inps = cmd_line_parse(iargs, script='dem_rsmas')
+
+    # parse
+    inps = create_parser()
 
     if not iargs is None:
         input_arguments = iargs
@@ -48,6 +63,10 @@ def main(iargs=None):
 
     message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
     
+    dataset_template = Template(inps.custom_template_file)
+    ssaraopt_string = dataset_template.generate_ssaraopt_string()
+    inps.ssaraopt = ssaraopt_string.split(' ')
+
     dem_dir = os.path.join(inps.work_dir, 'DEM')
     if not exist_valid_dem_dir(dem_dir):
         os.mkdir(dem_dir)
@@ -76,9 +95,9 @@ def main(iargs=None):
        #ssara_kml_file=sorted( glob.glob(inps.work_dir + '/SLC/ssara_search_*.kml') )[-1]
     except:
        # FA 8/2023: If there is no kml file or bbox emty it should rerun ssara to get a kml file
+       # FA 7/2024:  Here I should add generate_download_command and then an option to get the kml file
        print('No SLC/ssara_search_*.kml found')
        #generate_download_command.main([inps.custom_template_file])
-       
        raise FileExistsError('No SLC/ssara_search_*.kml found')
 
     print('using kml file:',ssara_kml_file)
