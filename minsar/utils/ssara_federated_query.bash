@@ -39,10 +39,32 @@ fi
 rm -f ssara_listing.txt
 cmd="ssara_federated_query.py $cmd $asfResponseTimeout_opt --kml --print > ssara_listing.txt 2> ssara.e"
 
-echo "$(date +"%Y%m%d-%H:%m") * $cmd " >> log
-echo "Running.... $cmd"
-eval "$cmd"
-grep -q "urllib.error.HTTPError: HTTP Error 502: Proxy Error" ssara.e && { echo "Download problem: urllib.error.HTTPError: HTTP Error 502: Proxy Error"; exit 1; }
+# Downloading. Try for 2 days if error 502 occurs
+elapsed=0
+duration=$((2 * 24 * 60 * 60)) # 2 days in seconds
+
+while [ $elapsed -lt $duration ]; do
+    # Log and run the command
+    echo "$(date +"%Y%m%d-%H:%M") * $cmd " >> log
+    echo "Running.... $cmd"
+    eval "$cmd"
+
+    # Check for error 502
+    if grep -q "urllib.error.HTTPError: HTTP Error 502: Proxy Error" ssara.e; then
+        echo "Download problem: urllib.error.HTTPError: HTTP Error 502: Proxy Error. Retrying in 1 hour..."
+        sleep 60 # Wait for 3600 seconds before retrying
+        elapsed=$((elapsed + 60)) # Increment the elapsed time
+    else
+        echo "Download successful or no 502 error detected."
+        break # Exit the loop if no 502 error is detected
+    fi
+done
+
+# Check if the loop exited because the duration was exceeded
+if [ $elapsed -ge $duration ]; then
+    echo "Download problem persists after 2 days. Exiting."
+    exit 1
+fi
 
 # select password according to satellite
 if [[ $cmd == *SENTINEL* ]]; then
