@@ -22,8 +22,6 @@ import subprocess
 import math
 import argparse
 from minsar.objects import message_rsmas
-#from minsar.old_generate_download_command import add_polygon_to_ssaraopt
-#from minsar.utils.process_utilities import cmd_line_parse
 from minsar.utils import process_utilities as putils
 from minsar.utils import get_boundingBox_from_kml
 from minsar.objects.dataset_template import Template
@@ -45,9 +43,6 @@ def create_parser():
     inps = parser.parse_args()
     inps = putils.create_or_update_template(inps)
 
-    #inps.project_name = putils.get_project_name(inps.custom_template_file)
-    #inps.work_dir = putils.get_work_directory(None, inps.project_name)
-
     return inps
 
 ##########################################
@@ -63,10 +58,6 @@ def main(iargs=None):
 
     message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
     
-    dataset_template = Template(inps.custom_template_file)
-    ssaraopt_string = dataset_template.generate_ssaraopt_string()
-    inps.ssaraopt = ssaraopt_string.split(' ')
-
     dem_dir = os.path.join(inps.work_dir, 'DEM')
     if not exist_valid_dem_dir(dem_dir):
         os.mkdir(dem_dir)
@@ -80,11 +71,22 @@ def main(iargs=None):
     if '.' in inps.slc_dir:
        inps.slc_dir = inps.slc_dir.replace(".",os.getcwd())
 
-    if 'COSMO-SKYMED' in inps.ssaraopt:
-       inps.slc_dir = inps.slc_dir.replace('SLC','RAW_data')
-    if 'TSX' in inps.ssaraopt:
-       inps.slc_dir = inps.slc_dir.replace('SLC','SLC_ORIG')
+    ## 7/2024: using inps.template.values() to avoid using  dataset_template=Template(inps.custom_template_file). Previous code:
+    # dataset_template = Template(inps.custom_template_file)
+    # ssaraopt_string = dataset_template.generate_ssaraopt_string()
+    # inps.ssaraopt = ssaraopt_string.split(' ')
+    #
+    # if 'COSMO-SKYMED' in inps.ssaraopt:
+    #   inps.slc_dir = inps.slc_dir.replace('SLC','RAW_data')
+    # if 'TSX' in inps.ssaraopt:
+    #   inps.slc_dir = inps.slc_dir.replace('SLC','SLC_ORIG')
       
+    values = inps.template.values()
+    if any("COSMO-SKYMED" in str(value).upper() for value in values):
+       inps.slc_dir = inps.slc_dir.replace('SLC','RAW_data')
+    if any("TSX" in str(value).upper() for value in values):
+       inps.slc_dir = inps.slc_dir.replace('SLC','SLC_ORIG')
+
     # FA 10/2021: We probably should check here whether a DEM/*wgs84 file exist and exit if it does.
     # That could save time. On the other hand, most steps allow to be run even if data exist
     os.chdir(dem_dir)
@@ -92,12 +94,10 @@ def main(iargs=None):
     print('DEM generation using ISCE based on *kml file')
     try:
        ssara_kml_file=sorted( glob.glob(inps.slc_dir + '/ssara_search_*.kml') )[-1]
-       #ssara_kml_file=sorted( glob.glob(inps.work_dir + '/SLC/ssara_search_*.kml') )[-1]
     except:
-       # FA 8/2023: If there is no kml file or bbox emty it should rerun ssara to get a kml file
-       # FA 7/2024:  Here I should add generate_download_command and then an option to get the kml file
-       print('No SLC/ssara_search_*.kml found')
-       #generate_download_command.main([inps.custom_template_file])
+       # FA 7/2024: If there is no kml it should rerun generate_download_command 
+       # and then a ssara command to get the kml file
+       # generate_download_command.main([inps.custom_template_file])
        raise FileExistsError('No SLC/ssara_search_*.kml found')
 
     print('using kml file:',ssara_kml_file)
