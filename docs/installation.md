@@ -42,8 +42,8 @@ git clone git@github.com:geodesymiami/SSARA.git tools/SSARA ;
 git clone git@github.com:TACC/launcher.git tools/launcher ;
 git clone git@github.com:geodesymiami/PlotData tools/PlotData
 git clone git@github.com:geodesymiami/precip tools/Precip
-git clone git@github.com:geodesymiami/precip tools/Precip_web
-git clone git@github.com:geodesymiami/precip tools/Precip_cron
+git clone git@github.com:geodesymiami/precip_web tools/Precip_web
+git clone git@github.com:geodesymiami/precip_cron tools/Precip_cron
 
 
 ### Install credential files ###############
