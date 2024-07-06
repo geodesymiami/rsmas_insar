@@ -52,8 +52,8 @@ while [ $elapsed -lt $duration ]; do
     # Check for error 502
     if grep -q "urllib.error.HTTPError: HTTP Error 502: Proxy Error" ssara.e; then
         echo "Download problem: urllib.error.HTTPError: HTTP Error 502: Proxy Error. Retrying in 1 hour..."
-        sleep 60 # Wait for 3600 seconds before retrying
-        elapsed=$((elapsed + 60)) # Increment the elapsed time
+        sleep 300     # Wait for 300 seconds before retrying
+        elapsed=$((elapsed + 300)) # Increment the elapsed time
     else
         echo "Download successful or no 502 error detected."
         break # Exit the loop if no 502 error is detected
