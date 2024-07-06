@@ -22,14 +22,6 @@ cd $WORK2/code
 * Install the code using the commands below (there could be copy-paste issues if copying too many lines ). 
 
 
-* Go to the area where you want to install the code:
-
-```
-cd $WORK2/code
-```
-
-* Install the code using the commands below (there could be copy-paste issues if copying too many lines ). 
-
 ```
 bash
 if [ "$(uname)" == "Linux" ]; then
