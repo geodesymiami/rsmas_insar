@@ -16,22 +16,27 @@ import minsar.utils.process_utilities as putils
 
 pathObj = PathFind()
 
+
+DESCRIPTION = ("""Creates jobfile to run save_hdfeos5.py for data in radar coordinates""")
+EXAMPLE = """example:
+    create_save_hdf5_jobfile.py miaplpy_SN_201606_201608/network_delaunay_4
+"""
+
 ###########################################################################################
 def create_parser():
-    parser = argparse.ArgumentParser(description='create jobfile to run save_hdf5.py for data in radar coordinates (*template is not used)\n')
-    parser = putils.add_common_parser(parser)
-    parser.add_argument(dest='processing_dir', default=None, help='miaplpy network_* directory with data for hdf5 file\n')
+    parser = argparse.ArgumentParser(description=DESCRIPTION, epilog=EXAMPLE, formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('custom_template_file', help='template file with option settings.\n')
+    parser.add_argument('processing_dir', default=None, help='miaplpy network_* directory with data for hdf5 file\n')
+    parser.add_argument("--queue", dest="queue", metavar="QUEUE", help="Name of queue to submit job to")
+    parser.add_argument('--walltime', dest='wall_time', metavar="WALLTIME (HH:MM)", help='walltime for submitting the script as a job')
     parser.add_argument('--filter', dest='filter_par', type=float, default=0.7, help='Set the filtering parameter (default: 0.7)')
     parser.add_argument('--no-filter', dest='filter_par', action='store_const', const=None, help='Disable filtering')
     parser.add_argument('--outdir', dest='outdir', type=str, default=os.getcwd(), help='Output directory (Default: current directory.)')
     parser.add_argument('--outfile', dest='outfile', type=str, default='save_hdfeos5_radar', help='job file name (Default: save_hdfeos5_radar')
 
-    return parser
+    inps = parser.parse_args()
 
-def cmd_line_parse(iargs=None):
-
-    parser = create_parser()
-    inps = parser.parse_args(args=iargs)
+    inps = putils.create_or_update_template(inps)
 
     print(inps)
     
@@ -67,7 +72,7 @@ def get_network_prefix(network_dir):
 
 def main(iargs=None):
 
-    inps = cmd_line_parse()
+    inps = create_parser()
     inps.work_dir = os.getcwd()
 
     if not iargs is None:
@@ -77,7 +82,6 @@ def main(iargs=None):
 
     message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
 
-    inps = putils.create_or_update_template(inps)
     try:
        #min_temp_coh =  inps.template['miaplpy.timeseries.minTempCoh']
        min_temp_coh =  inps.template['mintpy.networkInversion.minTempCoh']
