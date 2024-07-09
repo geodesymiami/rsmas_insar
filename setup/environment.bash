@@ -30,6 +30,7 @@ export MIAPLPY_HOME=${RSMASINSAR_HOME}/tools/MiaplPy
 export MIMTPY_HOME=${RSMASINSAR_HOME}/tools/MimtPy
 export PLOTDATA_HOME=${RSMASINSAR_HOME}/tools/plotdata
 export PRECIP_HOME=${RSMASINSAR_HOME}/tools/Precip
+export SARVEY_HOME=${RSMASINSAR_HOME}/tools/sarvey
 export GBIS_HOME=${RSMASINSAR_HOME}/tools/GBIS
 export JOBDIR=${WORKDIR}/JOBS
 export OPERATIONS=${WORKDIR}/OPERATIONS
@@ -74,6 +75,8 @@ export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/tools/PyAPS
 export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/tools/PySolid
 export PYTHONPATH=${PYTHONPATH}:${PLOTDATA_HOME}/src
 export PYTHONPATH=${PYTHONPATH}:${PRECIP_HOME}/src
+export PYTHONPATH=${PYTHONPATH}:${SARVEY_HOME}
+export PYTHONPATH=${PYTHONPATH}:${SARVEY_HOME}/sarvey
 #export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/tools      # needed for mimt. Need to talk to Sara on how to do this smarter
 #export MPLBACKEND='Agg'
 
@@ -101,6 +104,8 @@ export PATH=${PATH}:${DASK_CONFIG}
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/S4I/viewer4falk
 export PATH=${ISCE_HOME}/applications:${ISCE_HOME}/bin:${ISCE_STACK}:${PATH}
 export PATH=${PYTHON3DIR}/bin:${PATH}
+export PATH="${RSMASINSAR_HOME}/tools/sarvey/sarvey:$PATH"
+export PATH="${RSMASINSAR_HOME}/tools/sarplotter-main/app:$PATH"
 
 [ -n ${MATLAB_HOME} ] && export PATH=${PATH}:${MATLAB_HOME}/bin
 
