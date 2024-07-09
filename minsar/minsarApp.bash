@@ -944,7 +944,7 @@ if [[ $miaplpy_flag == "1" ]]; then
     network_dir=${miaplpy_dir_name}/network_${network_type}
 
     # create miaplpy jobfiles
-    run_command "miaplpyApp.py $template_file --dir $miaplpy_dir_name --jobfiles $miaplpy_tmp_flag"
+    run_command "$srun_cmd miaplpyApp.py $template_file --dir $miaplpy_dir_name --jobfiles $miaplpy_tmp_flag"
 
     # run miaplpy jobfiles ( after create_save_hdf5_jobfile.py to include run_10_save_hdfeos5_radar_0.job )
     run_command "run_workflow.bash $template_file --append --dostep miaplpy --dir $miaplpy_dir_name"
