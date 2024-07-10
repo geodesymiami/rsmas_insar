@@ -96,6 +96,7 @@ export PATH=${PATH}:${PLOTDATA_HOME}/src/plotdata/cli
 export PATH=${PATH}:${MIAPLPY_HOME}/src/miaplpy
 export PATH=${PATH}:${PRECIP_HOME}/src/precip/cli
 export PATH=${PATH}:${MIMTPY_HOME}/mimtpy
+export PATH=${PATH}:${SARVEY_HOME}/sarvey
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/snaphu/bin
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/insarmaps_scripts
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/autoencoder
