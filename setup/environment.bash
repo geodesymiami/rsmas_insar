@@ -17,7 +17,8 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 [ -z ${SENTINEL_ORBITS} ] && export SENTINEL_ORBITS=${WORKDIR}/S1orbits
 [ -z ${SENTINEL_AUX} ] && export SENTINEL_AUX=${WORKDIR}/S1aux
 [ -z ${WEATHER_DIR} ] && export WEATHER_DIR=${WORKDIR}/WEATHER
-[ -z ${PRECIP_DIR} ] && export PRECIP_DIR=${WORKDIR}/PRECIP
+[ -z ${PRECIP_DIR} ] && export PRECIP_DIR=${SCRATCHDIR}/gpm_data
+[ -z ${PRECIP_PRODUCTS_DIR} ] && export PRECIP_PRODUCTS_DIR=${SCRATCHDIR}/precip_products
 [ -z ${TESTDATA_ISCE} ] && export TESTDATA_ISCE=${WORKDIR}/TESTDATA_ISCE
 
 ############ FOR PROCESSING  #########
@@ -30,6 +31,7 @@ export MIAPLPY_HOME=${RSMASINSAR_HOME}/tools/MiaplPy
 export MIMTPY_HOME=${RSMASINSAR_HOME}/tools/MimtPy
 export PLOTDATA_HOME=${RSMASINSAR_HOME}/tools/plotdata
 export PRECIP_HOME=${RSMASINSAR_HOME}/tools/Precip
+export PRECIP_CRON_HOME=${RSMASINSAR_HOME}/tools/Precip_cron
 export SARVEY_HOME=${RSMASINSAR_HOME}/tools/sarvey
 export GBIS_HOME=${RSMASINSAR_HOME}/tools/GBIS
 export JOBDIR=${WORKDIR}/JOBS
@@ -95,6 +97,7 @@ export PATH=${PATH}:${MINTPY_HOME}/src/mintpy/cli
 export PATH=${PATH}:${PLOTDATA_HOME}/src/plotdata/cli
 export PATH=${PATH}:${MIAPLPY_HOME}/src/miaplpy
 export PATH=${PATH}:${PRECIP_HOME}/src/precip/cli
+export PATH=${PATH}:${PRECIP_CRON_HOME}
 export PATH=${PATH}:${MIMTPY_HOME}/mimtpy
 export PATH=${PATH}:${SARVEY_HOME}/sarvey
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/snaphu/bin
