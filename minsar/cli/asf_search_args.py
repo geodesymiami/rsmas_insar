@@ -42,7 +42,7 @@ parser.add_argument('--start-date', metavar='YYYY-MM-DD or YYYYMMDD', help='Star
 parser.add_argument('--end-date', metavar='YYYY-MM-DD or YYYYMMDD', help='End date of the search')
 parser.add_argument('--node', metavar='NODE', help='Flight direction of the satellite (ASCENDING or DESCENDING)')
 parser.add_argument('--relativeOrbit', metavar='ORBIT', help='Relative Orbit Path')
-parser.add_argument('--Product', metavar='FILE', dest='product',help='Choose the product type to download')
+parser.add_argument('--Product', metavar='FILE', dest='product', choices=['SLC', 'CSLC', 'BURST'], help='Choose the product type to download')
 parser.add_argument('--platform', nargs='?',metavar='SENTINEL1, SENTINEL-1A, SENTINEL-1B', help='Choose the platform to search')
 parser.add_argument('--download', action='store_true', help='Download the data')
 parser.add_argument('--parallel', nargs=1, help='Download the data in parallel, specify the number of processes to use')
