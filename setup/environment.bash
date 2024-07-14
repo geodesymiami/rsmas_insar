@@ -18,7 +18,7 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 [ -z ${SENTINEL_AUX} ] && export SENTINEL_AUX=${WORKDIR}/S1aux
 [ -z ${WEATHER_DIR} ] && export WEATHER_DIR=${WORKDIR}/WEATHER
 [ -z ${PRECIP_DIR} ] && export PRECIP_DIR=${SCRATCHDIR}/gpm_data
-[ -z ${PRECIPPRODUCTS_DIR} ] && export PRECIP_PRODUCTS_DIR=${SCRATCHDIR}/precip_products
+[ -z ${PRECIPPRODUCTS_DIR} ] && export PRECIPPRODUCTS_DIR=${SCRATCHDIR}/precip_products
 [ -z ${TESTDATA_ISCE} ] && export TESTDATA_ISCE=${WORKDIR}/TESTDATA_ISCE
 
 ############ FOR PROCESSING  #########
