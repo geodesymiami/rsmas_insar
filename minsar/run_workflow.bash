@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+##! /bin/bash
 
 function abbreviate {
     abb=$1
@@ -386,16 +386,9 @@ echo "Started at: $(date +"%Y-%m-%d %H:%M:%S")"
 
 # 5/2024 hack to be able to run one jobfile
 if [[ $jobfile_flag == "true" ]]; then
-     #globlist=("$jobfile")
-     eval "globlist=($jobfile)"
+     globlist=("$jobfile")
      echo "--jobfile hack applies: replaced full list by jobfile $jobfile"
 fi
-
-globlist=("${globlist[@]/%/}") # Remove potential trailing spaces
-globlist=($(printf "%s\n" "${globlist[@]}" | grep -v '^$'))
-
-echo "QQQQ declare -p globlist"
-declare -p globlist
 
 for g in "${globlist[@]}"; do
     if [[ -n $g ]]; then
