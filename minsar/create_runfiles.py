@@ -34,9 +34,65 @@ def convert_subset_lalo_to_boundingBox_string(subset_lalo, delta_lat, delta_lon)
 
     return boundingBox_string
 
+###############################################
+def convert_intersectsWith_string_to_boundingBox_string(intersectsWith_str, delta_lat, delta_lon):
+    """ converts polygon string of the form:
+        POLYGON((-86.581 12.3995,-86.4958 12.3995,-86.4958 12.454,-86.581 12.454,-86.581 12.3995))
+        48.1153435942954,32.48224314182711,0 48.1460783620229,32.49847964019297,0 48.1153435942954,32.48224314182711,0
+           same functions convert_polygon_str() in convert_polygon_string.py, should move into ustilities
+    """
+    longs = []
+    lats = []
+
+    if "POLYGON" in intersectsWith_str:
+        modified_str = intersectsWith_str.removeprefix('POLYGON((')
+        modified_str = modified_str.removesuffix('))')
+
+        points = modified_str.split(',')
+
+        # Split each coordinate point to get longitude and latitude
+        for point in points:
+            long, lat = point.split()
+            longs.append(float(long))
+            lats.append(float(lat))
+    else:
+        points = intersectsWith_str.split(' ')
+        for point in points:
+            long, lat, z = point.split(',')
+            longs.append(float(long))
+            lats.append(float(lat))
+
+    min_lat = min(lats)
+    max_lat = max(lats)
+    min_lon = min(longs)
+    max_lon = max(longs)
+
+    min_lat = round(min_lat,3)
+    max_lat = round(max_lat,3)
+    min_lon = round(min_lon,3)
+    max_lon = round(max_lon,3)
+
+    min_lat_bbox = round(min_lat - delta_lat,1)
+    max_lat_bbox = round(max_lat + delta_lat,1)
+    min_lon_bbox = round(min_lon - delta_lon,1)
+    max_lon_bbox = round(max_lon + delta_lon,1)
+
+    bbox_str = str(min_lat_bbox) + ' ' + str(max_lat_bbox) + ' ' + str(min_lon_bbox) + ' ' + str(max_lon_bbox)
+    subset_str = str(min_lat) + ':' + str(max_lat) + ',' + str(min_lon) + ':' + str(max_lon)
+
+    tops_stack_bbox_str = 'topsStack.boundingBox                = ' + bbox_str
+
+    mintpy_subset_str  = 'mintpy.subset.lalo                   = ' + subset_str + '    #[S:N,W:E / no], auto for no'
+    miaplpy_subset_str = 'miaplpy.subset.lalo                  = ' + subset_str + '    #[S:N,W:E / no], auto for no'
+
+    #print("Desired strings: ")
+    #print(tops_stack_bbox_str)
+    #print(mintpy_subset_str)
+    #print(miaplpy_subset_str)
+    return bbox_str
 ###########################################################################################
 def get_bbox_from_template(inps, delta_lat, delta_lon):
-    """generates boundingBox string from miaplpy.subset.lalo or mintpy.subset.lalo"""
+    """generates boundingBox string from miaplpy.subset.lalo, mintpy.subset.lalo or intersectsWith POLYGON string"""
 
     if 'miaplpy.subset.lalo' in inps.template.keys():
         print("Creating topsStack.boundingBox using miaplpy.subset.lalo")
@@ -45,7 +101,9 @@ def get_bbox_from_template(inps, delta_lat, delta_lon):
         print("Creating topsStack.boundingBox using mintpy.subset.lalo")
         boundingBox_string = convert_subset_lalo_to_boundingBox_string(inps.template['mintpy.subset.lalo'], delta_lat, delta_lon)
     else:
-        raise Exception("USER ERROR: miaplpy.subset.lalo or mintpy.subset.lalo not given")
+        print("Creating topsStack.boundingBox using ssaraopt.intersectsWith")
+        #boundingBox_string = convert_intersectsWith_string_to_boundingBox_string(inps.template['ssaraopt.intersectsWith'], delta_lat=0.0, delta_lon=0.0)
+        boundingBox_string = convert_intersectsWith_string_to_boundingBox_string(inps.template['ssaraopt.intersectsWith'], delta_lat, delta_lon)
 
     return boundingBox_string
 
