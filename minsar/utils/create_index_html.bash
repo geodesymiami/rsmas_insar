@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
 
+if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
+helptext="                                                                       \n\
+  Example:                                                                       \n\
+      create_index_html.bash  sbas/pic                                           \n\
+                                                                                 \n\
+      creates an index.html in the directory and on Mac displays using your  \n\
+      default browser (note: you may have to empty your cache occasionaly)  \n\n"  
+  printf "$helptext"
+  exit 0;
+fi
+
 # Directory containing images
 dir_of_interest="$1"
 # Output HTML file
@@ -47,9 +58,9 @@ for img in "$dir_of_interest"/*.png; do
     # Extract just the filename from the path
     img_name=$(basename "$img")
     # Make sure to reference the image relative to the index.html location
+    echo "            <div class=\"image-name\">$img_name</div>" >> "$index_file"
     echo "        <div class=\"image-container\">" >> "$index_file"
     echo "            <a href=\"$img_name\"><img src=\"$img_name\" alt=\"$img_name\"></a>" >> "$index_file"
-    echo "            <div class=\"image-name\">$img_name</div>" >> "$index_file"
     echo "        </div>" >> "$index_file"
 done
 
@@ -62,5 +73,11 @@ EOF
 
 # Output command to open the directory or HTML file
 echo "Index file created at: $index_file"
-echo "To view the directory, run: open \"$dir_of_interest\""
-echo "To view the gallery in your browser, run: open \"$index_file\""
+#echo "To view the directory, run: open \"$dir_of_interest\""
+
+if [ "$(uname)" == "Darwin" ]; then
+   cmd="open \"$index_file\""
+   eval "$cmd"
+fi
+echo "To view the gallery in your browser, run: "
+echo "open \"$index_file\""

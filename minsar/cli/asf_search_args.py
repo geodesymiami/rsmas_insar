@@ -41,11 +41,11 @@ parser.add_argument('--end', metavar='YYYY-MM-DD or YYYYMMDD', help='End date of
 parser.add_argument('--start-date', metavar='YYYY-MM-DD or YYYYMMDD', help='Start date of the search')
 parser.add_argument('--end-date', metavar='YYYY-MM-DD or YYYYMMDD', help='End date of the search')
 parser.add_argument('--node', metavar='NODE', help='Flight direction of the satellite (ASCENDING or DESCENDING)')
-parser.add_argument('--relativeOrbit', metavar='ORBIT', help='Relative Orbit Path')
-parser.add_argument('--Product', metavar='FILE', dest='product',help='Choose the product type to download')
+parser.add_argument('--relativeOrbit', type=int, metavar='ORBIT', help='Relative Orbit Path')
+parser.add_argument('--Product', metavar='FILE', dest='product', choices=['SLC', 'CSLC', 'BURST'], help='Choose the product type to download')
 parser.add_argument('--platform', nargs='?',metavar='SENTINEL1, SENTINEL-1A, SENTINEL-1B', help='Choose the platform to search')
 parser.add_argument('--download', action='store_true', help='Download the data')
-parser.add_argument('--parallel', nargs=1, help='Download the data in parallel, specify the number of processes to use')
+parser.add_argument('--parallel', type=int, default=1, nargs=1, help='Download the data in parallel, specify the number of processes to use')
 parser.add_argument('--print', action='store_true', help='Print the search results')
 parser.add_argument('--dir', metavar='FOLDER', help='Specify path to download the data, if not specified, the data will be downloaded either in SCRATCHDIR or HOME directory')
 
@@ -53,10 +53,8 @@ inps = parser.parse_args()
 
 sdate = None
 edate = None
-polygon = None
 node = None
 orbit = None
-relative_orbit = None
 product = []
 
 if 'SLC' in inps.product:
@@ -79,12 +77,6 @@ if inps.end or inps.end_date:
         edate = datetime.datetime.strptime(inps.end if inps.end else inps.end_date, '%Y-%m-%d').date()
     except:
         edate = datetime.datetime.strptime(inps.end if inps.end else inps.end_date, '%Y%m%d').date()
-
-if inps.intersectsWith :
-    polygon = inps.intersectsWith
-
-if inps.relativeOrbit:
-    relative_orbit = int(inps.relativeOrbit)
 
 if inps.platform in ['SENTINEL1', 'SENTINEL-1', 'S1', 'S-1']:
     platform = asf.PLATFORM.SENTINEL1
@@ -116,20 +108,15 @@ if inps.download is not None:
 else:
     path = None
 
-if inps.parallel:
-    par = int(inps.parallel[0])
-else:
-    par = 1
-
 print("Searching for Sentinel-1 data...")
 results = asf.search(
     platform=platform,
     processingLevel=product,
     start=sdate,
     end=edate,
-    intersectsWith=polygon,
+    intersectsWith=inps.intersectsWith,
     flightDirection=node,
-    relativeOrbit=relative_orbit
+    relativeOrbit=inps.relativeOrbit
 )
 
 if workDir in os.environ:
@@ -159,5 +146,5 @@ if inps.download == True:
     results.download(
          path = path,
          session = asf.ASFSession(),
-         processes = par
+         processes = inps.parallel
     )
