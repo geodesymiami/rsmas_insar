@@ -84,7 +84,10 @@ class Sensors:
 
         return
 
+
     def unpack(self):
+
+        failed_files = []
 
         for in_file in self.file_list:
             workdir = os.path.dirname(in_file)
@@ -97,8 +100,14 @@ class Sensors:
 
                 # put failed files in a seperate directory
                 if not successflag_unzip:
+                    print ('Unzipping failed:',in_file)
+                    failed_files.append(in_file)
                     os.makedirs(os.path.join(workdir, 'FAILED_FILES'), exist_ok=True)
-                    os.rename(in_file, os.path.join(workdir, 'FAILED_FILES', '.'))
+                    
+                    try: 
+                        os.rename(in_file, os.path.join(workdir, 'FAILED_FILES', os.path.basename(in_file)))
+                    except OSError as e:
+                        print(f"Failed to move {in_file} to FAILED_FILES: {e}")
                 else:
                     # check if file needs to be removed or put in archive folder
                     if self.rmfile in [True, 'True']:
@@ -108,6 +117,10 @@ class Sensors:
                         os.makedirs(os.path.join(workdir, 'ARCHIVED_FILES'), exist_ok=True)
                         cmd = 'mv ' + in_file + ' ' + os.path.join(workdir, 'ARCHIVED_FILES', '.')
                         os.system(cmd)
+                        
+        if failed_files:
+            raise Exception(f"Unzipping failed for the following files: {failed_files}")
+
 
         # loop over the different folders and make sure the folder names are consistent.
         # this step is not needed unless the user has manually unzipped data before.

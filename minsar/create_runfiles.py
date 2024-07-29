@@ -148,8 +148,8 @@ def main(iargs=None):
     slc_dir = inps.template[inps.prefix + 'Stack.slcDir']
     os.makedirs(slc_dir, exist_ok=True)
 
-    #if int(get_size(slc_dir)/1024**2) < 500:   # calculate slc_dir size in MB and see if there are SLCs according to size
-    if int(get_size(slc_dir)/1024**2) < -1:    # calculate slc_dir size in MB and see if there are SLCs according to size
+    if int(get_size(slc_dir)/1024**2) < 500:   # calculate slc_dir size in MB and see if there are SLCs according to size
+    #if int(get_size(slc_dir)/1024**2) < -1:    # calculate slc_dir size in MB and see if there are SLCs according to size
 
         # Unpack Raw data:
         if not inps.template['raw_image_dir'] in [None, 'None']:
