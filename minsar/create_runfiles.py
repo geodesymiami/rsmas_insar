@@ -111,10 +111,11 @@ def get_bbox_from_template(inps, delta_lat, delta_lon):
 def main(iargs=None):
     inps = putils.cmd_line_parse(iargs, script='create_runfiles')
 
-    if inps.template['topsStack.boundingBox'] == 'None':
-        inps.template['topsStack.boundingBox'] = get_bbox_from_template(inps, delta_lat=0.15, delta_lon=3)
-
-    print('QQ0',inps.template['topsStack.boundingBox'])
+    
+    if 'topsStack.boundingBox' in inps.template:
+        if inps.template['topsStack.boundingBox'] == 'None':
+            inps.template['topsStack.boundingBox'] = get_bbox_from_template(inps, delta_lat=0.15, delta_lon=3)
+            print('QQ0',inps.template['topsStack.boundingBox'])
 
     if not iargs is None:
         input_arguments = iargs
