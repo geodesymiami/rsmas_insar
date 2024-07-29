@@ -120,7 +120,11 @@ def main(iargs=None):
             ])
             if inps.geo_flag:
                scp_list.extend([
-               '/'+ data_dir +'/geo/geo_*.h5'
+               '/'+ data_dir +'/geo/geo_*.h5',
+               '/'+ data_dir +'/geo/geo_*.dbf',
+               '/'+ data_dir +'/geo/geo_*.prj',
+               '/'+ data_dir +'/geo/geo_*.shp',
+               '/'+ data_dir +'/geo/geo_*.shx'
                ])
             #if inps.geo_flag:
             #   scp_list.extend([
@@ -160,7 +164,11 @@ def main(iargs=None):
                 ])
                 if inps.geo_flag:
                    scp_list.extend([
-                   '/'+ data_dir +'/geo/geo_*.h5'
+                   '/'+ data_dir +'/geo/geo_*.h5',
+                   '/'+ data_dir +'/geo/geo_*.dbf',
+                   '/'+ data_dir +'/geo/geo_*.prj',
+                   '/'+ data_dir +'/geo/geo_*.shp',
+                   '/'+ data_dir +'/geo/geo_*.shx'
                    ])
                 #if inps.geo_flag:
                 #   scp_list.extend([
