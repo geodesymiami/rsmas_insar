@@ -14,16 +14,22 @@ helptext="                                                                      
 fi
 
 cmd=""
+parallel=5  # Set default value for parallel
 for arg in "$@"; do
   if [[ "$arg" == --intersectsWith=* ]]; then
     # Extract the value right after '=' and wrap it with single quotes
     value="${arg#--intersectsWith=}"
     arg="--intersectsWith='$value'"
+  elif [[ "$arg" == --collectionName=* ]]; then
+    # Extract the value right after '=' and wrap it with double quotes
+    value="${arg#--collectionName=}"
+    arg="--collectionName=\"$value\""
   fi
   if [[ "$arg" == --parallel* ]]; then
     parallel="${arg#--parallel=}"
   fi
   # Append each argument to the command
+  # echo "QQ: <$arg> <$cmd>"
   cmd+=" $arg"
 done
 
@@ -31,9 +37,11 @@ done
 echo "$(date +"%Y%m%d-%H:%m") * `basename "$0"` $cmd " >> log
 
 asfResponseTimeout_opt="--asfResponseTimeout=300"
-if [[ $string_for_display == *TSX* ]] || [[ $string_for_display == *CSK* ]]; then
-   asfResponseTimeout_opt=""
-fi
+for arg in "$@"; do
+    if [[ "$arg" == *"TSX"* ]] || [[ $arg == *COSMO* ]]; then
+        asfResponseTimeout_opt=""
+    fi
+done
 
 # run ssara_federated_query.py to create ssara_listing.txt
 rm -f ssara_listing.txt
@@ -88,10 +96,6 @@ num_urls=${#urls[@]}
 
 echo "URLs to download: ${urls[@]}"
 echo "$(date +"%Y%m%d:%H-%m") * Datafiles to download: $num_urls" | tee -a log
-
-if  [[ -z "$parallel" ]] ; then
-   parallel=5
-fi
 
 timeout=500
 

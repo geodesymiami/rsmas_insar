@@ -129,7 +129,9 @@ def generate_download_command(template):
     ssaraopt_string = dataset_template.generate_ssaraopt_string()
     ssaraopt = ssaraopt_string.split(' ')
 
-    if 'ssaraopt.intersectsWith' not in dataset_template.get_options():
+    if not any(option.startswith('ssaraopt.intersectsWith') for option in dataset_template.get_options()):
+    # Your code here
+    # if 'ssaraopt.intersectsWith' not in dataset_template.get_options():
        intersects_string = generate_intersects_string(dataset_template)
        ssaraopt.insert(2, intersects_string)
        ssaraopt.append('--maxResults=20000')
