@@ -4,8 +4,8 @@ ssaraopt.collectionName               = "TSX ARC_famelung_COA3837"
 ssaraopt.beamSwath                    = strip_014
 ssaraopt.relativeOrbit                = 36
 unavco.relative_orbit                 = 36
-ssaraopt.startDate                    = 20170901
-ssaraopt.endDate                      = 20171031
+ssaraopt.startDate                    = 20160101
+ssaraopt.endDate                      = 20170922
 
 stripmapStack.sensor                  = tsx
 stripmapStack.zerodop                 = True
@@ -17,7 +17,7 @@ stripmapStack.boundingBox             = 25.52 26.0 -80.41 -80.1174
 stripmapStack.azimuthLooks            = 10
 stripmapStack.rangeLooks              = 10
 stripmapStack.timeThreshold           = 90
-stripmapStack.baselineThreshold       = 450
+stripmapStack.baselineThreshold       = 4500
 stripmapStack.golsteinFilterStrength  = 0.2          
 stripmapStack.unwMethod               = snaphu     
 
