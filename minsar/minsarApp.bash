@@ -743,34 +743,15 @@ if [[ $jobfiles_flag == "1" ]]; then
 fi
  
 if [[ $ifgram_flag == "1" ]]; then
-    # possibly set local WEATHER_DIR if WORK is slow
-    #timeout 2 ls  $WEATHER_DIR/ERA5/* >> /dev/null ; echo $?
-    #timeout 0.1 ls  $WEATHER_DIR/ERA5/* >> /dev/null ; echo $?
-    #cmd_try="download_ERA5_data.py --date_list SAFE_files.txt $template_file"
-
 
     if [[ $template_file != *"Sen"* || $select_reference_flag == "0" ]]; then 
-       cmd="run_workflow.bash $template_file --dostep ifgram $copy_to_tmp"
-       echo "Running.... $cmd"
-       $cmd
-       exit_status="$?"
-       if [[ $exit_status -ne 0 ]]; then
-          echo "run_workflow.bash $template_file --dostep ifgram  exited with a non-zero exit code ($exit_status). Exiting."
-          exit 1;
-       fi
 
+       run_command "run_workflow.bash $template_file --dostep ifgram $copy_to_tmp"
     else
 
        # run with checking and selecting of reference date
        echo "### Running step 1 to 5 to check whether reference date has enough bursts"
-       cmd="run_workflow.bash $template_file --start 1 --stop 5 $copy_to_tmp"
-       echo "Running.... $cmd"
-       $cmd
-       exit_status="$?"
-       if [[ $exit_status -ne 0 ]]; then
-          echo "run_workflow.bash $template_file --start 1 --stop 5 exited with a non-zero exit code ($exit_status). Exiting."
-          exit 1;
-       fi
+       run_command "run_workflow.bash $template_file --start 1 --stop 5 $copy_to_tmp"
 
        reference_date=$(get_reference_date)
        echo "Reference date: $reference_date" | tee reference_date_isce.txt
@@ -811,14 +792,7 @@ if [[ $ifgram_flag == "1" ]]; then
           rm -rf run_files configs
 
           # clean directory for processing
-          cmd="clean_dir.bash $PWD --runfiles --ifgram"
-          echo "Running.... $cmd"
-          $cmd
-          exit_status="$?"
-          if [[ $exit_status -ne 0 ]]; then
-             echo "clean_dir.bash exited with a non-zero exit code ($exit_status). Exiting."
-             exit 1;
-          fi
+          run_command "clean_dir.bash $PWD --runfiles --ifgram"
 
           cmd="create_runfiles.py $template_file --jobfiles --queue $QUEUENAME $copy_to_tmp"
           echo "Running.... $cmd >create_jobfiles.e 1>out_create_jobfiles.o"
@@ -831,14 +805,7 @@ if [[ $ifgram_flag == "1" ]]; then
 
           # rerun steps 1 to 5  with new reference
 	  echo "### Re-running step 1 to 5 with reference $new_reference_date"
-          cmd="run_workflow.bash $template_file --start 1 --stop 5 $copy_to_tmp --append"
-          echo "Running.... $cmd"
-          $cmd
-          exit_status="$?"
-          if [[ $exit_status -ne 0 ]]; then
-             echo "run_workflow.bash $template_file --start 1 --stop 5 exited with a non-zero exit code ($exit_status). Exiting."
-             exit 1;
-          fi
+          run_command "run_workflow.bash $template_file --start 1 --stop 5 $copy_to_tmp --append"
        else
           echo "No new reference date selected. Continue with original date: $reference_date" | tee -a log | tee -a `ls wor* | tail -1`
           echo "#########################################" | tee -a log | tee -a `ls wor* | tail -1`
@@ -865,64 +832,21 @@ fi
 #       MintPy         #
 ########################
 if [[ $mintpy_flag == "1" ]]; then
-    if [[ $download_ECMWF_before_mintpy_flag == "1" ]]  && [[ "$template_file" == *"SenAT"* || "$template_file" == *"SenDT"* ]]; then
-        #download weather models - run mintpy after downnload is completed
-        cmd="download_ERA5_data.py --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR"
-        echo "Running.... $cmd" | tee -a log
-        $cmd 2>out_download_ERA5_2.e 1>out_download_ERA5_2.o
-        exit_status="$?"
-        if [[ $exit_status -ne 0 ]]; then
-           echo "download_ERA5_data.py exited with a non-zero exit code ($exit_status). Exiting."
-           exit 1;
-        fi
-    fi
 
     # run MintPy 
-    cmd="run_workflow.bash $template_file --append --dostep mintpy $copy_to_tmp"
-    echo "Running.... $cmd"
-    $cmd
-    exit_status="$?"
-    if [[ $exit_status -ne 0 ]]; then
-       echo "$cmd exited with a non-zero exit code ($exit_status). Exiting."
-       exit 1;
-    fi
+    run_command "run_workflow.bash $template_file --append --dostep mintpy $copy_to_tmp"
 
     # upload mintpy directory 
     if [[ $upload_flag == "1" ]]; then
-        cmd="upload_data_products.py --dir mintpy ${template[minsar.upload_option]}"
-        echo "Running.... $cmd"
-        echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
-        $cmd 2>out_upload_mintpy_data_products.e 1>out_upload_mintpy_data_products.o & 
-        exit_status="$?"
-        if [[ $exit_status -ne 0 ]]; then
-           echo "upload_data_products.py exited with a non-zero exit code ($exit_status). Exiting."
-           exit 1;
-        fi
+        run_command "upload_data_products.py --dir mintpy ${template[minsar.upload_option]}"
     fi
 
     ## insarmaps
     if [[ $insarmaps_flag == "1" ]]; then
-        # create jobfile
-        cmd="create_insarmaps_jobfile.py mintpy --dataset geo"
-        echo "Running.... $cmd"
-        echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
-        $cmd
-        exit_status="$?"
-        if [[ $exit_status -ne 0 ]]; then
-           echo "$cmd exited with a non-zero exit code ($exit_status). Exiting."
-           exit 1;
-        fi
+        run_command "create_insarmaps_jobfile.py mintpy --dataset geo"
 
-        # run jobfile
         insarmaps_jobfile=$(ls -t insar*job | head -n 1)
-        cmd="run_workflow.bash $template_file --jobfile $PWD/$insarmaps_jobfile"
-        echo "Running.... $cmd"
-        $cmd
-        exit_status="$?"
-        if [[ $exit_status -ne 0 ]]; then
-           echo "$cmd with a non-zero exit code ($exit_status). Exiting."
-           exit 1;
-        fi
+        run_command "run_workflow.bash $template_file --jobfile $PWD/$insarmaps_jobfile"
     fi
 fi
 
@@ -959,41 +883,16 @@ if [[ $miaplpy_flag == "1" ]]; then
     run_command "create_html.py ${network_dir}/pic"
 
     # upload data products
-    if [[ $upload_flag == "1" ]]; then
-       cmd="upload_data_products.py --dir $network_dir ${template[minsar.upload_option]}"
-       echo "\nRunning.... $cmd"
-       echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
-       $cmd 2>out_upload_miaplpy_data_products.e 1>out_upload_miaplpy_data_products.o & 
-       exit_status="$?"
-       if [[ $exit_status -ne 0 ]]; then
-          echo "$cmd exited with a non-zero exit code ($exit_status). Exiting."
-          exit 1;
-       fi
-    fi   
+    run_command "upload_data_products.py --dir $network_dir ${template[minsar.upload_option]}"
 
     ## insarmaps
     if [[ $insarmaps_flag == "1" ]]; then
-        # create jobfile
-        cmd="create_insarmaps_jobfile.py $network_dir --dataset $insarmaps_dataset"
-        echo "Running.... $cmd"
-        echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
-        $cmd
-        exit_status="$?"
-        if [[ $exit_status -ne 0 ]]; then
-           echo "$cmd exited with a non-zero exit code ($exit_status). Exiting."
-           exit 1;
-        fi
+        run_command "create_insarmaps_jobfile.py $network_dir --dataset $insarmaps_dataset"
 
         # run jobfile
         insarmaps_jobfile=$(ls -t insar*job | head -n 1)
-        cmd="run_workflow.bash $template_file --jobfile $PWD/$insarmaps_jobfile"
-        echo "Running.... $cmd"
-        $cmd
-        exit_status="$?"
-        if [[ $exit_status -ne 0 ]]; then
-           echo "$cmd with a non-zero exit code ($exit_status). Exiting."
-           exit 1;
-        fi
+        run_command "run_workflow.bash $template_file --jobfile $PWD/$insarmaps_jobfile"
+
     fi
 fi
 
@@ -1003,15 +902,8 @@ if [[ $finishup_flag == "1" ]]; then
     else
         miaplpy_opt=""
     fi
-    cmd="summarize_job_run_times.py $template_file $copy_to_tmp $miaplpy_opt"
-    echo "Running.... $cmd"
-    $cmd
-    echo "$(date +"%Y%m%d:%H-%M") * $cmd" | tee -a log
-    exit_status="$?"
-    if [[ $exit_status -ne 0 ]]; then
-       echo "summarize_job_run_times.py exited with a non-zero exit code ($exit_status). Exiting."
-       exit 1;
-    fi
+    run_command "summarize_job_run_times.py $template_file $copy_to_tmp $miaplpy_opt"
+
     IFS=","
     last_file=($(tail -1 $download_dir/ssara_listing.txt))
     last_date=${last_file[3]}
