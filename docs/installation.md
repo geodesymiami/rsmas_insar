@@ -44,6 +44,7 @@ git clone git@github.com:geodesymiami/PlotData tools/PlotData
 git clone git@github.com:geodesymiami/precip tools/Precip
 git clone git@github.com:geodesymiami/precip_web tools/Precip_web
 git clone git@github.com:geodesymiami/precip_cron tools/Precip_cron
+git clone git@github.com:scottstanie/sardem tools/sardem
 
 
 ### Install credential files ###############
@@ -76,6 +77,8 @@ pip install -r ../minsar/requirements.txt
 pip install -r ../tools/insarmaps_scripts/requirements.txt
 pip install -r ../tools/PlotData/requirements.txt
 pip install -r ../tools/Precip/requirements.txt
+pip install -r ../tools/sardem/requirements.txt
+pip install -e ../tools/sardem
 
 ###  Reduce miniconda3 directory size #################
 rm -rf ../tools/miniconda3/pkgs
