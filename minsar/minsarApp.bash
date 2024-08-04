@@ -838,7 +838,7 @@ if [[ $mintpy_flag == "1" ]]; then
 
     # upload mintpy directory 
     if [[ $upload_flag == "1" ]]; then
-        run_command "upload_data_products.py --dir mintpy ${template[minsar.upload_option]}"
+        run_command "upload_data_products.py mintpy ${template[minsar.upload_option]}"
     fi
 
     ## insarmaps
@@ -883,7 +883,7 @@ if [[ $miaplpy_flag == "1" ]]; then
     run_command "create_html.py ${network_dir}/pic"
 
     # upload data products
-    run_command "upload_data_products.py --dir $network_dir ${template[minsar.upload_option]}"
+    run_command "upload_data_products.py $network_dir ${template[minsar.upload_option]}"
 
     ## insarmaps
     if [[ $insarmaps_flag == "1" ]]; then

@@ -21,9 +21,9 @@ import password_config as password
 
 ##############################################################################
 EXAMPLE = """example:
-    upload_data_products.py --dir mintppy
-    upload_data_products.py --dir miaplpy
-    upload_data_products.py --dir miaplpy/network_single_reference
+    upload_data_products.py mintppy
+    upload_data_products.py miaplpy
+    upload_data_products.py miaplpy/network_single_reference
 """
 
 DESCRIPTION = (
@@ -34,8 +34,7 @@ def create_parser():
     parser = argparse.ArgumentParser(description=DESCRIPTION, epilog=EXAMPLE,
                  formatter_class=argparse.RawTextHelpFormatter)
 
-    parser.add_argument('--dir', dest='data_dirs', nargs='+', default=False,  metavar="DIRECTORY",
-                         help='upload specific mintpy/miaplpy directory')
+    parser.add_argument('data_dirs', nargs='+', metavar="DIRECTORY", help='upload specific mintpy/miaplpy directory')
     parser.add_argument('--geo', dest='geo_flag', action='store_true', default=False, help='uploads geo  directory')
     parser.add_argument('--slcStack', dest='slcStack_flag', action='store_true', default=False, help='uploads miaplpy*/inputs directory')
     parser.add_argument('--all', dest='all_flag', action='store_true', default=False, help='uploads full directory')
@@ -106,7 +105,7 @@ def main(iargs=None):
     scp_list = []
     for data_dir in inps.data_dirs:
         data_dir = data_dir.rstrip('/')
-        if inps.mintpy_flag:
+        if 'mintpy' in data_dir:
             if os.path.isdir(data_dir + '/pic'):
                create_html_if_needed(data_dir + '/pic')
             scp_list.extend([
@@ -126,27 +125,20 @@ def main(iargs=None):
                '/'+ data_dir +'/geo/geo_*.shp',
                '/'+ data_dir +'/geo/geo_*.shx'
                ])
-            #if inps.geo_flag:
-            #   scp_list.extend([
-            #   '/'+ data_dir +'/geo/geo_avgSpatialCoh.h5',
-            #   '/'+ data_dir +'/geo/geo_geometryRadar.h5',
-            #   '/'+ data_dir +'/geo/geo_maskTempCoh.h5',
-            #   '/'+ data_dir +'/geo/geo_temporalCoherence.h5',
-            #   '/'+ data_dir +'/geo/geo_timeseries_demErr.h5'
-            #   #'/'+ data_dir +'/geo/geo_velocity.h5'             # already included earlier
-            #   ])
+
             if inps.triplets_flag:
                    scp_list.extend([
                    '/'+ data_dir +'/numTriNonzeroIntAmbiguity.h5',
                    ])
 
-        if inps.miaplpy_flag:
+        if 'miaplpy' in data_dir:
             if 'network_' in data_dir:
                dir_list = [ data_dir ]
             else:
                dir_list = glob.glob(data_dir + '/network_*')
 
             # loop over network_* folder(s)
+            # FA 8/2024: I may want to remove the network option., It is complicated. Rather give multiple directories
             for network_dir in dir_list:
                 create_html_if_needed(network_dir + '/pic')
                 scp_list.extend([
@@ -164,21 +156,12 @@ def main(iargs=None):
                 ])
                 if inps.geo_flag:
                    scp_list.extend([
-                   '/'+ data_dir +'/geo/geo_*.h5',
-                   '/'+ data_dir +'/geo/geo_*.dbf',
-                   '/'+ data_dir +'/geo/geo_*.prj',
-                   '/'+ data_dir +'/geo/geo_*.shp',
-                   '/'+ data_dir +'/geo/geo_*.shx'
+                   '/'+ network_dir +'/geo/geo_*.h5',
+                   '/'+ network_dir +'/geo/geo_*.dbf',
+                   '/'+ network_dir +'/geo/geo_*.prj',
+                   '/'+ network_dir +'/geo/geo_*.shp',
+                   '/'+ network_dir +'/geo/geo_*.shx'
                    ])
-                #if inps.geo_flag:
-                #   scp_list.extend([
-                #   '/'+ network_dir +'/geo/geo_avgSpatialCoh.h5',
-                #   '/'+ network_dir +'/geo/geo_geometryRadar.h5',
-                #   '/'+ network_dir +'/geo/geo_maskTempCoh.h5',
-                #   '/'+ network_dir +'/geo/geo_temporalCoherence.h5',
-                #   '/'+ network_dir +'/geo/geo_timeseries_*demErr.h5'
-                #   #'/'+ network_dir +'/geo/geo_velocity.h5'             # already included earlier
-                #   ])
                 if inps.triplets_flag:
                    scp_list.extend([
                    '/'+ network_dir +'/numTriNonzeroIntAmbiguity.h5',
@@ -203,8 +186,6 @@ def main(iargs=None):
             '/'+ os.path.dirname(data_dir) +'/inputs/baselines', 
             '/'+ os.path.dirname(data_dir) +'/inputs/*.template', 
             '/'+ os.path.dirname(data_dir) +'/inverted/tempCoh_average*', 
-            #'/'+ os.path.dirname(data_dir) +'/inputs/slcStack.h5',
-            #'/'+ os.path.dirname(data_dir) +'/inverted/phase_series.h5', 
             '/'+ os.path.dirname(data_dir) +'/inverted/tempCoh_full*' 
             ])
             if inps.slcStack_flag:
@@ -217,6 +198,8 @@ def main(iargs=None):
     for element in scp_list:
         print(element)
     print('################')
+    import time
+    time.sleep(2)
 
     for pattern in scp_list:
         if ( len(glob.glob(inps.work_dir + '/' + pattern)) >= 1 ):
@@ -248,14 +231,6 @@ def main(iargs=None):
             if status is not 0:
                 raise Exception('ERROR uploading using scp -r  in upload_data_products.py')
 
-            # adjust permissions
-            #print ('\nAdjusting permissions:')
-            #command = 'ssh ' + DATA_SERVER + ' chmod -R u=rwX,go=rX ' + REMOTE_DIR + project_name  + pattern
-            #print (command)
-            #status = subprocess.Popen(command, shell=True).wait()
-            #if status is not 0:
-            #    raise Exception('ERROR adjusting permissions in upload_data_products.py')
-
     # adjust permissions
     print ('\nAdjusting permissions:')
     command = 'ssh ' + DATA_SERVER + ' chmod -R u=rwX,go=rX ' + REMOTE_DIR + project_name  + '/' + os.path.dirname(data_dir)
@@ -266,19 +241,10 @@ def main(iargs=None):
 
 ##########################################
     remote_url = 'http://' + DATA_SERVER.split('@')[1] + REMOTE_DIR + '/' + project_name + '/' + data_dir + '/pic'
-    print('Data at:\n',remote_url)
+    print('Data at:')
+    print(remote_url)
     with open('upload.log', 'a') as f:
         f.write(remote_url + "\n")
-##########################################
-
-        #for pattern in rsync_list:
-        #    command = 'rsync -avuz -e ssh --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r ' + inps.work_dir + pattern + ' ' + destination + project_name + '/'.join(pattern.split('/')[0:-1])
-        #    print (command)
-        #    status = subprocess.Popen(command, shell=True).wait()
-        #    if status is not 0:
-        #        raise Exception('ERROR in upload_data_products.py')
-        #
-        #    return None
 
     return None
 
