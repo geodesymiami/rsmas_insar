@@ -33,6 +33,7 @@ export PLOTDATA_HOME=${RSMASINSAR_HOME}/tools/plotdata
 export PRECIP_HOME=${RSMASINSAR_HOME}/tools/Precip
 export PRECIP_CRON_HOME=${RSMASINSAR_HOME}/tools/Precip_cron
 export SARVEY_HOME=${RSMASINSAR_HOME}/tools/sarvey
+export SARDEM_HOME=${RSMASINSAR_HOME}/tools/sardem
 export GBIS_HOME=${RSMASINSAR_HOME}/tools/GBIS
 export JOBDIR=${WORKDIR}/JOBS
 export OPERATIONS=${WORKDIR}/OPERATIONS
@@ -79,6 +80,7 @@ export PYTHONPATH=${PYTHONPATH}:${PLOTDATA_HOME}/src
 export PYTHONPATH=${PYTHONPATH}:${PRECIP_HOME}/src
 export PYTHONPATH=${PYTHONPATH}:${SARVEY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${SARVEY_HOME}/sarvey
+export PYTHONPATH=${PYTHONPATH}:${SARDEM_HOME}
 #export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/tools      # needed for mimt. Need to talk to Sara on how to do this smarter
 #export MPLBACKEND='Agg'
 
