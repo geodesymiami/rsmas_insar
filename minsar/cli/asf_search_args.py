@@ -44,6 +44,7 @@ parser.add_argument('--node', metavar='NODE', help='Flight direction of the sate
 parser.add_argument('--relativeOrbit', type=int, metavar='ORBIT', help='Relative Orbit Path')
 parser.add_argument('--Product', metavar='FILE', dest='product', choices=['SLC', 'CSLC', 'BURST'], help='Choose the product type to download')
 parser.add_argument('--platform', nargs='?',metavar='SENTINEL1, SENTINEL-1A, SENTINEL-1B', help='Choose the platform to search')
+parser.add_argument('--burst-id', nargs='*', type=str, metavar='BURST', help='Burst ID')
 parser.add_argument('--download', action='store_true', help='Download the data')
 parser.add_argument('--parallel', type=int, default=1, nargs=1, help='Download the data in parallel, specify the number of processes to use')
 parser.add_argument('--print', action='store_true', help='Print the search results')
@@ -55,6 +56,7 @@ sdate = None
 edate = None
 node = None
 orbit = None
+burst_id = None
 product = []
 
 if 'SLC' in inps.product:
@@ -62,6 +64,9 @@ if 'SLC' in inps.product:
 
 if 'BURST' in inps.product:
     product.append(asf.PRODUCT_TYPE.BURST)
+
+    if inps.burst_id:
+        burst_id = inps.burst_id
 
 if 'CSLC' in inps.product or inps.product is None: 
     product.append(asf.PRODUCT_TYPE.CSLC)
@@ -108,6 +113,7 @@ if inps.download is not None:
 else:
     path = None
 
+
 print("Searching for Sentinel-1 data...")
 results = asf.search(
     platform=platform,
@@ -116,7 +122,8 @@ results = asf.search(
     end=edate,
     intersectsWith=inps.intersectsWith,
     flightDirection=node,
-    relativeOrbit=inps.relativeOrbit
+    relativeOrbit=inps.relativeOrbit,
+    absoluteBurstID = burst_id
 )
 
 if workDir in os.environ:
@@ -136,6 +143,8 @@ for r in results:
     print(f"{r.geometry['type']}: {r.geometry['coordinates']}")
     print(f"Path of satellite: {r.properties['pathNumber']}")
     print(f"Granule:  {r.properties['granuleType']}")
+    if burst_id:
+        print(f"Absolute Burst ID: {r.properties['burst']['absoluteBurstID']}")
 
     if inps.print:
         print('')
