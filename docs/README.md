@@ -1,4 +1,5 @@
 ## RSMAS InSAR code
+[![CircleCI](https://dl.circleci.com/status-badge/img/circleci/7w2RUppWsbs2rhMzycmYD4/51opWY8YqFRnTCqTVPPwYy/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/circleci/7w2RUppWsbs2rhMzycmYD4/51opWY8YqFRnTCqTVPPwYy/tree/main)
 
 The Miami INterferometric SAR software  (MinSAR) is an open-source python package for Interferometric Synthetic Aperture Radar processing and time series analysis written at the Geodesy Lab of the University of Miami at the Rosenstiel School of Marine and Atmospheric Science (RSMAS). MinSAR uses the following packages:
 
@@ -14,7 +15,7 @@ MinSAR downloads a stack of SLC images, downloads a DEM, processes the interfero
 
 The processing is controlled by a *.template file which offers many different options for each processing step ([see example])(../samples/unittestGalapagosSenDT128.template). The processing is executed by `minsarApp.bash`. The processing steps are specified on the command line. Steps:
 ```
-download:   downloading data     (by executing the command in 
+download:   downloading data     (by executing the command in
 dem:        downloading DEM
 jobfiles:   create runfiles and jobfiles
 ifgram:     processing interferograms starting with unpacking of the images
@@ -34,14 +35,14 @@ The default is to run the `mintpy` step. The `--mintpy --miaplpy` option runs bo
 
 Processing can be started at a given step using the `--start` option and stopped using `--stop` option. The `--dostep` option execute only one processing step. Examples:
 ```
-  minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  download     
-  minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  dem          
-  minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  jobfiles 
-  minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  ifgram 
+  minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  download
+  minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  dem
+  minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  jobfiles
+  minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  ifgram
   minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  mintpy
  (minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  insarmaps   # currently switched off because of disk space limitations)
  (minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  upload      # currently switched off)
-  minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  miaplpy        
+  minsarApp.bash $SAMPLESDIR/unittestGalapagosSenDT128.template --dostep  miaplpy
 ```
 In order to use either `--start` or `--dostep`, it is necessary that the previous step was completed.
 
@@ -56,7 +57,7 @@ In order to use either `--start` or `--dostep`, it is necessary that the previou
 
 - **mintpy:**    submits `smallbaseline_wrapper.job` to SLURM.
 
-- **miaplpy:**    submits  `miaplpyApp.py $SAMPLESDIR/unittestGalapagosSenDT128.template  --dir miaplpy --jobfiles` to SLURM via the `srun` command. Creates  
+- **miaplpy:**    submits  `miaplpyApp.py $SAMPLESDIR/unittestGalapagosSenDT128.template  --dir miaplpy --jobfiles` to SLURM via the `srun` command. Creates
 
 - **insarmaps:**  submits   `insarmaps.job` to slurm, which runs `ingest_insarmaps.py $SAMPLESDIR/unittestGalapagosSenDT128.template` to create `run_insarmaps` containing the two commands required fro ingesting.
 
