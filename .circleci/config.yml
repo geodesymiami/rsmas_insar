@@ -1,0 +1,64 @@
+version: 2.1
+jobs:
+  unit-n-workflow-tests:
+    docker:
+      - image: cimg/base:current
+        environment:
+          CONDA_PREFIX: /root/tools/miniforge
+          MINTPY_HOME: /root/tools/MintPy
+        user: root
+    working_directory: /root/tools/MintPy
+    resource_class: large
+
+    steps:
+      - checkout
+      - run:
+          name: Setting Up Environment with Miniforge
+          command: |
+            apt update
+            apt-get update --yes && apt-get upgrade --yes
+            apt-get install --yes git wget
+            # install miniforge
+            mkdir -p ${HOME}/tools
+            cd ${HOME}/tools
+            wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
+            bash Miniforge3-Linux-x86_64.sh -b -p ${HOME}/tools/miniforge
+            ${HOME}/tools/miniforge/bin/mamba init bash
+            # modify/export env var PATH to BASH_ENV to be shared across run steps
+            echo 'export PATH=${CONDA_PREFIX}/bin:${PATH}' >> ${BASH_ENV}
+
+      - run:
+          name: Installing MintPy
+          no_output_timeout: 30m
+          command: |
+            export PYTHONUNBUFFERED=1
+            # install dependencies and source code
+            # pin gdal version as "<=3.8" because:
+            # 1) gdal-3.9 could not read the GMT-6 *.grd file properly
+            # 2) gdal-3.9 could not be imported in circle CI (https://github.com/insarlab/MintPy/issues/1220)
+            mamba install --verbose --yes --file ${MINTPY_HOME}/requirements.txt gdal"<=3.8"
+            python -m pip install ${MINTPY_HOME}
+            # test installation
+            smallbaselineApp.py -h
+            tropo_pyaps3.py -h
+            solid_earth_tides.py -h
+
+      - run:
+          name: Unit Test
+          command: |
+            ${MINTPY_HOME}/tests/objects/euler_pole.py
+            ${MINTPY_HOME}/tests/objects/ionex.py
+            ${MINTPY_HOME}/tests/asc_desc2horz_vert.py
+            ${MINTPY_HOME}/tests/dem_error.py
+
+      - run:
+          name: Integration Test 1 - FernandinaSenDT128 (ISCE2/topsStack)
+          command: |
+            mkdir -p ${HOME}/data
+            ${MINTPY_HOME}/tests/smallbaselineApp.py --dir ${HOME}/data --dset FernandinaSenDT128
+
+workflows:
+  version: 2
+  unit-n-workflow-tests:
+    jobs:
+      - unit-n-workflow-tests
