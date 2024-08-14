@@ -17,8 +17,9 @@ jobs:
             bash Miniforge3-Linux-x86_64.sh -b -p ${RSMASINSAR_HOME}/tools/miniforge
             ${RSMASINSAR_HOME}/tools/miniforge/bin/mamba init bash
             echo 'export PATH=${CONDA_PREFIX}/bin:${PATH}' >> ${BASH_ENV}
-            source platforms_defaults.bash;
-            source environment.bash;
+            pwd
+            source ${RSMASINSAR_HOME}/platforms_defaults.bash;
+            source ${RSMASINSAR_HOME}/environment.bash;
             minsarApp.bash --help
 
       - run:
