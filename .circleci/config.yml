@@ -26,7 +26,6 @@ jobs:
             source platforms_defaults.bash
             source environment.bash
             minsarApp.bash --help
-            ls qqq
 
       - run:
           name: Download Dem
