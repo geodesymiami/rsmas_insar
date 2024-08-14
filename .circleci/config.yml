@@ -12,7 +12,8 @@ jobs:
             export RSMASINSAR_HOME=${CIRCLE_WORKING_DIRECTORY}
             export CONDA_PREFIX=${RSMASINSAR_HOME}/tools/miniforge
 
-            git clone git@github.com:scottstanie/sardem tools/sardem
+
+            git clone https://github.com/scottstanie/sardem.git tools/sardem
 
             cd setup
             miniconda_version=Miniconda3-latest-Linux-x86_64.sh
