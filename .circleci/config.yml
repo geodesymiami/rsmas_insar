@@ -3,13 +3,6 @@ jobs:
   rsmas-insar-testing:
     machine:
       image: ubuntu-2004:202010-01
-      environment:
-          CONDA_PREFIX: /root/rsmas_insar/tools/miniforge
-          RSMASINSAR_HOME: /root/rsmas_insar
-      user: root
-
-    working_directory: /root/tools/MintPy
-    resource_class: large
 
     steps:
       - checkout
@@ -19,6 +12,9 @@ jobs:
             apt update
             apt-get update --yes && apt-get upgrade --yes
             apt-get install --yes git wget
+
+            export RSMASINSAR_HOME=/root/rsmas_insar
+            export CONDA_PREFIX=${RSMASINSAR_HOME}/tools/miniforge
 
             cd rsmas_insar/setup
             wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
