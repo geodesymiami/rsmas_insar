@@ -71,7 +71,7 @@ def main(iargs=None):
         input_arguments = sys.argv[1::]
 
     message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
-    
+
     dem_dir = os.path.join(inps.work_dir, 'DEM')
     if not exist_valid_dem_dir(dem_dir):
         os.mkdir(dem_dir)
@@ -81,9 +81,12 @@ def main(iargs=None):
     except:
        inps.slc_dir = os.path.join(inps.work_dir, 'SLC')
 
+    print('QQK1', inps.slc_dir)
+
     # 10/21: inps.template['topsStack.slcDir'] may contain ./SLC  (it would be better to change where topsStack.slcDir is assigned)
     if '.' in inps.slc_dir:
        inps.slc_dir = inps.slc_dir.replace(".",os.getcwd())
+    print('QQK2', inps.slc_dir)
 
     ## 7/2024: using inps.template.values() to avoid using  dataset_template=Template(inps.custom_template_file). Previous code:
     # dataset_template = Template(inps.custom_template_file)
@@ -94,7 +97,7 @@ def main(iargs=None):
     #   inps.slc_dir = inps.slc_dir.replace('SLC','RAW_data')
     # if 'TSX' in inps.ssaraopt:
     #   inps.slc_dir = inps.slc_dir.replace('SLC','SLC_ORIG')
-      
+
     values = inps.template.values()
     if any("COSMO-SKYMED" in str(value).upper() for value in values):
        inps.slc_dir = inps.slc_dir.replace('SLC','RAW_data')
@@ -109,7 +112,7 @@ def main(iargs=None):
     try:
        ssara_kml_file=sorted( glob.glob(inps.slc_dir + '/ssara_search_*.kml') )[-1]
     except:
-       # FA 7/2024: If there is no kml it should rerun generate_download_command 
+       # FA 7/2024: If there is no kml it should rerun generate_download_command
        # and then a ssara command to get the kml file
        # generate_download_command.main([inps.custom_template_file])
        raise FileExistsError('No SLC/ssara_search_*.kml found')
@@ -136,11 +139,11 @@ def main(iargs=None):
     east = math.ceil(float(east) + 0.5)
 
     # demBbox = str(int(south)) + ' ' + str(int(north)) + ' ' + str(int(west)) + ' ' + str(int(east))
-    # 
+    #
     # command = 'dem.py -a stitch --filling --filling_value 0 -b ' + demBbox + ' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
-    # 
+    #
     # message_rsmas.log(os.getcwd(), command)
-    # 
+    #
     # try:
     #     #FA 8/2024: dem.main()  did not work, because it does not accept an argument list (I think).
     #     proc = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True,
@@ -165,11 +168,11 @@ def main(iargs=None):
 
     command = f"sardem --bbox {int(west)} {int(south)} {int(east)}  {int(north)} --data COP --make-isce-xml --output_name {output_name}"
     message_rsmas.log(os.getcwd(), command)
-    
+
     try:
         sardem.dem.main(bbox=bbox_LeftBottomRightTop, data_source="COP", make_isce_xml=True, output_name=output_name)
     except KeyboardInterrupt:
-        raise   
+        raise
     except Exception as e:
         print(f"ERROR message: {e}")
 
