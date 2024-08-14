@@ -18,8 +18,8 @@ jobs:
             ${RSMASINSAR_HOME}/tools/miniforge/bin/mamba init bash
             echo 'export PATH=${CONDA_PREFIX}/bin:${PATH}' >> ${BASH_ENV}
             pwd
-            source ${RSMASINSAR_HOME}/platforms_defaults.bash;
-            source ${RSMASINSAR_HOME}/environment.bash;
+            source ${RSMASINSAR_HOME}/setup/platforms_defaults.bash;
+            source ${RSMASINSAR_HOME}/setup/environment.bash;
             minsarApp.bash --help
 
       - run:
