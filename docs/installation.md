@@ -60,7 +60,7 @@ chmod 755 $miniconda_version
 bash ./$miniconda_version -b -p ../tools/miniconda3
 
 ### Source the environment  #################
-source ~/accounts/platforms_defaults.bash;
+source ./platforms_defaults.bash;
 export RSMASINSAR_HOME=$(dirname $PWD)
 source environment.bash;
 
