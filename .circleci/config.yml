@@ -41,6 +41,7 @@ jobs:
             pip install -r tools/sardem/requirements.txt
             pip install -e tools/sardem
 
+            export SCRATCHDIR=${RSMASINSAR_HOME}
             wget http://149.165.154.65/data/circleci/ci_minsarApp_dem.tar
             tar xvf ci_minsarApp_dem.tar
             pwd
