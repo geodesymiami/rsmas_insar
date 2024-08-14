@@ -14,7 +14,7 @@ jobs:
 
 
             git clone https://github.com/scottstanie/sardem.git tools/sardem
-            git clone https://github.com:insarlab/MintPy.git tools/MintPy ;
+            git clone https://github.com:insarlab/MintPy.git tools/MintPy
 
             wget http://149.165.154.65/data/circleci/ci_minsarApp_dem.tar
             tar xvf ci_minsarApp_dem.tar
