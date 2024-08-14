@@ -13,10 +13,13 @@ jobs:
             export RSMASINSAR_HOME=${CIRCLE_WORKING_DIRECTORY}
             export CONDA_PREFIX=${RSMASINSAR_HOME}/tools/miniforge
             cd setup
-            wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
-            bash Miniforge3-Linux-x86_64.sh -b -p ${RSMASINSAR_HOME}/tools/miniforge
-            ${RSMASINSAR_HOME}/tools/miniforge/bin/mamba init bash
-            echo 'export PATH=${CONDA_PREFIX}/bin:${PATH}' >> ${BASH_ENV}
+
+            miniconda_version=Miniconda3-latest-Linux-x86_64.sh
+            if [ "$(uname)" == "Darwin" ]; then miniconda_version=Miniconda3-latest-MacOSX-arm64.sh ; fi
+            wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate -O $miniconda_version #; if ($? != 0) exit;
+            chmod 755 $miniconda_version
+            bash ./$miniconda_version -b -p ../tools/miniconda3
+
             source platforms_defaults.bash
             source environment.bash
             minsarApp.bash --help
