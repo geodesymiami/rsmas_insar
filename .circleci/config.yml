@@ -19,9 +19,8 @@ jobs:
             echo 'export PATH=${CONDA_PREFIX}/bin:${PATH}' >> ${BASH_ENV}
             pwd
             ls
-            le setup
-            source platforms_defaults.bash;
-            source environment.bash;
+            source platforms_defaults.bash
+            source environment.bash
             minsarApp.bash --help
 
       - run:
