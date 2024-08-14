@@ -44,7 +44,8 @@ jobs:
             export SCRATCHDIR=${RSMASINSAR_HOME}
             wget http://149.165.154.65/data/circleci/ci_minsarApp_dem.tar
             tar xvf ci_minsarApp_dem.tar
-
+            ls unittestGalapagosSenDT128
+            cd unittestGalapagosSenDT128
             dem_rsmas.py /home/circleci/project/samples/unittestGalapagosSenDT128.template --ssara_kml
             minsarApp.bash ${RSMASINSAR_HOME}/samples/unittestGalapagosSenDT128.template --dostep dem
 
