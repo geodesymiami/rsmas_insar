@@ -9,7 +9,8 @@ jobs:
       - run:
           name: Set up Enviornment
           command: |
-            export RSMASINSAR_HOME=${HOME}/rsmas_insar
+            pwd
+            export RSMASINSAR_HOME=rsmas_insar
             export CONDA_PREFIX=${RSMASINSAR_HOME}/tools/miniforge
             cd setup
             wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
