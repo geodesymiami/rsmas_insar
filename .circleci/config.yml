@@ -9,11 +9,12 @@ jobs:
       - run:
           name: Set up Enviornment
           command: |
-            pwd
             export RSMASINSAR_HOME=${CIRCLE_WORKING_DIRECTORY}
             export CONDA_PREFIX=${RSMASINSAR_HOME}/tools/miniforge
-            cd setup
 
+            git clone git@github.com:scottstanie/sardem tools/sardem
+
+            cd setup
             miniconda_version=Miniconda3-latest-Linux-x86_64.sh
             if [ "$(uname)" == "Darwin" ]; then miniconda_version=Miniconda3-latest-MacOSX-arm64.sh ; fi
             wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate -O $miniconda_version #; if ($? != 0) exit;
@@ -27,12 +28,12 @@ jobs:
       - run:
           name: Download Dem
           command: |
-            pwd
             export RSMASINSAR_HOME=${CIRCLE_WORKING_DIRECTORY}
             source setup/platforms_defaults.bash
             source setup/environment.bash
-            pwd
+
             minsarApp.bash ${RSMASINSAR_HOME}/samples/unittestGalapagosSenDT128.template --dostep dem
+
 
 workflows:
   version: 2
