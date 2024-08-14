@@ -26,7 +26,8 @@ jobs:
       - run:
           name: Download Dem
           command: |
-            minsarApp.bash /work2/05861/tg851601/stampede2/code/rsmas_insar/samples/unittestGalapagosSenDT128.template --dostep dem
+            minsarApp.bash --help
+            minsarApp.bash ${RSMASINSAR_HONME}/samples/unittestGalapagosSenDT128.template --dostep dem
 
 workflows:
   version: 2
