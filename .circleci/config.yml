@@ -15,6 +15,9 @@ jobs:
 
             git clone https://github.com/scottstanie/sardem.git tools/sardem
 
+            wget http://149.165.154.65/data/circleci/ci_minsarApp_dem.tar
+            tar xvf ci_minsarApp_dem.tar
+
             cd setup
             miniconda_version=Miniconda3-latest-Linux-x86_64.sh
             if [ "$(uname)" == "Darwin" ]; then miniconda_version=Miniconda3-latest-MacOSX-arm64.sh ; fi
