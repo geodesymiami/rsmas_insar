@@ -45,6 +45,7 @@ jobs:
             wget http://149.165.154.65/data/circleci/ci_minsarApp_dem.tar
             tar xvf ci_minsarApp_dem.tar
             ls unittestGalapagosSenDT128
+            cd unittestGalapagosSenDT128
             dem_rsmas.py  ${RSMASINSAR_HOME}/samples/circleci/unittestGalapagosSenDT128.template --ssara_kml
             # minsarApp.bash ${RSMASINSAR_HOME}/samples/unittestGalapagosSenDT128.template --dostep dem
 
