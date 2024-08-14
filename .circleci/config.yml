@@ -25,9 +25,9 @@ jobs:
 
 
             pip install -r minsar/requirements.txt
-            pip install -e tools/MintPy
-            pip install -r tools/sardem/requirements.txt
-            pip install -e tools/sardem
+            pip install -e ../tools/MintPy
+            pip install -r ../tools/sardem/requirements.txt
+            pip install -e ../tools/sardem
 
             source platforms_defaults.bash
             source environment.bash
