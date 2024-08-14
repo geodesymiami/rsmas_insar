@@ -16,15 +16,18 @@ jobs:
             git clone https://github.com/scottstanie/sardem.git tools/sardem
             git clone https://github.com/insarlab/MintPy.git tools/MintPy
 
-            wget http://149.165.154.65/data/circleci/ci_minsarApp_dem.tar
-            tar xvf ci_minsarApp_dem.tar
-
             cd setup
             miniconda_version=Miniconda3-latest-Linux-x86_64.sh
             if [ "$(uname)" == "Darwin" ]; then miniconda_version=Miniconda3-latest-MacOSX-arm64.sh ; fi
             wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate -O $miniconda_version #; if ($? != 0) exit;
             chmod 755 $miniconda_version
             bash ./$miniconda_version -b -p ../tools/miniconda3
+
+
+            pip install -r minsar/requirements.txt
+            pip install -e tools/MintPy
+            pip install -r tools/sardem/requirements.txt
+            pip install -e tools/sardem
 
             source platforms_defaults.bash
             source environment.bash
@@ -37,10 +40,12 @@ jobs:
             source setup/platforms_defaults.bash
             source setup/environment.bash
 
-            pip install -r minsar/requirements.txt
-            pip install -e tools/MintPy
-            pip install -r tools/sardem/requirements.txt
-            pip install -e tools/sardem
+            wget http://149.165.154.65/data/circleci/ci_minsarApp_dem.tar
+            tar xvf ci_minsarApp_dem.tar
+            pwd
+            ls
+            ls SLC
+
 
             dem_rsmas.py /home/circleci/project/samples/unittestGalapagosSenDT128.template --ssara_kml
             minsarApp.bash ${RSMASINSAR_HOME}/samples/unittestGalapagosSenDT128.template --dostep dem
