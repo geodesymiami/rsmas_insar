@@ -31,7 +31,8 @@ jobs:
             export RSMASINSAR_HOME=${CIRCLE_WORKING_DIRECTORY}
             source setup/platforms_defaults.bash
             source setup/environment.bash
-            minsarApp.bash samples/unittestGalapagosSenDT128.template --dostep dem
+            pwd
+            minsarApp.bash ${RSMASINSAR_HOME}/samples/unittestGalapagosSenDT128.template --dostep dem
 
 workflows:
   version: 2
