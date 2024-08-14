@@ -112,7 +112,9 @@ echo $network_type
 ##################################################################################
 ##################################################################################
 ##################################################################################
-source $RSMASINSAR_HOME/minsar/utils/minsar_functions.bash
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/utils/minsar_functions.bash"
 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 helptext="                                                                       \n\
@@ -497,14 +499,15 @@ echo "    $download_flag     $dem_flag      $jobfiles_flag       $ifgram_flag   
 #############################################################
 # check weather python can load matplotlib.pyplot which occasionaly does not work for unknown reasons
 
-sleep 10
-echo Testing ... python -c \"import matplotlib.pyplot\" using check_matplotlib_pyplot
-check_matplotlib_pyplot;
-exit_status="$?"
-if [[ $exit_status -ne 0 ]]; then
-   echo "Exit code ($exit_status). Exiting."
-   exit 1;
-fi
+sleep 2
+# echo Testing ... python -c \"import matplotlib.pyplot\" using check_matplotlib_pyplot
+# check_matplotlib_pyplot;
+# exit_status="$?"
+# if [[ $exit_status -ne 0 ]]; then
+#    echo "Exit code ($exit_status). Exiting."
+#    exit 1;
+# fi
+
 #############################################################
 # check weather newest miniconda3.tar, minsar.tar,  S1orbits.tar and S1orbits exist on $SCRATCHDIR (might be purged) (partly only needed for --tmp)
 # code_dir from RSMASINSAR_HOME directory is prepended to distingiush different minsar.tar versions
