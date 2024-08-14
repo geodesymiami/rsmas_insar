@@ -9,9 +9,6 @@ jobs:
       - run:
           name: Set up Enviornment
           command: |
-            apt update
-            apt-get update --yes && apt-get upgrade --yes
-            apt-get install --yes git wget
             export RSMASINSAR_HOME=/root/rsmas_insar
             export CONDA_PREFIX=${RSMASINSAR_HOME}/tools/miniforge
             cd rsmas_insar/setup
