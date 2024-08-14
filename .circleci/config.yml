@@ -40,4 +40,4 @@ workflows:
   version: 2
   testing:
     jobs:
-      - rsmas-insar-testing:
+      - rsmas-insar-testing
