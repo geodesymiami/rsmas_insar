@@ -14,6 +14,7 @@ jobs:
 
 
             git clone https://github.com/scottstanie/sardem.git tools/sardem
+            git clone https://github.com:insarlab/MintPy.git tools/MintPy ;
 
             wget http://149.165.154.65/data/circleci/ci_minsarApp_dem.tar
             tar xvf ci_minsarApp_dem.tar
@@ -37,6 +38,7 @@ jobs:
             source setup/environment.bash
 
             pip install -r minsar/requirements.txt
+            pip install -e tools/MintPy
             pip install -r tools/sardem/requirements.txt
             pip install -e tools/sardem
 
