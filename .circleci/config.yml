@@ -36,9 +36,9 @@ jobs:
             source setup/platforms_defaults.bash
             source setup/environment.bash
 
-            pip install -r ../minsar/requirements.txt
-            pip install -r ../tools/sardem/requirements.txt
-            pip install -e ../tools/sardem
+            pip install -r minsar/requirements.txt
+            pip install -r tools/sardem/requirements.txt
+            pip install -e tools/sardem
 
             dem_rsmas.py /home/circleci/project/samples/unittestGalapagosSenDT128.template --ssara_kml
             minsarApp.bash ${RSMASINSAR_HOME}/samples/unittestGalapagosSenDT128.template --dostep dem
