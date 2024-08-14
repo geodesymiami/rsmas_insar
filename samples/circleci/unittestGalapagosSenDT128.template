@@ -1,0 +1,54 @@
+#####################################################
+# If  the data are in $TESTDATA_ISCE, run using
+# minsarApp.bash /work2/05861/tg851601/stampede2/code/rsmas_insar/samples/unittestGalapagosSenDT128.template --miaplpy --start dem
+######################################################
+cleanopt                        = 0   # [ 0 / 1 / 2 / 3 / 4]   0,1: none 2: keep merged,geom_master,SLC 3: keep MINTPY 4: everything
+ssaraopt.platform               = SENTINEL-1A,SENTINEL-1B
+ssaraopt.relativeOrbit          = 128
+ssaraopt.startDate              = 20160601
+ssaraopt.endDate                = 20160831
+minsar.upload_flag              = False      # [True / False / auto ], upload to jetstream (Default: True)
+minsar.insarmaps_flag           = False     # [True / False / auto ], ingest into insarmaps (Default: False)
+minsar.insarmaps_dataset        = DS       # [PS,DS,PSDS,geo,all], miaplpy dataset to ingest (Default: geo) (MintPy is always geo)
+
+######################################################
+
+topsStack.boundingBox           = -1 -0.6 -91.9 -90.7      # -1 0.15 -91.9 -90.6
+topsStack.boundingBox           = -0.81 -0.80 -90.9 -90.86    # -1 0.15 -91.9 -90.6
+topsStack.subswath              = 1    # '1 2'
+topsStack.numConnections        = 3    # comment
+topsStack.azimuthLooks          = 5    # comment
+topsStack.rangeLooks            = 15   # comment
+topsStack.filtStrength          = 0.2  # comment
+topsStack.unwMethod             = snaphu  # comment
+topsStack.coregistration        = geometry  # [NESD geometry], auto for NESD
+
+######################################################
+
+mintpy.compute.cluster           = local #[local / slurm / pbs / lsf / none], auto for none, cluster type
+mintpy.compute.numWorker         = 6 #[int > 1 / all], auto for 4 (local) or 40 (non-local), num of workers
+mintpy.reference.lalo            = auto # -0.82,-91.14     # S of SN
+mintpy.networkInversion.parallel = yes  #[yes / no], auto for no, parallel processing using dask
+mintpy.troposphericDelay.method  = no    # pyaps  #[pyaps / height_correlation / base_trop_cor / no], auto for pyaps
+mintpy.save.hdfEos5              = yes   #[yes / update / no], auto for no, save timeseries to UNAVCO InSAR Archive format
+mintpy.save.hdfEos5.update       = yes   #[yes / no], auto for no, put XXXXXXXX as endDate in output filename
+mintpy.save.hdfEos5.subset       = yes   #[yes / no], auto for no, put XXXXXXXX as endDate in output filename
+mintpy.save.kmz                  = yes  #[yes / no], auto for yes, save geocoded velocity to Google Earth KMZ file
+mintpy.load.autoPath             = yes
+mintpy.subset.lalo               = -0.86:-0.81,-91.19:-91.13    #[31.5:32.5,130.5:131.0 / no], auto for no
+
+######################################################
+
+miaplpy.load.processor               = isce  
+miaplpy.load.autoPath                = yes
+miaplpy.multiprocessing.numProcessor = 40
+miaplpy.subset.lalo                  = -0.86:-0.81,-91.19:-91.13    #[31.5:32.5,130.5:131.0 / no], auto for no
+miaplpy.interferograms.networkType   = single_reference     # [single_reference, sequential, combine, list] default: single_reference
+minsar.miaplpyDir.addition           = SN              #[name / lalo / no ]  auto for no (miaply_$name_startDate_endDate)) 
+minsar.insarmaps_dataset             = DS
+
+mintpy.networkInversion.minTempCoh   = 0.6     # auto for 0.5
+miaplpy.timeseries.minTempCoh        = 0.6     # auto for 0.5
+minsar.insarmaps_flag                = False
+minsar.upload_flag                   = True
+minsar.insarmaps_dataset             = DS
