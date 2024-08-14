@@ -116,7 +116,7 @@ cp ../tools/isce2/contrib/demUtils/demstitcher/DemStitcher.py  ../tools/minicond
 ### Create orbits and aux directories
 mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 
-echo "Installation DONE "
+echo "Installation DONE"
 ```
 
 ---
