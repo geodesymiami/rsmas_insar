@@ -48,7 +48,6 @@ jobs:
             ls
             ls SLC
 
-
             dem_rsmas.py /home/circleci/project/samples/unittestGalapagosSenDT128.template --ssara_kml
             minsarApp.bash ${RSMASINSAR_HOME}/samples/unittestGalapagosSenDT128.template --dostep dem
 
