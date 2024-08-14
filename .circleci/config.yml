@@ -47,7 +47,7 @@ jobs:
             ls unittestGalapagosSenDT128
             cd unittestGalapagosSenDT128
             dem_rsmas.py  ${RSMASINSAR_HOME}/samples/circleci/unittestGalapagosSenDT128.template --ssara_kml
-            # minsarApp.bash ${RSMASINSAR_HOME}/samples/unittestGalapagosSenDT128.template --dostep dem
+            minsarApp.bash ${RSMASINSAR_HOME}/samples/circleci/unittestGalapagosSenDT128.template --dostep dem
 
 
 workflows:
