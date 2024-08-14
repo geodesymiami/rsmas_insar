@@ -17,8 +17,6 @@ jobs:
             bash Miniforge3-Linux-x86_64.sh -b -p ${RSMASINSAR_HOME}/tools/miniforge
             ${RSMASINSAR_HOME}/tools/miniforge/bin/mamba init bash
             echo 'export PATH=${CONDA_PREFIX}/bin:${PATH}' >> ${BASH_ENV}
-            pwd
-            ls
             source platforms_defaults.bash
             source environment.bash
             minsarApp.bash --help
@@ -26,8 +24,10 @@ jobs:
       - run:
           name: Download Dem
           command: |
-            minsarApp.bash --help
-            minsarApp.bash ${RSMASINSAR_HONME}/samples/unittestGalapagosSenDT128.template --dostep dem
+            pwd
+            source setup/platforms_defaults.bash
+            source setup/environment.bash
+            minsarApp.bash samples/unittestGalapagosSenDT128.template --dostep dem
 
 workflows:
   version: 2
