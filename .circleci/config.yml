@@ -23,8 +23,6 @@ jobs:
             chmod 755 $miniconda_version
             bash ./$miniconda_version -b -p ../tools/miniconda3
 
-
-
             source platforms_defaults.bash
             source environment.bash
             minsarApp.bash --help
@@ -44,7 +42,7 @@ jobs:
             export SCRATCHDIR=${RSMASINSAR_HOME}
             wget http://149.165.154.65/data/circleci/ci_minsarApp_dem.tar
             tar xvf ci_minsarApp_dem.tar
-            ls unittestGalapagosSenDT128
+
             cd unittestGalapagosSenDT128
             dem_rsmas.py  ${RSMASINSAR_HOME}/samples/circleci/unittestGalapagosSenDT128.template --ssara_kml
             minsarApp.bash ${RSMASINSAR_HOME}/samples/circleci/unittestGalapagosSenDT128.template --dostep dem
