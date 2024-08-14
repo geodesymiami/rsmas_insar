@@ -1,4 +1,5 @@
 # MinSAR dependencies  (georaster is for view_scatterplot)
+numpy
 opencv-python
 #imageMagick
 jupyter
