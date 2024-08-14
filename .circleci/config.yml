@@ -1,6 +1,6 @@
 version: 2.1
 jobs:
-  rsmas_insar testing:
+  rsmas-insar-testing:
     machine:
       image: ubuntu-2004:202010-01
       environment:
@@ -32,9 +32,12 @@ jobs:
             minsarApp.bash --help
 
       - run:
-          name: download dem
+          name: Download Dem
           command: |
             minsarApp.bash /work2/05861/tg851601/stampede2/code/rsmas_insar/samples/unittestGalapagosSenDT128.template --dostep dem
 
 workflows:
   version: 2
+  testing:
+    jobs:
+      - rsmas-insar-testing:
