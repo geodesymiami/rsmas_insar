@@ -122,8 +122,8 @@ echo "Installation DONE"
 ```
 cd $SCRRATCHDIR
 wget http://149.165.154.65/data/circleci/ci_small_unittestGalapagosSenDT128.tar
-tar xvf ci_unittestGalapagosSenDT128.tar
-minsarApp.bash $SAMPLESDIR/circleci/unittestGalapagosSenDT128.template --start dem
+tar xvf ci_small_unittestGalapagosSenDT128.tar
+minsarApp.bash $SAMPLESDIR/circleci/ci_unittestGalapagosSenDT128.template --start dem
 ```
 
 ### #Orbits and aux files
