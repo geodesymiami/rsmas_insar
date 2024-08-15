@@ -46,10 +46,6 @@ git clone git@github.com:geodesymiami/precip_web tools/Precip_web
 git clone git@github.com:geodesymiami/precip_cron tools/Precip_cron
 git clone git@github.com:scottstanie/sardem tools/sardem
 
-
-### Install credential files ###############
-./setup/install_credential_files.bash;
-
 ### Install python #########################
 cd setup
 rm -rf ../tools/miniconda3
@@ -58,11 +54,6 @@ if [ "$(uname)" == "Darwin" ]; then miniconda_version=Miniconda3-latest-MacOSX-a
 wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate -O $miniconda_version #; if ($? != 0) exit; 
 chmod 755 $miniconda_version
 bash ./$miniconda_version -b -p ../tools/miniconda3
-
-### Source the environment  #################
-source ./platforms_defaults.bash;
-export RSMASINSAR_HOME=$(dirname $PWD)
-source environment.bash;
 
 ### Install c-dependencies (isce fails on Mac) ###
 conda install conda-libmamba-solver --yes
@@ -82,6 +73,14 @@ pip install -e ../tools/sardem
 
 ###  Reduce miniconda3 directory size #################
 rm -rf ../tools/miniconda3/pkgs
+
+### Source the environment  #################
+source ./platforms_defaults.bash;
+export RSMASINSAR_HOME=$(dirname $PWD)
+source environment.bash;
+
+### Install credential files ###############
+./install_credential_files.bash;
 
 ###  Install SNAPHU #################
 wget --no-check-certificate  https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/snaphu-v2.0.5.tar.gz
