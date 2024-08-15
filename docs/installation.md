@@ -57,8 +57,8 @@ bash ./$miniconda_version -b -p ../tools/miniconda3
 
 ### Install c-dependencies (isce fails on Mac) ###
 conda install conda-libmamba-solver --yes
-conda install --file ../minsar/environment.yml --solver libmamba --yes                      # first install c-code
-conda install --file ../tools/insarmaps_scripts/environment.yml --solver libmamba --yes     # first install c-code
+conda install python=3.10 --file ../minsar/environment.yml --solver libmamba --yes -c conda-forge             # first install c-code
+conda install --file ../tools/insarmaps_scripts/environment.yml --solver libmamba --yes -c conda-forge 
 conda install isce2 -c conda-forge  --solver libmamba --yes 
 
 ### Source the environment  #################
@@ -78,8 +78,6 @@ pip install -e ../tools/sardem
 
 ###  Reduce miniconda3 directory size #################
 rm -rf ../tools/miniconda3/pkgs
-
-
 
 ### Install credential files ###############
 ./install_credential_files.bash;
@@ -119,8 +117,12 @@ mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
 
 echo "Installation DONE"
 ```
-
 ---
+### Test your installation
+cd $SCRRATCHDIR
+wget http://149.165.154.65/data/circleci/ci_small_unittestGalapagosSenDT128.tar
+tar xvf ci_small_unittestGalapagosSenDT128.tar
+minsarApp.bash $SAMPLESDIR/circleci/unittestGalapagosSenDT128.template --start dem
 
 ### #Orbits and aux files
 This has created directories for the orbits for Sentinel-1 (`$SENTINEL_ORBITS`), which The can be downloaded using `dloadOrbits.py`. The IPF calibration files (`SENTINEL_AUX`) are downloaded from: https://qc.sentinel1.eo.esa.int/aux_cal/ .
