@@ -61,6 +61,11 @@ conda install --file ../minsar/environment.yml --solver libmamba --yes          
 conda install --file ../tools/insarmaps_scripts/environment.yml --solver libmamba --yes     # first install c-code
 conda install isce2 -c conda-forge  --solver libmamba --yes 
 
+### Source the environment  #################
+source ./platforms_defaults.bash;
+export RSMASINSAR_HOME=$(dirname $PWD)
+source environment.bash;
+
 ### Install python code and dependencies  ########
 pip install -e ../tools/MintPy
 pip install -e ../tools/MiaplPy
@@ -74,10 +79,7 @@ pip install -e ../tools/sardem
 ###  Reduce miniconda3 directory size #################
 rm -rf ../tools/miniconda3/pkgs
 
-### Source the environment  #################
-source ./platforms_defaults.bash;
-export RSMASINSAR_HOME=$(dirname $PWD)
-source environment.bash;
+
 
 ### Install credential files ###############
 ./install_credential_files.bash;
