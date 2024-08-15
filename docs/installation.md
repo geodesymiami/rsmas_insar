@@ -119,10 +119,12 @@ echo "Installation DONE"
 ```
 ---
 ### Test your installation
+```
 cd $SCRRATCHDIR
 wget http://149.165.154.65/data/circleci/ci_small_unittestGalapagosSenDT128.tar
-tar xvf ci_small_unittestGalapagosSenDT128.tar
+tar xvf ci_unittestGalapagosSenDT128.tar
 minsarApp.bash $SAMPLESDIR/circleci/unittestGalapagosSenDT128.template --start dem
+```
 
 ### #Orbits and aux files
 This has created directories for the orbits for Sentinel-1 (`$SENTINEL_ORBITS`), which The can be downloaded using `dloadOrbits.py`. The IPF calibration files (`SENTINEL_AUX`) are downloaded from: https://qc.sentinel1.eo.esa.int/aux_cal/ .
