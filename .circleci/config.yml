@@ -10,6 +10,8 @@ jobs:
           name: Setup SSH
           command: |
             mkdir -p ~/.ssh
+            echo "$DEPLOY_KEY" > ~/.ssh/id_ed25519
+            chmod 600 ~/.ssh/id_ed25519
             ssh-keyscan github.com >> ~/.ssh/known_hosts
       - run:
           name: Set up Enviornment
