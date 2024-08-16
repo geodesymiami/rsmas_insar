@@ -24,7 +24,7 @@ chmod 755 setup/${miniconda_version}
 bash setup/${miniconda_version} -b -p tools/miniconda3
 
 ### Source the environment  #################
-export RSMASINSAR_HOME=$(dirname $PWD)
+export RSMASINSAR_HOME=$PWD
 source setup/platforms_defaults.bash;
 source setup/environment.bash;
 
