@@ -53,10 +53,10 @@ setup/install_credential_files.bash;
 ###  Install SNAPHU #################
 wget --no-check-certificate  https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/snaphu-v2.0.5.tar.gz  -P tools
 tar -xvf tools/snaphu-v2.0.5.tar.gz -C tools
-mv tools/snaphu-v2.0.5 tools/snaphu
-perl -pi -e 's/\/usr\/local/\$(PWD)\/snaphu/g' tools/snaphu/src/Makefile 
+# mv tools/snaphu-v2.0.5 tools/snaphu
+perl -pi -e 's/\/usr\/local/\$(PWD)\/snaphu-v2.0.5/g' tools/snaphu-v2.0.5/src/Makefile 
 cc=tools/miniconda3/bin/cc
-make -C tools/snaphu/src
+make -C tools/snaphu-v2.0.5/src
 # cd  ../tools/snaphu/src; make
 # cd ../../../setup/
 

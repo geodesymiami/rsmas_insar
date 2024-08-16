@@ -26,6 +26,8 @@ python_version=$(echo "python3.$(${RSMASINSAR_HOME}/tools/miniconda3/bin/python 
 export SSARAHOME=${RSMASINSAR_HOME}/tools/SSARA
 export ISCE_HOME=${RSMASINSAR_HOME}/tools/miniconda3/lib/$python_version/site-packages/isce
 export ISCE_STACK=${RSMASINSAR_HOME}/tools/miniconda3/share/isce2
+export MINTPY_HOME=${RSMASINSAR_HOME}/tools/MintPy_falkamelung
+export MINTPY_HOME=/Users/famelung/Downloads/tmp/MintPy
 export MINTPY_HOME=${RSMASINSAR_HOME}/tools/MintPy
 export MIAPLPY_HOME=${RSMASINSAR_HOME}/tools/MiaplPy
 export MIMTPY_HOME=${RSMASINSAR_HOME}/tools/MimtPy
@@ -66,7 +68,7 @@ export LAUNCHER_SCHED=block   ## could be one of: dynamic, interleaved, block
 export PYTHON3DIR=${RSMASINSAR_HOME}/tools/miniconda3
 export CONDA_ENVS_PATH=${PYTHON3DIR}/envs
 export CONDA_PREFIX=${PYTHON3DIR}
-export PROJ_LIB=${PYTHON3DIR}/share/proj
+#export PROJ_LIB=${PYTHON3DIR}/share/proj:${PYTHON3DIR}/lib/python3.??/site-packages/pyproj/proj_dir/share/proj
 export GDAL_DATA=${PYTHON3DIR}/share/gdal
 
 export PYTHONPATH=${PYTHONPATH-""}
@@ -85,7 +87,7 @@ export PYTHONPATH=${PYTHONPATH}:${SARDEM_HOME}
 #export MPLBACKEND='Agg'
 
 ######### Ignore warnings ############
-#export PYTHONWARNINGS="ignore:Unverified HTTPS request"   (FA 6/20: Deprecation and VisibleDepreciation dis not work) 
+#export PYTHONWARNINGS="ignore:Unverified HTTPS request"   (FA 6/20: Deprecation and VisibleDepreciation dis not work)
 export PYTHONWARNINGS="ignore"
 
 #####################################
@@ -102,7 +104,7 @@ export PATH=${PATH}:${PRECIP_HOME}/src/precip/cli
 export PATH=${PATH}:${PRECIP_CRON_HOME}
 export PATH=${PATH}:${MIMTPY_HOME}/mimtpy
 export PATH=${PATH}:${SARVEY_HOME}/sarvey
-export PATH=${PATH}:${RSMASINSAR_HOME}/tools/snaphu/bin
+export PATH=${PATH}:${RSMASINSAR_HOME}/tools/snaphu-v2.0.5/bin
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/insarmaps_scripts
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/autoencoder
 export PATH=${PATH}:${PROJ_LIB}
