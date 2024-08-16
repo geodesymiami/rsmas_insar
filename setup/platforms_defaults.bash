@@ -33,25 +33,6 @@ then
   export JOB_SUBMISSION_SCHEME=singleTask
 fi
 ###############################################
-if [[ ${HOSTNAME} == centos7.bogon105.com ]]
-then
-  export PLATFORM_NAME=beijing_server
-  export JOBSCHEDULER=PBS
-  export QUEUENAME=batch
-  export SCRATCHDIR=/data/rsmasdata/famelung/SCRATCHDIR
-  export TESTDATA_ISCE=/data/rsmasdata/famelung/TESTDATA_ISCE
-fi
-###############################################
-if [[ ${HOSTNAME} == dqcentos7insar ]]
-then
-  export PLATFORM_NAME=deqing_server
-  export JOBSCHEDULER=PBS
-  export QUEUENAME=batch
-  export SCRATCHDIR=/data/${USER}/insarlab/SCRATCHDIR
-  export TESTDATA_ISCE=/data/${USER}/insarlab/TESTDATA_ISCE
-  export JOB_SUBMISSION_SCHEME=singleTask
-fi
-###############################################
 if [[ ${HOSTNAME} == perfectly-elegant-tapir ]]
 then
   export PLATFORM_NAME=jetstream
