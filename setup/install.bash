@@ -20,8 +20,8 @@ rm -rf tools/miniconda3
 miniconda_version=Miniconda3-latest-Linux-x86_64.sh
 if [ "$(uname)" == "Darwin" ]; then miniconda_version=Miniconda3-latest-MacOSX-arm64.sh ; fi
 wget http://repo.continuum.io/miniconda/${miniconda_version} --no-check-certificate -P setup
-chmod 755 ${miniconda_version}
-bash ./${miniconda_version} -b -p tools/miniconda3
+chmod 755 setup/${miniconda_version}
+bash setup/${miniconda_version} -b -p tools/miniconda3
 
 ### Source the environment  #################
 export RSMASINSAR_HOME=$(dirname $PWD)
