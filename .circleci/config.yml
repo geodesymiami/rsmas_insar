@@ -11,10 +11,9 @@ jobs:
           command: |
             pwd
             ls
-            ls rsmas_insar
-            ls rsmas_insar/setup
-            ls rsmas_insar/setup/install.bash
-            ./rsmas_insar/setup/install.bash
+            ls setup
+            ls setup/install.bash
+            ./setup/install.bash
             minsarApp.bash --help
 
       - run:
