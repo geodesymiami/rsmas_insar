@@ -146,11 +146,11 @@ helptext="                                                                      
    --mintpy --miaplpy    use smallbaselineApp.py and miaplpyApp.py               \n\
    --no-mintpy --miaplpy use only miaplpyApp.py                                  \n\
                                                                                  \n\
-   --sleep SECS     sleep seconds before running                                 \n\
+   --no-orbit-download   don't download prior to jobfile creation                \n\
+                                                                                 \n\
+   --sleep SECS           sleep seconds before running                           \n\
    --select_reference     select reference date [default].                       \n\
    --no_select_reference  don't select reference date.                           \n\
-   --download_ECMWF       download from ECMWF during ISCE processing             \n\
-   --no_download_ECMWF    don't download while processing                        \n\
    --chunks         process in form of multiple chunks.                          \n\
    --tmp            copy code and data to local /tmp [default].                  \n\
    --no-tmp         no copying to local /tmp.                                    \n\
@@ -200,6 +200,7 @@ minsarApp_command=$(echo minsarApp.bash $template_print_name ${@:2})
 #Switches
 chunks_flag=0
 jobfiles_flag=1
+orbit_download_flag=1
 select_reference_flag=1
 new_reference_flag=0
 download_ECMWF_flag=1
@@ -271,7 +272,11 @@ do
             upload_flag=0
             shift
             ;;
-	--sleep)
+        --no-orbit-download)
+            orbit_download_flag=0
+            shift
+            ;;
+	    --sleep)
             sleep_time="$2"
             shift
             shift
@@ -326,11 +331,8 @@ if [[ ! -v insarmaps_flag ]]; then
        else
            insarmaps_flag=0
        fi
-       #echo QQ2 Setting insarmaps_flag to: $insarmaps_flag 
    else
-       #echo "QQ2 template[minsar.insarmaps_flag] is no set"
        insarmaps_flag=0
-       #echo QQ2 Setting insarmaps_flag to: $insarmaps_flag 
    fi
 fi
 #echo QQQ insarmaps_flag: $insarmaps_flag 
@@ -496,10 +498,10 @@ echo "Flags for processing steps:"
 echo "download dem jobfiles ifgram mintpy miaplpy upload insarmaps finishup"
 echo "    $download_flag     $dem_flag      $jobfiles_flag       $ifgram_flag       $mintpy_flag      $miaplpy_flag      $upload_flag       $insarmaps_flag        $finishup_flag"
 
+sleep 2
+
 #############################################################
 # check weather python can load matplotlib.pyplot which occasionaly does not work for unknown reasons
-
-sleep 2
 # echo Testing ... python -c \"import matplotlib.pyplot\" using check_matplotlib_pyplot
 # check_matplotlib_pyplot;
 # exit_status="$?"
@@ -508,30 +510,6 @@ sleep 2
 #    exit 1;
 # fi
 
-#############################################################
-# check weather newest miniconda3.tar, minsar.tar,  S1orbits.tar and S1orbits exist on $SCRATCHDIR (might be purged) (partly only needed for --tmp)
-# code_dir from RSMASINSAR_HOME directory is prepended to distingiush different minsar.tar versions
-
-# FA 12/23  remove checking/copying of miniconda3.tar
-#code_dir=$(echo $(basename $(dirname $RSMASINSAR_HOME)))
-#if  ! test -f "$SCRATCHDIR/${code_dir}_miniconda3.tar" || [[ "$RSMASINSAR_HOME/tools/miniconda3.tar" -nt "$SCRATCHDIR/${code_dir}_miniconda3.tar" ]]; then
-#    echo "Copying $RSMASINSAR_HOME/tools/miniconda3.tar to $SCRATCHDIR/${code_dir}_miniconda3.tar ..."
-#    cp $RSMASINSAR_HOME/tools/miniconda3.tar $SCRATCHDIR/${code_dir}_miniconda3.tar
-#fi
-#if  ! test -f "$SCRATCHDIR/${code_dir}_minsar.tar" || [[ "$RSMASINSAR_HOME/minsar.tar" -nt "$SCRATCHDIR/${code_dir}_minsar.tar" ]]; then
-#    echo "Copying $RSMASINSAR_HOME/minsar.tar to $SCRATCHDIR/${code_dir}_minsar.tar ..."
-#    cp $RSMASINSAR_HOME/minsar.tar $SCRATCHDIR/${code_dir}_minsar.tar
-#fi
-
-#if  ! test -f "$SCRATCHDIR/S1orbits.tar" ; then
-#    echo "Copying S1orbits.tar to $SCRATCHDIR ..."
-#    cp $WORKDIR/S1orbits.tar $SCRATCHDIR
-#fi
-#if [ ! "$(ls -A $SCRATCHDIR/S1orbits)" ]; then
-#     echo "SCRATCHDIR/S1orbits is empty. Untarring S1orbits.tar ..."
-#     tar xf $SCRATCHDIR/S1orbits.tar -C $SCRATCHDIR
-#fi
-####################################
 download_dir=$WORK_DIR/SLC
 
 platform_str=$(grep platform $template_file | cut -d'=' -f2)
@@ -693,7 +671,8 @@ fi
 if [[ $jobfiles_flag == "1" ]]; then
 #############################################################
 # download latest orbits from ASF mirror
-    if [[ $template_file == *"Sen"*  ]]; then 
+    
+    if [[ $orbit_download_flag == "1" && $template_file == *"Sen"*  ]]; then 
        echo "Preparing to download latest poe and res orbits from ASF..."
        year=$(date +%Y)
        current_month=$(date +%Y%m)
@@ -703,7 +682,6 @@ if [[ $jobfiles_flag == "1" ]]; then
        curl --ftp-ssl-reqd --silent --use-ascii --ftp-method nocwd --list-only https://s1qc.asf.alaska.edu/aux_poeorb/ > ASF_poeorb.txt
        curl --ftp-ssl-reqd --silent --use-ascii --ftp-method nocwd --list-only https://s1qc.asf.alaska.edu/aux_resorb/ > ASF_resorb.txt
        cat ASF_poeorb.txt | awk '{printf "! test -f %s && wget -c https://s1qc.asf.alaska.edu/aux_poeorb/%s\n", substr($0,10,77), substr($0,10,77)}' | grep $year > ASF_poeorb_latest.txt
-       #cat ASF_resorb.txt | awk '{printf "! test -f %s && wget -c https://s1qc.asf.alaska.edu/aux_resorb/%s\n", substr($0,10,77), substr($0,10,77)}' | grep $year > ASF_resorb_latest.txt
        cat ASF_resorb.txt | awk '{printf "! test -f %s && wget -c https://s1qc.asf.alaska.edu/aux_resorb/%s\n", substr($0,10,77), substr($0,10,77)}' | grep $current_month  >  ASF_resorb_latest.txt
        cat ASF_resorb.txt | awk '{printf "! test -f %s && wget -c https://s1qc.asf.alaska.edu/aux_resorb/%s\n", substr($0,10,77), substr($0,10,77)}' | grep $previous_month >> ASF_resorb_latest.txt
        echo "Downloading poe orbits: running bash ASF_poeorb_latest.txt in orbit directory  $SENTINEL_ORBITS  ..."
@@ -733,15 +711,6 @@ if [[ $jobfiles_flag == "1" ]]; then
        echo "create_jobfile.py exited with a non-zero exit code ($exit_status). Exiting."
        exit 1;
     fi
-
-#    if [[ "$template_file" == *"SenAT"* || "$template_file" == *"SenDT"* ]]; then
-#        # need to use differnt date_list file for CSK
-#        download_ERA5_cmd=`which download_ERA5_data.py`
-#        cmd="$download_ERA5_cmd --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR "
-#        echo " Running.... python $cmd >& out_download_ERA5_data.e &"
-#        python $cmd >& out_download_ERA5_data.e &
-#        echo "$(date +"%Y%m%d:%H-%m") * download_ERA5_data.py --date_list SAFE_files.txt $template_file --weather_dir $WEATHER_DIR " >> "${WORK_DIR}"/log
-#    fi
 
 fi
  
