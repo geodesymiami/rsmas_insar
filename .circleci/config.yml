@@ -7,10 +7,10 @@ jobs:
     steps:
       - checkout
       - run:
-        name: Setup SSH
+          name: Setup SSH
           command: |
-          mkdir -p ~/.ssh
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
+            mkdir -p ~/.ssh
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
       - run:
           name: Set up Enviornment
           command: |
