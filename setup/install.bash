@@ -2,7 +2,7 @@
 set -eo pipefail
 
 if [ "$(uname)" == "Linux" ]; then
-   module purge
+   module purge || true
    export PATH=/bin
 fi
 git clone git@github.com:geodesymiami/rsmas_insar.git ;
