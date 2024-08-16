@@ -41,7 +41,7 @@ jobs:
             tar xvf ci_small_unittestGalapagosSenDT128.tar
 
             cd unittestGalapagosSenDT128
-            minsarApp.bash ${RSMASINSAR_HOME}/samples/circleci/unittestGalapagosSenDT128.template --start dem --stop jobfiles
+            minsarApp.bash ${RSMASINSAR_HOME}/samples/circleci/unittestGalapagosSenDT128.template --no-orbit-download --start dem --stop jobfiles
             
 
 workflows:
