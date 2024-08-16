@@ -25,7 +25,7 @@ jobs:
             
             wget http://149.165.154.65/data/circleci/ci_minsarApp_dem.tar
             tar xvf ci_minsarApp_dem.tar
-            minsarApp.bash ${RSMASINSAR_HOME}/samples/circleci/unittestGalapagosSenDT128.template --dostep dem
+            minsarApp.bash ${RSMASINSAR_HOME}/samples/circleci/ci_unittestGalapagosSenDT128.template --dostep dem
         
       - run:
           name: Process test data
