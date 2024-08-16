@@ -16,7 +16,7 @@ jobs:
             bash -x setup/install.bash
             minsar/minsarApp.bash --help
 
-      - run:
+      - run:    
           name: Download Dem
           command: |
             export RSMASINSAR_HOME=${CIRCLE_WORKING_DIRECTORY}
@@ -30,18 +30,18 @@ jobs:
             minsar/dem_rsmas.py  ${RSMASINSAR_HOME}/samples/circleci/unittestGalapagosSenDT128.template --ssara_kml
             minsar/minsarApp.bash ${RSMASINSAR_HOME}/samples/circleci/unittestGalapagosSenDT128.template --dostep dem
         
-        # - run:
-        #   name: Process test data
-        #   command: |
-        #     export RSMASINSAR_HOME=${CIRCLE_WORKING_DIRECTORY}
-        #     export SCRATCHDIR=${RSMASINSAR_HOME}
-        #     source setup/environment.bash
+      - run:
+          name: Process test data
+          command: |
+            export RSMASINSAR_HOME=${CIRCLE_WORKING_DIRECTORY}
+            export SCRATCHDIR=${RSMASINSAR_HOME}
+            source setup/environment.bash
             
-        #     wget http://149.165.154.65/data/circleci/ci_small_unittestGalapagosSenDT128.tar
-        #     tar xvf ci_small_unittestGalapagosSenDT128.tar
+            wget http://149.165.154.65/data/circleci/ci_small_unittestGalapagosSenDT128.tar
+            tar xvf ci_small_unittestGalapagosSenDT128.tar
 
-        #     cd unittestGalapagosSenDT128
-        #     minsarApp.bash ${RSMASINSAR_HOME}/samples/circleci/unittestGalapagosSenDT128.template --start dem --stop jobfiles
+            cd unittestGalapagosSenDT128
+            minsarApp.bash ${RSMASINSAR_HOME}/samples/circleci/unittestGalapagosSenDT128.template --start dem --stop jobfiles
             
 
 workflows:
