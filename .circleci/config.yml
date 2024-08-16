@@ -12,12 +12,9 @@ jobs:
       - run:
           name: Set up Enviornment
           command: |
-            pwd
-            ls
-            ls setup
-            ls setup/install.bash
-            ./setup/install.bash
-            minsarApp.bash --help
+            echo "Working directory: $PWD"
+            bash -x setup/install.bash
+            minsar/minsarApp.bash --help
 
       - run:
           name: Download Dem
