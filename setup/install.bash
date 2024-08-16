@@ -1,13 +1,6 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-if [ "$(uname)" == "Linux" ]; then
-   command -v module &> /dev/null && module purge
-   export PATH=/bin
-fi
-git clone git@github.com:geodesymiami/rsmas_insar.git ;
-cd rsmas_insar
-
 ########### Clone the required code  #################
 git clone git@github.com:insarlab/MintPy.git tools/MintPy ;
 git clone git@github.com:insarlab/MiaplPy.git tools/MiaplPy ;
@@ -28,7 +21,7 @@ cd setup
 rm -rf ../tools/miniconda3
 miniconda_version=Miniconda3-latest-Linux-x86_64.sh
 if [ "$(uname)" == "Darwin" ]; then miniconda_version=Miniconda3-latest-MacOSX-arm64.sh ; fi
-wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate -O $miniconda_version #; if ($? != 0) exit; 
+wget http://repo.continuum.io/miniconda/$miniconda_version --no-check-certificate -O $miniconda_version #; if ($? != 0) exit;
 chmod 755 $miniconda_version
 bash ./$miniconda_version -b -p ../tools/miniconda3
 
@@ -41,7 +34,7 @@ source environment.bash;
 conda install conda-libmamba-solver --yes
 conda install python=3.10  --file ../minsar/environment.yml --solver libmamba --yes -c conda-forge                     # first install c-code
 conda install --file ../tools/insarmaps_scripts/environment.yml --solver libmamba --yes  -c conda-forge
-conda install isce2 -c conda-forge  --solver libmamba --yes 
+conda install isce2 -c conda-forge  --solver libmamba --yes
 
 ### Install python code and dependencies  ########
 pip install -e ../tools/MintPy
@@ -85,9 +78,9 @@ cp -p ../minsar/additions/isce2/DemStitcher.py ../tools/isce2/contrib/demUtils/d
 
 ### Copying ISCE fixes into miniconda directory ###
 cp -r ../tools/isce2/contrib/stack/* ../tools/miniconda3/share/isce2
-cp -r ../tools/isce2/components/isceobj/Sensor/TOPS ../tools/miniconda3/share/isce2 
+cp -r ../tools/isce2/components/isceobj/Sensor/TOPS ../tools/miniconda3/share/isce2
 cp ../tools/isce2/components/isceobj/Sensor/TOPS/TOPSSwathSLCProduct.py ../tools/miniconda3/lib/python3.?/site-packages/isce/components/isceobj/Sensor/TOPS
-cp ../tools/isce2/contrib/demUtils/demstitcher/DemStitcher.py  ../tools/miniconda3/lib/python3.??/site-packages/isce/components/contrib/demUtils 
+cp ../tools/isce2/contrib/demUtils/demstitcher/DemStitcher.py  ../tools/miniconda3/lib/python3.??/site-packages/isce/components/contrib/demUtils
 
 ### Create orbits and aux directories
 mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
