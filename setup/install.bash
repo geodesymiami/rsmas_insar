@@ -1,34 +1,19 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-########### Clone the required code  #################
-https://github.com/insarlab/MintPy.git tools/MintPy ;
-https://github.com/insarlab/MiaplPy.git tools/MiaplPy ;
-https://github.com/geodesymiami/insarmaps_scripts.git tools/insarmaps_scripts ;
-https://github.com/isce-framework/isce2.git tools/isce2
-https://github.com/geodesymiami/MimtPy.git tools/MimtPy ;
-https://github.com/geodesymiami/geodmod.git tools/geodmod ;
-https://github.com/geodesymiami/SSARA.git tools/SSARA ;
-https://github.com/TACC/launcher.git tools/launcher ;
-https://github.com/geodesymiami/PlotData tools/PlotData
-https://github.com/geodesymiami/precip tools/Precip
-https://github.com/geodesymiami/precip_web tools/Precip_web
-https://github.com/geodesymiami/precip_cron tools/Precip_cron
-https://github.com/scottstanie/sardem tools/sardem
-
-# git clone git@github.com:insarlab/MintPy.git tools/MintPy ;
-# git clone git@github.com:insarlab/MiaplPy.git tools/MiaplPy ;
-# git clone git@github.com:geodesymiami/insarmaps_scripts.git tools/insarmaps_scripts ;
-# git clone git@github.com:isce-framework/isce2.git tools/isce2
-# git clone git@github.com:geodesymiami/MimtPy.git tools/MimtPy ;
-# git clone git@github.com:geodesymiami/geodmod.git tools/geodmod ;
-# git clone git@github.com:geodesymiami/SSARA.git tools/SSARA ;
-# git clone git@github.com:TACC/launcher.git tools/launcher ;
-# git clone git@github.com:geodesymiami/PlotData tools/PlotData
-# git clone git@github.com:geodesymiami/precip tools/Precip
-# git clone git@github.com:geodesymiami/precip_web tools/Precip_web
-# git clone git@github.com:geodesymiami/precip_cron tools/Precip_cron
-# git clone git@github.com:scottstanie/sardem tools/sardem
+git clone git@github.com:insarlab/MintPy.git tools/MintPy ;
+git clone git@github.com:insarlab/MiaplPy.git tools/MiaplPy ;
+git clone git@github.com:geodesymiami/insarmaps_scripts.git tools/insarmaps_scripts ;
+git clone git@github.com:isce-framework/isce2.git tools/isce2
+git clone git@github.com:geodesymiami/MimtPy.git tools/MimtPy ;
+git clone git@github.com:geodesymiami/geodmod.git tools/geodmod ;
+git clone git@github.com:geodesymiami/SSARA.git tools/SSARA ;
+git clone git@github.com:TACC/launcher.git tools/launcher ;
+git clone git@github.com:geodesymiami/PlotData tools/PlotData
+git clone git@github.com:geodesymiami/precip tools/Precip
+git clone git@github.com:geodesymiami/precip_web tools/Precip_web
+git clone git@github.com:geodesymiami/precip_cron tools/Precip_cron
+git clone git@github.com:scottstanie/sardem tools/sardem
 
 ### Install python #########################
 cd setup
