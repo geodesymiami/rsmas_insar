@@ -4,9 +4,11 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 # Setting the environment (don't modify)
 # check for required variables
 [ -z $RSMASINSAR_HOME ] && echo ERROR: RSMASINSAR_HOME is required variable && return
-[ -z $JOBSCHEDULER ] && echo ERROR: JOBSCHEDULER is required variable && return
-[ -z $QUEUENAME ] && echo ERROR: QUEUENAME is required variable && return
 [ -z $SCRATCHDIR ] && echo ERROR: SCRATCHDIR is required variable && return
+
+# set some required variables to NONE if not given
+[ -z $JOBSCHEDULER ] && export JOBSCHEDULE=NONE
+[ -z $QUEUENAME ] && export QUEUENAME=NONE
 
 #  set customizable variables to defaults if not given
 [ -z ${WORKDIR} ] && export WORKDIR=~/insarlab
