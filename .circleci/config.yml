@@ -16,16 +16,16 @@ jobs:
             bash -x setup/install.bash
             minsar/minsarApp.bash --help
 
-      - run:    
-          name: Download Dem
-          command: |
-            export RSMASINSAR_HOME=${CIRCLE_WORKING_DIRECTORY}
-            export SCRATCHDIR=${RSMASINSAR_HOME}
-            source setup/environment.bash
+      # - run:    
+      #     name: Download Dem
+      #     command: |
+      #       export RSMASINSAR_HOME=${CIRCLE_WORKING_DIRECTORY}
+      #       export SCRATCHDIR=${RSMASINSAR_HOME}
+      #       source setup/environment.bash
             
-            wget http://149.165.154.65/data/circleci/ci_minsarApp_dem.tar
-            tar xvf ci_minsarApp_dem.tar
-            minsarApp.bash ${RSMASINSAR_HOME}/samples/circleci/ci_unittestGalapagosSenDT128.template --dostep dem
+      #       wget http://149.165.154.65/data/circleci/ci_minsarApp_dem.tar
+      #       tar xvf ci_minsarApp_dem.tar
+      #       minsarApp.bash ${RSMASINSAR_HOME}/samples/circleci/ci_unittestGalapagosSenDT128.template --dostep dem
         
       - run:
           name: Process test data
