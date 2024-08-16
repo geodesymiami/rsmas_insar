@@ -25,9 +25,6 @@ jobs:
             
             wget http://149.165.154.65/data/circleci/ci_minsarApp_dem.tar
             tar xvf ci_minsarApp_dem.tar
-
-            cd unittestGalapagosSenDT128
-            dem_rsmas.py  ${RSMASINSAR_HOME}/samples/circleci/unittestGalapagosSenDT128.template --ssara_kml
             minsarApp.bash ${RSMASINSAR_HOME}/samples/circleci/unittestGalapagosSenDT128.template --dostep dem
         
       - run:
@@ -39,9 +36,7 @@ jobs:
             
             wget http://149.165.154.65/data/circleci/ci_small_unittestGalapagosSenDT128.tar
             tar xvf ci_small_unittestGalapagosSenDT128.tar
-
-            cd unittestGalapagosSenDT128
-            minsarApp.bash ${RSMASINSAR_HOME}/samples/circleci/unittestGalapagosSenDT128.template --no-orbit-download --start dem --stop jobfiles
+            minsarApp.bash ${RSMASINSAR_HOME}/samples/circleci/ci_unittestGalapagosSenDT128.template --no-orbit-download --start dem --stop jobfiles
             
 
 workflows:
