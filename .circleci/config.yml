@@ -21,7 +21,7 @@ jobs:
           command: |
             export RSMASINSAR_HOME=${CIRCLE_WORKING_DIRECTORY}
             export SCRATCHDIR=${RSMASINSAR_HOME}
-            source setup/enviroment.bash
+            source environment.bash
             
             wget http://149.165.154.65/data/circleci/ci_minsarApp_dem.tar
             tar xvf ci_minsarApp_dem.tar
@@ -29,6 +29,20 @@ jobs:
             cd unittestGalapagosSenDT128
             minsar/dem_rsmas.py  ${RSMASINSAR_HOME}/samples/circleci/unittestGalapagosSenDT128.template --ssara_kml
             minsar/minsarApp.bash ${RSMASINSAR_HOME}/samples/circleci/unittestGalapagosSenDT128.template --dostep dem
+        
+        # - run:
+        #   name: Process test data
+        #   command: |
+        #     export RSMASINSAR_HOME=${CIRCLE_WORKING_DIRECTORY}
+        #     export SCRATCHDIR=${RSMASINSAR_HOME}
+        #     source setup/environment.bash
+            
+        #     wget http://149.165.154.65/data/circleci/ci_minsarApp_dem.tar
+        #     tar xvf ci_minsarApp_dem.tar
+
+        #     cd unittestGalapagosSenDT128
+        #     minsar/dem_rsmas.py  ${RSMASINSAR_HOME}/samples/circleci/unittestGalapagosSenDT128.template --ssara_kml
+        #     minsar/minsarApp.bash ${RSMASINSAR_HOME}/samples/circleci/unittestGalapagosSenDT128.template --dostep dem
 
 workflows:
   version: 2
