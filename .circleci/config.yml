@@ -9,6 +9,8 @@ jobs:
       - run:
           name: Set up Enviornment
           command: |
+            pwd
+            ls rsmas_insar/setup/install.bash
             ./rsmas_insar/setup/install.bash
             minsarApp.bash --help
 
