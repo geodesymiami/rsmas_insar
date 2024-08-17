@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+set -eo pipefail
+set -x
 ##################################################################################
 function create_template_array() {
 mapfile -t array < <(grep -e ^minsar -e ^mintpy -e ^miaplpy $1)
@@ -516,7 +518,9 @@ platform_str=$(grep platform $template_file | cut -d'=' -f2)
 if [[ $platform_str == *"COSMO-SKYMED"* ]]; then
    download_dir=$WORK_DIR/RAW_data
 fi
-collectionName_str=$(grep collectionName $template_file | cut -d'=' -f2)
+collectionName_str=$(${template[collectionName]})
+echo $collectionName_str
+#collectionName_str=$(grep collectionName $template_file || True | cut -d'=' -f2)
 if [[ $collectionName_str == *"TSX"* ]]; then
    download_dir=$WORK_DIR/SLC_ORIG
 fi

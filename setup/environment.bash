@@ -6,11 +6,11 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 [ -z $RSMASINSAR_HOME ] && echo ERROR: RSMASINSAR_HOME is required variable && return
 [ -z $SCRATCHDIR ] && echo ERROR: SCRATCHDIR is required variable && return
 
-# set some required variables to NONE if not given
-[ -z $QUEUENAME ] && export QUEUENAME=NONE
+# set required variables to standard values if not given
+[ -z $JOBSCHEDULER ] && export JOBSCHEDULER=SLURM
+[ -z $QUEUENAME ] && export QUEUENAME=normal
 
 #  set customizable variables to defaults if not given
-[ -z $JOBSCHEDULER ] && export JOBSCHEDULER=SLURM
 [ -z ${WORKDIR} ] && export WORKDIR=~/insarlab
 [ -z ${USER_PREFERRED} ] && export USER_PREFERRED=$USER
 [ -z ${NOTIFICATIONEMAIL} ] && export NOTIFICATIONEMAIL=${USER_PREFERRED}@rsmas.miami.edu
