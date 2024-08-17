@@ -70,7 +70,7 @@ export LAUNCHER_SCHED=block   ## could be one of: dynamic, interleaved, block
 export PYTHON3DIR=${RSMASINSAR_HOME}/tools/miniconda3
 export CONDA_ENVS_PATH=${PYTHON3DIR}/envs
 export CONDA_PREFIX=${PYTHON3DIR}
-#export PROJ_LIB=${PYTHON3DIR}/share/proj:${PYTHON3DIR}/lib/python3.??/site-packages/pyproj/proj_dir/share/proj
+export PROJ_LIB=${PYTHON3DIR}/share/proj:${PYTHON3DIR}/lib/python3.??/site-packages/pyproj/proj_dir/share/proj
 export GDAL_DATA=${PYTHON3DIR}/share/gdal
 
 export PYTHONPATH=${PYTHONPATH-""}
