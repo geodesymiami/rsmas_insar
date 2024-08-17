@@ -1392,15 +1392,16 @@ def set_job_queue_values(args):
                 #    else:
                 #        break
 
-    if platform_name in ['stampede3', 'frontera', 'comet']:
-        scheduler = 'SLURM'
-    elif platform_name in ['pegasus']:
-        scheduler = 'LSF'
-    elif platform_name in ['eos_sanghoon', 'beijing_server', 'deqing_server', 'eos', 'dqcentos7insar']:
-        scheduler = 'PBS'
-    else:
-        scheduler = None
+    scheduler = 'SLURM'
+    platform_name = 'stampede3'
+ 
 
+
+
+
+
+
+  
     def_auto = [None, 16, 1, 1, 16000, 1]
     i = 0
     for key, value in check_auto.items():
