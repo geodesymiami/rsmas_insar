@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -eo pipefail
-##################################################################################
+###################################################################################
 function create_template_array() {
 mapfile -t array < <(grep -e ^minsar -e ^mintpy -e ^miaplpy $1)
 declare -gA template
@@ -891,8 +891,8 @@ echo
 echo "network_dir: <$network_dir>"
 echo
 echo "hdfeos5 files produced:"
-ls -sh mintpy/*he5 2>/dev/null
-ls -sh $network_dir/*he5 2>/dev/null
+if test -f mintpy/*he5; then ls -sh mintpy/*he5; fi 
+if test -f $network_dir/*he5; then ls -sh $network_dir/*he5; fi 
 echo
 echo "Done:  $minsarApp_command" 
 echo
