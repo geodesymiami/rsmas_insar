@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -eo pipefail
-set -x
 ##################################################################################
 function create_template_array() {
 mapfile -t array < <(grep -e ^minsar -e ^mintpy -e ^miaplpy $1)
