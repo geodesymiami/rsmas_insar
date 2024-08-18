@@ -12,21 +12,10 @@ jobs:
       - run:
           name: Set up Enviornment
           command: |
-            echo "Working directory: $PWD"
+            echo "Working directory: ${PWD}"
             bash -x setup/install.bash
             minsar/minsarApp.bash --help
 
-      # - run:    
-      #     name: Download Dem
-      #     command: |
-      #       export RSMASINSAR_HOME=${CIRCLE_WORKING_DIRECTORY}
-      #       export SCRATCHDIR=${RSMASINSAR_HOME}
-      #       source setup/environment.bash
-            
-      #       wget http://149.165.154.65/data/circleci/ci_minsarApp_dem.tar
-      #       tar xvf ci_minsarApp_dem.tar
-      #       minsarApp.bash ${RSMASINSAR_HOME}/samples/circleci/ci_unittestGalapagosSenDT128.template --dostep dem
-        
       - run:
           name: Process test data
           command: |
@@ -34,8 +23,8 @@ jobs:
             source setup/platforms_defaults.bash;
             source setup/environment.bash
 
-            wget -O- http://149.165.154.65/data/circleci/ci_small_unittestGalapagosSenDT128.tar | tar -xvf - -C $SCRATCHDIR
-            wget -O- http://149.165.154.65/data/circleci/S1orbits_unittestGalapagosSenDT128.tar | tar -xvf - -C "$(dirname $SENTINEL_ORBITS)"
+            wget -O- http://149.165.154.65/data/circleci/ci_small_unittestGalapagosSenDT128.tar | tar -xvf - -C ${SCRATCHDIR}
+            wget -O- http://149.165.154.65/data/circleci/S1orbits_unittestGalapagosSenDT128.tar | tar -xvf - -C "$(dirname ${SENTINEL_ORBITS})"
             
             minsarApp.bash ${RSMASINSAR_HOME}/samples/circleci/ci_unittestGalapagosSenDT128.template --no-orbit-download --start dem --stop jobfiles
             
