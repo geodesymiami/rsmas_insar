@@ -31,7 +31,6 @@ jobs:
           name: Process test data
           command: |
             export RSMASINSAR_HOME=${CIRCLE_WORKING_DIRECTORY}
-            export SCRATCHDIR=${RSMASINSAR_HOME}
             source setup/environment.bash
 
             wget -O- http://149.165.154.65/data/circleci/ci_small_unittestGalapagosSenDT128.tar | tar xvf -
