@@ -1329,12 +1329,13 @@ def set_job_queue_values(args):
             submission_scheme = 'launcher_multiTask_singleNode'
     hostname = subprocess.Popen("hostname -f", shell=True, stdout=subprocess.PIPE).stdout.read().decode("utf-8")
 
-    for platform in supported_platforms:
-        if platform in hostname:
-            platform_name = platform
-            break
-        else:
-            platform_name = None
+    platform_name = platform
+    # for platform in supported_platforms:  # FA 8/24 : no need as we only work on known platforms
+    #     if platform in hostname:
+    #         platform_name = platform
+    #         break
+    #     else:
+    #         platform_name = None
 
     if args.queue:
         template['QUEUENAME'] = args.queue
@@ -1392,15 +1393,9 @@ def set_job_queue_values(args):
                 #    else:
                 #        break
 
-    scheduler = 'SLURM'
-    platform_name = 'stampede3'
+    # scheduler = 'SLURM'
+    # platform_name = 'stampede3'
  
-
-
-
-
-
-
   
     def_auto = [None, 16, 1, 1, 16000, 1]
     i = 0
