@@ -81,6 +81,7 @@ cp tools/isce2/components/isceobj/Sensor/TOPS/TOPSSwathSLCProduct.py tools/minic
 cp tools/isce2/contrib/demUtils/demstitcher/DemStitcher.py  tools/miniconda3/lib/python3.??/site-packages/isce/components/contrib/demUtils
 
 ### Create orbits and aux directories
-mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS;
+echo "mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS"
+mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS
 
 echo "Installation DONE"
