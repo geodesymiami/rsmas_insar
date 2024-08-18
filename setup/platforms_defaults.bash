@@ -52,7 +52,6 @@ then
   export QUEUE_NORMAL=skx
   export QUEUE_DEV=skx-dev
   export QUEUENAME=$QUEUE_NORMAL
-
 fi
 ###############################################
 if [[ ${HOSTNAME} == *frontera* ]] || [[ ${TACC_SYSTEM} == *frontera* ]]
@@ -83,6 +82,18 @@ then
   export JOBSHEDULER_PROJECTNAME=TG-EAR180012
   export WORKDIR=${HOME}/insarlab
   export SCRATCHDIR=/oasis/scratch/comet/$USER/temp_project
+fi
+###############################################
+if [[ ${USER} == *circleci* ]] 
+then
+  export PLATFORM_NAME=circleci
+  export JOBSCHEDULER=SLURM
+  export JOBSHEDULER_PROJECTNAME=TG-EAR200012
+  export WORKDIR=~/project
+  export SCRATCHDIR=${HOME}
+  export QUEUE_NORMAL=normal
+  export QUEUE_DEV=development
+  export QUEUENAME=$QUEUE_NORMAL
 fi
 ###############################################
 if [ "$(uname)" == "Darwin" ]
