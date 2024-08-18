@@ -7,8 +7,7 @@ import glob
 
 
 queue_config_file = os.path.join(os.getenv('RSMASINSAR_HOME'), 'minsar/defaults/queues.cfg')
-supported_platforms = ['frontera', 'stampede3', 'comet', 'pegasus', 'eos_sanghoon', 'eos', 'eos\n',
-                       'beijing_server', 'deqing_server', 'dqcentos7insar']
+supported_platforms = ['frontera', 'stampede3', 'comet', 'pegasus', 'eos_sanghoon', 'eos', 'eos\n','circleci']
 
 class PathFind:
     def __init__(self):
@@ -75,15 +74,15 @@ class PathFind:
     def correct_for_ssara_date_format(template_options):
 
         inps_dict = template_options
-        
+
         if 'ssaraopt.startDate' in inps_dict:
             inps_dict['ssaraopt.startDate'] = \
                 datetime.datetime.strptime(inps_dict['ssaraopt.startDate'], '%Y%m%d').strftime('%Y-%m-%d')
-        
+
         if 'ssaraopt.endDate' in inps_dict:
             inps_dict['ssaraopt.endDate'] = \
                 datetime.datetime.strptime(inps_dict['ssaraopt.endDate'], '%Y%m%d').strftime('%Y-%m-%d')
-        
+
         return inps_dict
 
     @staticmethod
@@ -188,7 +187,7 @@ class PathFind:
             In order to use either --start or --step, it is necessary that a
             previous run was done using one of the steps options to process at least
             through the step immediately preceding the starting step of the current run.
-            
+
             """.format(STEP_LIST[0:7])
 
         return STEP_LIST, STEP_HELP
