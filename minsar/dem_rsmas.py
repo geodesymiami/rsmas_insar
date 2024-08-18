@@ -81,12 +81,9 @@ def main(iargs=None):
     except:
        inps.slc_dir = os.path.join(inps.work_dir, 'SLC')
 
-    print('QQK1', inps.slc_dir)
-
     # 10/21: inps.template['topsStack.slcDir'] may contain ./SLC  (it would be better to change where topsStack.slcDir is assigned)
     if '.' in inps.slc_dir:
        inps.slc_dir = inps.slc_dir.replace(".",os.getcwd())
-    print('QQK2', inps.slc_dir)
 
     ## 7/2024: using inps.template.values() to avoid using  dataset_template=Template(inps.custom_template_file). Previous code:
     # dataset_template = Template(inps.custom_template_file)

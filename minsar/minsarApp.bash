@@ -336,12 +336,9 @@ if [[ ! -v insarmaps_flag ]]; then
        insarmaps_flag=0
    fi
 fi
-#echo QQQ insarmaps_flag: $insarmaps_flag 
 
 # adjust switches according to template options if upload_flag is not set
-echo "QQ1 upload_flag: <$upload_flag>"
 if [[ ! -v upload_flag ]]; then
-   echo "QQ1 upload_flag not set because --upload option was not given"
    if [[ -n ${template[minsar.upload_flag]+_} ]]; then
        if [[ ${template[minsar.upload_flag]} == "True" ]]; then
            upload_flag=1
