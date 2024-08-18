@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -eo pipefail
+#set -x
 ###################################################################################
 function create_template_array() {
 mapfile -t array < <(grep -e ^minsar -e ^mintpy -e ^miaplpy $1)
@@ -179,7 +180,7 @@ if [[ $1 == $PWD ]]; then
    template_file=$TEMPLATES/$PROJECT_NAME.template
 fi
 export template_file
-WORK_DIR=$SCRATCHDIR/$PROJECT_NAME
+WORK_DIR=${SCRATCHDIR}/${PROJECT_NAME}
 mkdir -p $WORK_DIR
 cd $WORK_DIR
 
@@ -529,45 +530,45 @@ srun_cmd="srun -n1 -N1 -A $JOBSHEDULER_PROJECTNAME -p $QUEUENAME  -t 00:25:00 "
 if [[ $download_flag == "1" ]]; then
 
     echo "Running.... generate_download_command.py $template_file"
-    cmd='generate_download_command.py $template_file'
-    eval "$cmd"
-    exit_status="$?"
-    if [[ $exit_status -ne 0 ]]; then
-       echo "generate_download_command.py exited with a non-zero exit code ($exit_status). Exiting."
-       exit 1;
-    fi
+    run_command "generate_download_command.py $template_file"
 
     mkdir -p $download_dir
     cd $download_dir
-    cat ../ssara_command.txt
-    cmd=$(cat ../ssara_command.txt)
-    echo "Running.... 'cat ../ssara_command.txt'"
-    echo $cmd
-    eval "$cmd"
-    exit_status="$?"
-    if [ $exit_status -ne 0 ]; then
-       echo "ssara_federated_query.bash failed with exit status $exit_status. Exiting."
-       exit 1
-    fi
-    # FA 6/2024: The error checking is now done in ssara_federated_query.bash  which I think is better
-    #echo "exit status of ssara_federated_query.bash: $exit_status"
-    #grep -q "urllib.error.HTTPError: HTTP Error 502: Proxy Error" ssara.e && { echo "Download problem: HTTP Error 502"; exit 1; }
-   
-    runs=1
-    while [ $exit_status -ne 0 ] && [ $runs -le 4 ]; do
-        echo "ssara_federated_query.bash exited with a non-zero exit code ($exit_status). Trying again in 2 minutes."
-        echo "$(date +"%Y%m%d:%H-%m") * Something went wrong. Exit code was ${exit_status}. Trying again in 2 minutes" | tee -a log | tee -a ../log
-        sleep 120 # sleep for 2 minutes
-        $cmd
-        exit_status="$?"
-        runs=$((runs+1))
-    done
 
-    if [[ $runs -gt 4 ]]; then
-       echo "ssara_federated_query.bash failed after 20 hours. Exiting."
-       cd ..
-       exit 1;
-    fi
+    cmd=$(cat ../ssara_command.txt)
+    run_command "$cmd"
+
+    # FA 6/2024: The checking for HTTP Error 502 is now done in ssara_federated_query.bash  which I think is better
+    # FA 8/2024: I don't think we need the loop over several downloads anymore
+
+    # cat ../ssara_command.txt
+    # cmd=$(cat ../ssara_command.txt)
+    # echo "Running.... 'cat ../ssara_command.txt'"
+    # echo $cmd
+    # eval "$cmd"
+    # sleep 20
+    # exit_status="$?"
+    # if [ $exit_status -ne 0 ]; then
+    #    echo "ssara_federated_query.bash failed with exit status $exit_status. Exiting."
+    #    exit 1
+    # fi
+
+    # runs=1
+    # while [ $exit_status -ne 0 ] && [ $runs -le 4 ]; do
+    #     echo "ssara_federated_query.bash exited with a non-zero exit code ($exit_status). Trying again in 2 minutes."
+    #     echo "$(date +"%Y%m%d:%H-%m") * Something went wrong. Exit code was ${exit_status}. Trying again in 2 minutes" | tee -a log | tee -a ../log
+    #     sleep 120 # sleep for 2 minutes
+    #     $cmd
+    #     exit_status="$?"
+    #     runs=$((runs+1))
+    # done
+
+    # if [[ $runs -gt 4 ]]; then
+    #    echo "ssara_federated_query.bash failed after 20 hours. Exiting."
+    #    cd ..
+    #    exit 1;
+    # fi
+
     cd ..
 
     # remove excluded dates
@@ -592,18 +593,7 @@ if [[ $dem_flag == "1" ]]; then
        rm -rf DEM; eval "cp -r $demDir DEM"
     else   
        # download DEM
-       delta_lat=$(grep -E "^topsStack.boundingBox" $template_file | tail -1 | awk '{ printf "%f\n",$4-$3}')
-       job_minutes=$(echo $delta_lat  | awk '{ printf "%d\n",int($1 + 1)*4.5}')
-       echo "delta_lat, job_minutes: $delta_lat, $job_minutes"
-       cmd="dem_rsmas.py $template_file --ssara_kml"
-       #cmd="$srun_cmd -t 00:$job_minutes:00 $cmd"    # 1/23 swicthed off 
-       echo "Running... $cmd >out_dem_rsmas.e 1>out_dem_rsmas.o"
-       $cmd 2>out_dem_rsmas.e 1>out_dem_rsmas.o
-       exit_status="$?"
-       if [[ $exit_status -ne 0 ]]; then
-          echo "dem_rsmas.py exited with a non-zero exit code ($exit_status). Exiting."
-          exit 1;
-       fi
+       run_command "dem_rsmas.py $template_file --ssara_kml 2>out_dem_rsmas.e 1>out_dem_rsmas.o"
     fi
 fi
 
@@ -647,15 +637,8 @@ if [[ $chunks_flag == "1" ]]; then
     done
 
     # generate chunk template files
-    cmd="generate_chunk_template_files.py $template_file $options"
-    echo "Running... $cmd >out_generate_chunk_template_files.e 1>out_generate_chunk_template_files.o"
-    $cmd 2>out_generate_chunk_template_files.e 1>out_generate_chunk_template_files.o
-    exit_status="$?"
-    if [[ $exit_status -ne 0 ]]; then
-       echo "generate_chunk_template_files.py exited with a non-zero exit code ($exit_status). Exiting."
-       exit 1;
-    fi
-
+    run_command "generate_chunk_template_files.py $template_file $options 2>out_generate_chunk_template_files.e 1>out_generate_chunk_template_files.o"
+    
     echo "Submitting chunk minsar jobs:" | tee -a log
     cat $WORK_DIR/minsar_commands.txt | tee -a log
     bash $WORK_DIR/minsar_commands.txt
@@ -691,27 +674,10 @@ if [[ $jobfiles_flag == "1" ]]; then
        cd -
     fi
     
-    # clean directory for processing
+    # clean directory for processing and create jobfiles
     pwd=`pwd`; echo "DIR: $pwd"
-    cmd="clean_dir.bash $PWD --runfiles --ifgram --mintpy --miaplpy"
-    echo "Running.... $cmd"
-    $cmd
-    exit_status="$?"
-    if [[ $exit_status -ne 0 ]]; then
-       echo "clean_dir.bash exited with a non-zero exit code ($exit_status). Exiting."
-       exit 1;
-    fi
-
-    cmd="create_runfiles.py $template_file --jobfiles --queue $QUEUENAME $copy_to_tmp"
-    echo "Running.... $cmd >out_create_jobfiles.e 1>out_create_jobfiles.o"
-    #$srun_cmd $cmd 2>create_jobfiles.e 1>out_create_jobfiles.o   # FA 1/23:  the 2 pipes more output to terminal (I think)
-    $cmd 2>out_create_jobfiles.e 1>out_create_jobfiles.o
-    exit_status="$?"
-    if [[ $exit_status -ne 0 ]]; then
-       echo "create_jobfile.py exited with a non-zero exit code ($exit_status). Exiting."
-       exit 1;
-    fi
-
+    run_command "clean_dir.bash $PWD --runfiles --ifgram --mintpy --miaplpy"
+    run_command "create_runfiles.py $template_file --jobfiles --queue $QUEUENAME $copy_to_tmp 2>out_create_jobfiles.e 1>out_create_jobfiles.o"
 fi
  
 if [[ $ifgram_flag == "1" ]]; then
@@ -763,20 +729,12 @@ if [[ $ifgram_flag == "1" ]]; then
           mv $configs_dir modified_template
           rm -rf run_files configs
 
-          # clean directory for processing
+          # clean directory for processing and create jobfiles
           run_command "clean_dir.bash $PWD --runfiles --ifgram"
-
-          cmd="create_runfiles.py $template_file --jobfiles --queue $QUEUENAME $copy_to_tmp"
-          echo "Running.... $cmd >create_jobfiles.e 1>out_create_jobfiles.o"
-          $srun_cmd $cmd 2>create_jobfiles.e 1>out_create_jobfiles.o
-          exit_status="$?"
-          if [[ $exit_status -ne 0 ]]; then
-             echo "create_jobfile.py exited with a non-zero exit code ($exit_status). Exiting."
-             exit 1;
-          fi
-
+          run_command "create_runfiles.py $template_file --jobfiles --queue $QUEUENAME $copy_to_tmp 2>create_jobfiles.e 1>out_create_jobfiles.o"
+         
           # rerun steps 1 to 5  with new reference
-	  echo "### Re-running step 1 to 5 with reference $new_reference_date"
+	      echo "### Re-running step 1 to 5 with reference $new_reference_date"
           run_command "run_workflow.bash $template_file --start 1 --stop 5 $copy_to_tmp --append"
        else
           echo "No new reference date selected. Continue with original date: $reference_date" | tee -a log | tee -a `ls wor* | tail -1`
@@ -784,14 +742,8 @@ if [[ $ifgram_flag == "1" ]]; then
        fi
 
        # continue running starting step 6
-       cmd="run_workflow.bash $template_file --start 6 --stop 11 $copy_to_tmp --append"
-       echo "Running.... $cmd"
-       $cmd
-       exit_status="$?"
-       if [[ $exit_status -ne 0 ]]; then
-          echo "run_workflow.bash $template_file --start 6 --stop 11 exited with a non-zero exit code ($exit_status). Exiting."
-          exit 1;
-       fi
+       run_command "run_workflow.bash $template_file --start 6 --stop 11 $copy_to_tmp --append"
+ 
     fi
     # correct *xml and *vrt files
     #sed -i "s|/tmp|$PWD|g" */*.xml */*/*.xml  */*/*/*.xml 
