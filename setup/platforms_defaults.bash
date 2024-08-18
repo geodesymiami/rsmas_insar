@@ -45,6 +45,7 @@ fi
 if [[ ${HOSTNAME} == *stampede* ]] || [[ ${TACC_SYSTEM} == *stampede* ]]
 then
   export PLATFORM_NAME=stampede3
+  # export PLATFORM_NAME=circleci         # for testing
   export JOBSCHEDULER=SLURM
   export JOBSHEDULER_PROJECTNAME=TG-EAR200012
   export WORKDIR=$(dirname -- "$WORK2")/stampede2/insarlab
@@ -89,10 +90,10 @@ then
   export PLATFORM_NAME=circleci
   export JOBSCHEDULER=SLURM
   export JOBSHEDULER_PROJECTNAME=TG-EAR200012
-  export WORKDIR=~/project
+  export WORKDIR=${HOME}
   export SCRATCHDIR=${HOME}
-  export QUEUE_NORMAL=normal
-  export QUEUE_DEV=development
+  export QUEUE_NORMAL=skx
+  export QUEUE_DEV=skx-dev
   export QUEUENAME=$QUEUE_NORMAL
 fi
 ###############################################
