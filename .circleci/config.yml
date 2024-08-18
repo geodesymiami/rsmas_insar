@@ -17,7 +17,7 @@ jobs:
             minsar/minsarApp.bash --help
 
       - run:
-          name: Process test data
+          name: Prepare test data (Sentinel-1)
           command: |
             export RSMASINSAR_HOME=${CIRCLE_WORKING_DIRECTORY}
             source setup/platforms_defaults.bash;
