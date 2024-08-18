@@ -83,5 +83,7 @@ cp tools/isce2/contrib/demUtils/demstitcher/DemStitcher.py  tools/miniconda3/lib
 ### Create orbits and aux directories
 echo "mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS"
 mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS
+ls -d $SENTINEL_ORBITS $SENTINEL_AUX $OPERATIONS/LOGS
+
 
 echo "Installation DONE"
