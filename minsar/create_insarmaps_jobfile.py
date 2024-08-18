@@ -98,6 +98,7 @@ def main(iargs=None):
         mbtiles_file = f"{path_obj.parent}/JSON{suffix}/{path_obj.name}"
         mbtiles_file = mbtiles_file.replace('he5','mbtiles')
         command.append( f'json_mbtiles2insarmaps.py --num-workers 8 -u {password.insaruser} -p {password.insarpass} --host insarmaps.miami.edu -P rsmastest -U rsmas\@gmail.com --json_folder {inps.work_dir}/{inps.data_dir[0]}/JSON{suffix} --mbtiles_file {mbtiles_file}\n' )
+        command.append( f'json_mbtiles2insarmaps.py --num-workers 8 -u {password.docker_insaruser} -p {password.docker_insarpass} --host 149.165.174.11 -P insarmaps -U insarmaps@insarmaps.com --json_folder {inps.work_dir}/{inps.data_dir[0]}/JSON{suffix} --mbtiles_file {mbtiles_file}\n' )
     
     command.append('wait\n\n')
     str = [f'cat >> insarmaps.log<<EOF\n']
@@ -105,6 +106,7 @@ def main(iargs=None):
         base_name = os.path.basename(file)
         name_without_extension = os.path.splitext(base_name)[0]
         str.append(f"https://insarmaps.miami.edu/start/25.78/-80.3/11.0?flyToDatasetCenter=true&startDataset={name_without_extension}\n")
+        str.append(f"149.165.174.11/start/25.78/-80.3/11.0?flyToDatasetCenter=true&startDataset={name_without_extension}\n")
 
     str.append( 'EOF' ) 
     command.append( "".join(str) )

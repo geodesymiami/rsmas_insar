@@ -390,6 +390,12 @@ if [[ $jobfile_flag == "true" ]]; then
      echo "--jobfile hack applies: replaced full list by jobfile $jobfile"
 fi
 
+#globlist=("${globlist[@]/%/}") # Remove potential trailing spaces
+#globlist=($(printf "%s\n" "${globlist[@]}" | grep -v '^$'))
+
+echo "globlist (shown with declare -p):"
+declare -p globlist
+
 for g in "${globlist[@]}"; do
     if [[ -n $g ]]; then
         files=($(ls -1v $g))
