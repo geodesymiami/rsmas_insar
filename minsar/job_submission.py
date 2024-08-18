@@ -1329,13 +1329,14 @@ def set_job_queue_values(args):
             submission_scheme = 'launcher_multiTask_singleNode'
     hostname = subprocess.Popen("hostname -f", shell=True, stdout=subprocess.PIPE).stdout.read().decode("utf-8")
 
-    platform_name = platform
     # for platform in supported_platforms:  # FA 8/24 : no need as we only work on known platforms
     #     if platform in hostname:
     #         platform_name = platform
     #         break
     #     else:
     #         platform_name = None
+    platform_name = os.getenv('PLATFORM_NAME')
+    scheduler = os.getenv('JOBSCHEDULER')
 
     if args.queue:
         template['QUEUENAME'] = args.queue
