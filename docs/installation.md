@@ -18,18 +18,14 @@ git clone git@github.com:geodesymiami/accounts.git ~/accounts ;
 ```
 cd $WORK2/code
 ```
-* Clone the repo:
+* Clone the repo and install the code (including miniconda3 python):
 ```
 command -v module &> /dev/null && module purge
 git clone git@github.com:geodesymiami/rsmas_insar.git ;
-```
-
-* Install the code including the miniconda3 python using:
-```
 cd rsmas_insar
 bash -x setup/install.bash 
 ```
-The commands are [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install.bash).
+The `install.bash` commands are [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install.bash).
 
 ---
 ### Test your installation
