@@ -123,7 +123,7 @@ results = asf.search(
     intersectsWith=inps.intersectsWith,
     flightDirection=node,
     relativeOrbit=inps.relativeOrbit,
-    absoluteBurstID = burst_id
+    relativeBurstID=burst_id
 )
 
 if workDir in os.environ:
@@ -136,15 +136,19 @@ if path == '':
     path = work_dir
 
 print(f"Found {len(results)} results.")
+burst_ids =[]
 for r in results:
-    print('--------------------------------------------------------------------------------------------------------------------------')
-    print(f"Start date: {r.properties['startTime']}")
-    print(f"End date: {(r.properties['stopTime'])}")
-    print(f"{r.geometry['type']}: {r.geometry['coordinates']}")
-    print(f"Path of satellite: {r.properties['pathNumber']}")
-    print(f"Granule:  {r.properties['granuleType']}")
     if 'BURST' in product:
-        print(f"Absolute Burst ID: {r.properties['burst']['absoluteBurstID']}")
+        if r.properties['burst']['relativeBurstID'] not in burst_ids:
+            burst_ids.append(r.properties['burst']['relativeBurstID'])
+            print(f"Relative Burst ID: {r.properties['burst']['relativeBurstID']}")
+    else:
+        print('--------------------------------------------------------------------------------------------------------------------------')
+        print(f"Start date: {r.properties['startTime']}")
+        print(f"End date: {(r.properties['stopTime'])}")
+        print(f"{r.geometry['type']}: {r.geometry['coordinates']}")
+        print(f"Path of satellite: {r.properties['pathNumber']}")
+        print(f"Granule:  {r.properties['granuleType']}")
 
     if inps.print:
         print('')
