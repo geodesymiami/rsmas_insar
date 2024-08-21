@@ -16,10 +16,10 @@ descriptions below for details and usage examples.
 epi = """
 Usage Examples:
     These will do the search and download data:
-        asf_search_args.py --product=SLC --start-date=2014-10-04 --end-date=2015-10-05 --intersectsWith='POLYGON((-77.9853 0.7881,-77.9185 0.7881,-77.9185 0.8507,-77.9853 0.8507,-77.9853 0.7881))' --relativeOrbit 142 --download
+        asf_search_args.py --product=SLC --start-date=2014-10-04 --end-date=2015-10-05 --intersectsWith='POLYGON((-77.98 0.78,-77.91 0.78,-77.91 0.85,-77.98 0.85,-77.98 0.78))' --relativeOrbit 142 --download
         asf_search_args.py --product=SLC --start=2014-10-04 --end=2015-10-05 --platform SENTINEL1 --print --download
-        asf_search_args.py --product=CSLC --start=20141004 --end=20151005 --intersectsWith='POLYGON((-77.9853 0.7881,-77.9185 0.7881,-77.9185 0.8507,-77.9853 0.8507,-77.9853 0.7881))' --download --dir=PATH
-        asf_search_args.py --product=CSLC --start=2014-10-04 --end=2015-10-05 --intersectsWith='POLYGON((-77.9853 0.7881,-77.9185 0.7881,-77.9185 0.8507,-77.9853 0.8507,-77.9853 0.7881))' --download --dir=PATH
+        asf_search_args.py --product=CSLC --start=20141004 --end=20151005 --intersectsWith='POLYGON((-77.98 0.78,-77.91 0.78,-77.91 0.85,-77.98 0.85,-77.98 0.78))' --download --dir=PATH
+        asf_search_args.py --product=CSLC --start=2014-10-04 --end=2015-10-05 --intersectsWith='POLYGON((-77.98 0.78,-77.91 0.7881,-77.91 0.85,-77.98 0.85,-77.98 0.78))' --download --dir=PATH
 
     To use parallel downloads:
         asf_search_args.py --product=SLC --start=2014-10-04 --end=2015-10-05 --relativeOrbit=170 --download --dir=PATH --parallel=4
@@ -29,7 +29,10 @@ Usage Examples:
 
     To search for a specific intersectsWith area:
         asf_search_args.py --product=SLC --intersectsWith='POLYGON((-77.9853 0.7881,-77.9185 0.7881,-77.9185 0.8507,-77.9853 0.8507,-77.9853 0.7881))'
-"""
+
+    To search for a specific Burst:
+        asf_search_args.py --product=BURST --start=2014-10-04 --burst-id=349025 --download --dir=PATH
+    """
 
 parser = argparse.ArgumentParser(description=EXAMPLE,
                 formatter_class=argparse.RawTextHelpFormatter,
@@ -46,7 +49,7 @@ parser.add_argument('--product', dest='product', choices=['SLC', 'CSLC', 'BURST'
 parser.add_argument('--platform', nargs='?',metavar='SENTINEL1, SENTINEL-1A, SENTINEL-1B', help='Choose the platform to search')
 parser.add_argument('--burst-id', nargs='*', type=str, metavar='BURST', help='Burst ID')
 parser.add_argument('--download', action='store_true', help='Download the data')
-parser.add_argument('--parallel', type=int, default=1, nargs=1, help='Download the data in parallel, specify the number of processes to use')
+parser.add_argument('--parallel', type=int, default=1, help='Download the data in parallel, specify the number of processes to use')
 parser.add_argument('--print', action='store_true', help='Print the search results')
 parser.add_argument('--dir', metavar='FOLDER', help='Specify path to download the data, if not specified, the data will be downloaded either in SCRATCHDIR or HOME directory')
 
@@ -83,6 +86,9 @@ if inps.end or inps.end_date:
     except:
         edate = datetime.datetime.strptime(inps.end if inps.end else inps.end_date, '%Y%m%d').date()
 
+else:
+    edate = datetime.datetime.now().date()
+
 if inps.platform in ['SENTINEL1', 'SENTINEL-1', 'S1', 'S-1']:
     platform = asf.PLATFORM.SENTINEL1
 
@@ -108,7 +114,7 @@ if inps.download is not None:
         path = inps.dir
 
     else:
-        path = os.getenv('SCRATCHDIR') if os.getenv('SCRATCHDIR') else os.getenv('HOME')
+        path = os.getenv(workDir) if os.getenv(workDir) else os.getenv('HOME')
 
 else:
     path = None
@@ -126,14 +132,6 @@ results = asf.search(
     relativeBurstID=burst_id
 )
 
-if workDir in os.environ:
-    work_dir = os.getenv(workDir)
-
-else:
-    work_dir = os.getenv('HOME')
-
-if path == '':
-    path = work_dir
 
 print(f"Found {len(results)} results.")
 burst_ids =[]
