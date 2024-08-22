@@ -114,7 +114,7 @@ if inps.download is not None:
         path = inps.dir
 
     else:
-        path = os.getenv(workDir) if os.getenv(workDir) else os.getenv('HOME')
+        path = os.getcwd()
 
 else:
     path = None
