@@ -7,6 +7,7 @@ import os
 import sys
 import glob
 import argparse
+import re
 from pathlib import Path
 from minsar.objects import message_rsmas
 from minsar.objects.auto_defaults import PathFind
@@ -53,7 +54,7 @@ def main(iargs=None):
     file_PS = None
 
     for file in files:
-        if 'DS' in file:
+        if re.search(r'filt.*DS', file):
             file_DS = file
         elif 'PS' in file:
             file_PS = file
@@ -97,8 +98,8 @@ def main(iargs=None):
         path_obj = Path(file)
         mbtiles_file = f"{path_obj.parent}/JSON{suffix}/{path_obj.name}"
         mbtiles_file = mbtiles_file.replace('he5','mbtiles')
-        command.append( f'json_mbtiles2insarmaps.py --num-workers 8 -u {password.insaruser} -p {password.insarpass} --host insarmaps.miami.edu -P rsmastest -U rsmas\@gmail.com --json_folder {inps.work_dir}/{inps.data_dir[0]}/JSON{suffix} --mbtiles_file {mbtiles_file}\n' )
-        command.append( f'json_mbtiles2insarmaps.py --num-workers 8 -u {password.docker_insaruser} -p {password.docker_insarpass} --host 149.165.174.11 -P insarmaps -U insarmaps@insarmaps.com --json_folder {inps.work_dir}/{inps.data_dir[0]}/JSON{suffix} --mbtiles_file {mbtiles_file}\n' )
+        command.append( f'json_mbtiles2insarmaps.py --num-workers 8 -u {password.insaruser} -p {password.insarpass} --host insarmaps.miami.edu -P rsmastest -U rsmas\@gmail.com --json_folder {inps.work_dir}/{inps.data_dir[0]}/JSON{suffix} --mbtiles_file {mbtiles_file} &\n' )
+        command.append( f'json_mbtiles2insarmaps.py --num-workers 8 -u {password.docker_insaruser} -p {password.docker_insarpass} --host 149.165.174.11 -P insarmaps -U insarmaps@insarmaps.com --json_folder {inps.work_dir}/{inps.data_dir[0]}/JSON{suffix} --mbtiles_file {mbtiles_file} &\n' )
     
     command.append('wait\n\n')
     str = [f'cat >> insarmaps.log<<EOF\n']

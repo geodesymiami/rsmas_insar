@@ -9,7 +9,7 @@ if [[ $PLATFORM_NAME == "frontera" ]] ; then
           sed -i "s|small|normal|g" "$@" ;
           sed -i "s|development|normal|g" "$@" ;
 elif [[ $PLATFORM_NAME == "stampede3" ]] ; then 
-          sed -i "s|dev|skx|g" "$@" ;
+          sed -i "s|skx-dev|skx|g" "$@" ;
 fi 
 }
 
@@ -23,7 +23,7 @@ if [[ $PLATFORM_NAME == "frontera" ]] ; then
           sed -i "s|small|development|g" "$@" ;
           sed -i "s|normal|development|g" "$@" ;
 elif [[ $PLATFORM_NAME == "stampede3" ]] ; then 
-          sed -i "s|skx|dev|g" "$@" ;
+          sed -i "s|skx|skx-dev|g" "$@" ;
 fi 
 sed -i "s|SBATCH -t .:..:|SBATCH -t 1:59:|g" "$@" ; 
 sed -i "s|SBATCH -t ..:..:|SBATCH -t 01:59:|g" "$@" ;
