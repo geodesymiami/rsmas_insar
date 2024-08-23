@@ -124,6 +124,7 @@ def main(iargs=None):
     command.append( 'source ' + os.path.dirname(os.path.abspath(__file__)) + '/utils/minsar_functions.bash' )
     command.append( f'h5file=`ls *_??????_??????_???????_???????*_{prefix}PS.he5` ; add_ref_lalo_to_file $h5file' )
     command.append( f'h5file=`ls *_??????_??????_???????_???????*_{prefix}DS.he5` ; add_ref_lalo_to_file $h5file' )
+    command.append( f'h5file=`ls *_??????_??????_???????_???????*_filt{prefix}DS.he5` ; add_ref_lalo_to_file $h5file' )
 
     command.append( f'view.py --dpi 150 --noverbose --nodisplay --update --memory 4.0 temporalCoherence_lowpass_gaussian.h5 -c gray -v 0 1 &')
     command.append( f'view.py --dpi 150 --noverbose --nodisplay --update --memory 4.0 maskTempCoh_lowpass_gaussian.h5 -c gray -v 0 1 &')
