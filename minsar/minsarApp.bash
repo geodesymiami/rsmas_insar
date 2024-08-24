@@ -156,6 +156,7 @@ helptext="                                                                      
    --chunks         process in form of multiple chunks.                          \n\
    --tmp            copy code and data to local /tmp [default].                  \n\
    --no-tmp         no copying to local /tmp.                                    \n\
+   --debug
                                                                                  \n\
    Coding To Do:                                                                 \n\
        - clean up run_workflow (remove smallbaseline.job insarmaps.job)          \n\
@@ -278,7 +279,7 @@ do
             orbit_download_flag=0
             shift
             ;;
-	    --sleep)
+         --sleep)
             sleep_time="$2"
             shift
             shift
@@ -307,6 +308,10 @@ do
             chunks_flag=1
             shift
             ;;
+        --debug)
+            debug_flag=1
+            shift
+            ;;
         *)
             POSITIONAL+=("$1") # save it in an array for later
             shift # past argument
@@ -315,10 +320,13 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-# FA 5/2025 commented out as we now have --insarmaps option. It can be removed, I think.
 if [[ ${#POSITIONAL[@]} -gt 1 ]]; then
-    echo "Unknown parameters provided."
+    echo "Unknown parameters provided: ${POSITIONAL[-1]}"
     exit 1;
+fi
+
+if [[ $debug_flag == "1" ]]; then
+   set -x
 fi
 
 # adjust switches according to template options if insarmaps_flag is not set
@@ -434,7 +442,7 @@ elif [[ $startstep == "finishup" ]]; then
     upload_flag=0
     insarmaps_flag=0
 elif [[ $startstep != "" ]]; then
-    echo "startstep received value of "${startstep}". Exiting."
+    echo "USER ERROR: startstep received value of "${startstep}". Exiting."
     exit 1
 fi
 
@@ -837,39 +845,39 @@ if [[ $finishup_flag == "1" ]]; then
 fi
 
 echo
-echo "network_dir: <$network_dir>"
-echo
-echo "hdfeos5 files produced:"
-if test -f mintpy/*he5; then ls -sh mintpy/*he5; fi 
-if test -f $network_dir/*he5; then ls -sh $network_dir/*he5; fi 
+if test -f mintpy/*he5; then 
+   echo "hdfeos5 files produced:"
+   ls -sh mintpy/*he5 
+fi
+if test -f $network_dir/*he5; then 
+   echo " hdf5files in network_dir: <$network_dir>"
+   ls -sh $network_dir/*he5
+fi 
+
+# Summarize results
 echo
 echo "Done:  $minsarApp_command" 
 echo
 
-# Summarize results
-if [[ "$insarmaps_dataset" == "PS" || "$insarmaps_dataset" == "DS" ||  "$insarmaps_dataset" == "geo" ]]; then
-    num=1
-fi
-if [[ "$insarmaps_dataset" == "PSDS" ]]; then
-    num=2
-fi
-if [[ "$insarmaps_dataset" == "all" ]]; then
-    num=3
-fi
+echo
+echo "Yup! That's all from minsarApp.bash."
+echo
 
 echo "Data products uploaded to:"
 if [ -f "upload.log" ]; then
     tail -n -1 upload.log
-else
-    echo "upload.log does not exist."
-fi
-if [ -f "insarmaps.log" ]; then
-    tail -n $num insarmaps.log
-else
-    echo "insarmaps.log does not exist."
 fi
 
-echo
-echo "Yup! That's all from minsarApp.bash."
-echo
+lines=1
+if [[ "$insarmaps_dataset" == "PSDS" ]]; then
+    lines=2
+fi
+if [[ "$insarmaps_dataset" == "all" ]]; then
+   lines=4
+fi
+
+lines=$((lines * 2))  # multiply as long as we ingestinto two servers
+if [ -f "insarmaps.log" ]; then
+    tail -n $lines insarmaps.log
+fi
 
