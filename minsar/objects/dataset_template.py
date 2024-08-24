@@ -159,10 +159,15 @@ class Template:
                  parallel = 6
             ssaraopt += ' --parallel={}'.format(parallel)
 
-            #this was in Josh's code (above yje ssaraopt assignment) but unclear  what it does
+            #this was in Josh's code (above the ssaraopt assignment) but unclear  what it does
             #parallel_download = self.options.get("ssaraopt.parallelDownload", '30')
+            ssaraopt_dict = {}
+            for item in ssaraopt.split(' '):
+                if item:  # Skip empty strings
+                    key, value = item.lstrip('-').split('=', 1)  # Split at the first '=' and remove leading '--'
+                    ssaraopt_dict[key] = value
 
-        return ssaraopt
+            return ssaraopt, ssaraopt_dict
 
     def correct_keyvalue_quotes(self, options_in):
         """ quote-independent reformatting of sentinel.subswath key-value:

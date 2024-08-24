@@ -2,8 +2,7 @@
 
 import os
 import sys
-import time
-import datetime
+import re
 import argparse
 from minsar.objects.dataset_template import Template
 from minsar.objects import message_rsmas
@@ -55,7 +54,7 @@ def create_parser():
 
 ###############################################
 def generate_intersects_string(dataset_template, delta_lat=0.0):
-    """generates intersectsWith polygon string from miaplpy.subset.lalo or *Stack.boundingBox"""
+    """generates intersectsWith polygon string from miaplpy.subset.lalo, mintpy.subset.lalo or *Stack.boundingBox"""
     
     if not 'acquisition_mode' in dataset_template.get_options():
         print('WARNING: "acquisition_mode" is not given --> default: tops  (available options: tops, stripmap)')
@@ -65,13 +64,13 @@ def generate_intersects_string(dataset_template, delta_lat=0.0):
 
 
     if 'miaplpy.subset.lalo' in dataset_template.get_options():
-       print("Creating intersectsWith string using miaplpy.subset.lalo")
+       print("QQ0 Creating intersectsWith string using miaplpy.subset.lalo: ", dataset_template.get_options()['miaplpy.subset.lalo'])
        intersects_string = convert_subset_lalo_to_intersects_string(dataset_template.get_options()['miaplpy.subset.lalo'])
     elif 'mintpy.subset.lalo' in dataset_template.get_options():
-       print("Creating intersectsWith string using mintpy.subset.lalo")
+       print("QQ0 Creating intersectsWith string using mintpy.subset.lalo: dataset_template.get_options()['mintpy.subset.lalo']")
        intersects_string = convert_subset_lalo_to_intersects_string(dataset_template.get_options()['mintpy.subset.lalo'])
     else:
-       print("Creating intersectsWith string using *Stack.boundingBox")
+       print("QQ0 Creating intersectsWith string using *Stack.boundingBox: ", dataset_template.get_options()[prefix + 'Stack.boundingBox'])
        intersects_string = convert_bounding_box_to_intersects_string(dataset_template.get_options()[prefix + 'Stack.boundingBox'], delta_lat)
 
     return intersects_string
@@ -120,35 +119,72 @@ def convert_bounding_box_to_intersects_string(string_bbox, delta_lat):
    return intersects_string
 
 ###############################################
+def convert_intersects_string_to_extent_string(intersects_string):
+    """ Converts a intersectsWith string  to an extent string."""
+
+    match = re.search(r"Polygon\(\((.*?)\)\)", intersects_string)
+    if match:
+        polygon_str = match.group(1)
+    else:
+        polygon_str = None
+    
+    lon_list = []
+    lat_list = []
+    bbox_list = polygon_str.split(',')
+    for bbox in bbox_list:
+        lon, lat = map(float, bbox.split())
+        lon_list.append(lon)
+        lat_list.append(lat)
+    lon_list.sort()
+    lat_list.sort()
+
+    extent_list = [lon_list[0], lat_list[0], lon_list [-1], lat_list[-1]]
+    extent_str = ' '.join(map(str, extent_list))
+
+    return extent_str, extent_list
+
+###############################################
 def generate_download_command(template):
     """ generate ssara download options to use """
 
     dataset_template = Template(template)
     dataset_template.options.update(pathObj.correct_for_ssara_date_format(dataset_template.options))
 
-    ssaraopt_string = dataset_template.generate_ssaraopt_string()
+    ssaraopt_string, ssaraopt_dict = dataset_template.generate_ssaraopt_string()
     ssaraopt = ssaraopt_string.split(' ')
+    if 'end' not in ssaraopt_dict:
+        ssaraopt_dict['end'] = '2099-12-31'
 
     if not any(option.startswith('ssaraopt.intersectsWith') for option in dataset_template.get_options()):
-    # Your code here
-    # if 'ssaraopt.intersectsWith' not in dataset_template.get_options():
-       intersects_string = generate_intersects_string(dataset_template)
+       intersects_string = generate_intersects_string(dataset_template, delta_lat=0.1)
        ssaraopt.insert(2, intersects_string)
-       ssaraopt.append('--maxResults=20000')
+    
+    extent_str, extent_list = convert_intersects_string_to_extent_string(intersects_string)
+    print('QQ0 New intersectsWith sting using delta_lat=0.1: ', intersects_string)
+    print('QQ0 New extent sting using delta_lat=0.1: ', extent_str)
 
-    ssara_cmd = ['ssara_federated_query.bash'] + ssaraopt 
-    ssara_cmd_python = ['ssara_federated_query.py'] + ssaraopt + ['--asfResponseTimeout=300', '--kml', '--print', '--download']
-    asf_cmd = ['asf_search_args.py'] + ssaraopt + ['--Product=SLC', '--print', '--download']
+    ssara_cmd_slc_download_bash = ['ssara_federated_query.bash'] + ssaraopt 
+    ssara_cmd_kml_download_python = ['ssara_federated_query.py'] + ssaraopt + ['--maxResults=20000','--asfResponseTimeout=300', '--kml']
+    ssara_cmd_slc_download_python = ['ssara_federated_query.py'] + ssaraopt + ['--maxResults=20000','--asfResponseTimeout=300', '--kml', '--print','--download']
 
-    #asf_cmd = [item for item in asf_cmd if "SENTINEL" not in item]
-    asf_cmd = [item for item in asf_cmd if "maxResults" not in item]
+    asf_cmd_slc_download = ['asf_search_args.py', '--product=SLC'] + ssaraopt + ['--print', '--download']
+    asf_cmd_burst_download = ['asf_search_args.py', '--product=BURST'] + ssaraopt + ['--print', '--download']
+    asf_cmd_burst2safe = ['burst2stack','--rel-orbit',ssaraopt_dict['relativeOrbit'],'--start-date',ssaraopt_dict['start'],'--end-date',ssaraopt_dict['end'],'--extent',extent_str]
 
     with open('ssara_command.txt', 'w') as f:
-        f.write(' '.join(ssara_cmd) + '\n')
-#    with open('ssara_command_python.txt', 'w') as f:
-#        f.write(' '.join(ssara_cmd_python) + '\n')
-    with open('asf_command.txt', 'w') as f:
-        f.write(' '.join(asf_cmd) + '\n')
+        f.write(' '.join(ssara_cmd_slc_download_bash) + '\n')
+
+    with open('asf_slc_download.txt', 'w') as f:
+        f.write(' '.join(asf_cmd_slc_download) + '\n')
+
+    with open('asf_burst_download.txt', 'w') as f:
+        f.write(' '.join(ssara_cmd_kml_download_python) + '\n')
+        f.write(' '.join(asf_cmd_burst_download) + '\n')
+        f.write(' '.join(asf_cmd_burst2safe ) + '\n')
+
+    ssara_cmd_python = ['ssara_federated_query.py'] + ssaraopt + ['--maxResults=20000','--asfResponseTimeout=300', '--kml', '--print']
+    with open('ssara_command_python.txt', 'w') as f:
+       f.write(' '.join(ssara_cmd_python) + '\n')
 
     return 
    
