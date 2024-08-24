@@ -95,13 +95,13 @@ def get_bbox_from_template(inps, delta_lat, delta_lon):
     """generates boundingBox string from miaplpy.subset.lalo, mintpy.subset.lalo or intersectsWith POLYGON string"""
 
     if 'miaplpy.subset.lalo' in inps.template.keys():
-        print("Creating topsStack.boundingBox using miaplpy.subset.lalo")
+        print("QQ0 Creating topsStack.boundingBox using miaplpy.subset.lalo: ",inps.template['miaplpy.subset.lalo'] )
         boundingBox_string = convert_subset_lalo_to_boundingBox_string(inps.template['miaplpy.subset.lalo'], delta_lat, delta_lon)
     elif 'mintpy.subset.lalo' in inps.template.keys():
-        print("Creating topsStack.boundingBox using mintpy.subset.lalo")
+        print("QQ0 Creating topsStack.boundingBox using mintpy.subset.lalo: ", inps.template['mintpy.subset.lalo'])
         boundingBox_string = convert_subset_lalo_to_boundingBox_string(inps.template['mintpy.subset.lalo'], delta_lat, delta_lon)
     else:
-        print("Creating topsStack.boundingBox using ssaraopt.intersectsWith")
+        print("QQ0 Creating topsStack.boundingBox using ssaraopt.intersectsWith: ", inps.template['ssaraopt.intersectsWith'])
         #boundingBox_string = convert_intersectsWith_string_to_boundingBox_string(inps.template['ssaraopt.intersectsWith'], delta_lat=0.0, delta_lon=0.0)
         boundingBox_string = convert_intersectsWith_string_to_boundingBox_string(inps.template['ssaraopt.intersectsWith'], delta_lat, delta_lon)
 
@@ -114,8 +114,8 @@ def main(iargs=None):
     
     if 'topsStack.boundingBox' in inps.template:
         if inps.template['topsStack.boundingBox'] == 'None':
-            inps.template['topsStack.boundingBox'] = get_bbox_from_template(inps, delta_lat=0.15, delta_lon=3)
-            print('QQ0',inps.template['topsStack.boundingBox'])
+            inps.template['topsStack.boundingBox'] = get_bbox_from_template(inps, delta_lat=0.10, delta_lon=3)
+            print('QQ0 New topsStack.boundingBox using delta_lat=0.10: ',inps.template['topsStack.boundingBox'])
 
     if not iargs is None:
         input_arguments = iargs
