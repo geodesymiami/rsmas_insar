@@ -1,24 +1,23 @@
 #!/bin/bash
 
 show_help() {
-    echo "Usage: $0 [options] template_path [min_temp_coh]"
+    echo "Usage: update_minTempCoh.bash template_path [min_temp_coh] data_dir"
     echo ""
     echo "Options:"
     echo "  --help                Show this help message and exit"
-    echo "  --dir DIR             Specify the directory"
     echo ""
     echo "Examples:"
-    echo "  update_minTempCoh.bash \$TE/unittestGalapagosSenDT128.template --dir mintpy"
-    echo "  update_minTempCoh.bash \$TE/unittestGalapagosSenDT128.template 0.9 --dir mintpy"
-    echo "  update_minTempCoh.bash \$TE/unittestGalapagosSenDT128.template --dir miaplpy/network_single_reference"
-    echo "  update_minTempCoh.bash \$TE/unittestGalapagosSenDT128.template 0.9 --dir miaplpy/network_single_reference"
-    echo "  update_minTempCoh.bash \$SAMPLESDIR/unittestGalapagosSenDT128.template --dir miaplpy_SN_201606_201608/network_delaunay_4"
+    echo "  update_minTempCoh.bash \$TE/unittestGalapagosSenDT128.template mintpy"
+    echo "  update_minTempCoh.bash \$TE/unittestGalapagosSenDT128.template 0.9 mintpy"
+    echo "  update_minTempCoh.bash \$TE/unittestGalapagosSenDT128.template miaplpy/network_single_reference"
+    echo "  update_minTempCoh.bash \$TE/unittestGalapagosSenDT128.template 0.9 miaplpy/network_single_reference"
 }
 
 get_project_dir() {
     local template_path="$1"
     echo "$(basename "$template_path" .template)"
 }
+
 replace_min_temp_coh() {
     local template_path="$1"
     local min_temp_coh="$2"
@@ -26,16 +25,6 @@ replace_min_temp_coh() {
     sed -i.bak -E "s/(mintpy\.networkInversion\.minTempCoh\s*=\s*)([0-9.]+|auto)/\1${min_temp_coh}/" "$template_path"
     sed -i.bak -E "s/(miaplpy\.timeseries\.minTempCoh\s*=\s*)([0-9.]+|auto)/\1${min_temp_coh}/" "$template_path"
 }
-
-# display_job_status() {
-#     local job1_id=$1
-#     local job2_id=$2
-#     while true; do
-#         echo "Job status at $(date):"
-#         squeue -j $job1_id,$job2_id
-#         sleep 10
-#     done
-# }
 
 display_job_status() {
     local job_ids=("$@")
@@ -46,6 +35,7 @@ display_job_status() {
         sleep 10
     done
 }
+
 run_update() {
     local template_path="$1"
     local min_temp_coh="$2"
@@ -83,9 +73,7 @@ run_update() {
         echo "Third job submitted with ID: $joblast_id"       
     fi
 
-    # display_job_status $job1_id $job2_id $joblast_id &
     display_job_status $job1_id $job2_id $joblast_id &
-
 
     echo "Waiting for job $joblast_id to complete..."
     while squeue -j $joblast_id | grep -q "$joblast_id"; do
@@ -98,9 +86,9 @@ run_update() {
 }
 
 # Initialize variables
-dir_option=""
 template_path=""
 min_temp_coh=""
+data_dir=""
 
 # Parse command-line options
 while [[ "$1" != "" ]]; do
@@ -109,33 +97,31 @@ while [[ "$1" != "" ]]; do
             show_help
             exit 0
             ;;
-        --dir )
-            shift
-            dir_option=$1
-            ;;
         * )
             if [[ -z "$template_path" ]]; then
                 template_path=$1
-            elif [[ -z "$min_temp_coh" ]]; then
+            elif [[ -z "$min_temp_coh" && "$1" =~ ^[0-9]*\.?[0-9]+$ ]]; then
                 min_temp_coh=$1
+            elif [[ -z "$data_dir" ]]; then
+                data_dir=$1
             fi
             ;;
     esac
     shift
 done
 
-# Check if template_path and dir_option are  provided
+# Check if template_path and data_dir are provided
 if [[ -z "$template_path" ]]; then
     echo "Error: template_path is required."
     show_help
     exit 1
 fi
 
-if [[ -z "$dir_option" ]]; then
-    echo "Error: --dir option is required."
+if [[ -z "$data_dir" ]]; then
+    echo "Error: data_dir is required."
     show_help
     exit 1
 fi
 
 # Main script execution
-run_update "$template_path" "$min_temp_coh" "$dir_option"
+run_update "$template_path" "$min_temp_coh" "$data_dir"
