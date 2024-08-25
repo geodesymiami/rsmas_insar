@@ -207,7 +207,6 @@ orbit_download_flag=1
 select_reference_flag=1
 new_reference_flag=0
 debug_flag=0
-burst_download_flag=0
 download_ECMWF_flag=1
 download_ECMWgF_before_mintpy_flag=0
 
@@ -352,7 +351,7 @@ if [[ ! -v insarmaps_flag ]]; then
    fi
 fi
 
-# adjust switches according to template options if upload_flag is not set
+# adjust switches according to template options if upload_flag is not given on command line
 if [[ ! -v upload_flag ]]; then
    if [[ -n ${template[minsar.upload_flag]+_} ]]; then
        if [[ ${template[minsar.upload_flag]} == "True" ]]; then
@@ -362,6 +361,19 @@ if [[ ! -v upload_flag ]]; then
        fi
    else
        upload_flag=0
+   fi
+fi
+
+# adjust switches according to template options if burst_download_flag is not given on command line
+if [[ ! -v burst_download_flag ]]; then
+   if [[ -n ${template[minsar.burst_download_flag]+_} ]]; then
+       if [[ ${template[minsar.burst_download_flag]} == "True" ]]; then
+           burst_download_flag=1
+       else
+           burst_download_flag=0
+       fi
+   else
+       burst_download_flag=0
    fi
 fi
 
@@ -511,7 +523,7 @@ echo "Flags for processing steps:"
 echo "download dem jobfiles ifgram mintpy miaplpy upload insarmaps finishup"
 echo "    $download_flag     $dem_flag      $jobfiles_flag       $ifgram_flag       $mintpy_flag      $miaplpy_flag      $upload_flag       $insarmaps_flag        $finishup_flag"
 
-sleep 2
+sleep 4
 
 #############################################################
 # check weather python can load matplotlib.pyplot which occasionaly does not work for unknown reasons
@@ -549,7 +561,7 @@ if [[ $download_flag == "1" ]]; then
     mkdir -p $download_dir
     cd $download_dir
 
-    echo "QQQQQQQ now download"
+    echo "QQQQQQQ Download is starting...."
     if [[ $burst_download_flag == "1" ]]; then
        cmd=$(cat ../asf_burst_download.txt)
        run_command "$cmd"
@@ -851,12 +863,12 @@ if [[ $finishup_flag == "1" ]]; then
     fi
     run_command "summarize_job_run_times.py $template_file $copy_to_tmp $miaplpy_opt"
 
-    IFS=","
-    last_file=($(tail -1 $download_dir/ssara_listing.txt))
-    last_date=${last_file[3]}
-    echo "Last file: $last_file"
-    echo "Last processed image date: $last_date"
-    unset IFS
+    # IFS=","
+    # last_file=($(tail -1 $download_dir/ssara_listing.txt))
+    # last_date=${last_file[3]}
+    # echo "Last file: $last_file"
+    # echo "Last processed image date: $last_date"
+    # unset IFS
 fi
 
 echo
