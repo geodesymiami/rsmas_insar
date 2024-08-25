@@ -65,10 +65,10 @@ def generate_intersects_string(dataset_template, delta_lat=0.0):
 
     if 'miaplpy.subset.lalo' in dataset_template.get_options():
        print("QQ0 Creating intersectsWith string using miaplpy.subset.lalo: ", dataset_template.get_options()['miaplpy.subset.lalo'])
-       intersects_string = convert_subset_lalo_to_intersects_string(dataset_template.get_options()['miaplpy.subset.lalo'])
+       intersects_string = convert_subset_lalo_to_intersects_string(dataset_template.get_options()['miaplpy.subset.lalo'], delta_lat)
     elif 'mintpy.subset.lalo' in dataset_template.get_options():
        print("QQ0 Creating intersectsWith string using mintpy.subset.lalo: dataset_template.get_options()['mintpy.subset.lalo']")
-       intersects_string = convert_subset_lalo_to_intersects_string(dataset_template.get_options()['mintpy.subset.lalo'])
+       intersects_string = convert_subset_lalo_to_intersects_string(dataset_template.get_options()['mintpy.subset.lalo'], delta_lat)
     else:
        print("QQ0 Creating intersectsWith string using *Stack.boundingBox: ", dataset_template.get_options()[prefix + 'Stack.boundingBox'])
        intersects_string = convert_bounding_box_to_intersects_string(dataset_template.get_options()[prefix + 'Stack.boundingBox'], delta_lat)
@@ -76,16 +76,16 @@ def generate_intersects_string(dataset_template, delta_lat=0.0):
     return intersects_string
 
 ###############################################
-def convert_subset_lalo_to_intersects_string(subset_lalo):
+def convert_subset_lalo_to_intersects_string(subset_lalo, delta_lat=0):
    """ Converts a subset.lalo string in S:N,E:W format (e.g., "2.7:2.8,125.3:125.4") to an intersectsWith polygon string."""
 
    lat_string = subset_lalo.split(',')[0] 
    lon_string = subset_lalo.split(',')[1] 
 
-   min_lat = float(lat_string.split(':')[0])
-   max_lat = float(lat_string.split(':')[1])
-   min_lon = float(lon_string.split(':')[0])
-   max_lon = float(lon_string.split(':')[1])
+   min_lat = float(lat_string.split(':')[0]) - delta_lat
+   max_lat = float(lat_string.split(':')[1]) + delta_lat
+   min_lon = float(lon_string.split(':')[0]) - delta_lat/2
+   max_lon = float(lon_string.split(':')[1]) + delta_lat/2
 
    intersects_string = '--intersectsWith=\'Polygon(({:.2f} {:.2f}, {:.2f} {:.2f}, {:.2f} {:.2f}, {:.2f} {:.2f}, ' \
          '{:.2f} {:.2f}))\''.format(min_lon, min_lat, min_lon, max_lat, max_lon, max_lat, max_lon, min_lat, min_lon, min_lat)
@@ -170,6 +170,8 @@ def generate_download_command(template):
     asf_cmd_slc_download = ['asf_search_args.py', '--product=SLC'] + ssaraopt + ['--print', '--download']
     asf_cmd_burst_download = ['asf_search_args.py', '--product=BURST'] + ssaraopt + ['--print', '--download']
     asf_cmd_burst2safe = ['burst2stack','--rel-orbit',ssaraopt_dict['relativeOrbit'],'--start-date',ssaraopt_dict['start'],'--end-date',ssaraopt_dict['end'],'--extent',extent_str]
+    asf_cmd_burst2safe = ['burst2stack','--rel-orbit',ssaraopt_dict['relativeOrbit'],'--start-date',ssaraopt_dict['start'],'--end-date',ssaraopt_dict['end'],'--extent',extent_str]
+    asf_cmd_burst2safe.insert(0, "srun -n1 -N1 -A $JOBSHEDULER_PROJECTNAME -p $QUEUENAME  -t 00:25:00 ")    #FA 8/24: it should create a burst2safe.job
 
     with open('ssara_command.txt', 'w') as f:
         f.write(' '.join(ssara_cmd_slc_download_bash) + '\n')
