@@ -9,6 +9,6 @@ wget https://github.com/conda-forge/miniforge/releases/latest/download/$miniforg
 
 chmod 755 ${miniforge_version}
 bash ${miniforge_version} -b -p tools/miniforge3
-tools/miniforge3/bin/mamba init bash
+#tools/miniforge3/bin/mamba init bash
 
 echo "Python installation DONE"
