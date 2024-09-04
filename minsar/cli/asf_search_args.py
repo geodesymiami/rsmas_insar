@@ -31,7 +31,7 @@ Usage Examples:
         asf_search_args.py --product=SLC --intersectsWith='POLYGON((-77.9853 0.7881,-77.9185 0.7881,-77.9185 0.8507,-77.9853 0.8507,-77.9853 0.7881))'
 
     To search for a specific Burst:
-        asf_search_args.py --product=BURST --start=2014-10-04 --burst-id=349025 --download --dir=PATH
+        asf_search_args.py --product=BURST --start=2014-10-04 --burst-id=349025 --download
     """
 
 parser = argparse.ArgumentParser(description=EXAMPLE,
@@ -51,7 +51,7 @@ parser.add_argument('--burst-id', nargs='*', type=str, metavar='BURST', help='Bu
 parser.add_argument('--download', action='store_true', help='Download the data')
 parser.add_argument('--parallel', type=int, default=1, help='Download the data in parallel, specify the number of processes to use')
 parser.add_argument('--print', action='store_true', help='Print the search results')
-parser.add_argument('--dir', metavar='FOLDER', help='Specify path to download the data, if not specified, the data will be downloaded either in SCRATCHDIR or HOME directory')
+parser.add_argument('--dir', metavar='FOLDER', help='Specify path to download the data, if not specified, the data will be downloaded in SCRATCHDIR directory')
 
 inps = parser.parse_args()
 
