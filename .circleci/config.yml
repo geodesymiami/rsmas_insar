@@ -16,6 +16,7 @@ jobs:
             bash -x setup/install_python.bash
             bash -x setup/install_code.bash
             minsar/minsarApp.bash --help
+            echo "alias s.bw2='export RSMASINSAR_HOME=${CIRCLE_WORKING_DIRECTORY}; source setup/platforms_defaults.bash; source setup/environment.bash'" >> ~/.bashrc
 
       - run:
           name: Prepare test data (Sentinel-1)
