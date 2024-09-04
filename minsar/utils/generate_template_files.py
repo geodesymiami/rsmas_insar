@@ -201,7 +201,7 @@ def main(args):
 
     default_sheet = "1zAsa5cykv-WS39ufkCZdvFvaOem3Akol8aqzANnsdhE"
     test_sheet = "1Q8isYbGtGLGBoeqIQffg-587K13MtrDoQTYnx_59fFE"     #test1_templateRSMAS.csv (test1 4 datasets)
-    output_location = os.getenv('OPERATIONS') + '/TEMPLATES/'
+    #output_location = os.getenv('OPERATIONS') + '/TEMPLATES/'
 
     csv_file = default_sheet
 

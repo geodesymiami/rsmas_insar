@@ -11,7 +11,7 @@ supported_platforms = ['frontera', 'stampede3', 'comet', 'pegasus', 'eos_sanghoo
 
 class PathFind:
     def __init__(self):
-        self.logdir = os.getenv('OPERATIONS') + '/LOGS'
+        #self.logdir = os.getenv('OPERATIONS') + '/LOGS'
         self.scratchdir = os.getenv('SCRATCHDIR')
         self.defaultdir = os.path.expandvars('${RSMASINSAR_HOME}/minsar/defaults')
         self.orbitdir = os.path.expandvars('$SENTINEL_ORBITS')
