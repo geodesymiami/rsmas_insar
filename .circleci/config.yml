@@ -17,6 +17,10 @@ jobs:
             bash -x setup/install_code.bash
             minsar/minsarApp.bash --help
 
+            cat >> .bashrc<<EOF
+            alias s.bw2='export RSMASINSAR_HOME=${CIRCLE_WORKING_DIRECTORY}; source setup/platforms_defaults.bash; source setup/environment.bash'
+            EOF
+
       - run:
           name: Prepare test data (Sentinel-1)
           command: |
