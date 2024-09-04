@@ -42,12 +42,12 @@ function run_command() {
 function get_date_str() {
 # get string with start and end date
 if  [ ! -z ${template[miaplpy.load.startDate]} ] && [ ! ${template[miaplpy.load.startDate]} == "auto" ]; then
-    start_date=${template[miaplpy.load.startDate]} 
+    start_date=${template[miaplpy.load.startDate]}
 else
     start_date=$(ls merged/SLC | head -1)
 fi
 if  [ ! -z ${template[miaplpy.load.endDate]} ] && [ ! ${template[miaplpy.load.endDate]} == "auto" ]; then
-    end_date=${template[miaplpy.load.endDate]} 
+    end_date=${template[miaplpy.load.endDate]}
 else
     end_date=$(ls merged/SLC | tail -1)
 fi
@@ -156,13 +156,14 @@ helptext="                                                                      
    --chunks         process in form of multiple chunks.                          \n\
    --tmp            copy code and data to local /tmp [default].                  \n\
    --no-tmp         no copying to local /tmp.                                    \n\
+   --debug
                                                                                  \n\
    Coding To Do:                                                                 \n\
        - clean up run_workflow (remove smallbaseline.job insarmaps.job)          \n\
        - move bash functions into minsarApp_functions.bash                       \n\
        - change flags from 0/1 to False/True for reading from template file      \n\
        - create a command execution function (cmd_exec)                          \n\
-       - create .minsarrc for defaults                                           \n 
+       - create .minsarrc for defaults                                           \n
      "
     printf "$helptext"
     exit 0;
@@ -205,8 +206,9 @@ jobfiles_flag=1
 orbit_download_flag=1
 select_reference_flag=1
 new_reference_flag=0
+debug_flag=0
 download_ECMWF_flag=1
-download_ECMWF_before_mintpy_flag=0
+download_ECMWgF_before_mintpy_flag=0
 
 copy_to_tmp="--tmp"
 runfiles_dir="run_files_tmp"
@@ -278,7 +280,7 @@ do
             orbit_download_flag=0
             shift
             ;;
-	    --sleep)
+         --sleep)
             sleep_time="$2"
             shift
             shift
@@ -307,6 +309,14 @@ do
             chunks_flag=1
             shift
             ;;
+        --debug)
+            debug_flag=1
+            shift
+            ;;
+        --burst-download)
+            burst_download_flag=1
+            shift
+            ;;
         *)
             POSITIONAL+=("$1") # save it in an array for later
             shift # past argument
@@ -315,10 +325,13 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-# FA 5/2025 commented out as we now have --insarmaps option. It can be removed, I think.
 if [[ ${#POSITIONAL[@]} -gt 1 ]]; then
-    echo "Unknown parameters provided."
+    echo "Unknown parameters provided: ${POSITIONAL[-1]}"
     exit 1;
+fi
+
+if [[ $debug_flag == "1" ]]; then
+   set -x
 fi
 
 # adjust switches according to template options if insarmaps_flag is not set
@@ -338,7 +351,7 @@ if [[ ! -v insarmaps_flag ]]; then
    fi
 fi
 
-# adjust switches according to template options if upload_flag is not set
+# adjust switches according to template options if upload_flag is not given on command line
 if [[ ! -v upload_flag ]]; then
    if [[ -n ${template[minsar.upload_flag]+_} ]]; then
        if [[ ${template[minsar.upload_flag]} == "True" ]]; then
@@ -351,6 +364,19 @@ if [[ ! -v upload_flag ]]; then
    fi
 fi
 
+# adjust switches according to template options if burst_download_flag is not given on command line
+if [[ ! -v burst_download_flag ]]; then
+   if [[ -n ${template[minsar.burst_download_flag]+_} ]]; then
+       if [[ ${template[minsar.burst_download_flag]} == "True" ]]; then
+           burst_download_flag=1
+       else
+           burst_download_flag=0
+       fi
+   else
+       burst_download_flag=0
+   fi
+fi
+
 ### always use --no-tmp on stampede3
 if [[ $HOSTNAME == *"stampede3"* ]] && [[ $copy_to_tmp == "--tmp" ]]; then
    copy_to_tmp="--no-tmp"
@@ -358,7 +384,7 @@ if [[ $HOSTNAME == *"stampede3"* ]] && [[ $copy_to_tmp == "--tmp" ]]; then
    configs_dir="configs"
    echo "Running on stampede3: switched from --tmp to --no-tmp because of too slow copying to /tmp"
 fi
-miaplpy_tmp_flag=$copy_to_tmp   
+miaplpy_tmp_flag=$copy_to_tmp
 
 if [ ! -z ${sleep_time+x} ]; then
   echo "sleeping $sleep_time secs before starting ..."
@@ -374,12 +400,12 @@ fi
 
 #if [[ -v mintpy_flag ]]; then lock_mintpy_flag=1; fi
 #mintpy_flag=1
-#if [[ -v miaplpy_flag ]]; then  
+#if [[ -v miaplpy_flag ]]; then
 #    miaplpy_flag=1;
 #   if [[ -v lock_mintpy_flag ]]; then
-#      mintpy_flag=1; 
+#      mintpy_flag=1;
 #   else
-#      mintpy_flag=0; 
+#      mintpy_flag=0;
 #   fi
 #else
 #    miaplpy_flag=0;
@@ -434,7 +460,7 @@ elif [[ $startstep == "finishup" ]]; then
     upload_flag=0
     insarmaps_flag=0
 elif [[ $startstep != "" ]]; then
-    echo "startstep received value of "${startstep}". Exiting."
+    echo "USER ERROR: startstep received value of "${startstep}". Exiting."
     exit 1
 fi
 
@@ -492,12 +518,12 @@ if [[ $copy_to_tmp == "--tmp" ]]; then
 else
     echo "copy_to_tmp is OFF"
 fi
-echo "Switches: select_reference: $select_reference_flag   download_ECMWF: $download_ECMWF_flag  chunks: $chunks_flag"
+echo "Switches: select_reference: $select_reference_flag   burst_download: $burst_download_flag  chunks: $chunks_flag"
 echo "Flags for processing steps:"
 echo "download dem jobfiles ifgram mintpy miaplpy upload insarmaps finishup"
 echo "    $download_flag     $dem_flag      $jobfiles_flag       $ifgram_flag       $mintpy_flag      $miaplpy_flag      $upload_flag       $insarmaps_flag        $finishup_flag"
 
-sleep 2
+sleep 4
 
 #############################################################
 # check weather python can load matplotlib.pyplot which occasionaly does not work for unknown reasons
@@ -535,8 +561,17 @@ if [[ $download_flag == "1" ]]; then
     mkdir -p $download_dir
     cd $download_dir
 
-    cmd=$(cat ../ssara_command.txt)
-    run_command "$cmd"
+    echo "QQQQQQQ Download is starting...."
+    if [[ $burst_download_flag == "1" ]]; then
+       cmd=$(cat ../asf_burst_download.txt)
+       run_command "$cmd"
+       #while IFS= read -r cmd; do
+       #   run_command "$cmd"
+       #done < ssara_command.txt
+    else
+       cmd=$(cat ../ssara_command.txt)
+       run_command "$cmd"
+    fi
 
     # FA 6/2024: The checking for HTTP Error 502 is now done in ssara_federated_query.bash  which I think is better
     # FA 8/2024: I don't think we need the loop over several downloads anymore
@@ -576,7 +611,7 @@ if [[ $download_flag == "1" ]]; then
       date_string=$(grep ^minsar.excludeDates $template_file | awk -F = '{printf "%s\n",$2}')
       date_array=($(echo $date_string | tr ',' "\n"))
       echo "${date_array[@]}"
-      
+
        for date in "${date_array[@]}"; do
            echo "Remove $date if exist"
            files="RAW_data/*$date*"
@@ -591,7 +626,7 @@ if [[ $dem_flag == "1" ]]; then
        # copy DEM if given
        demDir=$(grep -E "^stripmapStack.demDir|^topsStack.demDir" $template_file | awk -F = '{printf "%s\n",$2}' | sed 's/ //')
        rm -rf DEM; eval "cp -r $demDir DEM"
-    else   
+    else
        # download DEM
        run_command "dem_rsmas.py $template_file --ssara_kml 2>out_dem_rsmas.e 1>out_dem_rsmas.o"
     fi
@@ -638,7 +673,7 @@ if [[ $chunks_flag == "1" ]]; then
 
     # generate chunk template files
     run_command "generate_chunk_template_files.py $template_file $options 2>out_generate_chunk_template_files.e 1>out_generate_chunk_template_files.o"
-    
+
     echo "Submitting chunk minsar jobs:" | tee -a log
     cat $WORK_DIR/minsar_commands.txt | tee -a log
     bash $WORK_DIR/minsar_commands.txt
@@ -654,8 +689,8 @@ fi
 if [[ $jobfiles_flag == "1" ]]; then
 #############################################################
 # download latest orbits from ASF mirror
-    
-    if [[ $orbit_download_flag == "1" && $template_file == *"Sen"*  ]]; then 
+
+    if [[ $orbit_download_flag == "1" && $template_file == *"Sen"*  ]]; then
        echo "Preparing to download latest poe and res orbits from ASF..."
        year=$(date +%Y)
        current_month=$(date +%Y%m)
@@ -673,16 +708,16 @@ if [[ $jobfiles_flag == "1" ]]; then
        bash ASF_resorb_latest.txt
        cd -
     fi
-    
+
     # clean directory for processing and create jobfiles
     pwd=`pwd`; echo "DIR: $pwd"
     run_command "clean_dir.bash $PWD --runfiles --ifgram --mintpy --miaplpy"
     run_command "create_runfiles.py $template_file --jobfiles --queue $QUEUENAME $copy_to_tmp 2>out_create_jobfiles.e 1>out_create_jobfiles.o"
 fi
- 
+
 if [[ $ifgram_flag == "1" ]]; then
 
-    if [[ $template_file != *"Sen"* || $select_reference_flag == "0" ]]; then 
+    if [[ $template_file != *"Sen"* || $select_reference_flag == "0" ]]; then
 
        run_command "run_workflow.bash $template_file --dostep ifgram $copy_to_tmp"
     else
@@ -732,7 +767,7 @@ if [[ $ifgram_flag == "1" ]]; then
           # clean directory for processing and create jobfiles
           run_command "clean_dir.bash $PWD --runfiles --ifgram"
           run_command "create_runfiles.py $template_file --jobfiles --queue $QUEUENAME $copy_to_tmp 2>create_jobfiles.e 1>out_create_jobfiles.o"
-         
+
           # rerun steps 1 to 5  with new reference
 	      echo "### Re-running step 1 to 5 with reference $new_reference_date"
           run_command "run_workflow.bash $template_file --start 1 --stop 5 $copy_to_tmp --append"
@@ -743,11 +778,11 @@ if [[ $ifgram_flag == "1" ]]; then
 
        # continue running starting step 6
        run_command "run_workflow.bash $template_file --start 6 --stop 11 $copy_to_tmp --append"
- 
+
     fi
     # correct *xml and *vrt files
-    #sed -i "s|/tmp|$PWD|g" */*.xml */*/*.xml  */*/*/*.xml 
-    #sed -i "s|/tmp|$PWD|g" */*.vrt */*/*.vrt  */*/*/*.vrt 
+    #sed -i "s|/tmp|$PWD|g" */*.xml */*/*.xml  */*/*/*.xml
+    #sed -i "s|/tmp|$PWD|g" */*.vrt */*/*.vrt  */*/*/*.vrt
     sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.vrt merged/SLC/*/*.vrt   merged/interferograms/*/*vrt
     sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.xml merged/SLC/*/*.xml   merged/interferograms/*/*xml
 fi
@@ -757,10 +792,10 @@ fi
 ########################
 if [[ $mintpy_flag == "1" ]]; then
 
-    # run MintPy 
+    # run MintPy
     run_command "run_workflow.bash $template_file --append --dostep mintpy $copy_to_tmp"
 
-    # upload mintpy directory 
+    # upload mintpy directory
     if [[ $upload_flag == "1" ]]; then
         run_command "upload_data_products.py mintpy ${template[minsar.upload_option]}"
     fi
@@ -779,10 +814,10 @@ fi
 ########################
 if [[ $miaplpy_flag == "1" ]]; then
     # correct *xml and *vrt files (if skipped in ifgram step because of unwrap problems) (skipping merged/interferograms because it takes long)
-    sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.vrt merged/SLC/*/*.vrt  
-    sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.xml merged/SLC/*/*.xml  
+    sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.vrt merged/SLC/*/*.vrt
+    sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.xml merged/SLC/*/*.xml
 
-    # unset $miaplpy_tmp_flag for --no-tmp as miaplpyApp.py does not understand --no-tmp option 
+    # unset $miaplpy_tmp_flag for --no-tmp as miaplpyApp.py does not understand --no-tmp option
     if [[ $miaplpy_tmp_flag == "--no-tmp" ]]; then
        unset miaplpy_tmp_flag
     fi
@@ -800,7 +835,7 @@ if [[ $miaplpy_flag == "1" ]]; then
     # create save_hdf5 jobfile
     run_command "create_save_hdf5_jobfile.py  $template_file $network_dir --outdir $network_dir/run_files --outfile run_10_save_hdfeos5_radar_0 --queue $QUEUENAME --walltime 0:30"
 
-    # run save_hdfeos5_radar jobfile 
+    # run save_hdfeos5_radar jobfile
     run_command "run_workflow.bash $template_file --dir $miaplpy_dir_name --start 10"
 
     # create index.html with all images
@@ -828,48 +863,48 @@ if [[ $finishup_flag == "1" ]]; then
     fi
     run_command "summarize_job_run_times.py $template_file $copy_to_tmp $miaplpy_opt"
 
-    IFS=","
-    last_file=($(tail -1 $download_dir/ssara_listing.txt))
-    last_date=${last_file[3]}
-    echo "Last file: $last_file"
-    echo "Last processed image date: $last_date"
-    unset IFS
+    # IFS=","
+    # last_file=($(tail -1 $download_dir/ssara_listing.txt))
+    # last_date=${last_file[3]}
+    # echo "Last file: $last_file"
+    # echo "Last processed image date: $last_date"
+    # unset IFS
 fi
 
 echo
-echo "network_dir: <$network_dir>"
-echo
-echo "hdfeos5 files produced:"
-if test -f mintpy/*he5; then ls -sh mintpy/*he5; fi 
-if test -f $network_dir/*he5; then ls -sh $network_dir/*he5; fi 
-echo
-echo "Done:  $minsarApp_command" 
-echo
+if test -f mintpy/*he5; then
+   echo "hdfeos5 files produced:"
+   ls -sh mintpy/*he5
+fi
+if test -f $network_dir/*he5; then
+   echo " hdf5files in network_dir: <$network_dir>"
+   ls -sh $network_dir/*he5
+fi
 
 # Summarize results
-if [[ "$insarmaps_dataset" == "PS" || "$insarmaps_dataset" == "DS" ||  "$insarmaps_dataset" == "geo" ]]; then
-    num=1
-fi
-if [[ "$insarmaps_dataset" == "PSDS" ]]; then
-    num=2
-fi
-if [[ "$insarmaps_dataset" == "all" ]]; then
-    num=3
-fi
-
-echo "Data products uploaded to:"
-if [ -f "upload.log" ]; then
-    tail -n -1 upload.log
-else
-    echo "upload.log does not exist."
-fi
-if [ -f "insarmaps.log" ]; then
-    tail -n $num insarmaps.log
-else
-    echo "insarmaps.log does not exist."
-fi
+echo
+echo "Done:  $minsarApp_command"
+echo
 
 echo
 echo "Yup! That's all from minsarApp.bash."
 echo
+
+echo "Data products uploaded to:"
+if [ -f "upload.log" ]; then
+    tail -n -1 upload.log
+fi
+
+lines=1
+if [[ "$insarmaps_dataset" == "PSDS" ]]; then
+    lines=2
+fi
+if [[ "$insarmaps_dataset" == "all" ]]; then
+   lines=4
+fi
+
+lines=$((lines * 2))  # multiply as long as we ingestinto two servers
+if [ -f "insarmaps.log" ]; then
+    tail -n $lines insarmaps.log
+fi
 

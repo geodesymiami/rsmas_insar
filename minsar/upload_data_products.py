@@ -3,6 +3,7 @@
 # Author:  Falk Amelung
 #######################
 
+
 import os
 import subprocess
 import sys
@@ -123,7 +124,7 @@ def main(iargs=None):
                '/'+ data_dir +'/geo/geo_*.dbf',
                '/'+ data_dir +'/geo/geo_*.prj',
                '/'+ data_dir +'/geo/geo_*.shp',
-               '/'+ data_dir +'/geo/geo_*.shx'
+               '/'+ data_dir +'/geo/geo_*.shx',
                ])
 
             if inps.triplets_flag:
@@ -162,6 +163,21 @@ def main(iargs=None):
                    '/'+ network_dir +'/geo/geo_*.shp',
                    '/'+ network_dir +'/geo/geo_*.shx'
                    ])
+                
+                timeseries_path = 'timeseries_demErr.h5'
+                if  os.path.exists(network_dir + '/' + 'timeseries_ERA5_demErr.h5'):
+                    timeseries_path = 'timeseries_ERA5_demErr.h5'
+
+                # FA 8/24: This section for edgar to have the high-res files
+                if inps.geo_flag:
+                    scp_list.extend([
+                    '/'+ data_dir +'../maskPS.h5',
+                    '/'+ data_dir +'/inputs/geometryRadar.h5',
+                    '/'+ data_dir +'/temporalCoherence_lowpass_gaussian.h5',
+                    '/'+ data_dir +'/maskTempCoh__lowpass_gaussian.h5',
+                    '/'+ data_dir + '/' + timeseries_path
+                    ])
+
                 if inps.triplets_flag:
                    scp_list.extend([
                    '/'+ network_dir +'/numTriNonzeroIntAmbiguity.h5',

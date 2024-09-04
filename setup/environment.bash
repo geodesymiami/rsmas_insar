@@ -10,6 +10,8 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 [ -z $JOBSCHEDULER ] && export JOBSCHEDULER=SLURM
 [ -z $QUEUENAME ] && export QUEUENAME=normal
 
+[ -f ~/accounts/remote_hosts.bash ] && source ~/accounts/remote_hosts.bash
+
 #  set customizable variables to defaults if not given
 [ -z ${WORKDIR} ] && export WORKDIR=~/insarlab
 [ -z ${USER_PREFERRED} ] && export USER_PREFERRED=$USER

@@ -8,7 +8,6 @@ export JOBSCHEDULER=NONE
 export QUEUENAME=NONE
 export WORKDIR=~/insarlab
 export SCRATCHDIR=${WORKDIR}/scratch
-export REMOTE_SERVER=centos@129.114.104.223
 
 #############################################
 ########### known platforms ##################
