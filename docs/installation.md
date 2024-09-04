@@ -23,9 +23,10 @@ cd $WORK2/code
 command -v module &> /dev/null && module purge
 git clone git@github.com:geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
-bash -x setup/install.bash 
+bash -x setup/install_python.bash
+bash -x setup/install_code.bash 
 ```
-The `install.bash` commands are [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install.bash).
+The `install_python.bash` command is [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install_python.bash) and  `install_code.bash`  is  [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install_code.bash).
 
 ---
 ### Test your installation
