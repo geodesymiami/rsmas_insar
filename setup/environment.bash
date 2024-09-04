@@ -9,14 +9,13 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 # set required variables to standard values if not given
 [ -z $JOBSCHEDULER ] && export JOBSCHEDULER=SLURM
 [ -z $QUEUENAME ] && export QUEUENAME=normal
+[ -z ${WORKDIR} ] && export WORKDIR=$SCRATCHDIR
 
 [ -f ~/accounts/remote_hosts.bash ] && source ~/accounts/remote_hosts.bash
 
 #  set customizable variables to defaults if not given
-[ -z ${WORKDIR} ] && export WORKDIR=~/insarlab
 [ -z ${USER_PREFERRED} ] && export USER_PREFERRED=$USER
 [ -z ${NOTIFICATIONEMAIL} ] && export NOTIFICATIONEMAIL=${USER_PREFERRED}@rsmas.miami.edu
-[ -z ${DOWNLOADHOST} ] && export DOWNLOADHOST=local
 [ -z ${JOBSHEDULER_PROJECTNAME} ] && export JOBSHEDULER_PROJECTNAME=insarlab
 [ -z ${SENTINEL_ORBITS} ] && export SENTINEL_ORBITS=${WORKDIR}/S1orbits
 [ -z ${SENTINEL_AUX} ] && export SENTINEL_AUX=${WORKDIR}/S1aux
@@ -26,12 +25,10 @@ echo "sourcing ${RSMASINSAR_HOME}/setup/environment.bash ..."
 [ -z ${TESTDATA_ISCE} ] && export TESTDATA_ISCE=${WORKDIR}/TESTDATA_ISCE
 
 ############ FOR PROCESSING  #########
-python_version=$(echo "python3.$(${RSMASINSAR_HOME}/tools/miniconda3/bin/python --version | cut -d. -f2)")        # e.g. python3.10
+python_version=$(echo "python3.$(${RSMASINSAR_HOME}/tools/miniforge3/bin/python --version | cut -d. -f2)")        # e.g. python3.10
 export SSARAHOME=${RSMASINSAR_HOME}/tools/SSARA
-export ISCE_HOME=${RSMASINSAR_HOME}/tools/miniconda3/lib/$python_version/site-packages/isce
-export ISCE_STACK=${RSMASINSAR_HOME}/tools/miniconda3/share/isce2
-export MINTPY_HOME=${RSMASINSAR_HOME}/tools/MintPy_falkamelung
-export MINTPY_HOME=/Users/famelung/Downloads/tmp/MintPy
+export ISCE_HOME=${RSMASINSAR_HOME}/tools/miniforge3/lib/$python_version/site-packages/isce
+export ISCE_STACK=${RSMASINSAR_HOME}/tools/miniforge3/share/isce2
 export MINTPY_HOME=${RSMASINSAR_HOME}/tools/MintPy
 export MIAPLPY_HOME=${RSMASINSAR_HOME}/tools/MiaplPy
 export MIMTPY_HOME=${RSMASINSAR_HOME}/tools/MimtPy
@@ -42,7 +39,6 @@ export SARVEY_HOME=${RSMASINSAR_HOME}/tools/sarvey
 export SARDEM_HOME=${RSMASINSAR_HOME}/tools/sardem
 export GBIS_HOME=${RSMASINSAR_HOME}/tools/GBIS
 export JOBDIR=${WORKDIR}/JOBS
-export OPERATIONS=${WORKDIR}/OPERATIONS
 
 ############ FOR MODELLING  ###########
 export MODELDATA=${WORKDIR}/MODELDATA
@@ -69,7 +65,7 @@ export LAUNCHER_RMI=${JOBSCHEDULER}
 export LAUNCHER_SCHED=block   ## could be one of: dynamic, interleaved, block
 
 ##############  PYTHON  ##############
-export PYTHON3DIR=${RSMASINSAR_HOME}/tools/miniconda3
+export PYTHON3DIR=${RSMASINSAR_HOME}/tools/miniforge3
 export CONDA_ENVS_PATH=${PYTHON3DIR}/envs
 export CONDA_PREFIX=${PYTHON3DIR}
 export PROJ_LIB=${PYTHON3DIR}/share/proj:${PYTHON3DIR}/lib/python3.??/site-packages/pyproj/proj_dir/share/proj
@@ -88,10 +84,8 @@ export PYTHONPATH=${PYTHONPATH}:${SARVEY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${SARVEY_HOME}/sarvey
 export PYTHONPATH=${PYTHONPATH}:${SARDEM_HOME}
 #export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/tools      # needed for mimt. Need to talk to Sara on how to do this smarter
-#export MPLBACKEND='Agg'
 
 ######### Ignore warnings ############
-#export PYTHONWARNINGS="ignore:Unverified HTTPS request"   (FA 6/20: Deprecation and VisibleDepreciation dis not work)
 export PYTHONWARNINGS="ignore"
 
 #####################################
