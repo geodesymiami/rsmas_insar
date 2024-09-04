@@ -23,8 +23,8 @@ if [[ ! -f ~/.netrc ]]; then
 fi
 
 # for pyaps
-PYTHON_VERSION=$(echo "python3.$("$SCRIPT_DIR/../tools/miniconda3/bin/python" --version | cut -d. -f2)")
-MODEL_CFG_FILE="$SCRIPT_DIR/../tools/miniconda3/lib/$PYTHON_VERSION/site-packages/pyaps3/model.cfg"
+PYTHON_VERSION=$(echo "python3.$("$SCRIPT_DIR/../tools/miniforge3/bin/python" --version | cut -d. -f2)")
+MODEL_CFG_FILE="$SCRIPT_DIR/../tools/miniforge3/lib/$PYTHON_VERSION/site-packages/pyaps3/model.cfg"
 if [[ ! -f $MODEL_CFG_FILE ]]; then
   echo "Copying default model.cfg for ECMWF download with PyAPS into $(dirname "$MODEL_CFG_FILE")"
   cp ~/accounts/model.cfg "$MODEL_CFG_FILE"
