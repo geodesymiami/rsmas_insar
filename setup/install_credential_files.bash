@@ -2,7 +2,8 @@
 ######### copy credentials to right place ##############
 
 # Determine the script's directory
-SCRIPT_DIR=$(dirname "$(realpath "$0")")
+SCRIPT_DIR=$(dirname "$(realpath "${BASH_SOURCE[0]}")")
+echo SCRIPT_DIR "$SCRIPT_DIR"
 
 # for ssara
 SSARA_FILE="$SCRIPT_DIR/../tools/SSARA/password_config.py"
