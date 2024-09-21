@@ -164,13 +164,14 @@ def generate_download_command(template):
     print('QQ0 New extent sting using delta_lat=0.1: ', extent_str)
 
     ssara_cmd_slc_download_bash = ['ssara_federated_query.bash'] + ssaraopt 
-    ssara_cmd_kml_download_python = ['ssara_federated_query.py'] + ssaraopt + ['--maxResults=20000','--asfResponseTimeout=300', '--kml']
+    #ssara_cmd_kml_download_python = ['ssara_federated_query.py'] + ssaraopt + ['--maxResults=20000','--asfResponseTimeout=300', '--kml']
+    ssara_cmd_kml_download_python = ['ssara_federated_query.py'] + ssaraopt + ['--maxResults=20000','--asfResponseTimeout=300', '--kml','--print','>','ssara_listing.txt','2> ssara.e']
     ssara_cmd_slc_download_python = ['ssara_federated_query.py'] + ssaraopt + ['--maxResults=20000','--asfResponseTimeout=300', '--kml', '--print','--download']
 
     asf_cmd_slc_download = ['asf_search_args.py', '--product=SLC'] + ssaraopt + ['--print', '--download']
     asf_cmd_burst_download = ['asf_search_args.py', '--product=BURST'] + ssaraopt + ['--print', '--download']
-    asf_cmd_burst2safe = ['burst2stack','--rel-orbit',ssaraopt_dict['relativeOrbit'],'--start-date',ssaraopt_dict['start'],'--end-date',ssaraopt_dict['end'],'--extent',extent_str]
-    asf_cmd_burst2safe = ['burst2stack','--rel-orbit',ssaraopt_dict['relativeOrbit'],'--start-date',ssaraopt_dict['start'],'--end-date',ssaraopt_dict['end'],'--extent',extent_str]
+    #asf_cmd_burst2safe = ['burst2stack','--rel-orbit',ssaraopt_dict['relativeOrbit'],'--start-date',ssaraopt_dict['start'],'--end-date',ssaraopt_dict['end'],'--extent',extent_str]
+    asf_cmd_burst2safe = ['burst2stack','--rel-orbit',ssaraopt_dict['relativeOrbit'],'--start-date',ssaraopt_dict['start'],'--end-date',ssaraopt_dict['end'],'--extent',extent_str,'--all-anns']
     asf_cmd_burst2safe.insert(0, "srun -n1 -N1 -A $JOBSHEDULER_PROJECTNAME -p $QUEUENAME  -t 00:25:00 ")    #FA 8/24: it should create a burst2safe.job
 
     with open('ssara_command.txt', 'w') as f:
