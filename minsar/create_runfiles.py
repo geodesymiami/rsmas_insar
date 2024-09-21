@@ -140,7 +140,8 @@ def main(iargs=None):
        dem_dir = inps.template[inps.prefix + 'Stack.demDir']
 
     try:
-        dem_file = glob.glob(dem_dir + '/*.wgs84')[0]
+        #dem_file = glob.glob(dem_dir + '/*.wgs84')[0]
+        dem_file = glob.glob(dem_dir + '/*.dem')[0]
         inps.template[inps.prefix + 'Stack.demDir'] = dem_file
     except:
         raise SystemExit('DEM does not exist')

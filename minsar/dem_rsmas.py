@@ -135,35 +135,34 @@ def main(iargs=None):
     west = math.floor(float(west) - 0.5)
     east = math.ceil(float(east) + 0.5)
 
-    # demBbox = str(int(south)) + ' ' + str(int(north)) + ' ' + str(int(west)) + ' ' + str(int(east))
-    #
-    # command = 'dem.py -a stitch --filling --filling_value 0 -b ' + demBbox + ' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
-    #
-    # message_rsmas.log(os.getcwd(), command)
-    #
-    # try:
-    #     #FA 8/2024: dem.main()  did not work, because it does not accept an argument list (I think).
-    #     proc = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True,
-    #                             universal_newlines=True)
-    #     output, error = proc.communicate()
-    #     print(error)
-    #     if proc.returncode is not 0:
-    #         print('FA 8/23: dem.py returns error. SKIPPING because it may happen because of poor dem.py call')
-    #         print(output)
-    #         print(error, file=sys.stderr)
-    # except subprocess.CalledProcessError as exc:
-    #     print("Command failed. Exit code, StdErr:", exc.returncode, exc.output)
-    #     sys.exit('Error produced by dem.py')
-    # else:
-    #     if 'Could not create a stitched DEM. Some tiles are missing' in output:
-    #         os.chdir('..')
-    #         shutil.rmtree('DEM')
-    #         sys.exit('Error in dem.py: Tiles are missing. Ocean???')
+    demBbox = str(int(south)) + ' ' + str(int(north)) + ' ' + str(int(west)) + ' ' + str(int(east))
+    command = 'dem.py -a stitch --filling --filling_value 0 -b ' + demBbox + ' -c -u https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/'
+    #message_rsmas.log(os.getcwd(), command)
+    ##
+    #try:
+    #    #FA 8/2024: dem.main()  did not work, because it does not accept an argument list (I think).
+    #    proc = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True,
+    #                            universal_newlines=True)
+    #    output, error = proc.communicate()
+    #    print(error)
+    #    if proc.returncode is not 0:
+    #        print('FA 8/23: dem.py returns error. SKIPPING because it may happen because of poor dem.py call')
+    #        print(output)
+    #        print(error, file=sys.stderr)
+    #except subprocess.CalledProcessError as exc:
+    #    print("Command failed. Exit code, StdErr:", exc.returncode, exc.output)
+    #    sys.exit('Error produced by dem.py')
+    #else:
+    #    if 'Could not create a stitched DEM. Some tiles are missing' in output:
+    #        os.chdir('..')
+    #        shutil.rmtree('DEM')
+    #        sys.exit('Error in dem.py: Tiles are missing. Ocean???')
 
     bbox_LeftBottomRightTop = [int(west), int(south), int(east), int(north)]
-    output_name = f"elevation_{format_bbox(bbox_LeftBottomRightTop)}.dem.wgs84"
+    #output_name = f"elevation_{format_bbox(bbox_LeftBottomRightTop)}.dem.wgs84"   #FA  Sep 2024
+    output_name = f"elevation_{format_bbox(bbox_LeftBottomRightTop)}.dem"      
 
-    command = f"sardem --bbox {int(west)} {int(south)} {int(east)}  {int(north)} --data COP --make-isce-xml --output_name {output_name}"
+    command = f"sardem --bbox {int(west)} {int(south)} {int(east)}  {int(north)} --data COP --make-isce-xml --output {output_name}"
     message_rsmas.log(os.getcwd(), command)
 
     try:
