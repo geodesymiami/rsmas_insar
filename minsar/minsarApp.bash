@@ -3,7 +3,7 @@ set -eo pipefail
 #set -x
 ###################################################################################
 function create_template_array() {
-mapfile -t array < <(grep -e ^minsar -e ^mintpy -e ^miaplpy $1)
+mapfile -t array < <(grep -e ^minsar -e ^mintpy -e ^miaplpy -e ^topsStack $1)
 declare -gA template
 for item in "${array[@]}"; do
   #echo "item: <$item>"
@@ -148,6 +148,7 @@ helptext="                                                                      
    --mintpy --miaplpy    use smallbaselineApp.py and miaplpyApp.py               \n\
    --no-mintpy --miaplpy use only miaplpyApp.py                                  \n\
                                                                                  \n\
+   --burst-download      download burst instead of frames                        \n\
    --no-orbit-download   don't download prior to jobfile creation                \n\
                                                                                  \n\
    --sleep SECS           sleep seconds before running                           \n\
@@ -518,6 +519,12 @@ if [[ $copy_to_tmp == "--tmp" ]]; then
 else
     echo "copy_to_tmp is OFF"
 fi
+
+# switch mintpy off for slc workflow
+if [[ ${template[topsStack.workflow]} == "slc" ]]; then
+   mintpy_flag=0
+fi
+
 echo "Switches: select_reference: $select_reference_flag   burst_download: $burst_download_flag  chunks: $chunks_flag"
 echo "Flags for processing steps:"
 echo "download dem jobfiles ifgram mintpy miaplpy upload insarmaps finishup"
@@ -718,9 +725,15 @@ fi
 if [[ $ifgram_flag == "1" ]]; then
 
     if [[ $template_file != *"Sen"* || $select_reference_flag == "0" ]]; then
-
        run_command "run_workflow.bash $template_file --dostep ifgram $copy_to_tmp"
     else
+
+       echo "topsStack.workflow: <${template[topsStack.workflow]}>"
+       stopstep=11              # default for interferogram workflow
+       if [[ ${template[topsStack.workflow]} == "slc" ]]; then
+          stopstep=8
+       fi
+       #sleep 30
 
        # run with checking and selecting of reference date
        echo "### Running step 1 to 5 to check whether reference date has enough bursts"
@@ -777,14 +790,14 @@ if [[ $ifgram_flag == "1" ]]; then
        fi
 
        # continue running starting step 6
-       run_command "run_workflow.bash $template_file --start 6 --stop 11 $copy_to_tmp --append"
+       run_command "run_workflow.bash $template_file --start 6 --stop $stopstep $copy_to_tmp --append"
 
     fi
     # correct *xml and *vrt files
     #sed -i "s|/tmp|$PWD|g" */*.xml */*/*.xml  */*/*/*.xml
     #sed -i "s|/tmp|$PWD|g" */*.vrt */*/*.vrt  */*/*/*.vrt
-    sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.vrt merged/SLC/*/*.vrt   merged/interferograms/*/*vrt
-    sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.xml merged/SLC/*/*.xml   merged/interferograms/*/*xml
+    #sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.vrt merged/SLC/*/*.vrt   merged/interferograms/*/*vrt
+    #sed -i "s|/tmp|$PWD|g" merged/geom_reference/*.xml merged/SLC/*/*.xml   merged/interferograms/*/*xml
 fi
 
 ########################
