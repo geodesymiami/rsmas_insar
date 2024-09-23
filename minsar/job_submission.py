@@ -150,7 +150,7 @@ class JOB_SUBMIT:
         self.job_files = []
 
         try:
-            dem_file = glob.glob(self.work_dir + '/DEM/*.wgs84')[0]
+            dem_file = glob.glob(self.work_dir + '/DEM/*.dem')[0]
             inps.template[inps.prefix + 'Stack.demDir'] = os.path.dirname(dem_file)
         except:
             print('DEM does not exist in {}'.format(self.work_dir + '/DEM'))
