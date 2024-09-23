@@ -60,7 +60,6 @@ def main(iargs=None):
     inps.work_dir = os.getcwd()
 
     run_01_burst2safe_path = Path(inps.ssara_listing_path).resolve().with_name('run_01_burst2safe')
-    # run_02_burst2safe_path = Path(inps.ssara_listing_path).resolve().with_name('run_02_burst2safe')
 
     absolute_orbits = []
     dates = []
@@ -74,6 +73,8 @@ def main(iargs=None):
                 date = date_time.split('T')[0]  # Split at 'T' and take the first part (the date)
                 dates.append(date)
     relative_orbit = (int(absolute_orbits[0]) - 73) % 175 + 1
+    unique_dates = list(set(dates))
+    dates = unique_dates
     
     dir = os.path.dirname(inps.ssara_listing_path)
 
