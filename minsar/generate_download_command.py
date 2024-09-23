@@ -64,13 +64,13 @@ def generate_intersects_string(dataset_template, delta_lat=0.0):
 
 
     if 'miaplpy.subset.lalo' in dataset_template.get_options():
-       print("QQ0 Creating intersectsWith string using miaplpy.subset.lalo: ", dataset_template.get_options()['miaplpy.subset.lalo'])
+       print("Creating intersectsWith string using miaplpy.subset.lalo: ", dataset_template.get_options()['miaplpy.subset.lalo'])
        intersects_string = convert_subset_lalo_to_intersects_string(dataset_template.get_options()['miaplpy.subset.lalo'], delta_lat)
     elif 'mintpy.subset.lalo' in dataset_template.get_options():
-       print("QQ0 Creating intersectsWith string using mintpy.subset.lalo: dataset_template.get_options()['mintpy.subset.lalo']")
+       print("Creating intersectsWith string using mintpy.subset.lalo: dataset_template.get_options()['mintpy.subset.lalo']")
        intersects_string = convert_subset_lalo_to_intersects_string(dataset_template.get_options()['mintpy.subset.lalo'], delta_lat)
     else:
-       print("QQ0 Creating intersectsWith string using *Stack.boundingBox: ", dataset_template.get_options()[prefix + 'Stack.boundingBox'])
+       print("Creating intersectsWith string using *Stack.boundingBox: ", dataset_template.get_options()[prefix + 'Stack.boundingBox'])
        intersects_string = convert_bounding_box_to_intersects_string(dataset_template.get_options()[prefix + 'Stack.boundingBox'], delta_lat)
 
     return intersects_string
@@ -86,6 +86,11 @@ def convert_subset_lalo_to_intersects_string(subset_lalo, delta_lat=0):
    max_lat = float(lat_string.split(':')[1]) + delta_lat
    min_lon = float(lon_string.split(':')[0]) - delta_lat/2
    max_lon = float(lon_string.split(':')[1]) + delta_lat/2
+
+   min_lat = round(min_lat, 2)
+   max_lat = round(max_lat, 2)
+   min_lon = round(min_lon, 2)
+   max_lon = round(max_lon, 2)
 
    intersects_string = '--intersectsWith=\'Polygon(({:.2f} {:.2f}, {:.2f} {:.2f}, {:.2f} {:.2f}, {:.2f} {:.2f}, ' \
          '{:.2f} {:.2f}))\''.format(min_lon, min_lat, min_lon, max_lat, max_lon, max_lat, max_lon, min_lat, min_lon, min_lat)
@@ -144,7 +149,7 @@ def convert_intersects_string_to_extent_string(intersects_string):
     return extent_str, extent_list
 
 ###############################################
-def generate_download_command(template):
+def generate_download_command(template,inps):
     """ generate ssara download options to use """
 
     dataset_template = Template(template)
@@ -160,19 +165,17 @@ def generate_download_command(template):
        ssaraopt.insert(2, intersects_string)
     
     extent_str, extent_list = convert_intersects_string_to_extent_string(intersects_string)
-    print('QQ0 New intersectsWith sting using delta_lat=0.1: ', intersects_string)
-    print('QQ0 New extent sting using delta_lat=0.1: ', extent_str)
+    print('New intersectsWith sting using delta_lat=0.1: ', intersects_string)
+    print('New extent sting using delta_lat=0.1: ', extent_str)
 
     ssara_cmd_slc_download_bash = ['ssara_federated_query.bash'] + ssaraopt 
-    #ssara_cmd_kml_download_python = ['ssara_federated_query.py'] + ssaraopt + ['--maxResults=20000','--asfResponseTimeout=300', '--kml']
     ssara_cmd_kml_download_python = ['ssara_federated_query.py'] + ssaraopt + ['--maxResults=20000','--asfResponseTimeout=300', '--kml','--print','>','ssara_listing.txt','2> ssara.e']
     ssara_cmd_slc_download_python = ['ssara_federated_query.py'] + ssaraopt + ['--maxResults=20000','--asfResponseTimeout=300', '--kml', '--print','--download']
 
     asf_cmd_slc_download = ['asf_search_args.py', '--product=SLC'] + ssaraopt + ['--print', '--download']
     asf_cmd_burst_download = ['asf_search_args.py', '--product=BURST'] + ssaraopt + ['--print', '--download']
-    #asf_cmd_burst2safe = ['burst2stack','--rel-orbit',ssaraopt_dict['relativeOrbit'],'--start-date',ssaraopt_dict['start'],'--end-date',ssaraopt_dict['end'],'--extent',extent_str]
-    asf_cmd_burst2safe = ['burst2stack','--rel-orbit',ssaraopt_dict['relativeOrbit'],'--start-date',ssaraopt_dict['start'],'--end-date',ssaraopt_dict['end'],'--extent',extent_str,'--all-anns']
-    asf_cmd_burst2safe.insert(0, "srun -n1 -N1 -A $JOBSHEDULER_PROJECTNAME -p $QUEUENAME  -t 00:25:00 ")    #FA 8/24: it should create a burst2safe.job
+    asf_cmd_burst2safe1 = ['ssara_listing_2_burst2safe_jobfile.py', ' ssara_listing.txt' + ' --extent', extent_str]
+    asf_cmd_burst2safe2 = [f'run_workflow.bash {template} --jobfile {inps.work_dir}/SLC/run_01_burst2safe']
 
     with open('ssara_command.txt', 'w') as f:
         f.write(' '.join(ssara_cmd_slc_download_bash) + '\n')
@@ -183,7 +186,8 @@ def generate_download_command(template):
     with open('asf_burst_download.txt', 'w') as f:
         f.write(' '.join(ssara_cmd_kml_download_python) + '\n')
         f.write(' '.join(asf_cmd_burst_download) + '\n')
-        f.write(' '.join(asf_cmd_burst2safe ) + '\n')
+        f.write(' '.join(asf_cmd_burst2safe1 ) + '\n')
+        f.write(' '.join(asf_cmd_burst2safe2 ) + '\n')
 
     ssara_cmd_python = ['ssara_federated_query.py'] + ssaraopt + ['--maxResults=20000','--asfResponseTimeout=300', '--kml', '--print']
     with open('ssara_command_python.txt', 'w') as f:
@@ -204,7 +208,7 @@ def main(iargs=None):
 
     message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
 
-    generate_download_command(inps.custom_template_file)
+    generate_download_command(inps.custom_template_file,inps)
 
     return None
 
