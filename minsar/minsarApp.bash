@@ -569,7 +569,7 @@ if [[ $download_flag == "1" ]]; then
 
     echo "QQQQQQQ Download is starting...."
     if [[ $burst_download_flag == "1" ]]; then
-       cmd=$(cat ../asf_burst_download.txt)
+       cmd=$(cat ../asf_burst_download_commands.txt)
        run_command "$cmd"
        #while IFS= read -r cmd; do
        #   run_command "$cmd"

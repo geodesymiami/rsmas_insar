@@ -74,7 +74,7 @@ def main(iargs=None):
                 dates.append(date)
     relative_orbit = (int(absolute_orbits[0]) - 73) % 175 + 1
     unique_dates = list(set(dates))
-    dates = unique_dates
+    dates = sorted(unique_dates)
     
     dir = os.path.dirname(inps.ssara_listing_path)
 
