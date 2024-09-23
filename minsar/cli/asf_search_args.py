@@ -22,10 +22,10 @@ Usage Examples:
         asf_search_args.py --product=CSLC --start=2014-10-04 --end=2015-10-05 --intersectsWith='POLYGON((-77.98 0.78,-77.91 0.7881,-77.91 0.85,-77.98 0.85,-77.98 0.78))' --download --dir=PATH
 
     To use parallel downloads:
-        asf_search_args.py --product=SLC --start=2014-10-04 --end=2015-10-05 --relativeOrbit=170 --download --dir=PATH --parallel=4
+        asf_search_args.py --product=SLC --start=2014-10-04 --end=2015-10-05 --relativeOrbit=170 --download --dir=path/to/folder --parallel=4
 
-    To search for a specific date range:
-        asf_search_args.py --product=SLC --start=2014-10-04 --end=2015-10-05 --download --dir=PATH
+    To search for a specific polarization:
+        asf_search_args.py --product=SLC --pols HH
 
     To search for a specific intersectsWith area:
         asf_search_args.py --product=SLC --intersectsWith='POLYGON((-77.9853 0.7881,-77.9185 0.7881,-77.9185 0.8507,-77.9853 0.8507,-77.9853 0.7881))'
@@ -43,9 +43,9 @@ parser.add_argument('--start', metavar='YYYY-MM-DD or YYYYMMDD', help='Start dat
 parser.add_argument('--end', metavar='YYYY-MM-DD or YYYYMMDD', help='End date of the search')
 parser.add_argument('--start-date', metavar='YYYY-MM-DD or YYYYMMDD', help='Start date of the search')
 parser.add_argument('--end-date', metavar='YYYY-MM-DD or YYYYMMDD', help='End date of the search')
-parser.add_argument('--node', metavar='NODE', help='Flight direction of the satellite (ASCENDING or DESCENDING)')
+parser.add_argument('--node', choices=['ASC', 'DESC', 'ASCENDING', 'DESCENDING'], help='Flight direction of the satellite (ASCENDING or DESCENDING)')
 parser.add_argument('--relativeOrbit', type=int, metavar='ORBIT', help='Relative Orbit Path')
-parser.add_argument('--pols', choices=['HH', 'VV', 'VV+VH', 'HH+HV'], metavar='POLARITY', default='VV', help='Polarization, default is %(default)s')
+parser.add_argument('--pols', choices=['HH', 'VV', 'VV+VH', 'HH+HV'], default='VV', help='Polarization, default is %(default)s')
 parser.add_argument('--product', dest='product', choices=['SLC', 'CSLC', 'BURST'], help='Choose the product type to download')
 parser.add_argument('--platform', nargs='?',metavar='SENTINEL1, SENTINEL-1A, SENTINEL-1B', help='Choose the platform to search')
 parser.add_argument('--burst-id', nargs='*', type=str, metavar='BURST', help='Burst ID')
@@ -104,10 +104,10 @@ else:
     platform = asf.PLATFORM.SENTINEL1
 
 if inps.node:
-    if inps.node in ['ASCENDING', 'ASC', 'A']:
+    if inps.node in ['ASCENDING', 'ASC']:
         node = asf.FLIGHT_DIRECTION.ASCENDING
 
-    elif inps.node in ['DESCENDING', 'DESC', 'D']:
+    elif inps.node in ['DESCENDING', 'DESC']:
         node = asf.FLIGHT_DIRECTION.DESCENDING
 
 if inps.download is not None:
