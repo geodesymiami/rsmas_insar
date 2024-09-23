@@ -1,4 +1,5 @@
 ##! /bin/bash
+#set -x
 
 function abbreviate {
     abb=$1
@@ -134,6 +135,8 @@ fi
 echo "$(date +"%Y%m%d:%H-%M") * run_workflow.bash $template_print_name ${@:2}" >> "${WORKDIR}"/log
 
 jobfile_flag=0
+jobfiles=()
+
 while [[ $# -gt 0 ]]
 do
     key="$1"
@@ -207,6 +210,14 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 if [[ $startstep == "miaplpy" ]]; then
    miaplpy_flag=true
 fi
+
+# Print the collected job files for confirmation
+#echo "Job files: ${jobfiles[@]}"
+#for jobfile in "${jobfiles[@]}"; do
+#    echo "Processing job file: $jobfile"
+#done
+echo "jobfile: <${jobfile}>"
+sleep 3
 
 # set startstep, stopstep if miaplpy options are given
 echo "startstep, stopstep:<$startstep> <$stopstep>"
@@ -387,6 +398,10 @@ echo "Started at: $(date +"%Y-%m-%d %H:%M:%S")"
 # 5/2024 hack to be able to run one jobfile
 if [[ $jobfile_flag == "true" ]]; then
      globlist=("$jobfile")
+     #globlist=$jobfiles
+    if [[ ${globlist[0]} != *job ]]; then
+       globlist[0]="${globlist[0]}*.job"
+    fi
      echo "--jobfile hack applies: replaced full list by jobfile $jobfile"
 fi
 
@@ -400,6 +415,9 @@ for g in "${globlist[@]}"; do
     if [[ -n $g ]]; then
         files=($(ls -1v $g))
     fi
+    echo "QQ globlist: <${globlist[@]}>"
+    echo "QQ globlist element: <$g>"
+    echo "QQ files: <$files>"
 
     if $randomorder; then
         files=( $(echo "${files[@]}" | sed -r 's/(.[^;]*;)/ \1 /g' | tr " " "\n" | shuf | tr -d " " ) )
@@ -410,6 +428,7 @@ for g in "${globlist[@]}"; do
 
     jobnumbers=()
     file_pattern=$(echo "${files[0]}" | grep -oP "(.*)(?=_\d{1,}.job)|insarmaps|smallbaseline_wrapper")
+    echo "QQ files[0], file_pattern: <${files[0]}> <$file_pattern>"
     
     sbc_command="submit_jobs.bash $file_pattern"
     
