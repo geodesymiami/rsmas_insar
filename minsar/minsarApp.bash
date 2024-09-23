@@ -186,9 +186,6 @@ WORK_DIR=${SCRATCHDIR}/${PROJECT_NAME}
 mkdir -p $WORK_DIR
 cd $WORK_DIR
 
-create_template_array $template_file
-#echo template keys: ${!template[@]}
-
 # create name including $TE for concise log file
 template_file_dir=$(dirname "$template_file")          # create name including $TE for concise log file
 if   [[ $template_file_dir == $TEMPLATES ]]; then
@@ -334,6 +331,8 @@ fi
 if [[ $debug_flag == "1" ]]; then
    set -x
 fi
+
+create_template_array $template_file
 
 # adjust switches according to template options if insarmaps_flag is not set
 # first test if insarmaps_flag is set
@@ -729,9 +728,9 @@ if [[ $ifgram_flag == "1" ]]; then
     else
 
        echo "topsStack.workflow: <${template[topsStack.workflow]}>"
-       stopstep=11              # default for interferogram workflow
-       if [[ ${template[topsStack.workflow]} == "slc" ]]; then
-          stopstep=8
+       ifgram_stopstep=11              # default for interferogram workflow
+       if [[ ${template[topsStack.workflow]} == "slc" ]] || [[ $mintpy_flag == 0 ]]; then
+          ifgram_stopstep=8
        fi
        #sleep 30
 
@@ -790,7 +789,7 @@ if [[ $ifgram_flag == "1" ]]; then
        fi
 
        # continue running starting step 6
-       run_command "run_workflow.bash $template_file --start 6 --stop $stopstep $copy_to_tmp --append"
+       run_command "run_workflow.bash $template_file --start 6 --stop $ifgram_stopstep $copy_to_tmp --append"
 
     fi
     # correct *xml and *vrt files
@@ -885,11 +884,11 @@ if [[ $finishup_flag == "1" ]]; then
 fi
 
 echo
-if test -f mintpy/*he5; then
+if ls mintpy/*he5 1> /dev/null 2>&1; then
    echo "hdfeos5 files produced:"
    ls -sh mintpy/*he5
 fi
-if test -f $network_dir/*he5; then
+if ls $network_dir/*he5 1> /dev/null 2>&1; then
    echo " hdf5files in network_dir: <$network_dir>"
    ls -sh $network_dir/*he5
 fi
