@@ -45,13 +45,14 @@ parser.add_argument('--start-date', metavar='YYYY-MM-DD or YYYYMMDD', help='Star
 parser.add_argument('--end-date', metavar='YYYY-MM-DD or YYYYMMDD', help='End date of the search')
 parser.add_argument('--node', metavar='NODE', help='Flight direction of the satellite (ASCENDING or DESCENDING)')
 parser.add_argument('--relativeOrbit', type=int, metavar='ORBIT', help='Relative Orbit Path')
-parser.add_argument('--pols', choices=['HH', 'VV', 'VV+VH', 'HH+HV'], metavar='POLARITY', default='VV', help='Polarization')
+parser.add_argument('--pols', choices=['HH', 'VV', 'VV+VH', 'HH+HV'], metavar='POLARITY', default='VV', help='Polarization, default is %(default)s')
 parser.add_argument('--product', dest='product', choices=['SLC', 'CSLC', 'BURST'], help='Choose the product type to download')
 parser.add_argument('--platform', nargs='?',metavar='SENTINEL1, SENTINEL-1A, SENTINEL-1B', help='Choose the platform to search')
 parser.add_argument('--burst-id', nargs='*', type=str, metavar='BURST', help='Burst ID')
 parser.add_argument('--download', action='store_true', help='Download the data')
 parser.add_argument('--parallel', type=int, default=1, help='Download the data in parallel, specify the number of processes to use')
 parser.add_argument('--print', action='store_true', help='Print the search results')
+parser.add_argument('--print-json', dest='pjson',action='store_true', help='Print the whole search results in JSON format')
 parser.add_argument('--dir', metavar='FOLDER', help='Specify path to download the data, if not specified, the data will be downloaded in SCRATCHDIR directory')
 
 inps = parser.parse_args()
@@ -140,19 +141,20 @@ results = asf.search(
 print(f"Found {len(results)} results.")
 burst_ids =[]
 for r in results:
-    if 'BURST' in product:
-        if r.properties['burst']['relativeBurstID'] not in burst_ids:
-            burst_ids.append(r.properties['burst']['relativeBurstID'])
-            print(f"Relative Burst ID: {r.properties['burst']['relativeBurstID']}")
-    else:
-        print('--------------------------------------------------------------------------------------------------------------------------')
-        print(f"Start date: {r.properties['startTime']}")
-        print(f"End date: {(r.properties['stopTime'])}")
-        print(f"{r.geometry['type']}: {r.geometry['coordinates']}")
-        print(f"Path of satellite: {r.properties['pathNumber']}")
-        print(f"Granule:  {r.properties['granuleType']}")
-
     if inps.print:
+        if 'BURST' in product:
+            if r.properties['burst']['relativeBurstID'] not in burst_ids:
+                burst_ids.append(r.properties['burst']['relativeBurstID'])
+                print(f"Relative Burst ID: {r.properties['burst']['relativeBurstID']}")
+        else:
+            print('--------------------------------------------------------------------------------------------------------------------------')
+            print(f"Start date: {r.properties['startTime']}")
+            print(f"End date: {(r.properties['stopTime'])}")
+            print(f"{r.geometry['type']}: {r.geometry['coordinates']}")
+            print(f"Path of satellite: {r.properties['pathNumber']}")
+            print(f"Granule:  {r.properties['granuleType']}")
+
+    elif inps.pjson:
         print('')
         print(r)
 
