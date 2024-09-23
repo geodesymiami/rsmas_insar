@@ -45,6 +45,7 @@ parser.add_argument('--start-date', metavar='YYYY-MM-DD or YYYYMMDD', help='Star
 parser.add_argument('--end-date', metavar='YYYY-MM-DD or YYYYMMDD', help='End date of the search')
 parser.add_argument('--node', metavar='NODE', help='Flight direction of the satellite (ASCENDING or DESCENDING)')
 parser.add_argument('--relativeOrbit', type=int, metavar='ORBIT', help='Relative Orbit Path')
+parser.add_argument('--pols', choices=['HH', 'VV', 'VV+VH', 'HH+HV'], metavar='POLARITY', default='VV', help='Polarization')
 parser.add_argument('--product', dest='product', choices=['SLC', 'CSLC', 'BURST'], help='Choose the product type to download')
 parser.add_argument('--platform', nargs='?',metavar='SENTINEL1, SENTINEL-1A, SENTINEL-1B', help='Choose the platform to search')
 parser.add_argument('--burst-id', nargs='*', type=str, metavar='BURST', help='Burst ID')
@@ -119,6 +120,8 @@ if inps.download is not None:
 else:
     path = None
 
+pols = inps.pols
+
 
 print("Searching for Sentinel-1 data...")
 results = asf.search(
@@ -129,7 +132,8 @@ results = asf.search(
     intersectsWith=inps.intersectsWith,
     flightDirection=node,
     relativeOrbit=inps.relativeOrbit,
-    relativeBurstID=burst_id
+    relativeBurstID=burst_id,
+    polarization=pols
 )
 
 
