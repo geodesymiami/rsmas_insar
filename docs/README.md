@@ -46,6 +46,11 @@ Processing can be started at a given step using the `--start` option and stopped
 ```
 In order to use either `--start` or `--dostep`, it is necessary that the previous step was completed.
 
+Update 9/2024:  For burst download and ISCE processing with slc workflow use:
+```
+minsarApp.bash $SAMPLESDIR/bdunittestGalapagosSenDT128.template --burst-download --miaplpy --no-mintpy --insarmaps
+```
+
 ## 3. Summary of processing steps ###
 - **download:** `minsrApp.bash` runs  `generate_download_command.py` and creates a `ssara_federated_query.py` download command in `ssara_command.txt` (which is excuted in the `SLC` directory using `bash ../ssara_command.txt`.
 
