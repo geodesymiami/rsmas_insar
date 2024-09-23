@@ -45,7 +45,7 @@ parser.add_argument('--start-date', metavar='YYYY-MM-DD or YYYYMMDD', help='Star
 parser.add_argument('--end-date', metavar='YYYY-MM-DD or YYYYMMDD', help='End date of the search')
 parser.add_argument('--node', choices=['ASC', 'DESC', 'ASCENDING', 'DESCENDING'], help='Flight direction of the satellite (ASCENDING or DESCENDING)')
 parser.add_argument('--relativeOrbit', type=int, metavar='ORBIT', help='Relative Orbit Path')
-parser.add_argument('--pols', choices=['HH', 'VV', 'VV+VH', 'HH+HV'], default='VV', help='Polarization, default is %(default)s')
+parser.add_argument('--pols', choices=['HH', 'VV', 'VV+VH', 'HH+HV', 'HH+VV'], default='VV', help='Polarization, default is %(default)s')
 parser.add_argument('--product', dest='product', choices=['SLC', 'CSLC', 'BURST'], help='Choose the product type to download')
 parser.add_argument('--platform', nargs='?',metavar='SENTINEL1, SENTINEL-1A, SENTINEL-1B', help='Choose the platform to search')
 parser.add_argument('--burst-id', nargs='*', type=str, metavar='BURST', help='Burst ID')
