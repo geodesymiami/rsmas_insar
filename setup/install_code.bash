@@ -16,6 +16,7 @@ mamba install numpy pandas xarray netcdf4 packaging gmt pygmt --yes
 git clone git@github.com:insarlab/MintPy.git tools/MintPy
 git clone git@github.com:insarlab/MiaplPy.git tools/MiaplPy
 git clone git@github.com:geodesymiami/insarmaps_scripts.git tools/insarmaps_scripts
+git clone git@github.com:geodesymiami/insarmaps.git tools/insarmaps
 git clone git@github.com:isce-framework/isce2.git tools/isce2
 git clone git@github.com:geodesymiami/MimtPy.git tools/MimtPy
 git clone git@github.com:geodesymiami/geodmod.git tools/geodmod

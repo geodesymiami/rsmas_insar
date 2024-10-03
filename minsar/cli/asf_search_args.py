@@ -147,12 +147,9 @@ for r in results:
                 burst_ids.append(r.properties['burst']['relativeBurstID'])
                 print(f"Relative Burst ID: {r.properties['burst']['relativeBurstID']}")
         else:
-            print('--------------------------------------------------------------------------------------------------------------------------')
-            print(f"Start date: {r.properties['startTime']}")
-            print(f"End date: {(r.properties['stopTime'])}")
-            print(f"{r.geometry['type']}: {r.geometry['coordinates']}")
-            print(f"Path of satellite: {r.properties['pathNumber']}")
-            print(f"Granule:  {r.properties['granuleType']}")
+            print('-' * 100)
+            print(f"Start date: {r.properties['startTime']}, End date: {(r.properties['stopTime'])}, {r.geometry['type']}: {r.geometry['coordinates']}, Path of satellite: {r.properties['pathNumber']}, Granule:  {r.properties['granuleType']}")
+            
 
     elif inps.pjson:
         print('')
