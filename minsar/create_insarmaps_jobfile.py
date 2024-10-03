@@ -17,8 +17,9 @@ from minsar.job_submission import JOB_SUBMIT
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
 
-REMOTEHOST_INSARMAPS = os.getenv('REMOTEHOST_INSARMAPS')
+REMOTEHOST_INSARMAPS1 = os.getenv('REMOTEHOST_INSARMAPS1')
 REMOTEHOST_INSARMAPS2 = os.getenv('REMOTEHOST_INSARMAPS2')
+REMOTEHOST_INSARMAPS3 = os.getenv('REMOTEHOST_INSARMAPS3')
 
 pathObj = PathFind()
 ############################################################
@@ -103,8 +104,9 @@ def main(iargs=None):
         path_obj = Path(file[0])
         mbtiles_file = f"{path_obj.parent}/JSON{suffix}/{path_obj.name}"
         mbtiles_file = mbtiles_file.replace('he5','mbtiles')
-        command.append( f'json_mbtiles2insarmaps.py --num-workers 8 -u {password.insaruser} -p {password.insarpass} --host {REMOTEHOST_INSARMAPS} -P {password.databasepass} -U {password.databaseuser} --json_folder {inps.work_dir}/{inps.data_dir[0]}/JSON{suffix} --mbtiles_file {mbtiles_file} &' )
+        command.append( f'json_mbtiles2insarmaps.py --num-workers 8 -u {password.insaruser} -p {password.insarpass} --host {REMOTEHOST_INSARMAPS1} -P {password.databasepass} -U {password.databaseuser} --json_folder {inps.work_dir}/{inps.data_dir[0]}/JSON{suffix} --mbtiles_file {mbtiles_file} &' )
         command.append( f'json_mbtiles2insarmaps.py --num-workers 8 -u {password.docker_insaruser} -p {password.docker_insarpass} --host {REMOTEHOST_INSARMAPS2} -P {password.docker_databasepass} -U {password.docker_databaseuser} --json_folder {inps.work_dir}/{inps.data_dir[0]}/JSON{suffix} --mbtiles_file {mbtiles_file} &' )
+        command.append( f'json_mbtiles2insarmaps.py --num-workers 8 -u {password.docker_insaruser} -p {password.docker_insarpass} --host {REMOTEHOST_INSARMAPS3} -P {password.docker_databasepass} -U {password.docker_databaseuser} --json_folder {inps.work_dir}/{inps.data_dir[0]}/JSON{suffix} --mbtiles_file {mbtiles_file} &' )
     
     command.append('wait\n')
     str = [f'cat >> insarmaps.log<<EOF']
@@ -114,8 +116,9 @@ def main(iargs=None):
         # str.append(f"https://insarmaps.miami.edu/start/25.78/-80.3/11.0?flyToDatasetCenter=true&startDataset={name_without_extension}")
         # str.append(f"149.165.174.11/start/25.78/-80.3/11.0?flyToDatasetCenter=true&startDataset={name_without_extension}")
         
-        str.append(f"https://{REMOTEHOST_INSARMAPS}/start/{ref_lat:.1f}/{ref_lon:.1f}/11.0?flyToDatasetCenter=true&startDataset={name_without_extension}")
+        str.append(f"https://{REMOTEHOST_INSARMAPS1}/start/{ref_lat:.1f}/{ref_lon:.1f}/11.0?flyToDatasetCenter=true&startDataset={name_without_extension}")
         str.append(f"{REMOTEHOST_INSARMAPS2}/start/{ref_lat:.1f}/{ref_lon:.1f}/11.0?flyToDatasetCenter=true&startDataset={name_without_extension}")
+        str.append(f"{REMOTEHOST_INSARMAPS3}/start/{ref_lat:.1f}/{ref_lon:.1f}/11.0?flyToDatasetCenter=true&startDataset={name_without_extension}")
 
     str.append( 'EOF' ) 
     command.append( '\n'.join(str) )
