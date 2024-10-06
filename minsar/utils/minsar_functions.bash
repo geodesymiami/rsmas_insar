@@ -12,6 +12,24 @@ elif [[ $PLATFORM_NAME == "stampede3" ]] ; then
           sed -i "s|skx-dev|skx|g" "$@" ;
 fi 
 }
+###########################################
+scancel_jobs() {
+    if [ -z "$1" ] || [ "$1" == "--help" ]; then
+        echo 
+        echo "Usage: scancel_jobs <job_name_pattern>"
+        echo 
+        echo "Cancels all SLURM jobs containing the specified pattern in their name."
+        echo 
+        echo "Example: scancel_jobs run_05"
+        echo 
+        return 0
+    fi
+
+    job_name_pattern=$1
+    for job_id in $(squeue -u $USER -o "%.18i %.100j" | grep "$job_name_pattern" | awk '{print $1}'); do
+        scancel $job_id
+    done
+}
 
 ###########################################
 function changequeuedev() { 
