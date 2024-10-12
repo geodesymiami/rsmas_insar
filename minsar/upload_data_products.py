@@ -39,7 +39,7 @@ def create_parser():
     parser.add_argument('--geo', dest='geo_flag', action='store_true', default=False, help='uploads geo  directory')
     parser.add_argument('--slcStack', dest='slcStack_flag', action='store_true', default=False, help='uploads miaplpy*/inputs directory')
     parser.add_argument('--all', dest='all_flag', action='store_true', default=False, help='uploads full directory')
-    parser.add_argument('--pic', dest='pic_flag', action='store_true', default=False, help='uploads only pic directory')
+    parser.add_argument('--pic', dest='piconly_flag', action='store_true', default=False, help='uploads only pic directory')
     #parser.add_argument('--triplets', dest='triplets_flag', action='store_true', default=False, help='uploads numTriNonzeroIntAmbiguity.h5')
     parser.add_argument('--triplets', dest='triplets_flag', action='store_true', default=True, help='uploads numTriNonzeroIntAmbiguity.h5')
 
@@ -106,28 +106,31 @@ def main(iargs=None):
         if 'mintpy' in data_dir:
             if os.path.isdir(data_dir + '/pic'):
                create_html_if_needed(data_dir + '/pic')
-            scp_list.extend([
-            '/'+ data_dir +'/*.he5',
-            '/'+ data_dir +'/timeseries*demErr.h5',
-            '/'+ data_dir +'/pic',
-            '/'+ data_dir +'/inputs/geometryRadar.h5',
-            '/'+ data_dir +'/inputs/smallbaselineApp.cfg',
-            '/'+ data_dir +'/inputs/*.template',
-            '/'+ data_dir +'/geo/geo_velocity.h5'
-            ])
-            if inps.geo_flag:
+
+            scp_list.extend([ '/'+ data_dir +'/pic', ])
+
+            if not inps.piconly_flag:
                scp_list.extend([
-               '/'+ data_dir +'/geo/geo_*.h5',
-               '/'+ data_dir +'/geo/geo_*.dbf',
-               '/'+ data_dir +'/geo/geo_*.prj',
-               '/'+ data_dir +'/geo/geo_*.shp',
-               '/'+ data_dir +'/geo/geo_*.shx',
+               '/'+ data_dir +'/*.he5',
+               '/'+ data_dir +'/timeseries*demErr.h5',
+               '/'+ data_dir +'/inputs/geometryRadar.h5',
+               '/'+ data_dir +'/inputs/smallbaselineApp.cfg',
+               '/'+ data_dir +'/inputs/*.template',
+               '/'+ data_dir +'/geo/geo_velocity.h5'
                ])
 
-            if inps.triplets_flag:
-                   scp_list.extend([
-                   '/'+ data_dir +'/numTriNonzeroIntAmbiguity.h5',
-                   ])
+               if inps.triplets_flag:
+                  scp_list.extend([
+                  '/'+ data_dir +'/numTriNonzeroIntAmbiguity.h5',
+                  ])
+               if inps.geo_flag:
+                  scp_list.extend([
+                  '/'+ data_dir +'/geo/geo_*.h5',
+                  '/'+ data_dir +'/geo/geo_*.dbf',
+                  '/'+ data_dir +'/geo/geo_*.prj',
+                  '/'+ data_dir +'/geo/geo_*.shp',
+                  '/'+ data_dir +'/geo/geo_*.shx',
+                  ])
 
         if 'miaplpy' in data_dir:
             if 'network_' in data_dir:
@@ -139,72 +142,75 @@ def main(iargs=None):
             # FA 8/2024: I may want to remove the network option., It is complicated. Rather give multiple directories
             for network_dir in dir_list:
                 create_html_if_needed(network_dir + '/pic')
-                scp_list.extend([
-                '/'+ network_dir +'/*.he5',
-                '/'+ network_dir +'/demErr.h5',
-                '/'+ network_dir +'/velocity.h5',
-                '/'+ network_dir +'/temporalCoherence.h5',
-                '/'+ network_dir +'/avgSpatialCoh.h5',
-                '/'+ network_dir +'/maskTempCoh.h5',
-                '/'+ network_dir +'/numTriNonzeroIntAmbiguity.h5',
-                '/'+ network_dir +'/../maskPS.h5',
-                '/'+ network_dir +'/pic',
-                '/'+ network_dir +'/inputs/geometryRadar.h5',
-                '/'+ network_dir +'/geo/geo_velocity.h5'             # already included earlier
-                ])
-                if inps.geo_flag:
-                   scp_list.extend([
-                   '/'+ network_dir +'/geo/geo_*.h5',
-                   '/'+ network_dir +'/geo/geo_*.dbf',
-                   '/'+ network_dir +'/geo/geo_*.prj',
-                   '/'+ network_dir +'/geo/geo_*.shp',
-                   '/'+ network_dir +'/geo/geo_*.shx'
-                   ])
+
+                scp_list.extend([ '/'+ network_dir + '/pic', ])
+
+                if not inps.piconly_flag:
+                    scp_list.extend([
+                    '/'+ network_dir +'/*.he5',
+                    '/'+ network_dir +'/demErr.h5',
+                    '/'+ network_dir +'/velocity.h5',
+                    '/'+ network_dir +'/temporalCoherence.h5',
+                    '/'+ network_dir +'/avgSpatialCoh.h5',
+                    '/'+ network_dir +'/maskTempCoh.h5',
+                    '/'+ network_dir +'/numTriNonzeroIntAmbiguity.h5',
+                    '/'+ network_dir +'/../maskPS.h5',
+                    '/'+ network_dir +'/inputs/geometryRadar.h5',
+                    '/'+ network_dir +'/geo/geo_velocity.h5'             # already included earlier
+                    ])
+                    if inps.geo_flag:
+                       scp_list.extend([
+                       '/'+ network_dir +'/geo/geo_*.h5',
+                       '/'+ network_dir +'/geo/geo_*.dbf',
+                       '/'+ network_dir +'/geo/geo_*.prj',
+                       '/'+ network_dir +'/geo/geo_*.shp',
+                       '/'+ network_dir +'/geo/geo_*.shx'
+                       ])
                 
-                timeseries_path = 'timeseries_demErr.h5'
-                if  os.path.exists(network_dir + '/' + 'timeseries_ERA5_demErr.h5'):
-                    timeseries_path = 'timeseries_ERA5_demErr.h5'
+                    timeseries_path = 'timeseries_demErr.h5'
+                    if  os.path.exists(network_dir + '/' + 'timeseries_ERA5_demErr.h5'):
+                        timeseries_path = 'timeseries_ERA5_demErr.h5'
 
-                # FA 8/24: This section for edgar to have the high-res files
-                if inps.geo_flag:
+                    # FA 8/24: This section for edgar to have the high-res files
+                    if inps.geo_flag:
+                        scp_list.extend([
+                        '/'+ data_dir +'../maskPS.h5',
+                        '/'+ data_dir +'/inputs/geometryRadar.h5',
+                        '/'+ data_dir +'/temporalCoherence_lowpass_gaussian.h5',
+                        '/'+ data_dir +'/maskTempCoh__lowpass_gaussian.h5',
+                        '/'+ data_dir + '/' + timeseries_path
+                        ])
+
+                    if inps.triplets_flag:
+                       scp_list.extend([
+                       '/'+ network_dir +'/numTriNonzeroIntAmbiguity.h5',
+                       ])
+                    if inps.all_flag:
+                        scp_list.extend([
+                        '/'+ network_dir +'/numInvIfgram.h5',
+                        '/'+ network_dir +'/timeseries_demErr.h5',
+                        '/'+ network_dir +'/inputs/ifgramStack.h5',
+                        '/'+ network_dir +'/inputs/smallbaselineApp.cfg',
+                        '/'+ network_dir +'/inputs/*template',
+                        '/'+ network_dir +'/*.cfg',
+                        '/'+ network_dir +'/*.txt',
+                        '/'+ network_dir +'/geo', 
+                        ])
+
+                    # After completion of network_* loops
                     scp_list.extend([
-                    '/'+ data_dir +'../maskPS.h5',
-                    '/'+ data_dir +'/inputs/geometryRadar.h5',
-                    '/'+ data_dir +'/temporalCoherence_lowpass_gaussian.h5',
-                    '/'+ data_dir +'/maskTempCoh__lowpass_gaussian.h5',
-                    '/'+ data_dir + '/' + timeseries_path
+                    '/'+ os.path.dirname(data_dir) +'/maskPS.h5',
+                    '/'+ os.path.dirname(data_dir) +'/miaplpyApp.cfg',
+                    '/'+ os.path.dirname(data_dir) +'/inputs/geometryRadar.h5',
+                    '/'+ os.path.dirname(data_dir) +'/inputs/baselines', 
+                    '/'+ os.path.dirname(data_dir) +'/inputs/*.template', 
+                    '/'+ os.path.dirname(data_dir) +'/inverted/tempCoh_average*', 
+                    '/'+ os.path.dirname(data_dir) +'/inverted/tempCoh_full*' 
                     ])
-
-                if inps.triplets_flag:
-                   scp_list.extend([
-                   '/'+ network_dir +'/numTriNonzeroIntAmbiguity.h5',
-                   ])
-                if inps.all_flag:
-                    scp_list.extend([
-                    '/'+ network_dir +'/numInvIfgram.h5',
-                    '/'+ network_dir +'/timeseries_demErr.h5',
-                    '/'+ network_dir +'/inputs/ifgramStack.h5',
-                    '/'+ network_dir +'/inputs/smallbaselineApp.cfg',
-                    '/'+ network_dir +'/inputs/*template',
-                    '/'+ network_dir +'/*.cfg',
-                    '/'+ network_dir +'/*.txt',
-                    '/'+ network_dir +'/geo', 
-                    ])
-
-            # After completion of network_* loops
-            scp_list.extend([
-            '/'+ os.path.dirname(data_dir) +'/maskPS.h5',
-            '/'+ os.path.dirname(data_dir) +'/miaplpyApp.cfg',
-            '/'+ os.path.dirname(data_dir) +'/inputs/geometryRadar.h5',
-            '/'+ os.path.dirname(data_dir) +'/inputs/baselines', 
-            '/'+ os.path.dirname(data_dir) +'/inputs/*.template', 
-            '/'+ os.path.dirname(data_dir) +'/inverted/tempCoh_average*', 
-            '/'+ os.path.dirname(data_dir) +'/inverted/tempCoh_full*' 
-            ])
-            if inps.slcStack_flag:
-                scp_list.extend([
-                '/'+ os.path.dirname(data_dir) +'/inputs/slcStack.h5'
-                ])
+                    if inps.slcStack_flag:
+                        scp_list.extend([
+                        '/'+ os.path.dirname(data_dir) +'/inputs/slcStack.h5'
+                        ])
 
     print('################')
     print('Data to upload: ')
