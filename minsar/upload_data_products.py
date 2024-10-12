@@ -39,6 +39,7 @@ def create_parser():
     parser.add_argument('--geo', dest='geo_flag', action='store_true', default=False, help='uploads geo  directory')
     parser.add_argument('--slcStack', dest='slcStack_flag', action='store_true', default=False, help='uploads miaplpy*/inputs directory')
     parser.add_argument('--all', dest='all_flag', action='store_true', default=False, help='uploads full directory')
+    parser.add_argument('--pic', dest='pic_flag', action='store_true', default=False, help='uploads only pic directory')
     #parser.add_argument('--triplets', dest='triplets_flag', action='store_true', default=False, help='uploads numTriNonzeroIntAmbiguity.h5')
     parser.add_argument('--triplets', dest='triplets_flag', action='store_true', default=True, help='uploads numTriNonzeroIntAmbiguity.h5')
 
@@ -93,15 +94,11 @@ def main(iargs=None):
 
     message_rsmas.log(inps.work_dir, os.path.basename(__file__) + ' ' + ' '.join(input_arguments))
 
-    # get DATA_SERVER and return if it does not exist
-    #try:
-    #    DATA_SERVER = os.getenv('DATA_SERVER')
-    #except:
-    #    return
-
-    DATA_SERVER = 'exouser@149.165.154.65'
+    REMOTEHOST_DATA = os.getenv('REMOTEHOST_DATA')
+    REMOTEUSER = os.getenv('REMOTEUSER')
     REMOTE_DIR = '/data/HDF5EOS/'
-    destination = DATA_SERVER + ':' + REMOTE_DIR
+    REMOTE_CONNECTION = REMOTEUSER + '@' + REMOTEHOST_DATA
+    REMOTE_CONNECTION_DIR = REMOTE_CONNECTION + ':' + REMOTE_DIR
 
     scp_list = []
     for data_dir in inps.data_dirs:
@@ -233,7 +230,7 @@ def main(iargs=None):
                
             # create remote directory
             print ('\nCreating remote directory:',dir_name)
-            command = 'ssh ' + DATA_SERVER + ' mkdir -p ' + REMOTE_DIR + project_name + '/' + dir_name
+            command = 'ssh ' + REMOTE_CONNECTION + ' mkdir -p ' + REMOTE_DIR + project_name + '/' + dir_name
             print (command)
             status = subprocess.Popen(command, shell=True).wait()
             if status is not 0:
@@ -241,7 +238,7 @@ def main(iargs=None):
 
             # upload data
             print ('\nUploading data:')
-            command = 'scp -r ' + inps.work_dir + pattern + ' ' + destination + project_name + '/'.join(pattern.split('/')[0:-1])
+            command = 'scp -r ' + inps.work_dir + pattern + ' ' + REMOTE_CONNECTION_DIR + '/' + project_name + '/'.join(pattern.split('/')[0:-1])
             print (command)
             status = subprocess.Popen(command, shell=True).wait()
             if status is not 0:
@@ -249,14 +246,14 @@ def main(iargs=None):
 
     # adjust permissions
     print ('\nAdjusting permissions:')
-    command = 'ssh ' + DATA_SERVER + ' chmod -R u=rwX,go=rX ' + REMOTE_DIR + project_name  + '/' + os.path.dirname(data_dir)
+    command = 'ssh ' + REMOTEUSER + '@' +REMOTEHOST_DATA + ' chmod -R u=rwX,go=rX ' + REMOTE_DIR + project_name  + '/' + os.path.dirname(data_dir)
     print (command)
     status = subprocess.Popen(command, shell=True).wait()
     if status is not 0:
         raise Exception('ERROR adjusting permissions in upload_data_products.py')
 
 ##########################################
-    remote_url = 'http://' + DATA_SERVER.split('@')[1] + REMOTE_DIR + '/' + project_name + '/' + data_dir + '/pic'
+    remote_url = 'http://' + REMOTEHOST_DATA + REMOTE_DIR + project_name + '/' + data_dir + '/pic'
     print('Data at:')
     print(remote_url)
     with open('upload.log', 'a') as f:
