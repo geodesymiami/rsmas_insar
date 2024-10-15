@@ -13,6 +13,7 @@ from minsar.objects import message_rsmas
 from minsar.objects.auto_defaults import PathFind
 import minsar.utils.process_utilities as putils
 from minsar.job_submission import JOB_SUBMIT
+from minsar.objects.auto_defaults import queue_config_file, supported_platforms
 
 sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
@@ -34,7 +35,7 @@ def create_parser():
     epilog = EXAMPLE
     parser = argparse.ArgumentParser(description=synopsis, epilog=epilog, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('data_dir', nargs=1, help='Directory with hdf5eos file.\n')
-    parser.add_argument('--dataset', dest='dataset', choices=['PS', 'DS', 'PSDS', 'geo', 'filt*DS','all'], default='geo', help='Plot data as image or scatter (default: %(default)s).')
+    parser.add_argument('--dataset', dest='dataset', choices=['PS', 'DS', 'PSDS', 'filt*DS','DSfilt*DS', 'geo','all'], default='geo', help='Plot data as image or scatter (default: %(default)s).')
     parser.add_argument("--queue", dest="queue", metavar="QUEUE", default=os.getenv('QUEUENAME'), help="Name of queue to submit job to")
     parser.add_argument('--walltime', dest='wall_time', metavar="WALLTIME (HH:MM)", default='1:00', help='job walltime (default=1:00)')
    
@@ -81,6 +82,11 @@ def main(iargs=None):
     if inps.dataset == "filt*DS":
         files.append(file_filtDS)
         suffixes.append("_filtDS")
+    if inps.dataset == "DSfilt*DS":
+        files.append(file_DS)
+        files.append(file_filtDS)
+        suffixes.append("_DS")
+        suffixes.append("_filtDS")
     if inps.dataset == "PSDS" or inps.dataset == "DSPS":
         files.append(file_PS)
         files.append(file_DS)
@@ -106,7 +112,7 @@ def main(iargs=None):
         mbtiles_file = mbtiles_file.replace('he5','mbtiles')
         command.append( f'json_mbtiles2insarmaps.py --num-workers 8 -u {password.insaruser} -p {password.insarpass} --host {REMOTEHOST_INSARMAPS1} -P {password.databasepass} -U {password.databaseuser} --json_folder {inps.work_dir}/{inps.data_dir[0]}/JSON{suffix} --mbtiles_file {mbtiles_file} &' )
         command.append( f'json_mbtiles2insarmaps.py --num-workers 8 -u {password.docker_insaruser} -p {password.docker_insarpass} --host {REMOTEHOST_INSARMAPS2} -P {password.docker_databasepass} -U {password.docker_databaseuser} --json_folder {inps.work_dir}/{inps.data_dir[0]}/JSON{suffix} --mbtiles_file {mbtiles_file} &' )
-        command.append( f'json_mbtiles2insarmaps.py --num-workers 8 -u {password.docker_insaruser} -p {password.docker_insarpass} --host {REMOTEHOST_INSARMAPS3} -P {password.docker_databasepass} -U {password.docker_databaseuser} --json_folder {inps.work_dir}/{inps.data_dir[0]}/JSON{suffix} --mbtiles_file {mbtiles_file} &' )
+        # command.append( f'json_mbtiles2insarmaps.py --num-workers 8 -u {password.docker_insaruser} -p {password.docker_insarpass} --host {REMOTEHOST_INSARMAPS3} -P {password.docker_databasepass} -U {password.docker_databaseuser} --json_folder {inps.work_dir}/{inps.data_dir[0]}/JSON{suffix} --mbtiles_file {mbtiles_file} &' )
     
     command.append('wait\n')
     str = [f'cat >> insarmaps.log<<EOF']
@@ -118,7 +124,7 @@ def main(iargs=None):
         
         str.append(f"https://{REMOTEHOST_INSARMAPS1}/start/{ref_lat:.1f}/{ref_lon:.1f}/11.0?flyToDatasetCenter=true&startDataset={name_without_extension}")
         str.append(f"{REMOTEHOST_INSARMAPS2}/start/{ref_lat:.1f}/{ref_lon:.1f}/11.0?flyToDatasetCenter=true&startDataset={name_without_extension}")
-        str.append(f"{REMOTEHOST_INSARMAPS3}/start/{ref_lat:.1f}/{ref_lon:.1f}/11.0?flyToDatasetCenter=true&startDataset={name_without_extension}")
+        # str.append(f"{REMOTEHOST_INSARMAPS3}/start/{ref_lat:.1f}/{ref_lon:.1f}/11.0?flyToDatasetCenter=true&startDataset={name_without_extension}")
 
     str.append( 'EOF' ) 
     command.append( '\n'.join(str) )
