@@ -415,9 +415,9 @@ for g in "${globlist[@]}"; do
     if [[ -n $g ]]; then
         files=($(ls -1v $g))
     fi
-    echo "QQ globlist: <${globlist[@]}>"
-    echo "QQ globlist element: <$g>"
-    echo "QQ files: <$files>"
+    ##echo "QQ globlist: <${globlist[@]}>"
+    #echo "QQ globlist element: <$g>"
+    #echo "QQ files: <$files>"
 
     if $randomorder; then
         files=( $(echo "${files[@]}" | sed -r 's/(.[^;]*;)/ \1 /g' | tr " " "\n" | shuf | tr -d " " ) )
@@ -428,7 +428,7 @@ for g in "${globlist[@]}"; do
 
     jobnumbers=()
     file_pattern=$(echo "${files[0]}" | grep -oP "(.*)(?=_\d{1,}.job)|insarmaps|smallbaseline_wrapper")
-    echo "QQ files[0], file_pattern: <${files[0]}> <$file_pattern>"
+    #echo "QQ files[0], file_pattern: <${files[0]}> <$file_pattern>"
     
     sbc_command="submit_jobs.bash $file_pattern"
     
