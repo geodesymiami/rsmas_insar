@@ -31,7 +31,7 @@ The `install_python.bash` command is [here](https://github.com/geodesymiami/rsma
 ---
 ### Test your installation
 ```
-cd $SCRRATCHDIR
+cd $SCRATCHDIR
 wget http://149.165.154.65/data/circleci/ci_small_unittestGalapagosSenDT128.tar
 tar xvf ci_small_unittestGalapagosSenDT128.tar
 minsarApp.bash $SAMPLESDIR/circleci/ci_unittestGalapagosSenDT128.template --start dem
