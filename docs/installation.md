@@ -27,7 +27,7 @@ bash -x setup/install_python.bash
 bash -x setup/install_code.bash
 bash -x setup/install_credentials
 ```
-The `install_python.bash` command is [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install_python.bash) and  `install_code.bash`  is  [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install_code.bash).
+The `install_python.bash` command is [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install_python.bash) and  `install_code.bash`  is  [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install_code.bash) and  `install_credentials.bash`  is  [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install_credentials.bash)
 
 ---
 ### Test your installation
