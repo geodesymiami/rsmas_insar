@@ -9,7 +9,13 @@ source setup/environment.bash;
 ### Install basic code and c-dependencies (isce fails on Mac) ###
 mamba install python=3.10 wget git tree numpy --yes
 pip install bypy
-mamba install isce2 mintpy --yes
+
+if [[ "$(uname)" == "Darwin" ]]; then
+  mamba install mintpy --yes
+else
+  mamba install isce2 mintpy --yes
+fi
+
 mamba install numpy pandas xarray netcdf4 packaging gmt pygmt --yes
 
 ### git clone the code   #################
@@ -27,6 +33,7 @@ git clone git@github.com:geodesymiami/precip tools/Precip
 git clone git@github.com:geodesymiami/precip_web tools/Precip_web
 git clone git@github.com:geodesymiami/precip_cron tools/Precip_cron
 git clone git@github.com:scottstanie/sardem tools/sardem
+git clone git@github.com:luhipi/sarvey tools/sarvey
 
 mamba install python=3.10  --file minsar/environment.yml --yes -c conda-forge                     # first install c-code
 mamba install --file tools/insarmaps_scripts/environment.yml -c conda-forge
@@ -40,6 +47,7 @@ pip install -r tools/PlotData/requirements.txt
 pip install -r tools/Precip/requirements.txt
 pip install -r tools/sardem/requirements.txt
 pip install -e tools/sardem
+pip install tools/sarvey
 
 ###  Reduce miniforge3 directory size #################
 rm -rf tools/miniforge3/pkgs
