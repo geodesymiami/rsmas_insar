@@ -53,7 +53,7 @@ pip install tools/sarvey
 rm -rf tools/miniforge3/pkgs
 
 ### Install credential files ###############
-setup/install_credential_files.bash;
+#setup/install_credential_files.bash;
 
 ###  Install SNAPHU #################
 wget --no-check-certificate  https://web.stanford.edu/group/radar/softwareandlinks/sw/snaphu/snaphu-v2.0.5.tar.gz  -P tools
