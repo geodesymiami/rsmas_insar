@@ -34,6 +34,7 @@ git clone git@github.com:geodesymiami/precip_web tools/Precip_web
 git clone git@github.com:geodesymiami/precip_cron tools/Precip_cron
 git clone git@github.com:scottstanie/sardem tools/sardem
 git clone git@github.com:luhipi/sarvey tools/sarvey
+git clone git@github.com:falkamelung/MintPy.git tools/MintPy_falk
 
 mamba install python=3.10  --file minsar/environment.yml --yes -c conda-forge                     # first install c-code
 mamba install --file tools/insarmaps_scripts/environment.yml -c conda-forge
