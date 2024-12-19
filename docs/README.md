@@ -13,7 +13,7 @@ The main Developers are Sara Mirzaee and Falk Amelung with contributions of many
 
 MinSAR downloads a stack of SLC images, downloads a DEM, processes the interferograms and creates displacement timeseries products using MintPy and/or MiaplPy. Optional steps are the ingestion into our [dataportal] (https//:insarmaps.miami.edu) and the upload of the data products to our jetstream server.
 
-The processing is controlled by a *.template file which offers many different options for each processing step ([see example])(../samples/unittestGalapagosSenDT128.template). The processing is executed by `minsarApp.bash`. The processing steps are specified on the command line. Steps:
+The processing is controlled by a *.template file which offers many different options for each processing step (![see example](../samples/unittestGalapagosSenDT128.template)). The processing is executed by `minsarApp.bash`. The processing steps are specified on the command line. Steps:
 ```
 download:   downloading data     (by executing the command in
 dem:        downloading DEM
