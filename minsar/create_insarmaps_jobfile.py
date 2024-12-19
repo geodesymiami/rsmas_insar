@@ -8,6 +8,7 @@ import sys
 import glob
 import argparse
 import h5py
+import math
 from pathlib import Path
 from minsar.objects import message_rsmas
 from minsar.objects.auto_defaults import PathFind
@@ -63,7 +64,7 @@ def get_num_workers_hdf5eos(files, number_of_cores_per_node):
             percentage = percentage_of_cores[i]
             break
    
-    num_workers = int(number_of_cores_per_node * percentage / 100)
+    num_workers = math.ceil(number_of_cores_per_node * percentage / 100)
     return num_workers
 
 def get_num_workers_json_mbtiles(files, number_of_cores_per_node):
