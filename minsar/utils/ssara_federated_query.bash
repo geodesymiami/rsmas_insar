@@ -51,7 +51,9 @@ cmd="ssara_federated_query.py $cmd $asfResponseTimeout_opt --kml --print > ssara
 elapsed=0
 duration=$((2 * 24 * 60 * 60)) # 2 days in seconds
 wait_time=300
+wait_time=10
 
+set -x
 while [ $elapsed -lt $duration ]; do
     # Log and run the command
     echo "$(date +"%Y%m%d-%H:%M") * $cmd " >> log
@@ -66,6 +68,12 @@ while [ $elapsed -lt $duration ]; do
     # Check for error 500
     elif grep -q "urllib.error.HTTPError: HTTP Error 500: Internal Server Error" ssara.e; then
         echo -e  "Download problem: urllib.error.HTTPError: HTTP Error 500: Internal Server Error. Retrying in $wait_time seconds...\n"
+        sleep $wait_time     # Wait for 300 seconds before retrying
+        elapsed=$((elapsed + $wait_time)) # Increment the elapsed time
+    elif grep -q "ERROR 404: Not Found" wget.e; then
+        # FA 12/2024:  I did not check whether this works, in particular whether removing wget.e is the right thing to do
+        echo -e  "wget download problem: ERROR 404: Not Found. Retrying in $wait_time seconds...\n"
+        rm wget.e
         sleep $wait_time     # Wait for 300 seconds before retrying
         elapsed=$((elapsed + $wait_time)) # Increment the elapsed time
     else
@@ -106,7 +114,7 @@ echo "$(date +"%Y%m%d:%H-%m") * Datafiles to download: $num_urls" | tee -a log
 timeout=500
 
 echo "downloading using: echo URLs | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd" | tee -a log
-echo ${urls[@]} | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd
+echo ${urls[@]} | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd 2>> wget.e
 exit_code=$?
 
 echo "$(date +"%Y%m%d-%H:%m") check_download: `check_download.py $PWD --delete`"  | tee -a log
@@ -118,7 +126,7 @@ while [ $exit_code -ne 0 ] && [ $runs -lt 3 ]; do
     new_timeout=$(echo "$timeout * $runs" | bc)
     echo "$(date +"%Y%m%d:%H-%m") * Something went wrong. Exit code was ${exit_code}. Trying again with $new_timeout second timeout" | tee -a log
 
-    echo ${urls[@]} | xargs -n 1 -P $parallel timeout $new_timeout wget --continue --user $user --password $passwd
+    echo ${urls[@]} | xargs -n 1 -P $parallel timeout $new_timeout wget --continue --user $user --password $passwd 2>> wget.e
     exit_code=$?
 
     echo "$(date +"%Y%m%d:%H-%m") check_download: `check_download.py $PWD --delete`"  | tee -a log
