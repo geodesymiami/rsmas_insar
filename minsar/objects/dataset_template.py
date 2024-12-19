@@ -131,7 +131,8 @@ class Template:
                 ssaraopt += ' --platform={}'.format(platform)
             if 'ssaraopt.collectionName' in self.options.keys():
                 collectionName = self.options['ssaraopt.collectionName']
-                ssaraopt += ' --collectionName={}'.format(collectionName)
+                # ssaraopt += ' --collectionName={}'.format(collectionName)
+                ssaraopt += f" --collectionName='{collectionName}'"
             if 'ssaraopt.beamMode' in self.options.keys():
                 beamMode = self.options['ssaraopt.beamMode']
                 ssaraopt += ' --beamMode={}'.format(beamMode)
@@ -162,10 +163,12 @@ class Template:
             #this was in Josh's code (above the ssaraopt assignment) but unclear  what it does
             #parallel_download = self.options.get("ssaraopt.parallelDownload", '30')
             ssaraopt_dict = {}
-            for item in ssaraopt.split(' '):
-                if item:  # Skip empty strings
-                    key, value = item.lstrip('-').split('=', 1)  # Split at the first '=' and remove leading '--'
-                    ssaraopt_dict[key] = value
+            for item in ssaraopt.split('--'):
+                item = item.strip()
+                if '=' not in item:
+                    continue
+                key, value = item.split('=', 1)  # Split at the first '=' and remove leading '--'
+                ssaraopt_dict[key] = value
 
             return ssaraopt, ssaraopt_dict
 
