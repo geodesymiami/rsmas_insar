@@ -1,11 +1,12 @@
 processor                             = isce
 
-ssaraopt.collectionName               = "TSX ARC_famelung_COA3837"
+ssaraopt.collectionName               = TSX ARC_famelung_COA3837
+#ssaraopt.collectionName               = ARC_famelung_COA3837
 ssaraopt.beamSwath                    = strip_014
 ssaraopt.relativeOrbit                = 36
 unavco.relative_orbit                 = 36
 ssaraopt.startDate                    = 20160101
-ssaraopt.endDate                      = 20170922
+ssaraopt.endDate                      = 20171110
 
 stripmapStack.sensor                  = tsx
 stripmapStack.zerodop                 = True

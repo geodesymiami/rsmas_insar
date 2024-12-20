@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -eo pipefail
-#set -x
+#set -xv
 ###################################################################################
 function create_template_array() {
-mapfile -t array < <(grep -e ^minsar -e ^mintpy -e ^miaplpy -e ^topsStack $1)
+mapfile -t array < <(grep -e ^ssaraopt -e ^minsar -e ^mintpy -e ^miaplpy -e ^topsStack $1)
 declare -gA template
 for item in "${array[@]}"; do
   #echo "item: <$item>"
@@ -529,30 +529,37 @@ echo "Flags for processing steps:"
 echo "download dem jobfiles ifgram mintpy miaplpy upload insarmaps finishup"
 echo "    $download_flag     $dem_flag      $jobfiles_flag       $ifgram_flag       $mintpy_flag      $miaplpy_flag      $upload_flag       $insarmaps_flag        $finishup_flag"
 
-sleep 4
+sleep 2
 
 #############################################################
-# check weather python can load matplotlib.pyplot which occasionaly does not work for unknown reasons
-# echo Testing ... python -c \"import matplotlib.pyplot\" using check_matplotlib_pyplot
-# check_matplotlib_pyplot;
-# exit_status="$?"
-# if [[ $exit_status -ne 0 ]]; then
-#    echo "Exit code ($exit_status). Exiting."
-#    exit 1;
-# fi
 
-download_dir=$WORK_DIR/SLC
+#set -xv
+platform_str=$( (grep platform "$template_file" || echo "") | cut -d'=' -f2 )
+if [[ -z $platform_str ]]; then
+   # assume TERRASAR-X if no platform is given (ssara_federated_query.py does not seem to work with --platform-TERRASAR-X)
+   #echo "platform_str empty"
+   collectionName_str=$(grep collectionName $template_file || True | cut -d'=' -f2)
+   echo "$collectionName_str"
+   platform_str="TERRASAR-X"
+fi
 
-platform_str=$(grep platform $template_file | cut -d'=' -f2)
 if [[ $platform_str == *"COSMO-SKYMED"* ]]; then
-   download_dir=$WORK_DIR/RAW_data
+    download_dir="$WORK_DIR/RAW_data"
+elif [[ $platform_str == *"TERRASAR-X"* ]]; then
+    download_dir="$WORK_DIR/SLC_ORIG"
+else
+    download_dir="$WORK_DIR/SLC"
 fi
-collectionName_str=$(${template[collectionName]})
-echo $collectionName_str
-#collectionName_str=$(grep collectionName $template_file || True | cut -d'=' -f2)
-if [[ $collectionName_str == *"TSX"* ]]; then
-   download_dir=$WORK_DIR/SLC_ORIG
-fi
+#if [[ $platform_str == *"COSMO-SKYMED"* ]]; then
+#   download_dir=$WORK_DIR/RAW_data
+#elif [[ $platform_str == *"TERRASAR-X"* ]]; then
+#   download_dir=$WORK_DIR/SLC_ORIG
+#else
+#   download_dir=$WORK_DIR/SLC
+#fi
+sleep 10
+echo QQQQQQQ $download_dir
+
 ####################################
 srun_cmd="srun -n1 -N1 -A $JOBSHEDULER_PROJECTNAME -p $QUEUENAME  -t 00:07:00 "
 srun_cmd="srun -n1 -N1 -A $JOBSHEDULER_PROJECTNAME -p $QUEUENAME  -t 00:25:00 "
@@ -571,44 +578,10 @@ if [[ $download_flag == "1" ]]; then
     if [[ $burst_download_flag == "1" ]]; then
        cmd=$(cat ../asf_burst_download_commands.txt)
        run_command "$cmd"
-       #while IFS= read -r cmd; do
-       #   run_command "$cmd"
-       #done < ssara_command.txt
     else
        cmd=$(cat ../ssara_command.txt)
        run_command "$cmd"
     fi
-
-    # FA 6/2024: The checking for HTTP Error 502 is now done in ssara_federated_query.bash  which I think is better
-    # FA 8/2024: I don't think we need the loop over several downloads anymore
-
-    # cat ../ssara_command.txt
-    # cmd=$(cat ../ssara_command.txt)
-    # echo "Running.... 'cat ../ssara_command.txt'"
-    # echo $cmd
-    # eval "$cmd"
-    # sleep 20
-    # exit_status="$?"
-    # if [ $exit_status -ne 0 ]; then
-    #    echo "ssara_federated_query.bash failed with exit status $exit_status. Exiting."
-    #    exit 1
-    # fi
-
-    # runs=1
-    # while [ $exit_status -ne 0 ] && [ $runs -le 4 ]; do
-    #     echo "ssara_federated_query.bash exited with a non-zero exit code ($exit_status). Trying again in 2 minutes."
-    #     echo "$(date +"%Y%m%d:%H-%m") * Something went wrong. Exit code was ${exit_status}. Trying again in 2 minutes" | tee -a log | tee -a ../log
-    #     sleep 120 # sleep for 2 minutes
-    #     $cmd
-    #     exit_status="$?"
-    #     runs=$((runs+1))
-    # done
-
-    # if [[ $runs -gt 4 ]]; then
-    #    echo "ssara_federated_query.bash failed after 20 hours. Exiting."
-    #    cd ..
-    #    exit 1;
-    # fi
 
     cd ..
 

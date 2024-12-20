@@ -124,18 +124,40 @@ def convert_bounding_box_to_intersects_string(string_bbox, delta_lat):
    return intersects_string
 
 ###############################################
+def point_str_to_bbox(point_str, delta=0.001):
+    # Strip whitespace and split by space
+    lon_str, lat_str = point_str.strip().split()
+    lon = float(lon_str)
+    lat = float(lat_str)
+    
+    # Compute bounding box coordinates: Lower-left,  lower-right, upper-left, frst point
+    p1 = f"{lon - delta} {lat - delta}"
+    p2 = f"{lon + delta} {lat - delta}"
+    p3 = f"{lon + delta} {lat + delta}"
+    p4 = f"{lon - delta} {lat + delta}"
+    p5 = p1
+    
+    return [p1, p2, p3, p4, p5]
+
+###############################################
 def convert_intersects_string_to_extent_string(intersects_string):
     """ Converts a intersectsWith string  to an extent string."""
 
-    match = re.search(r"Polygon\(\((.*?)\)\)", intersects_string)
-    if match:
-        polygon_str = match.group(1)
+    # FA 12/2024. For Polygon we use (( )) and for Point ( ). Unclear why. I may want to allow for both.
+    match_polygon = re.search(r"polygon\(\((.*?)\)\)", intersects_string, re.IGNORECASE)
+    match_point = re.search(r"point\((.*?)\)", intersects_string, re.IGNORECASE)
+
+    if match_polygon:
+        polygon_str = match_polygon.group(1)
+        bbox_list = polygon_str.split(',')
+    elif match_point:
+        point_str = match_point.group(1)
+        bbox_list = point_str_to_bbox(point_str, delta=0.001)
     else:
         polygon_str = None
     
     lon_list = []
     lat_list = []
-    bbox_list = polygon_str.split(',')
     for bbox in bbox_list:
         lon, lat = map(float, bbox.split())
         lon_list.append(lon)
@@ -160,13 +182,15 @@ def generate_download_command(template,inps):
     if 'end' not in ssaraopt_dict:
         ssaraopt_dict['end'] = '2099-12-31'
 
-    if not any(option.startswith('ssaraopt.intersectsWith') for option in dataset_template.get_options()):
+    if any(option.startswith('ssaraopt.intersectsWith') for option in dataset_template.get_options()):
+       intersects_string = f"--intersectsWith={ssaraopt_dict['intersectsWith']}"
+    else:
        intersects_string = generate_intersects_string(dataset_template, delta_lat=0.1)
        ssaraopt.insert(2, intersects_string)
     
     extent_str, extent_list = convert_intersects_string_to_extent_string(intersects_string)
-    print('New intersectsWith sting using delta_lat=0.1: ', intersects_string)
-    print('New extent sting using delta_lat=0.1: ', extent_str)
+    print('New intersectsWith string using delta_lat=0.1: ', intersects_string)
+    print('New extent string using delta_lat=0.1: ', extent_str)
 
     ssara_cmd_slc_download_bash = ['ssara_federated_query.bash'] + ssaraopt 
     ssara_cmd_kml_download_python = ['ssara_federated_query.py'] + ssaraopt + ['--maxResults=20000','--asfResponseTimeout=300', '--kml','--print','>','ssara_listing.txt','2> ssara.e']
