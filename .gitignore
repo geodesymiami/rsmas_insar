@@ -14,6 +14,7 @@ setup/Miniconda3-latest-Linux-x86_64.sh
 setup/snaphu-v2.0.5.tar.gz
 tools
 notebooks
+Miniforge3*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
