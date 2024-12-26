@@ -116,7 +116,7 @@ echo $network_type
 ##################################################################################
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/utils/minsar_functions.bash"
+source "$SCRIPT_DIR/utils/common_helpers.bash"
 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 helptext="                                                                       \n\
@@ -533,7 +533,6 @@ sleep 2
 
 #############################################################
 
-#set -xv
 platform_str=$( (grep platform "$template_file" || echo "") | cut -d'=' -f2 )
 if [[ -z $platform_str ]]; then
    # assume TERRASAR-X if no platform is given (ssara_federated_query.py does not seem to work with --platform-TERRASAR-X)

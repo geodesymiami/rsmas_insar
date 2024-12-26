@@ -53,7 +53,6 @@ duration=$((2 * 24 * 60 * 60)) # 2 days in seconds
 wait_time=300
 wait_time=10
 
-set -x
 while [ $elapsed -lt $duration ]; do
     # Log and run the command
     echo "$(date +"%Y%m%d-%H:%M") * $cmd " >> log
