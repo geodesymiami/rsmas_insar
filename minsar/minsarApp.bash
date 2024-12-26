@@ -550,8 +550,10 @@ fi
 
 if [[ $jobfiles_flag == "1" ]]; then
 #############################################################
-    # download new Sentinel-1 orbits from the ASF
-    run_command "download_orbits_asf.bash"
+    if [[ $orbit_download_flag == "1" && $template_file == *"Sen"*  ]]; then
+       # download new Sentinel-1 orbits from the ASF
+       run_command "download_orbits_asf.bash"
+    fi
 
     # clean directory for processing and create jobfiles
     pwd=`pwd`; echo "DIR: $pwd"
