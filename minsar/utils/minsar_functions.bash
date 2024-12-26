@@ -1,4 +1,4 @@
-set -eo pipefail
+#set -eo pipefail
 ###################################################################################
 function create_template_array() {
 mapfile -t array < <(grep -e ^ssaraopt -e ^minsar -e ^mintpy -e ^miaplpy -e ^topsStack $1)
