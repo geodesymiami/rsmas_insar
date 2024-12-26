@@ -12,29 +12,9 @@ show_help() {
     echo "  update_minTempCoh.bash \$TE/unittestGalapagosSenDT128.template miaplpy/network_single_reference"
     echo "  update_minTempCoh.bash \$TE/unittestGalapagosSenDT128.template 0.9 miaplpy/network_single_reference"
 }
-###################################################################################
-function create_template_array() {
-mapfile -t array < <(grep -e ^minsar -e ^mintpy -e ^miaplpy $1)
-declare -gA template
-for item in "${array[@]}"; do
-  #echo "item: <$item>"
-  IFS='=' ; read -a arr1 <<< "$item"
-  item="${arr1[1]}"
-  IFS='#' ; read -a arr2 <<< "$item"
-  key="${arr1[0]}"
-  key=$(echo $key | tr -d ' ')
-  value="${arr2[0]}"
-  shopt -s extglob
-  value="${value##*( )}"          # Trim leading whitespaces
-  value="${value%%*( )}"          # Trim trailing whitespaces
-  shopt -u extglob
-  #echo "key, value: <$key> <$value>"
-  if [ ! -z "$key"  ]; then
-     template[$key]="$value"
-  fi
-unset IFS
-done
-}
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/minsar_functions.bash"
 
 get_project_dir() {
     local template_path="$1"

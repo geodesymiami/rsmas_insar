@@ -116,7 +116,7 @@ echo $network_type
 ##################################################################################
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/utils/common_helpers.bash"
+source "$SCRIPT_DIR/utils/minsar_functions.bash"
 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 helptext="                                                                       \n\
@@ -557,7 +557,6 @@ fi
 #   download_dir=$WORK_DIR/SLC
 #fi
 sleep 10
-echo QQQQQQQ $download_dir
 
 ####################################
 srun_cmd="srun -n1 -N1 -A $JOBSHEDULER_PROJECTNAME -p $QUEUENAME  -t 00:07:00 "
@@ -573,7 +572,6 @@ if [[ $download_flag == "1" ]]; then
     mkdir -p $download_dir
     cd $download_dir
 
-    echo "QQQQQQQ Download is starting...."
     if [[ $burst_download_flag == "1" ]]; then
        cmd=$(cat ../asf_burst_download_commands.txt)
        run_command "$cmd"

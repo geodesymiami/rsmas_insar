@@ -122,6 +122,7 @@ export LD_RUN_PATH=${PYTHON3DIR}/lib
 
 ########## bash functions #########
 source $RSMASINSAR_HOME/minsar/utils/minsar_functions.bash
+source $RSMASINSAR_HOME/minsar/utils/common_helpers.bash
 
 if [ -n "${prompt}" ]
 then
