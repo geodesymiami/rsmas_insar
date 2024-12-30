@@ -125,6 +125,13 @@ def main(iargs=None):
             status = subprocess.Popen(command, shell=True).wait()
             if status is not 0:
                 raise Exception('ERROR uploading using scp -r  in upload_data_products.py')
+            
+            ##########################################
+            remote_url = 'http://' + REMOTEHOST_DATA + REMOTE_DIR + project_name + '/' + pattern + '/remora_summary.html'
+            print('Data at:')
+            print(remote_url)
+            with open('remora_upload.log', 'a') as f:
+                f.write(remote_url + "\n")
 
     # adjust permissions
     print ('\nAdjusting permissions:')
