@@ -218,6 +218,10 @@ class JOB_SUBMIT:
                                                             a=batch_file, b=self.out_dir,
                                                             c=self.num_memory_units)
 
+            if self.remora:
+               print("remora is set")
+               log_args += ' --remora'
+
             if self.copy_to_tmp:
                 log_args += ' --tmp'
 
@@ -1258,15 +1262,19 @@ class JOB_SUBMIT:
             #job_file_lines.append( "export PATH={0}:$PATH\n".format(self.stack_path))
 
             if self.remora:
+                job_file_lines.append("\nmodule load  gcc/13.2.0  mvapich-plus-cpu/4.0b")
+                job_file_lines.append("\nmodule load  gcc/13.2.0  mvapich-plus-pvc/4.0b")
+                job_file_lines.append("\nmodule load  intel/24.0  impi/21.11")
+                job_file_lines.append("\nmodule load  intel/24.0  mvapich/3.0")
+                job_file_lines.append("\nmodule load  opencilk/2.1.0  mvapich-plus-cpu/4.0b")
+                job_file_lines.append("\nmodule load  opencilk/2.1.0  mvapich-plus-pvc/4.0b")
+
                 job_file_lines.append("\n\nmodule load remora")
                 job_file_lines.append("\nremora $LAUNCHER_DIR/paramrun\n")
-                job_file_lines.append("\nmv remora_$SLURM_JOB_ID remora_" + os.path.basename(batch_file) + "_$SLURM_JOB_ID\n")
+                job_file_lines.append("\nmv remora_$SLURM_JOB_ID " + os.path.dirname(batch_file) + '/remora_' +os.path.basename(batch_file) + "\n")
 
             else:
                 job_file_lines.append("$LAUNCHER_DIR/paramrun\n")
-
-            # need to remove code because of a Stampede2/SLURM bug that sometimes not all files are removed
-            job_file_lines.append( """rm -rf /tmp/rsmas_insar \n""" )
 
             with open(os.path.join(self.out_dir, job_file_name), "w+") as job_f:
                 job_f.writelines(job_file_lines)

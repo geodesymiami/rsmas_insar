@@ -85,6 +85,8 @@ def add_create_runfiles(parser):
                             help="writes job files to run on /scratch rather than /tmp.")
     run_parser.add_argument('--jobfiles', dest='write_jobs', action='store_true',
                              help='writes the jobs corresponding to run files')
+    run_parser.add_argument('--remora', dest='remora', action='store_true',
+                             help='run job_submission.py with --remora option')
     run_parser.add_argument('--ignore_stack', dest='ignore_stack', action='store_true',
                              help='ignores existing stack by temporay renaming /coreg_secondarys to /tmp_coreg_secondarys')
     return parser
