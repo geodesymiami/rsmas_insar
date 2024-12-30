@@ -22,7 +22,8 @@ import password_config as password
 
 ##############################################################################
 EXAMPLE = """example:
-    upload_data_products.py remora_*
+    upload_data_products.py run_files/remora_*
+    upload_data_products.py run_files/remora_run_04_fullBurst_geo2rdr_0
 """
 
 DESCRIPTION = (
