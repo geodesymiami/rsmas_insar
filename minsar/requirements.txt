@@ -12,6 +12,8 @@ jupyter-ai
 pulp           # needed for ISCE but was missing
 pdf2image      # for create_html.py
 netCDF4        # for nc4 files
+kite
+pyrocko
 asf_search
 burst2safe
 pyside6        # for sarvey
