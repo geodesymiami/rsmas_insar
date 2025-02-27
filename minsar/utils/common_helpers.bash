@@ -1,6 +1,6 @@
 #####!/usr/bin/env bash
 ###########################################
-function changequeuenormal() { 
+function changequeuenormal() {
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
    echo "  Usage: changequeuenormal run_10*.job"; return
 fi
@@ -8,20 +8,20 @@ if [[ $PLATFORM_NAME == "frontera" ]] ; then
           sed -i "s|flex|normal|g" "$@" ;
           sed -i "s|small|normal|g" "$@" ;
           sed -i "s|development|normal|g" "$@" ;
-elif [[ $PLATFORM_NAME == "stampede3" ]] ; then 
+elif [[ $PLATFORM_NAME == "stampede3" ]] ; then
           sed -i "s|skx-dev|skx|g" "$@" ;
-fi 
+fi
 }
 ###########################################
 scancel_jobs() {
     if [ -z "$1" ] || [ "$1" == "--help" ]; then
-        echo 
+        echo
         echo "Usage: scancel_jobs <job_name_pattern>"
-        echo 
+        echo
         echo "Cancels all SLURM jobs containing the specified pattern in their name."
-        echo 
+        echo
         echo "Example: scancel_jobs run_05"
-        echo 
+        echo
         return 0
     fi
 
@@ -32,7 +32,7 @@ scancel_jobs() {
 }
 
 ###########################################
-function changequeuedev() { 
+function changequeuedev() {
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
    echo "  Usage: changequeuedev run_10*.job"; return
 fi
@@ -40,15 +40,15 @@ if [[ $PLATFORM_NAME == "frontera" ]] ; then
           sed -i "s|flex|development|g" "$@" ;
           sed -i "s|small|development|g" "$@" ;
           sed -i "s|normal|development|g" "$@" ;
-elif [[ $PLATFORM_NAME == "stampede3" ]] ; then 
+elif [[ $PLATFORM_NAME == "stampede3" ]] ; then
           sed -i "s|skx|skx-dev|g" "$@" ;
-fi 
-sed -i "s|SBATCH -t .:..:|SBATCH -t 1:59:|g" "$@" ; 
+fi
+sed -i "s|SBATCH -t .:..:|SBATCH -t 1:59:|g" "$@" ;
 sed -i "s|SBATCH -t ..:..:|SBATCH -t 01:59:|g" "$@" ;
 }
 
 ###########################################
-function changequeueflex() { 
+function changequeueflex() {
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
    echo "  Usage: changequeueflex run_10*.job"; return
 fi
@@ -56,7 +56,7 @@ if [[ $PLATFORM_NAME == "frontera" ]] ; then
           sed -i "s|normal|flex|g" "$@" ;
           sed -i "s|small|flex|g" "$@" ;
           sed -i "s|development|flex|g" "$@" ;
-fi 
+fi
 }
 
 #function changequeuedev() { sed -i "s|skx-normal|$QUEUE_DEV|g"  "$@" ; sed -i "s|flex|$QUEUE_DEV|g"  "$@" ; sed -i "s|normal|$QUEUE_DEV|g"  "$@" ; }
@@ -64,7 +64,7 @@ function changequeuesmall() { sed -i "s|flex|small|g" "$@" ; sed -i "s|developme
 #function changequeueflex()  { sed -i "s|small|flex|g" "$@" ; sed -i "s|development|flex|g"  "$@" ; }
 
 ###########################################
-function check_matplotlib_pyplot(){ 
+function check_matplotlib_pyplot(){
    #set -x
    #Check if 'timeout' command is available
    if command -v timeout &> /dev/null; then
@@ -82,7 +82,7 @@ function check_matplotlib_pyplot(){
    return 0
 }
 ###########################################
-function listc() { 
+function listc() {
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 helptext="                                       \n\
   Examples:                                      \n\
@@ -108,8 +108,8 @@ arg_mod=*$arg
 [[ $arg == *"Chunk"* ]] && arg_mod=$(echo $arg | sed -e s/Chunk.\*Sen/\*Sen/)
 [[ $arg == *"Big"* ]] && arg_mod=$(echo $arg | sed -e s/Big.\*Sen/\*Sen/)
 [[ $arg == *"Chunks"* ]] && arg_mod=$(echo $arg | sed -e s/Chunks.\*Sen/\*Sen/)
-#echo Original_argument: $arg 
-#echo Modified_argument: ${arg_mod} 
+#echo Original_argument: $arg
+#echo Modified_argument: ${arg_mod}
 
 dir_list=$(ls -d $arg_mod)
 for dir in $dir_list; do
@@ -124,7 +124,7 @@ for dir in $dir_list; do
    else
       not_finished+=($dir)
    fi
-done; 
+done;
 for dir in ${not_finished[@]}; do
     if [[ $dir != *Big* ]] && [[ $dir != *ChunksS* ]]; then
        #ls -lvd $dir/{,out_run*.e}  | awk  '{print $5,$6,$7,$8,$9}'
@@ -134,7 +134,7 @@ done
 }
 
 ###########################################
-function add_ref_lalo_to_file() { 
+function add_ref_lalo_to_file() {
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 helptext="                                       \n\
   Examples:                                      \n\
@@ -157,7 +157,7 @@ $MINTPY_HOME/src/mintpy/legacy/add_attribute.py $file REF_LON=${REF_LON}
 }
 
 ###########################################
-function rsyncFJ() { 
+function rsyncFJ() {
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 helptext="            \n\
   rsyncFJ:  rsync directory From Jetstream (FJ) server to local \$SCRATCHDIR \n\
@@ -186,15 +186,15 @@ if [ ! -d "$SCRATCHDIR/$dir" ]; then
 fi
 
 echo "Syncing directory $dir from jetstream:"
-cmd="rsync -avzh exouser@149.165.154.65:/data/HDF5EOS/$dir/ $SCRATCHDIR/$dir"
+cmd="rsync -avzh --progress exouser@149.165.154.65:/data/HDF5EOS/$dir/ $SCRATCHDIR/$dir"
 echo running ... $cmd
 $cmd
 
 if [[ $dir == *"network"* ]]; then
-  cmd="rsync -avzh exouser@149.165.154.65:/data/HDF5EOS/${dir%/*}/maskPS.h5 $SCRATCHDIR/${dir%/*}/maskPS.h5"
+  cmd="rsync -avzh --progress exouser@149.165.154.65:/data/HDF5EOS/${dir%/*}/maskPS.h5 $SCRATCHDIR/${dir%/*}/maskPS.h5"
   echo running ... $cmd
   $cmd
-  cmd="rsync -avzh exouser@149.165.154.65:/data/HDF5EOS/$dir/inputs/geometryRadar.h5 $SCRATCHDIR/$dir/inputs"
+  cmd="rsync -avzh --progress exouser@149.165.154.65:/data/HDF5EOS/$dir/inputs/geometryRadar.h5 $SCRATCHDIR/$dir/inputs"
   echo running ... $cmd
   $cmd
 fi
@@ -202,7 +202,7 @@ fi
 }
 
 ###########################################
-function rsyncTJ() { 
+function rsyncTJ() {
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 helptext="            \n\
   rsyncTJ:  rsync directory TO JETSTREAM server from local $SCRATCHDIR \n\
@@ -225,7 +225,7 @@ else
 fi
 
 echo "Syncing directory $dir from jetstream:"
-cmd="rsync -avzh $SCRATCHDIR/$dir/ exouser@149.165.154.65:/data/HDF5EOS/$dir "
+cmd="rsync -avzh --progress $SCRATCHDIR/$dir/ exouser@149.165.154.65:/data/HDF5EOS/$dir "
 echo running ... $cmd
 $cmd
 }
