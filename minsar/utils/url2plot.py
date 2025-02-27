@@ -163,7 +163,7 @@ def build_commands(params):
 
 
     #### Build the view.py command string (should use velocity.h5 or geo_velocity.h5 depending on geometry but not supported by timeseries2velocity.py).
-    view_cmd_parts = [ "view.py velocity.h5 velocity --mask geo_mask.h5 --dem geo_geometryRadar.h5" ] 
+    view_cmd_parts = [ "view.py velocity.h5 velocity --mask geo_mask.h5 --dem geo_geometryRadar.h5 --alpha 0.2" ] 
     if ref_lat is not None and ref_lon is not None:
         view_cmd_parts.append(f"--ref-lalo {fmt.format(ref_lat)} {fmt.format(ref_lon)}")
     view_cmd_parts.append(f"--sub-lat {min_lat:.4f} {max_lat:.4f} --sub-lon {min_lon:.4f} {max_lon:.4f}")
