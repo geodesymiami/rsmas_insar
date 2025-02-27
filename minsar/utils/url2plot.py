@@ -15,10 +15,10 @@ from urllib.parse import urlparse, parse_qs
 
 def print_help():
     help_text = """
-URL2plot.py: Convert an insarmaps URL into a viewPS.py command.
+url2plot.py: Convert an insarmaps URL into a viewPS.py command.
 
 Usage:
-    python URL2plot.py "<insarmaps URL>"
+    url2plot.py "<insarmaps URL>"
 
 The insarmaps URL should have the following format:
     https://insarmaps.miami.edu/start/<centerLat>/<centerLon>/<zoomFactor>?<query_parameters>
