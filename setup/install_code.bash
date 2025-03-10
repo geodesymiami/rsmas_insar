@@ -3,14 +3,12 @@ set -eo pipefail
 
 ### Source the environment  #################
 export RSMASINSAR_HOME=$PWD
-VSM_ENV="vsm"
-TARGET_ENV="target_env_name" #Add some other environments
 
-VSM_ENV_PATH=$(conda env list | grep "$VSM_ENV " | awk '{print $NF}')
+VSM_ENV_PATH=$(conda env list | grep "vsm " | awk '{print $NF}')
 
 # Check if the environment path was found
 if [ -z "$VSM_ENV_PATH" ]; then
-  echo "Environment '$VSM_ENV' not found."
+  echo "Environment 'vsm' not found."
   exit 1
 fi
 
@@ -61,7 +59,7 @@ pip install -r tools/Precip/requirements.txt
 pip install -r tools/sardem/requirements.txt
 pip install -e tools/sardem
 pip install tools/sarvey
-$TARGET_ENV_PATH/bin/pip install -r tools/VSM/VSM/requirements.txt
+$VSM_ENV_PATH/bin/pip install -r tools/VSM/VSM/requirements.txt
 
 ###  Reduce miniforge3 directory size #################
 rm -rf tools/miniforge3/pkgs
