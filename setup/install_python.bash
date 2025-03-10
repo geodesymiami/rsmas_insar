@@ -13,9 +13,6 @@ bash ${miniforge_version} -b -p tools/miniforge3
 
 ### Create Conda Environment #########################
 tools/miniforge3/bin/conda create --name inversion -y
-echo "Conda environment 'inversion' created with Python 3.9"
-
-### Activate Environment (Optional) ##################
-# tools/miniforge3/bin/conda activate inversion
+echo "Conda environment 'inversion' created"
 
 echo "Python installation DONE"
