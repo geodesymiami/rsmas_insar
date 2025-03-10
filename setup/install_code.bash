@@ -3,6 +3,17 @@ set -eo pipefail
 
 ### Source the environment  #################
 export RSMASINSAR_HOME=$PWD
+VSM_ENV="vsm"
+TARGET_ENV="target_env_name" #Add some other environments
+
+VSM_ENV_PATH=$(conda env list | grep "$VSM_ENV " | awk '{print $NF}')
+
+# Check if the environment path was found
+if [ -z "$VSM_ENV_PATH" ]; then
+  echo "Environment '$VSM_ENV' not found."
+  exit 1
+fi
+
 source setup/platforms_defaults.bash;
 source setup/environment.bash;
 
@@ -35,6 +46,7 @@ git clone git@github.com:geodesymiami/precip_cron tools/Precip_cron
 git clone git@github.com:scottstanie/sardem tools/sardem
 git clone git@github.com:luhipi/sarvey tools/sarvey
 git clone git@github.com:falkamelung/MintPy.git tools/MintPy_falk
+git clone git@github.com:EliTras/VSM.git tools/VSM
 
 mamba install python=3.10  --file minsar/environment.yml --yes -c conda-forge                     # first install c-code
 mamba install --file tools/insarmaps_scripts/environment.yml -c conda-forge
@@ -49,6 +61,7 @@ pip install -r tools/Precip/requirements.txt
 pip install -r tools/sardem/requirements.txt
 pip install -e tools/sardem
 pip install tools/sarvey
+$TARGET_ENV_PATH/bin/pip install -r tools/VSM/VSM/requirements.txt
 
 ###  Reduce miniforge3 directory size #################
 rm -rf tools/miniforge3/pkgs
