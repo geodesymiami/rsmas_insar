@@ -64,9 +64,9 @@ pip install -r tools/PlotData/requirements.txt
 pip install -r tools/Precip/requirements.txt
 pip install -r tools/sardem/requirements.txt
 pip install -e tools/sardem
-pip install tools/sarvey
+# pip install tools/sarvey
 $VSM_ENV_PATH/bin/pip install -r tools/VSM/VSM/requirements.txt
-$SARVEY_ENV_PATH /bin/pip install pysolid gdal
+$SARVEY_ENV_PATH/bin/pip install pysolid gdal
 
 ###  Reduce miniforge3 directory size #################
 rm -rf tools/miniforge3/pkgs
