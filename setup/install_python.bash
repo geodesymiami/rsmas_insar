@@ -11,11 +11,14 @@ chmod 755 ${miniforge_version}
 bash ${miniforge_version} -b -p tools/miniforge3
 #tools/miniforge3/bin/mamba init bash
 
-### Create Conda Environment #########################
-tools/miniforge3/bin/conda create --name vsm -y
+### Create Conda Environment VSM #########################
+tools/miniforge3/bin/conda create --name vsm pip -y
 echo "Conda environment 'vsm' created"
 
-### Install pipw  #########################
+### Install pip  #########################
 tools/miniforge3/bin/conda install --name vsm pip -y
+
+### Create Conda Environment Sarvey #########################
+tools/miniforge3/bin/conda env create -n sarvey pip -y
 
 echo "Python installation DONE"
