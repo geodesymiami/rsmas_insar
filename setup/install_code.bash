@@ -5,10 +5,16 @@ set -eo pipefail
 export RSMASINSAR_HOME=$PWD
 
 VSM_ENV_PATH=$(tools/miniforge3/bin/conda env list | grep "vsm " | awk '{print $NF}')
+SARVEY_ENV_PATH=$(tools/miniforge3/bin/conda env list | grep "sarvey " | awk '{print $NF}')
 
 # Check if the environment path was found
 if [ -z "$VSM_ENV_PATH" ]; then
   echo "Environment 'vsm' not found."
+  exit 1
+fi
+
+if [ -z "$SARVEY_ENV_PATH" ]; then
+  echo "Environment 'sarvey' not found."
   exit 1
 fi
 
@@ -60,6 +66,7 @@ pip install -r tools/sardem/requirements.txt
 pip install -e tools/sardem
 pip install tools/sarvey
 $VSM_ENV_PATH/bin/pip install -r tools/VSM/VSM/requirements.txt
+$SARVEY_ENV_PATH /bin/pip install pysolid gdal
 
 ###  Reduce miniforge3 directory size #################
 rm -rf tools/miniforge3/pkgs
