@@ -63,7 +63,8 @@ pip install -r tools/insarmaps_scripts/requirements.txt
 pip install -r tools/PlotData/requirements.txt
 pip install -r tools/Precip/requirements.txt
 pip install -r tools/sardem/requirements.txt
-pip install -e tools/sardem
+# pip install -e tools/sardem
+
 # pip install tools/sarvey
 $VSM_ENV_PATH/bin/pip install -r tools/VSM/VSM/requirements.txt
 $SARVEY_ENV_PATH/bin/pip install pysolid gdal
