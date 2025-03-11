@@ -4,7 +4,7 @@ set -eo pipefail
 ### Source the environment  #################
 export RSMASINSAR_HOME=$PWD
 
-VSM_ENV_PATH=$(conda env list | grep "vsm " | awk '{print $NF}')
+VSM_ENV_PATH=$(tools/miniforge3/bin/conda env list | grep "vsm " | awk '{print $NF}')
 
 # Check if the environment path was found
 if [ -z "$VSM_ENV_PATH" ]; then
