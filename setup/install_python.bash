@@ -13,9 +13,9 @@ bash ${miniforge_version} -b -p tools/miniforge3
 
 ### Create Conda Environment #########################
 tools/miniforge3/bin/conda create --name vsm -y
-echo "Conda environment 'inversion' created"
+echo "Conda environment 'vsm' created"
 
 ### Install pipw  #########################
-tools/miniforge3/bin/conda install -n vsm pip -y
+tools/miniforge3/bin/conda install --name vsm pip -y
 
 echo "Python installation DONE"
