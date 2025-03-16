@@ -8,8 +8,7 @@ import os
 import subprocess
 import sys
 import glob
-import time
-import shutil
+from datetime import datetime
 import argparse
 from minsar.objects.rsmas_logging import loglevel
 from minsar.objects import message_rsmas
@@ -73,6 +72,24 @@ def create_html_if_needed(dir):
         # Create an instance of Inps with the directory
         inps = Inps(dir)
         create_html(inps)
+
+def add_log_remote_hdfeos5(scp_list, work_dir):
+    # add uploaded he5 files to remote log file
+    
+    REMOTEHOST_DATA = os.getenv('REMOTEHOST_DATA')
+    REMOTEUSER = os.getenv('REMOTEUSER')
+    REMOTELOGFILE = os.getenv('REMOTELOGFILE')
+    
+    he5_pattern = [item for item in scp_list if item.endswith('.he5')][0]
+    he5_files = glob.glob(work_dir + he5_pattern)
+    relative_he5_files = [os.path.relpath(item, start=os.path.dirname(work_dir)) for item in he5_files]
+    current_date = datetime.now().strftime('%Y%m%d')
+
+    for relative_file in relative_he5_files:
+        command = f"echo {current_date} {relative_file} | ssh {REMOTEUSER}@{REMOTEHOST_DATA} 'cat >> {REMOTELOGFILE}'"
+        status = subprocess.Popen(command, shell=True).wait()
+        if status != 0:
+            raise Exception('ERROR appending to remote log file in upload_data_products.py')
    
 ##############################################################################
 
@@ -259,6 +276,20 @@ def main(iargs=None):
         raise Exception('ERROR adjusting permissions in upload_data_products.py')
 
 ##########################################
+    add_log_remote_hdfeos5(scp_list, inps.work_dir)
+    # he5_pattern = [item for item in scp_list if item.endswith('.he5')][0]
+    # he5_files = glob.glob(inps.work_dir + he5_pattern)
+    # relative_he5_files = [os.path.relpath(item, start=os.path.dirname(inps.work_dir)) for item in he5_files]
+    # current_date = datetime.now().strftime('%Y%m%d')
+    # REMOTE_LOG_FILE = "/data/log/hdfeos5_files.txt"
+
+    # for relative_file in relative_he5_files:
+    #     command = f"echo {current_date} {relative_file} | ssh {REMOTEUSER}@{REMOTEHOST_DATA} 'cat >> {REMOTE_LOG_FILE}'"
+    #     status = subprocess.Popen(command, shell=True).wait()
+    #     if status != 0:
+    #         raise Exception('ERROR appending to remote log file in upload_data_products.py')
+##########################################
+
     remote_url = 'http://' + REMOTEHOST_DATA + REMOTE_DIR + project_name + '/' + data_dir + '/pic'
     print('Data at:')
     print(remote_url)
