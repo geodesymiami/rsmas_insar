@@ -11,6 +11,8 @@ Usage:
 
 import sys
 import math
+import os
+import subprocess  # Add this import statement
 from urllib.parse import urlparse, parse_qs
 
 def print_help():
@@ -22,8 +24,8 @@ Usage:
 
 The insarmaps URL should have the following format:
     https://insarmaps.miami.edu/start/<centerLat>/<centerLon>/<zoomFactor>?<query_parameters>
-    
-Examples:   
+
+Examples:
     cd $SCRATCHDIR/unittestGalapagosSenD128/mintpy
     url2plot.py "https://insarmaps.miami.edu/start/-0.8286/-91.1462/14.1973?flyToDatasetCenter=false&startDataset=S1_IW1_128_0596_0597_20160605_XXXXXXXX_S00887_S00783_W091207_W091106&pointLat=-0.81794&pointLon=-91.13625&minScale=-60&maxScale=60&startDate=20160629&endDate=20160804"
 
@@ -42,7 +44,7 @@ Current limitations:
 Todo:
     - viewPS.py should use timeseries2velocity
     - needs option to fit time function or use difference between start-date and end-date
-    - viewPS.py should call extract_hdf5eos5 and extract as needed 
+    - viewPS.py should call extract_hdf5eos5 and extract as needed
     - ideally tsview.py, view.py have options to use OSM satellite/street as background, and to plot radar-coded data in geo coordinates.
     - should be one command that creates the plot with an easy way to modify plot parameters.
 
@@ -67,7 +69,7 @@ def parse_insarmaps_url(url):
     # Helper: extract first value or None if not present
     def get_val(key, default=None):
         return qs.get(key, [default])[0]
-    
+
     file = get_val('startDataset')
     point_lat = get_val('pointLat')
     point_lon = get_val('pointLon')
@@ -79,7 +81,7 @@ def parse_insarmaps_url(url):
     end_date = get_val('endDate')
     # For colorscale, default to "velocity" if not given.
     unit = get_val('colorscale', 'velocity')
-    
+
     # Convert numeric values if they exist, else leave as None.
     point_lat = float(point_lat) if point_lat is not None else None
     point_lon = float(point_lon) if point_lon is not None else None
@@ -104,6 +106,7 @@ def parse_insarmaps_url(url):
         'unit': unit
     }
 
+
 def build_commands(params):
     """
     Given the parsed parameters, compute the subset extents and return
@@ -121,7 +124,7 @@ def build_commands(params):
     ref_lon = params['ref_lon']
     min_scale = params['min_scale']
     max_scale = params['max_scale']
-    
+
     # Constant for point size
     point_size = 10
 
@@ -151,39 +154,77 @@ def build_commands(params):
     extract_cmd_parts = [ "extract_hdfeos5.py", f"{file}.he5"]
 
     #### Build the viewPS.py command string.
-    # viewPS_cmd_parts = [ "viewPS.py", f"{file}.he5"," velocity --mask mask.h5 --dem geometryRadar.h5" ]
-    viewPS_cmd_parts = [ "viewPS.py", f"{file}.he5"," velocity","--dem geo_geometryRadar.h5 --figsize 8 8" ]
+    # viewsPS1_cmd_parts = [ "viewPS.py", f"{file}.he5"," velocity","--dem geo_geometryRadar.h5 --figsize 8 8" ]
+    viewsPS1_cmd_parts = [ "viewPS.py", f"{file}.he5"," velocity","--satellite --figsize 8 8" ]
+    viewsPS2_cmd_parts = [ "viewPS.py", f"{file}.he5"," dem_error","--satellite --figsize 8 8" ]
+    viewsPS3_cmd_parts = [ "viewPS.py", f"{file}.he5"," elevation","--satellite --figsize 8 8" ]
 
+    cmd_parts = []
     if ref_lat is not None and ref_lon is not None:
-        viewPS_cmd_parts.append(f"--ref-lalo {fmt.format(ref_lat)} {fmt.format(ref_lon)}")
-    viewPS_cmd_parts.append(f"--subset-lalo={subset_lat},{subset_lon}")
-    if min_scale is not None and max_scale is not None:
-        viewPS_cmd_parts.append(f"--vlim {min_scale} {max_scale}")
-    viewPS_cmd_parts.append(f"--point-size {point_size}")
+        cmd_parts.append(f"--ref-lalo {fmt.format(ref_lat)} {fmt.format(ref_lon)}")
+    cmd_parts.append(f"--subset-lalo={subset_lat},{subset_lon}")
 
+    cmd_parts.append(f"--point-size {point_size}")
+    
+    cmd_scale=[]
+    if min_scale is not None and max_scale is not None:
+        cmd_scale.append(f"--vlim {min_scale} {max_scale}")
+
+    viewsPS1_cmd_parts.extend(cmd_scale)
+    viewsPS1_cmd_parts.extend(cmd_parts)
+    viewsPS2_cmd_parts.extend(cmd_parts)
+    viewsPS3_cmd_parts.extend(cmd_parts)
 
     #### Build the view.py command string (should use velocity.h5 or geo_velocity.h5 depending on geometry but not supported by timeseries2velocity.py).
-    view_cmd_parts = [ "view.py velocity.h5 velocity --mask geo_mask.h5 --dem geo_geometryRadar.h5 --alpha 0.2" ] 
+    view_cmd_parts = [ "view.py velocity.h5 velocity --mask geo_mask.h5 --dem geo_geometryRadar.h5 --alpha 0.2" ]
     if ref_lat is not None and ref_lon is not None:
         view_cmd_parts.append(f"--ref-lalo {fmt.format(ref_lat)} {fmt.format(ref_lon)}")
     view_cmd_parts.append(f"--sub-lat {min_lat:.4f} {max_lat:.4f} --sub-lon {min_lon:.4f} {max_lon:.4f}")
-    if min_scale is not None and max_scale is not None:
-        view_cmd_parts.append(f"--vlim {min_scale} {max_scale}")
     view_cmd_parts.append(f"--style scatter --scatter-size {point_size}")
 
-    ts2velocity_cmd = " ".join(ts2velocity_cmd_parts)
-    extract_cmd = " ".join(extract_cmd_parts)    
-    view_cmd = " ".join(view_cmd_parts)
-    viewPS_cmd = " ".join(viewPS_cmd_parts)
+    if min_scale is not None and max_scale is not None:
+        view_cmd_parts.append(f"--vlim {min_scale} {max_scale}")
 
-    return ts2velocity_cmd, extract_cmd, view_cmd, viewPS_cmd,
+    ts2velocity_cmd = " ".join(ts2velocity_cmd_parts)
+    extract_cmd = " ".join(extract_cmd_parts)
+    view_cmd = " ".join(view_cmd_parts)
+    viewsPS1_cmd = " ".join(viewsPS1_cmd_parts)
+    viewsPS2_cmd = " ".join(viewsPS2_cmd_parts)
+    viewsPS3_cmd = " ".join(viewsPS3_cmd_parts)
+
+    return ts2velocity_cmd, extract_cmd, view_cmd, viewsPS1_cmd, viewsPS2_cmd ,viewsPS3_cmd
+
+def get_dir_log_remote_hdfeos5(he5_file):
+    # get directory name from remote log file
+
+    REMOTEHOST_DATA = os.getenv('REMOTEHOST_DATA')
+    REMOTEUSER = os.getenv('REMOTEUSER')
+    REMOTELOGFILE = os.getenv('REMOTELOGFILE')
+    
+    command = f"ssh {REMOTEUSER}@{REMOTEHOST_DATA} 'cat {REMOTELOGFILE}'"
+    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+
+    if result.returncode != 0:
+        raise Exception('ERROR retrieving remote log file in upload_data_products.py')
+
+    logfile_contents = result.stdout
+    logfile_lines = logfile_contents.splitlines()
+    matching_lines = [line for line in logfile_lines if he5_file in line]
+
+    if matching_lines:
+        last_match = matching_lines[-1]
+        dir = os.path.dirname(last_match.split()[1])
+        print(f"Last match directory for {he5_file}: {dir}")
+    else:
+        print(f"No entries found for {he5_file}")
+    return dir
 
 def main():
     # Check for help flag.
     if len(sys.argv) < 2 or sys.argv[1] in ("--help", "-h"):
         print_help()
         sys.exit(0)
-    
+
     url = sys.argv[1]
     try:
         params = parse_insarmaps_url(url)
@@ -191,13 +232,17 @@ def main():
         print(f"Error parsing URL: {e}")
         sys.exit(1)
     
-    ts2velocity_cmd, extract_hdfeos5_cmd, view_cmd, viewPS_cmd, = build_commands(params=params)
-    
+    ts2velocity_cmd, extract_hdfeos5_cmd, view_cmd, viewsPS1_cmd, viewsPS2_cmd, viewsPS3_cmd = build_commands(params=params)
+
+    dir = get_dir_log_remote_hdfeos5(he5_file=params['file'])
+
+    change_dir_cmd = f"cd {os.getenv('SCRATCHDIR')}/{dir}"
+
     print()
-    print("To plot run:")
-    # if params['unit'] == 'velocity':
-    #     print(ts2velocity_cmd)
-    
+    print("To plot, run: (Note: *.he5 file is not used by viewPS.py but currently required")
+    print()
+
+    print(change_dir_cmd)
     print(ts2velocity_cmd)
     print(extract_hdfeos5_cmd)
 
@@ -206,8 +251,11 @@ def main():
         print(view_cmd)
     else:
         print("geocode.py geometryRadar.h5")
-        print(viewPS_cmd)
-    
+        print(viewsPS1_cmd,' &')
+        print()
+        print(viewsPS2_cmd,' &')
+        print(viewsPS3_cmd,' &')
+
     print()
 if __name__ == '__main__':
     main()
