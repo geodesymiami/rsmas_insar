@@ -154,10 +154,10 @@ def build_commands(params):
     extract_cmd_parts = [ "extract_hdfeos5.py", f"{file}.he5"]
 
     #### Build the viewPS.py command string.
-    # viewsPS1_cmd_parts = [ "viewPS.py", f"{file}.he5"," velocity","--dem geo_geometryRadar.h5 --figsize 8 8" ]
-    viewsPS1_cmd_parts = [ "viewPS.py", f"{file}.he5"," velocity","--satellite --figsize 8 8" ]
-    viewsPS2_cmd_parts = [ "viewPS.py", f"{file}.he5"," dem_error","--satellite --figsize 8 8" ]
-    viewsPS3_cmd_parts = [ "viewPS.py", f"{file}.he5"," elevation","--satellite --figsize 8 8" ]
+    viewsPS1_cmd_parts = [ "viewPS.py", f"{file}.he5"," velocity","--dem geo_geometryRadar.h5 --figsize 8 8" ]
+    viewsPS2_cmd_parts = [ "viewPS.py", f"{file}.he5"," velocity","--satellite --figsize 8 8" ]
+    viewsPS3_cmd_parts = [ "viewPS.py", f"{file}.he5"," dem_error","--satellite --figsize 8 8" ]
+    viewsPS4_cmd_parts = [ "viewPS.py", f"{file}.he5"," elevation","--satellite --figsize 8 8" ]
 
     cmd_parts = []
     if ref_lat is not None and ref_lon is not None:
@@ -171,9 +171,14 @@ def build_commands(params):
         cmd_scale.append(f"--vlim {min_scale} {max_scale}")
 
     viewsPS1_cmd_parts.extend(cmd_scale)
-    viewsPS1_cmd_parts.extend(cmd_parts)
     viewsPS2_cmd_parts.extend(cmd_parts)
     viewsPS3_cmd_parts.extend(cmd_parts)
+    viewsPS4_cmd_parts.extend(cmd_parts)
+
+    viewsPS1_cmd = " ".join(viewsPS1_cmd_parts)
+    viewsPS2_cmd = " ".join(viewsPS2_cmd_parts)
+    viewsPS3_cmd = " ".join(viewsPS3_cmd_parts)
+    viewsPS4_cmd = " ".join(viewsPS4_cmd_parts)
 
     #### Build the view.py command string (should use velocity.h5 or geo_velocity.h5 depending on geometry but not supported by timeseries2velocity.py).
     view_cmd_parts = [ "view.py velocity.h5 velocity --mask geo_mask.h5 --dem geo_geometryRadar.h5 --alpha 0.2" ]
@@ -188,11 +193,9 @@ def build_commands(params):
     ts2velocity_cmd = " ".join(ts2velocity_cmd_parts)
     extract_cmd = " ".join(extract_cmd_parts)
     view_cmd = " ".join(view_cmd_parts)
-    viewsPS1_cmd = " ".join(viewsPS1_cmd_parts)
-    viewsPS2_cmd = " ".join(viewsPS2_cmd_parts)
-    viewsPS3_cmd = " ".join(viewsPS3_cmd_parts)
 
-    return ts2velocity_cmd, extract_cmd, view_cmd, viewsPS1_cmd, viewsPS2_cmd ,viewsPS3_cmd
+
+    return ts2velocity_cmd, extract_cmd, view_cmd, viewsPS1_cmd, viewsPS2_cmd ,viewsPS3_cmd, viewsPS4_cmd
 
 def get_dir_log_remote_hdfeos5(he5_file):
     # get directory name from remote log file
@@ -232,7 +235,7 @@ def main():
         print(f"Error parsing URL: {e}")
         sys.exit(1)
     
-    ts2velocity_cmd, extract_hdfeos5_cmd, view_cmd, viewsPS1_cmd, viewsPS2_cmd, viewsPS3_cmd = build_commands(params=params)
+    ts2velocity_cmd, extract_hdfeos5_cmd, view_cmd, viewsPS1_cmd, viewsPS2_cmd, viewsPS3_cmd, viewsPS4_cmd = build_commands(params=params)
 
     dir = get_dir_log_remote_hdfeos5(he5_file=params['file'])
 
@@ -255,6 +258,8 @@ def main():
         print()
         print(viewsPS2_cmd,' &')
         print(viewsPS3_cmd,' &')
+        print(viewsPS4_cmd,' &')
+
 
     print()
 if __name__ == '__main__':
