@@ -79,6 +79,7 @@ def parse_insarmaps_url(url):
     max_scale = get_val('maxScale')
     start_date = get_val('startDate')
     end_date = get_val('endDate')
+    pixel_size = get_val('pixelSize')
     # For colorscale, default to "velocity" if not given.
     unit = get_val('colorscale', 'velocity')
 
@@ -103,6 +104,7 @@ def parse_insarmaps_url(url):
         'max_scale': max_scale,
         'start_date': start_date,
         'end_date': end_date,
+        'pixel_size': pixel_size,
         'unit': unit
     }
 
@@ -124,9 +126,13 @@ def build_commands(params):
     ref_lon = params['ref_lon']
     min_scale = params['min_scale']
     max_scale = params['max_scale']
-
-    # Constant for point size
-    point_size = 10
+    
+    if params['pixel_size'] is None:
+        pixel_size = 1
+    else:
+        pixel_size = params['pixel_size']
+    
+    mod_pixel_size = round(float(pixel_size) * 5)
 
     # Compute delta using the given formula:
     delta = 301.2 * math.exp(-0.7075 * zoom_factor)
@@ -153,47 +159,40 @@ def build_commands(params):
     #### Build the extract_hdfeos5 command string.
     extract_cmd_parts = [ "extract_hdfeos5.py", f"{file}.he5"]
 
-    #### Build the viewPS.py command string.
+    #### Build the viewPS.py and/or view.py command string
+    ref_lalo, subset_lalo, point_size,  scale, sub_lat_lon, scatter_size = [], [], [], [], [], []
+    if ref_lat is not None and ref_lon is not None:
+        ref_lalo.append(f"--ref-lalo {fmt.format(ref_lat)} {fmt.format(ref_lon)}")
+    subset_lalo.append(f"--subset-lalo={subset_lat},{subset_lon}")
+    scatter_size.append(f"--style scatter --scatter-size {mod_pixel_size}")
+    point_size.append(f"--point-size {mod_pixel_size}")  # 3/25: should use different point_size for view.py, viewPS.py (geo, radar-coded)
+    if min_scale is not None and max_scale is not None:
+        scale.append(f"--vlim {min_scale} {max_scale}")
+
+    sub_lat_lon.append(f"--sub-lat {min_lat:.4f} {max_lat:.4f} --sub-lon {min_lon:.4f} {max_lon:.4f}")
+
+    #### Build the viewPS.py and view.py command strings (second should use velocity.h5 or geo_velocity.h5 depending on geometry but not supported by timeseries2velocity.py).
+    #### viewPS.py need to accept scatter_size instead of point_size
+
     viewsPS1_cmd_parts = [ "viewPS.py", f"{file}.he5"," velocity","--dem geo_geometryRadar.h5 --figsize 8 8" ]
     viewsPS2_cmd_parts = [ "viewPS.py", f"{file}.he5"," velocity","--satellite --figsize 8 8" ]
     viewsPS3_cmd_parts = [ "viewPS.py", f"{file}.he5"," dem_error","--satellite --figsize 8 8" ]
     viewsPS4_cmd_parts = [ "viewPS.py", f"{file}.he5"," elevation","--satellite --figsize 8 8" ]
+    view_cmd_parts = [ "view.py velocity.h5 velocity --mask geo_mask.h5 --dem geo_geometryRadar.h5 --alpha 0.8" ] # opacity hardwired
 
-    cmd_parts = []
-    if ref_lat is not None and ref_lon is not None:
-        cmd_parts.append(f"--ref-lalo {fmt.format(ref_lat)} {fmt.format(ref_lon)}")
-    cmd_parts.append(f"--subset-lalo={subset_lat},{subset_lon}")
-
-    cmd_parts.append(f"--point-size {point_size}")
+    viewsPS1_cmd_parts.extend( scale + ref_lalo + subset_lalo + point_size )
+    viewsPS2_cmd_parts.extend( scale + ref_lalo + subset_lalo + point_size )
+    viewsPS3_cmd_parts.extend( ref_lalo + subset_lalo + point_size )
+    viewsPS4_cmd_parts.extend( ref_lalo + subset_lalo + point_size )
+    view_cmd_parts.extend( ref_lalo + sub_lat_lon + scale + scatter_size )
     
-    cmd_scale=[]
-    if min_scale is not None and max_scale is not None:
-        cmd_scale.append(f"--vlim {min_scale} {max_scale}")
-
-    viewsPS1_cmd_parts.extend(cmd_scale)
-    viewsPS2_cmd_parts.extend(cmd_parts)
-    viewsPS3_cmd_parts.extend(cmd_parts)
-    viewsPS4_cmd_parts.extend(cmd_parts)
-
     viewsPS1_cmd = " ".join(viewsPS1_cmd_parts)
     viewsPS2_cmd = " ".join(viewsPS2_cmd_parts)
     viewsPS3_cmd = " ".join(viewsPS3_cmd_parts)
     viewsPS4_cmd = " ".join(viewsPS4_cmd_parts)
-
-    #### Build the view.py command string (should use velocity.h5 or geo_velocity.h5 depending on geometry but not supported by timeseries2velocity.py).
-    view_cmd_parts = [ "view.py velocity.h5 velocity --mask geo_mask.h5 --dem geo_geometryRadar.h5 --alpha 0.2" ]
-    if ref_lat is not None and ref_lon is not None:
-        view_cmd_parts.append(f"--ref-lalo {fmt.format(ref_lat)} {fmt.format(ref_lon)}")
-    view_cmd_parts.append(f"--sub-lat {min_lat:.4f} {max_lat:.4f} --sub-lon {min_lon:.4f} {max_lon:.4f}")
-    view_cmd_parts.append(f"--style scatter --scatter-size {point_size}")
-
-    if min_scale is not None and max_scale is not None:
-        view_cmd_parts.append(f"--vlim {min_scale} {max_scale}")
-
+    view_cmd = " ".join(view_cmd_parts)
     ts2velocity_cmd = " ".join(ts2velocity_cmd_parts)
     extract_cmd = " ".join(extract_cmd_parts)
-    view_cmd = " ".join(view_cmd_parts)
-
 
     return ts2velocity_cmd, extract_cmd, view_cmd, viewsPS1_cmd, viewsPS2_cmd ,viewsPS3_cmd, viewsPS4_cmd
 
@@ -259,7 +258,6 @@ def main():
         print(viewsPS2_cmd,' &')
         print(viewsPS3_cmd,' &')
         print(viewsPS4_cmd,' &')
-
 
     print()
 if __name__ == '__main__':
