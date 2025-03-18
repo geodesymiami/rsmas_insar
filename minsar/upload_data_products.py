@@ -80,13 +80,27 @@ def add_log_remote_hdfeos5(scp_list, work_dir):
     REMOTEUSER = os.getenv('REMOTEUSER')
     REMOTELOGFILE = os.getenv('REMOTELOGFILE')
     
-    he5_pattern = [item for item in scp_list if item.endswith('.he5')][0]
+    he5_pattern = [item for item in scp_list if item.endswith('.he5')][0]    
     he5_files = glob.glob(work_dir + he5_pattern)
+    relative_he5_files = [os.path.relpath(item, start=os.path.dirname(work_dir)) for item in he5_files]
     relative_he5_files = [os.path.relpath(item, start=os.path.dirname(work_dir)) for item in he5_files]
     current_date = datetime.now().strftime('%Y%m%d')
 
+    file_path = he5_files[0]
+
+    from mintpy.utils import readfile
+    metadata = readfile.read_attribute(file_path)
+    if 'data_footprint' not in metadata:
+        raise Exception('ERROR: data_footprint not found in metadata')
+    data_footprint = metadata['data_footprint']
+
     for relative_file in relative_he5_files:
-        command = f"echo {current_date} {relative_file} | ssh {REMOTEUSER}@{REMOTEHOST_DATA} 'cat >> {REMOTELOGFILE}'"
+        # command = f"echo {current_date} {relative_file} | ssh {REMOTEUSER}@{REMOTEHOST_DATA} 'cat >> {REMOTELOGFILE}'"
+        escaped_data_footprint = data_footprint.replace('(', '\(').replace(')', '\)')
+        command = f"echo {current_date} {relative_file} '{escaped_data_footprint}' | ssh {REMOTEUSER}@{REMOTEHOST_DATA} 'cat >> {REMOTELOGFILE}'"
+
+        # command = f"echo {current_date} {relative_file} {data_footprint} | ssh {REMOTEUSER}@{REMOTEHOST_DATA} 'cat >> {REMOTELOGFILE}'"
+
         status = subprocess.Popen(command, shell=True).wait()
         if status != 0:
             raise Exception('ERROR appending to remote log file in upload_data_products.py')
@@ -277,17 +291,6 @@ def main(iargs=None):
 
 ##########################################
     add_log_remote_hdfeos5(scp_list, inps.work_dir)
-    # he5_pattern = [item for item in scp_list if item.endswith('.he5')][0]
-    # he5_files = glob.glob(inps.work_dir + he5_pattern)
-    # relative_he5_files = [os.path.relpath(item, start=os.path.dirname(inps.work_dir)) for item in he5_files]
-    # current_date = datetime.now().strftime('%Y%m%d')
-    # REMOTE_LOG_FILE = "/data/log/hdfeos5_files.txt"
-
-    # for relative_file in relative_he5_files:
-    #     command = f"echo {current_date} {relative_file} | ssh {REMOTEUSER}@{REMOTEHOST_DATA} 'cat >> {REMOTE_LOG_FILE}'"
-    #     status = subprocess.Popen(command, shell=True).wait()
-    #     if status != 0:
-    #         raise Exception('ERROR appending to remote log file in upload_data_products.py')
 ##########################################
 
     remote_url = 'http://' + REMOTEHOST_DATA + REMOTE_DIR + project_name + '/' + data_dir + '/pic'
