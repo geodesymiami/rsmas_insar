@@ -8,6 +8,7 @@ import os
 import subprocess
 import sys
 import glob
+import shlex
 from datetime import datetime
 import argparse
 from minsar.objects.rsmas_logging import loglevel
@@ -96,10 +97,9 @@ def add_log_remote_hdfeos5(scp_list, work_dir):
 
     for relative_file in relative_he5_files:
         # command = f"echo {current_date} {relative_file} | ssh {REMOTEUSER}@{REMOTEHOST_DATA} 'cat >> {REMOTELOGFILE}'"
-        escaped_data_footprint = data_footprint.replace('(', '\(').replace(')', '\)')
-        command = f"echo {current_date} {relative_file} '{escaped_data_footprint}' | ssh {REMOTEUSER}@{REMOTEHOST_DATA} 'cat >> {REMOTELOGFILE}'"
+        escaped_data_footprint = shlex.quote(data_footprint)
 
-        # command = f"echo {current_date} {relative_file} {data_footprint} | ssh {REMOTEUSER}@{REMOTEHOST_DATA} 'cat >> {REMOTELOGFILE}'"
+        command = f"""ssh {REMOTEUSER}@{REMOTEHOST_DATA} "echo {current_date} {relative_file} {escaped_data_footprint} >> {REMOTELOGFILE}" """
 
         status = subprocess.Popen(command, shell=True).wait()
         if status != 0:
