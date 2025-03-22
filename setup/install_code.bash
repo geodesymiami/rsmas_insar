@@ -48,7 +48,7 @@ pip install -r tools/PlotData/requirements.txt
 pip install -r tools/Precip/requirements.txt
 pip install -r tools/sardem/requirements.txt
 pip install -e tools/sardem
-pip install tools/sarvey
+#pip install tools/sarvey
 
 ###  Reduce miniforge3 directory size #################
 rm -rf tools/miniforge3/pkgs
