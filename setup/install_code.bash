@@ -3,6 +3,21 @@ set -eo pipefail
 
 ### Source the environment  #################
 export RSMASINSAR_HOME=$PWD
+
+VSM_ENV_PATH=$(tools/miniforge3/bin/conda env list | grep "vsm " | awk '{print $NF}')
+SARVEY_ENV_PATH=$(tools/miniforge3/bin/conda env list | grep "sarvey " | awk '{print $NF}')
+
+# Check if the environment path was found
+if [ -z "$VSM_ENV_PATH" ]; then
+  echo "Environment 'vsm' not found."
+  exit 1
+fi
+
+if [ -z "$SARVEY_ENV_PATH" ]; then
+  echo "Environment 'sarvey' not found."
+  exit 1
+fi
+
 source setup/platforms_defaults.bash;
 source setup/environment.bash;
 
@@ -35,6 +50,7 @@ git clone git@github.com:geodesymiami/precip_cron tools/Precip_cron
 git clone git@github.com:scottstanie/sardem tools/sardem
 git clone git@github.com:luhipi/sarvey tools/sarvey
 git clone git@github.com:falkamelung/MintPy.git tools/MintPy_falk
+git clone git@github.com:EliTras/VSM.git tools/VSM
 
 mamba install python=3.10  --file minsar/environment.yml --yes -c conda-forge                     # first install c-code
 mamba install --file tools/insarmaps_scripts/environment.yml -c conda-forge
@@ -47,8 +63,14 @@ pip install -r tools/insarmaps_scripts/requirements.txt
 pip install -r tools/PlotData/requirements.txt
 pip install -r tools/Precip/requirements.txt
 pip install -r tools/sardem/requirements.txt
-pip install -e tools/sardem
-#pip install tools/sarvey
+# pip install -e tools/sardem
+
+# pip install tools/sarvey
+$VSM_ENV_PATH/bin/pip install -r tools/VSM/VSM/requirements.txt
+
+### Install GDAL and PySolid #########################
+tools/miniforge3/bin/conda install -n sarvey -c conda-forge gdal pysolid -y
+
 
 ###  Reduce miniforge3 directory size #################
 rm -rf tools/miniforge3/pkgs
