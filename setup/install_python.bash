@@ -17,6 +17,6 @@ echo "Conda environment 'vsm' created"
 
 ### Create Conda Environment Sarvey #########################
 tools/miniforge3/bin/conda create --name sarvey pip -y
-echo "Conda environment 'vsm' created"
+echo "Conda environment 'sarvey' created"
 
 echo "Python installation DONE"
