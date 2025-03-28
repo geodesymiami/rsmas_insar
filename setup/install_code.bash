@@ -65,12 +65,11 @@ pip install -r tools/Precip/requirements.txt
 pip install -r tools/sardem/requirements.txt
 # pip install -e tools/sardem
 
-# pip install tools/sarvey
+# pip install tools/VSM
 $VSM_ENV_PATH/bin/pip install -r tools/VSM/VSM/requirements.txt
 
 ### Install GDAL and PySolid #########################
 tools/miniforge3/bin/conda install -n sarvey -c conda-forge gdal pysolid -y
-
 
 ###  Reduce miniforge3 directory size #################
 rm -rf tools/miniforge3/pkgs
