@@ -64,13 +64,13 @@ pip install -r tools/insarmaps_scripts/requirements.txt
 pip install -r tools/PlotData/requirements.txt
 pip install -r tools/Precip/requirements.txt
 pip install -r tools/sardem/requirements.txt
-# pip install -e tools/sardem
+pip install -e tools/sardem
 
 # pip install tools/VSM
 $VSM_ENV_PATH/bin/pip install -r tools/VSM/VSM/requirements.txt
 
-### Install GDAL and PySolid #########################
-tools/miniforge3/bin/conda install -n sarvey -c conda-forge gdal pysolid -y
+### Install GDAL into sarvey environment #########################
+tools/miniforge3/bin/conda install -n sarvey -c conda-forge gdal -y
 
 ###  Reduce miniforge3 directory size #################
 rm -rf tools/miniforge3/pkgs
