@@ -43,7 +43,7 @@ git clone git@github.com:geodesymiami/MimtPy.git tools/MimtPy
 git clone git@github.com:geodesymiami/geodmod.git tools/geodmod
 git clone git@github.com:geodesymiami/SSARA.git tools/SSARA
 git clone git@github.com:TACC/launcher.git tools/launcher
-git clone git@github.com:geodesymiami/PlotData tools/PlotDat
+git clone git@github.com:geodesymiami/PlotData tools/PlotData
 git clone git@github.com:geodesymiami/PlotDataFA tools/PlotDataFA
 git clone git@github.com:geodesymiami/precip tools/Precip
 git clone git@github.com:geodesymiami/precip_web tools/Precip_web
