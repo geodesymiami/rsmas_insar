@@ -36,6 +36,7 @@ export PLOTDATA_HOME=${RSMASINSAR_HOME}/tools/PlotData
 export PRECIP_HOME=${RSMASINSAR_HOME}/tools/Precip
 export PRECIP_CRON_HOME=${RSMASINSAR_HOME}/tools/Precip_cron
 export SARVEY_HOME=${RSMASINSAR_HOME}/tools/sarvey
+export VSM_HOME=${RSMASINSAR_HOME}/tools/VSM
 export SARDEM_HOME=${RSMASINSAR_HOME}/tools/sardem
 export GBIS_HOME=${RSMASINSAR_HOME}/tools/GBIS
 export JOBDIR=${WORKDIR}/JOBS
@@ -83,6 +84,7 @@ export PYTHONPATH=${PYTHONPATH}:${PRECIP_HOME}/src
 export PYTHONPATH=${PYTHONPATH}:${SARVEY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${SARVEY_HOME}/sarvey
 export PYTHONPATH=${PYTHONPATH}:${SARDEM_HOME}
+export PYTHONPATH=${PYTHONPATH}:${VSM_HOME}/VSM
 #export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/tools      # needed for mimt. Need to talk to Sara on how to do this smarter
 
 ######### Ignore warnings ############
