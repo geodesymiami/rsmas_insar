@@ -43,14 +43,17 @@ for arg in "$@"; do
     fi
 done
 
-# run ssara_federated_query.py to create ssara_listing.txt
+############################################################
+# run ssara_federated_query.py to create ssara_listing.txt #
+############################################################
 rm -f ssara_listing.txt
 cmd="ssara_federated_query.py $cmd $asfResponseTimeout_opt --kml --print > ssara_listing.txt 2> ssara.e"
 
-# Downloading. Try for 2 days if error 502 occurs
+# Try for 2 days if error 502 occurs
 elapsed=0
 duration=$((2 * 24 * 60 * 60)) # 2 days in seconds
 wait_time=300
+duration=30
 wait_time=10
 
 while [ $elapsed -lt $duration ]; do
@@ -69,14 +72,24 @@ while [ $elapsed -lt $duration ]; do
         echo -e  "Download problem: urllib.error.HTTPError: HTTP Error 500: Internal Server Error. Retrying in $wait_time seconds...\n"
         sleep $wait_time     # Wait for 300 seconds before retrying
         elapsed=$((elapsed + $wait_time)) # Increment the elapsed time
-    elif grep -q "ERROR 404: Not Found" wget.e; then
-        # FA 12/2024:  I did not check whether this works, in particular whether removing wget.e is the right thing to do
-        echo -e  "wget download problem: ERROR 404: Not Found. Retrying in $wait_time seconds...\n"
-        rm wget.e
-        sleep $wait_time     # Wait for 300 seconds before retrying
-        elapsed=$((elapsed + $wait_time)) # Increment the elapsed time
+#    elif grep -q "ERROR 404: Not Found" wget.e; then
+#        # FA 12/2024:  I did not check whether this works, in particular whether removing wget.e is the right thing to do
+#        echo -e  "wget download problem: ERROR 404: Not Found. Retrying in $wait_time seconds...\n"
+#        rm wget.e
+#        sleep $wait_time     # Wait for 300 seconds before retrying
+#        elapsed=$((elapsed + $wait_time)) # Increment the elapsed time
+#    elif grep -q "ERROR 403: Forbidden" wget.e; then
+#        # FA 5/2025:  addded as MiamitestTsxSMDT36 gave HTTP Error 403: Forbidden
+#        echo -e  "wget download problem: QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ"
+#        echo -e  "wget download problem: HTTP Error 403: Forbidden. Retrying in $wait_time seconds...\n"
+#        rm wget.e
+#        sleep $wait_time     # Wait for 300 seconds before retrying
+#        elapsed=$((elapsed + $wait_time)) # Increment the elapsed time
+#        echo "QQQQQQQ: Elapsed time $elapsed"
     else
-        echo "Download successful, or no 500 or  502 error detected."
+        echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        echo "Successfully downloaded ssara_listing.txt (no 500 or 502 error detected.)"
+        echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         break # Exit the loop if no 502 error is detected
     fi
 done
@@ -112,42 +125,40 @@ echo "$(date +"%Y%m%d:%H-%m") * Datafiles to download: $num_urls" | tee -a log
 
 timeout=500
 
-echo "downloading using: echo URLs | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd" | tee -a log
-echo ${urls[@]} | xargs -n 1 -P $parallel timeout $timeout wget --continue --user $user --password $passwd 2>> wget.e
-exit_code=$?
-
-echo "$(date +"%Y%m%d-%H:%m") check_download: `check_download.py $PWD --delete`"  | tee -a log
-granules_num=$(ls *.{zip,tar.gz} 2> /dev/null | wc -l)
-echo "$(date +"%Y%m%d:%H-%m") * Downloaded scenes after check_download: $granules_num" | tee -a log
+echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+echo "XXX  Download with wget through xargs XXXX"
+echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 
 runs=1
-while [ $exit_code -ne 0 ] && [ $runs -lt 3 ]; do
-    new_timeout=$(echo "$timeout * $runs" | bc)
-    echo "$(date +"%Y%m%d:%H-%m") * Something went wrong. Exit code was ${exit_code}. Trying again with $new_timeout second timeout" | tee -a log
-
-    echo ${urls[@]} | xargs -n 1 -P $parallel timeout $new_timeout wget --continue --user $user --password $passwd 2>> wget.e
+new_timeout=$timeout
+elapsed=0
+exit_code=1    # set exit_code to 1 so that it does not think it was already successful
+while [[ "$exit_code" -ne 0 ]] && [[ "$elapsed" -lt "$duration" ]]; do
+    rm -f wget.e
+    echo "Run $runs of wget downloads using xargs. elapsed, wait_time, duration, timeout:  $elapsed, $wait_time, $duration, $new_timeout"
+    ######################## Actual data download command using wget  ######################################################
+    echo "Downloading using command: echo $URLs | xargs -n 1 -P $parallel timeout $new_timeout wget --continue --user $user --password $passwd --quiet" | tee -a log
+    echo ${urls[@]} | xargs -n 1 -P $parallel timeout $new_timeout wget --continue --user $user --password $passwd --quiet 2>> wget.e
     exit_code=$?
+    if [[ $exit_code -ne 0 ]]; then 
+       new_timeout=$(echo "$timeout * 5" | bc)
+       echo "$(date +"%Y%m%d:%H-%m") * Something went wrong. Exit code was ${exit_code}. Trying again with $new_timeout second timeout" | tee -a log
+    fi
 
     echo "$(date +"%Y%m%d:%H-%m") check_download: `check_download.py $PWD --delete`"  | tee -a log
     granules_num=$(ls *.{zip,tar.gz} 2> /dev/null | wc -l)
     echo "$(date +"%Y%m%d:%H-%m") * Downloaded scenes after check_download: $granules_num" | tee -a log
 
     runs=$((runs+1))
+    elapsed=$((elapsed + $wait_time)) # Increment the elapsed time
     sleep 1
 done
-
-echo "Running.... $cmd" 
-echo "$(date +"%Y%m%d:%H-%m") $cmd"  | tee -a log
-
-echo "$(date +"%Y%m%d:%H-%m") check_download: `check_download.py $PWD --delete`"  | tee -a log
-granules_num=$(ls *.{zip,tar.gz} 2> /dev/null | wc -l)
-echo "$(date +"%Y%m%d:%H-%m") * Downloaded scenes after check_download: $granules_num" | tee -a log
 
 if [[ $granules_num -ge $num_urls ]]; then
    echo "Download was successful, downloaded scenes: $granules_num" | tee -a log
    exit 0;
 else
-  echo "Not all scenes downloaded, downloaded scenes: $granules_num" | tee -a log
+  echo "ERROR: Only $granules_num of $num_urls scenes downloaded."  | tee -a log
   exit 1;
 fi
 
