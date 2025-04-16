@@ -33,6 +33,7 @@ export MINTPY_HOME=${RSMASINSAR_HOME}/tools/MintPy
 export MIAPLPY_HOME=${RSMASINSAR_HOME}/tools/MiaplPy
 export MIMTPY_HOME=${RSMASINSAR_HOME}/tools/MimtPy
 export PLOTDATA_HOME=${RSMASINSAR_HOME}/tools/PlotData
+export PLOTDATA_HOME=${RSMASINSAR_HOME}/tools/PlotDataFA
 export PRECIP_HOME=${RSMASINSAR_HOME}/tools/Precip
 export PRECIP_CRON_HOME=${RSMASINSAR_HOME}/tools/Precip_cron
 export SARVEY_HOME=${RSMASINSAR_HOME}/tools/sarvey
@@ -40,7 +41,6 @@ export VSM_HOME=${RSMASINSAR_HOME}/tools/VSM
 export SARDEM_HOME=${RSMASINSAR_HOME}/tools/sardem
 export GBIS_HOME=${RSMASINSAR_HOME}/tools/GBIS
 export JOBDIR=${WORKDIR}/JOBS
-
 ############ FOR MODELLING  ###########
 export MODELDATA=${WORKDIR}/MODELDATA
 export GEODMOD_INFILES=${WORKDIR}/infiles/${USER_PREFERRED}/GEODMOD_INFILES
@@ -106,6 +106,7 @@ export PATH=${PATH}:${MIMTPY_HOME}/mimtpy
 export PATH=${PATH}:${SARVEY_HOME}/sarvey
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/snaphu-v2.0.5/bin
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/insarmaps_scripts
+export PATH=${PATH}:${RSMASINSAR_HOME}/tools/test_insarmaps_scripts
 export PATH=${PATH}:${RSMASINSAR_HOME}/tools/autoencoder
 export PATH=${PATH}:${PROJ_LIB}
 export PATH=${PATH}:${DASK_CONFIG}
