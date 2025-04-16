@@ -11,6 +11,7 @@ import glob
 import shlex
 from datetime import datetime
 import argparse
+from pathlib import Path
 from minsar.objects.rsmas_logging import loglevel
 from minsar.objects import message_rsmas
 import minsar.utils.process_utilities as putils
@@ -21,10 +22,14 @@ sys.path.insert(0, os.getenv('SSARAHOME'))
 import password_config as password
 
 ##############################################################################
-EXAMPLE = """example:
-    upload_data_products.py mintppy
+EXAMPLE = """For slcStack.h5 use:
+     upload_data_products.py miaplpy/inputs
+
+Examples:
+    upload_data_products.py mintpy
     upload_data_products.py miaplpy
     upload_data_products.py miaplpy/network_single_reference
+    upload_data_products.py miaplpy/inputs
 """
 
 DESCRIPTION = (
@@ -37,7 +42,6 @@ def create_parser():
 
     parser.add_argument('data_dirs', nargs='+', metavar="DIRECTORY", help='upload specific mintpy/miaplpy directory')
     parser.add_argument('--geo', dest='geo_flag', action='store_true', default=False, help='uploads geo  directory')
-    parser.add_argument('--slcStack', dest='slcStack_flag', action='store_true', default=False, help='uploads miaplpy*/inputs directory')
     parser.add_argument('--all', dest='all_flag', action='store_true', default=False, help='uploads full directory')
     parser.add_argument('--pic', dest='piconly_flag', action='store_true', default=False, help='uploads only pic directory')
     #parser.add_argument('--triplets', dest='triplets_flag', action='store_true', default=False, help='uploads numTriNonzeroIntAmbiguity.h5')
@@ -81,9 +85,12 @@ def add_log_remote_hdfeos5(scp_list, work_dir):
     REMOTEUSER = os.getenv('REMOTEUSER')
     REMOTELOGFILE = os.getenv('REMOTELOGFILE')
     
-    he5_pattern = [item for item in scp_list if item.endswith('.he5')][0]    
+    try:
+        he5_pattern = [item for item in scp_list if item.endswith('.he5')][0]
+    except:
+        return  # No .he5 pattern found in scp_list
+
     he5_files = glob.glob(work_dir + he5_pattern)
-    relative_he5_files = [os.path.relpath(item, start=os.path.dirname(work_dir)) for item in he5_files]
     relative_he5_files = [os.path.relpath(item, start=os.path.dirname(work_dir)) for item in he5_files]
     current_date = datetime.now().strftime('%Y%m%d')
 
@@ -104,7 +111,7 @@ def add_log_remote_hdfeos5(scp_list, work_dir):
         status = subprocess.Popen(command, shell=True).wait()
         if status != 0:
             raise Exception('ERROR appending to remote log file in upload_data_products.py')
-   
+
 ##############################################################################
 
 def main(iargs=None):
@@ -162,8 +169,11 @@ def main(iargs=None):
                   '/'+ data_dir +'/geo/geo_*.shp',
                   '/'+ data_dir +'/geo/geo_*.shx',
                   ])
+        elif 'miaplpy' in data_dir and 'inputs' in data_dir:
+            #scp_list.extend(['/' + data_dir])  
+            scp_list.extend(['/' + data_dir + '/*'])  
 
-        if 'miaplpy' in data_dir:
+        elif 'miaplpy' in data_dir and not 'inputs' in data_dir:
             if 'network_' in data_dir:
                dir_list = [ data_dir ]
             else:
@@ -238,10 +248,8 @@ def main(iargs=None):
                     '/'+ os.path.dirname(data_dir) +'/inverted/tempCoh_average*', 
                     '/'+ os.path.dirname(data_dir) +'/inverted/tempCoh_full*' 
                     ])
-                    if inps.slcStack_flag:
-                        scp_list.extend([
-                        '/'+ os.path.dirname(data_dir) +'/inputs/slcStack.h5'
-                        ])
+        else:
+           raise ValueError(f'file path {data_dir} is not allowed')
 
     print('################')
     print('Data to upload: ')
