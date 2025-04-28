@@ -47,7 +47,7 @@ parser.add_argument('--node', choices=['ASC', 'DESC', 'ASCENDING', 'DESCENDING']
 parser.add_argument('--relativeOrbit', type=int, metavar='ORBIT', help='Relative Orbit Path')
 parser.add_argument('--pols', choices=['HH', 'VV', 'VV+VH', 'HH+HV', 'HH+VV'], default='VV', help='Polarization, default is %(default)s')
 parser.add_argument('--product', dest='product', choices=['SLC', 'CSLC', 'BURST'], help='Choose the product type to download')
-parser.add_argument('--platform', nargs='?',metavar='SENTINEL1, SENTINEL-1A, SENTINEL-1B', help='Choose the platform to search')
+parser.add_argument('--platform', nargs='?',metavar='SENTINEL1, SENTINEL-1A, SENTINEL-1B, ALOS', help='Choose the platform to search')
 parser.add_argument('--burst-id', nargs='*', type=str, metavar='BURST', help='Burst ID')
 parser.add_argument('--download', action='store_true', help='Download the data')
 parser.add_argument('--parallel', type=int, default=1, help='Download the data in parallel, specify the number of processes to use')
@@ -99,6 +99,9 @@ elif inps.platform in ['SENTINEL-1A', 'SENTINEL1A', 'S-1A', 'S1A']:
 
 elif inps.platform in ['SENTINEL-1B', 'SENTINEL1B', 'S-1B', 'S1B']:
     platform = asf.PLATFORM.SENTINEL1B
+
+elif inps.platform in ['ALOS']:
+    platform = asf.PLATFORM.ALOS
 
 else:
     platform = asf.PLATFORM.SENTINEL1
