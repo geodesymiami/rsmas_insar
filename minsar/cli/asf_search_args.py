@@ -114,7 +114,7 @@ if inps.node:
         node = asf.FLIGHT_DIRECTION.DESCENDING
 
 if inps.download is not None:
-    
+
     if inps.dir:
         path = inps.dir
 
