@@ -127,7 +127,7 @@ else:
 pols = inps.pols
 
 
-print("Searching for Sentinel-1 data...")
+print(f"Searching for {platform} data...")
 results = asf.search(
     platform=platform,
     processingLevel=product,
