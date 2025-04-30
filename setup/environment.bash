@@ -33,7 +33,6 @@ export MINTPY_HOME=${RSMASINSAR_HOME}/tools/MintPy
 export MIAPLPY_HOME=${RSMASINSAR_HOME}/tools/MiaplPy
 export MIMTPY_HOME=${RSMASINSAR_HOME}/tools/MimtPy
 export PLOTDATA_HOME=${RSMASINSAR_HOME}/tools/PlotData
-export PLOTDATA_HOME=${RSMASINSAR_HOME}/tools/PlotDataFA
 export PRECIP_HOME=${RSMASINSAR_HOME}/tools/Precip
 export PRECIP_CRON_HOME=${RSMASINSAR_HOME}/tools/Precip_cron
 export SARVEY_HOME=${RSMASINSAR_HOME}/tools/sarvey
