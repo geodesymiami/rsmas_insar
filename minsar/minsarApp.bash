@@ -570,7 +570,7 @@ if [[ $ifgram_flag == "1" ]]; then
        echo "topsStack.workflow: <${template[topsStack.workflow]}>"
        ifgram_stopstep=11              # default for interferogram workflow
        if [[ ${template[topsStack.workflow]} == "slc" ]] || [[ $mintpy_flag == 0 ]]; then
-          ifgram_stopstep=8
+          ifgram_stopstep=7
        fi
        #sleep 30
 
