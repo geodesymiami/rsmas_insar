@@ -12,6 +12,7 @@ Usage:
 import sys
 import math
 import os
+import re
 import subprocess  # Add this import statement
 from urllib.parse import urlparse, parse_qs
 
@@ -126,12 +127,12 @@ def build_commands(params):
     ref_lon = params['ref_lon']
     min_scale = params['min_scale']
     max_scale = params['max_scale']
-    
+
     if params['pixel_size'] is None:
         pixel_size = 1
     else:
         pixel_size = params['pixel_size']
-    
+
     mod_pixel_size = round(float(pixel_size) * 5)
 
     # Compute delta using the given formula:
@@ -150,6 +151,20 @@ def build_commands(params):
     fmt = "{:.3f}"
     subset_lat = f"{fmt.format(min_lat)}:{fmt.format(max_lat)}"
     subset_lon = f"{fmt.format(min_lon)}:{fmt.format(max_lon)}"
+
+    #### Build the plot_data.py command string.
+    plot_data_cmd_parts = []
+
+    if start_date and end_date:
+        plot_data_cmd_parts.extend(["--period", f"{start_date}:{end_date}"])
+
+    plot_data_cmd_parts.extend([
+        "--plot-type=timeseries",
+        "--ref-lalo", f"{ref_lat:.5f}", f"{ref_lon:.5f}",
+        "--resolution", "01s",
+        "--isolines", "3",
+        "--lalo", f"{center_lat:.5f}", f"{center_lon:.5f}"
+    ])
 
     #### Build the timeseries2velocity.py command string.
     ts2velocity_cmd_parts = [ "timeseries2velocity.py", f"{file}.he5" if file else "None.he5"]
@@ -185,7 +200,7 @@ def build_commands(params):
     viewsPS3_cmd_parts.extend( ref_lalo + subset_lalo + point_size )
     viewsPS4_cmd_parts.extend( ref_lalo + subset_lalo + point_size )
     view_cmd_parts.extend( ref_lalo + sub_lat_lon + scale + scatter_size )
-    
+
     viewsPS1_cmd = " ".join(viewsPS1_cmd_parts)
     viewsPS2_cmd = " ".join(viewsPS2_cmd_parts)
     viewsPS3_cmd = " ".join(viewsPS3_cmd_parts)
@@ -194,32 +209,74 @@ def build_commands(params):
     ts2velocity_cmd = " ".join(ts2velocity_cmd_parts)
     extract_cmd = " ".join(extract_cmd_parts)
 
-    return ts2velocity_cmd, extract_cmd, view_cmd, viewsPS1_cmd, viewsPS2_cmd ,viewsPS3_cmd, viewsPS4_cmd
+    return plot_data_cmd_parts, ts2velocity_cmd, extract_cmd, view_cmd, viewsPS1_cmd, viewsPS2_cmd ,viewsPS3_cmd, viewsPS4_cmd
+
 
 def get_dir_log_remote_hdfeos5(he5_file):
-    # get directory name from remote log file
-
+    # Get environment variables
     REMOTEHOST_DATA = os.getenv('REMOTEHOST_DATA')
     REMOTEUSER = os.getenv('REMOTEUSER')
     REMOTELOGFILE = os.getenv('REMOTELOGFILE')
-    
-    command = f"ssh {REMOTEUSER}@{REMOTEHOST_DATA} 'cat {REMOTELOGFILE}'"
+
+    # SSH command to get log file
+    command = f"ssh -i {os.getenv('HOME')}/.ssh/id_rsa_jetstream {REMOTEUSER}@{REMOTEHOST_DATA} 'cat {REMOTELOGFILE}'"
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
 
     if result.returncode != 0:
         raise Exception('ERROR retrieving remote log file in upload_data_products.py')
 
-    logfile_contents = result.stdout
-    logfile_lines = logfile_contents.splitlines()
-    matching_lines = [line for line in logfile_lines if he5_file in line]
+    logfile_lines = result.stdout.splitlines()
 
-    if matching_lines:
-        last_match = matching_lines[-1]
-        dir = os.path.dirname(last_match.split()[1])
-        print(f"Last match directory for {he5_file}: {dir}")
-    else:
-        print(f"No entries found for {he5_file}")
-    return dir
+    # Find the line matching the target he5 file
+    target_line = next((line for line in logfile_lines if he5_file in line), None)
+    if not target_line:
+        raise ValueError(f"No entries found for {he5_file}")
+
+    # Extract full path from line (second field)
+    try:
+        path = target_line.split()[1]
+    except IndexError:
+        raise ValueError(f"Unexpected line format: {target_line}")
+
+    dir = os.path.dirname(path)
+    suffix = he5_file.split('_')[-1]  # e.g., filtDel4DS.he5
+
+    # Extract prefix like RaungSenDT105
+    target_prefix = path.split('/')[0]
+
+    match = re.match(r"(?P<volcano>\w+)Sen(?P<node>[AD])\d*", target_prefix)
+    if not match:
+        raise ValueError(f"Invalid prefix format: {target_prefix}")
+
+    volcano_name = match.group("volcano")
+    node_letter = match.group("node")
+
+    # Flip node letter to find counterpart
+    counterpart_node = 'D' if node_letter == 'A' else 'A'
+    counterpart_prefix = f"{volcano_name}Sen{counterpart_node}"
+
+    # Try to find the counterpart directory
+    for line in logfile_lines:
+        if he5_file in line:
+            continue  # skip the same line
+
+        try:
+            other_path = line.split()[1]
+        except IndexError:
+            continue
+
+        if counterpart_prefix not in other_path:
+            continue
+        if suffix not in other_path:
+            continue
+
+        other_dir = os.path.dirname(other_path)
+        print(f"Found counterpart directory for {he5_file}: {other_dir}")
+        return dir, other_dir
+
+    print(f"Only found target directory for {he5_file}: {dir}")
+    return dir, None
+
 
 def main():
     # Check for help flag.
@@ -233,10 +290,13 @@ def main():
     except Exception as e:
         print(f"Error parsing URL: {e}")
         sys.exit(1)
-    
-    ts2velocity_cmd, extract_hdfeos5_cmd, view_cmd, viewsPS1_cmd, viewsPS2_cmd, viewsPS3_cmd, viewsPS4_cmd = build_commands(params=params)
 
-    dir = get_dir_log_remote_hdfeos5(he5_file=params['file'])
+    plot_data_cmd_parts, ts2velocity_cmd, extract_hdfeos5_cmd, view_cmd, viewsPS1_cmd, viewsPS2_cmd, viewsPS3_cmd, viewsPS4_cmd = build_commands(params=params)
+
+    dir, other_node = get_dir_log_remote_hdfeos5(he5_file=params['file'])
+
+    plot_data_cmd_parts = ["plot_data.py", dir, other_node] + plot_data_cmd_parts
+    plot_data_cmd = " ".join(plot_data_cmd_parts)
 
     change_dir_cmd = f"cd {os.getenv('SCRATCHDIR')}/{dir}"
 
@@ -247,6 +307,7 @@ def main():
     print(change_dir_cmd)
     print(ts2velocity_cmd)
     print(extract_hdfeos5_cmd)
+    print(plot_data_cmd)
 
     # This checks whetehr the file is in GEO or RADAR coordinates
     if params['file'][-1].isdigit():
