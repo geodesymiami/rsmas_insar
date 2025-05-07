@@ -304,10 +304,18 @@ def main():
     print("To plot, run: (Note: *.he5 file is not used by viewPS.py but currently required")
     print()
 
+    print("#"*50)
     print(change_dir_cmd)
+    print()
+    print("#"*50)
     print(ts2velocity_cmd)
+    print()
+    print("#"*50)
     print(extract_hdfeos5_cmd)
+    print()
+    print("#"*50)
     print(plot_data_cmd)
+    print()
 
     # This checks whetehr the file is in GEO or RADAR coordinates
     if params['file'][-1].isdigit():
