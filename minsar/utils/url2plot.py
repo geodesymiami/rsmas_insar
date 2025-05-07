@@ -163,7 +163,7 @@ def build_commands(params):
         "--ref-lalo", f"{ref_lat:.5f}", f"{ref_lon:.5f}",
         "--resolution", "01s",
         "--isolines", "3",
-        "--lalo", f"{center_lat:.5f}", f"{center_lon:.5f}"
+        "--lalo", f"{params['point_lat']:.5f}", f"{params['point_lon']:.5f}"
     ])
 
     #### Build the timeseries2velocity.py command string.
