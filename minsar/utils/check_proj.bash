@@ -1,4 +1,3 @@
-check_vertical_transform.sh
 #!/bin/bash
 
 # check_vertical_transform.sh
