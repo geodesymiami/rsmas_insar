@@ -53,7 +53,7 @@ cmd="ssara_federated_query.py $cmd $asfResponseTimeout_opt --kml --print > ssara
 elapsed=0
 duration=$((2 * 24 * 60 * 60)) # 2 days in seconds
 wait_time=300
-duration=30
+#duration=30
 wait_time=10
 
 while [ $elapsed -lt $duration ]; do
@@ -96,7 +96,7 @@ done
 
 # Check if the loop exited because the duration was exceeded
 if [ $elapsed -ge $duration ]; then
-    echo "Download problem persists after 2 days. Exiting."
+    echo "Download problem persists after $duration seconds. Exiting."
     exit 1
 fi
 
