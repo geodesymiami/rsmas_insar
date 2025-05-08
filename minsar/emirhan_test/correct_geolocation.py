@@ -171,11 +171,15 @@ def main(iargs=None):
 def correct_geolocation_csv(input_file, output_file=None):
     df = pd.read_csv(input_file)
 
-    required_cols = ["xcoord", "ycoord", "dem_error"]
-    for col in required_cols:
-        if col not in df.columns:
-            raise ValueError(f"Missing required column: {col}")
+    if "xcoord" in df.columns and "ycoord" in df.columns:
+        xcol, ycol = "xcoord", "ycoord"
+    elif "X" in df.columns and "Y" in df.columns:
+        xcol, ycol = "X", "Y"
+    else:
+        raise ValueError("CSV must contain either ('xcoord', 'ycoord') or ('X', 'Y') columns")
 
+    if "dem_error" not in df.columns:
+        raise ValueError("Missing required column: 'dem_error'")
 
     #from the paper
     inc_angle = np.radians(42.85)
@@ -188,10 +192,10 @@ def correct_geolocation_csv(input_file, output_file=None):
 
     #degree conversion (per meter)
     meter_to_deg_lat = 1 / 111320
-    meter_to_deg_lon = 1 / (111320 * np.cos(np.radians(df["ycoord"])))
+    meter_to_deg_lon = 1 / (111320 * np.cos(np.radians(df[ycol])))
 
-    df["X_geocorr"] = df["xcoord"] + dx_m * meter_to_deg_lon
-    df["Y_geocorr"] = df["ycoord"] + dy_m * meter_to_deg_lat
+    df["X_geocorr"] = df[xcol] + dx_m * meter_to_deg_lon
+    df["Y_geocorr"] = df[ycol] + dy_m * meter_to_deg_lat
 
     insert_before = "point_id" if "point_id" in df.columns else "velocity"
     insert_idx = df.columns.get_loc(insert_before)
@@ -199,13 +203,9 @@ def correct_geolocation_csv(input_file, output_file=None):
     for col in ["X_geocorr", "Y_geocorr"]:
         cols.insert(insert_idx, cols.pop(cols.index(col)))
     df = df[cols]
+    
 
-    if output_file is None:
-        base, ext = os.path.splitext(input_file)
-        output_path = f"{base}_geocorr{ext}"
-    else:
-        output_path = output_file
-
+    output_path = output_file or f"{os.path.splitext(input_file)[0]}_geocorr.csv"
     df.to_csv(output_path, index=False)
     print(f"Geolocation-corrected CSV saved to: {output_path}")
 
