@@ -20,7 +20,6 @@ cd $WORK2/code
 ```
 * Create a bash virgin environmen, clone the repo and install the code (including miniforge3 python) as user circleci (on the development queue (`idevdev` on Stampede3):
 ```
-# command -v module &> /dev/null && module purge
 env -i HOME=$HOME PATH=/usr/bin:/bin SHELL=/bin/bash USER=circleci bash --noprofile --norc
 export USER=circleci
 git clone git@github.com:geodesymiami/rsmas_insar.git ;
