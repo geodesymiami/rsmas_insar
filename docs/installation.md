@@ -18,7 +18,7 @@ git clone git@github.com:geodesymiami/accounts.git ~/accounts ;
 ```
 cd $WORK2/code
 ```
-* Create a bash virgin environmen, clone the repo and install the code (including miniforge3 python) as user circleci (on the development queue (`idevdev` on Stampede3):
+* Create a bash virgin environmen, clone the repo and install the code (including miniforge3 python). Work as user circleci. On stampede3 on the development queue (`idevdev`):
 ```
 env -i HOME=$HOME PATH=/usr/bin:/bin SHELL=/bin/bash USER=circleci bash --noprofile --norc
 export USER=circleci
