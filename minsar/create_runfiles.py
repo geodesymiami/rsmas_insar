@@ -152,7 +152,8 @@ def main(iargs=None):
     if int(get_size(slc_dir)/1024**2) < 500:   # calculate slc_dir size in MB and see if there are SLCs according to size
     #if int(get_size(slc_dir)/1024**2) < -1:    # calculate slc_dir size in MB and see if there are SLCs according to size
 
-        # Unpack Raw data:
+        # Unpack Raw data (TSX, CSK):
+        print('Unpacking raw data....')
         if not inps.template['raw_image_dir'] in [None, 'None']:
             #raw_image_dir = inps.template['raw_image_dir']               # FA 1/23: it would be better to have ORIG_DATA set in defaults for both CSK and TSX
             raw_image_dir = os.path.join(inps.work_dir, inps.template['raw_image_dir'])
@@ -162,14 +163,14 @@ def main(iargs=None):
         if os.path.exists(raw_image_dir):
             unpackObj = Sensors(raw_image_dir, slc_dir, remove_file='False',
                                 multiple_raw_frame=inps.template['multiple_raw_frame'])
-            unpack_run_file = unpackObj.start()
+            runfile_unpack = unpackObj.start()
             unpackObj.close()
 
-            job_obj.write_batch_jobs(batch_file=unpack_run_file)
-            job_status = job_obj.submit_batch_jobs(batch_file=unpack_run_file)
+            job_obj.write_batch_jobs(batch_file=runfile_unpack)
+            job_status = job_obj.submit_batch_jobs(batch_file=runfile_unpack)
 
             if not job_status:
-                raise Exception('ERROR: Unpacking was failed')
+                raise Exception('ERROR: Unpacking failed')
         else:
             raise Exception('ERROR: No data (SLC or Raw) available')
 
