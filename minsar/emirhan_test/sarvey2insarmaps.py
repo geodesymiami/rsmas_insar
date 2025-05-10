@@ -151,11 +151,8 @@ def main():
     #input/output paths
     shp_path = Path(args.shapefile).resolve()
     stem = shp_path.stem
-<<<<<<< HEAD
-=======
     final_stem = standardized_stem if standardized_stem else stem
 
->>>>>>> 8fac52e (add standardized filename stem using slcStack.h5 metadata (date, bbox))
     base_dir = shp_path.parent.parent.parent.resolve()
 
     outdir = base_dir / "output_csv"
