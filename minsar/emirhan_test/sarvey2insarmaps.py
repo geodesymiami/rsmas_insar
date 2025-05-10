@@ -3,6 +3,12 @@ import argparse
 import os
 import subprocess
 from pathlib import Path
+import json
+import ast
+from mintpy.utils import readfile
+from datetime import date
+import re
+import pickle
 
 
 def find_script(script_name, search_paths):
@@ -12,6 +18,32 @@ def find_script(script_name, search_paths):
             return str(full_path)
     raise FileNotFoundError(f"Could not find {script_name} in {search_paths}")
 
+def extract_metadata_from_inputs(inputs_path):
+    attributes = {}
+
+    slc_path = inputs_path / "slcStack.h5"
+    geom_path = inputs_path / "geometryRadar.h5"
+
+    if slc_path.exists():
+        slc_attr = readfile.read_attribute(str(slc_path))
+        for key in ["mission", "beam_mode", "flight_direction", "relative_orbit", "processing_method",
+                    "REF_LAT", "REF_LON", "areaName"]:
+            if key in slc_attr:
+                attributes[key] = slc_attr[key]
+
+    if geom_path.exists():
+        geom_attr = readfile.read_attribute(str(geom_path))
+        if "beamSwath" in geom_attr:
+            attributes["beamSwath"] = geom_attr["beamSwath"]
+
+    attributes["data_type"] = "LOS_TIMESERIES"
+    attributes["look_direction"] = "R" if attributes.get("mission", "").upper() != "NISAR" else "L"
+    attributes["start_date"] = "TO_INFER"
+    attributes["end_date"] = "TO_INFER"
+    attributes["history"] = str(date.today())
+    attributes["data_footprint"] = "TO_INFER"
+
+    return attributes
 
 def run_command(command, shell=False):
     print(f"\nRunning: {' '.join(command) if isinstance(command, list) else command}")
@@ -46,6 +78,7 @@ def main():
         formatter_class=argparse.RawTextHelpFormatter
     )    
     parser.add_argument("shapefile", help="Input shapefile path")
+    parser.add_argument("--config-json", help="Path to config.json (overrides default detection)")
     parser.add_argument("--skip-upload", action="store_true", help="Skip upload to Insarmaps")
     parser.add_argument("--make-jobfile", action="store_true", help="Generate jobfile")
     parser.add_argument("--insarmaps-host", default="insarmaps.miami.edu")
@@ -53,6 +86,32 @@ def main():
     parser.add_argument("--insarmaps-pass", default="insaradmin")
     parser.add_argument("--insarmaps-email", default="insarmaps@insarmaps.com")
     args = parser.parse_args()
+
+    #load config.json if provided or found in working dir
+    config_json_path = None
+    if args.config_json:
+        config_json_path = Path(args.config_json).resolve()
+    elif Path("config.json").exists():
+        config_json_path = Path("config.json").resolve()
+
+    if config_json_path:
+        print(f"Using config file: {config_json_path}")
+        with open(config_json_path) as f:
+            config_text = f.read()
+            #formatting to valid JSON because SARvey's config.json uses unquoted keys and trailing commas
+            config_text = re.sub(r"(?<![\w\"]) (\w+) *:", r'"\1":', config_text)  #quote keys
+            config_text = re.sub(r",\s*([\]}])", r"\1", config_text)              #remove trailing commas
+            config_text = config_text.replace("null", "null").replace("true", "true").replace("false", "false")  #keeps JSON-compatible
+            config_data = json.loads(config_text)
+        inputs_path = Path(config_data["general"]["input_path"]).resolve()
+    else:
+        inputs_path = Path("inputs").resolve()
+
+    metadata = extract_metadata_from_inputs(inputs_path)
+    if not metadata:
+        print("Warning: No metadata found in slcStack.h5 or geometryRadar.h5.")
+    else:
+        print("Extracted metadata:", metadata)
 
     #use $RSMASINSAR_HOME as the root for now (temporarily)
     rsmasinsar_env = os.environ.get("RSMASINSAR_HOME")
@@ -110,11 +169,43 @@ def main():
     run_command(cmd1)
     run_command(cmd2)
     run_command(cmd3)
+    #update metadata with inferred values from *_metadata.pickle
+    final_metadata_path = json_dir / "metadata.pickle"
+    if final_metadata_path.exists():
+        try:
+            with open(final_metadata_path, "rb") as f:
+                meta = pickle.load(f)
+
+            final_metadata = meta.get("attributes", {})
+
+            for key in ["first_date", "last_date", "data_footprint"]:
+                if key in final_metadata:
+                    metadata[key.replace("first_", "start_").replace("last_", "end_")] = final_metadata[key]
+                    
+            #add REF_LAT and REF_LON to metadata
+            for ref_key in ["REF_LAT", "REF_LON"]:
+                if ref_key in final_metadata:
+                    metadata[ref_key] = float(final_metadata[ref_key])
+
+        except Exception as e:
+            print(f"Warning: Failed to read final metadata from pickle: {e}")
+
+    print("Final metadata with inferred values:", metadata)
+
+    #store final metadata for documentation
+    final_meta_path = outdir / f"{stem}_final_metadata.json"
+    with open(final_meta_path, "w") as f:
+        json.dump(metadata, f, indent=2)
+    print(f"Saved final metadata to: {final_meta_path}")
+
     if not args.skip_upload:
         run_command(cmd4)
 
     print("\nAll done!")
-    print(f"\nView on Insarmaps: https://{args.insarmaps_host}/start/26.1/-80.1/11.0?flyToDatasetCenter=true&startDataset={stem}_geocorr")
+    ref_lat = metadata.get("REF_LAT", 26.1)
+    ref_lon = metadata.get("REF_LON", -80.1)
+    print(f"\nView on Insarmaps: https://{args.insarmaps_host}/start/{ref_lat:.4f}/{ref_lon:.4f}/11.0?flyToDatasetCenter=true&startDataset={stem}_geocorr")
+    #print(f"\nView on Insarmaps: https://{args.insarmaps_host}/start/26.1/-80.1/11.0?flyToDatasetCenter=true&startDataset={stem}_geocorr")
 
 
 if __name__ == "__main__":
