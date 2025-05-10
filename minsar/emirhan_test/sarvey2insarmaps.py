@@ -122,7 +122,7 @@ def main():
     #input/output paths
     shp_path = Path(args.shapefile).resolve()
     stem = shp_path.stem
-    base_dir = shp_path.parent.parent.parent.resolve()  # go from input/shp/ -> a/
+    base_dir = shp_path.parent.parent.parent.resolve()
 
     outdir = base_dir / "output_csv"
     outdir.mkdir(parents=True, exist_ok=True)
