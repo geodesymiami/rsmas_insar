@@ -9,6 +9,7 @@ from mintpy.utils import readfile
 from datetime import date
 import re
 import pickle
+from shapely.geometry import box
 
 
 def find_script(script_name, search_paths):
@@ -20,6 +21,7 @@ def find_script(script_name, search_paths):
 
 def extract_metadata_from_inputs(inputs_path):
     attributes = {}
+    standardized_stem = None
 
     slc_path = inputs_path / "slcStack.h5"
     geom_path = inputs_path / "geometryRadar.h5"
@@ -27,7 +29,8 @@ def extract_metadata_from_inputs(inputs_path):
     if slc_path.exists():
         slc_attr = readfile.read_attribute(str(slc_path))
         for key in ["mission", "beam_mode", "flight_direction", "relative_orbit", "processing_method",
-                    "REF_LAT", "REF_LON", "areaName"]:
+                    "REF_LAT", "REF_LON", "areaName", "DATE", "LAT_REF1", "LAT_REF2", "LAT_REF3", "LAT_REF4",
+                    "LON_REF1", "LON_REF2", "LON_REF3", "LON_REF4"]:
             if key in slc_attr:
                 attributes[key] = slc_attr[key]
 
@@ -43,7 +46,33 @@ def extract_metadata_from_inputs(inputs_path):
     attributes["history"] = str(date.today())
     attributes["data_footprint"] = "TO_INFER"
 
-    return attributes
+    #build standardized_stem from slcStack.h5
+    try:
+        mission = attributes.get("mission", "S1")
+        rel_orbit = f"{int(attributes.get('relative_orbit', 0)):03d}"
+        start_date = attributes.get("DATE", "YYYYMMDD")
+        end_date = "XXXXXXXX"
+
+        # bbox from LAT_REF/LON_REF
+        lat_vals = [float(attributes[k]) for k in ["LAT_REF1", "LAT_REF2", "LAT_REF3", "LAT_REF4"] if k in attributes]
+        lon_vals = [float(attributes[k]) for k in ["LON_REF1", "LON_REF2", "LON_REF3", "LON_REF4"] if k in attributes]
+
+        if lat_vals and lon_vals:
+            min_lat = min(lat_vals)
+            max_lat = max(lat_vals)
+            min_lon = min(lon_vals)
+            max_lon = max(lon_vals)
+
+            lat1 = f"N{int(min_lat * 10000):05d}"
+            lat2 = f"N{int(max_lat * 10000):05d}"
+            lon1 = f"W{abs(int(max_lon * 10000)):06d}"
+            lon2 = f"W{abs(int(min_lon * 10000)):06d}"
+
+            standardized_stem = f"{mission}_{rel_orbit}_{start_date}_{end_date}_{lat1}_{lat2}_{lon1}_{lon2}"
+    except Exception as e:
+        print(f"Warning: Could not generate standardized_stem: {e}")
+
+    return attributes, standardized_stem
 
 def run_command(command, shell=False):
     print(f"\nRunning: {' '.join(command) if isinstance(command, list) else command}")
@@ -107,7 +136,7 @@ def main():
     else:
         inputs_path = Path("inputs").resolve()
 
-    metadata = extract_metadata_from_inputs(inputs_path)
+    metadata, standardized_stem = extract_metadata_from_inputs(inputs_path)
     if not metadata:
         print("Warning: No metadata found in slcStack.h5 or geometryRadar.h5.")
     else:
@@ -122,18 +151,23 @@ def main():
     #input/output paths
     shp_path = Path(args.shapefile).resolve()
     stem = shp_path.stem
+<<<<<<< HEAD
+=======
+    final_stem = standardized_stem if standardized_stem else stem
+
+>>>>>>> 8fac52e (add standardized filename stem using slcStack.h5 metadata (date, bbox))
     base_dir = shp_path.parent.parent.parent.resolve()
 
     outdir = base_dir / "output_csv"
     outdir.mkdir(parents=True, exist_ok=True)
 
-    csv_path = outdir / f"{stem}.csv"
-    geocorr_csv = outdir / f"{stem}_geocorr.csv"
+    csv_path = outdir / f"{final_stem}.csv"
+    geocorr_csv = outdir / f"{final_stem}_geocorr.csv"
 
     json_dir = base_dir / "JSON"
     json_dir.mkdir(parents=True, exist_ok=True)
 
-    mbtiles_path = json_dir / f"{stem}_geocorr.mbtiles"
+    mbtiles_path = json_dir / f"{final_stem}_geocorr.mbtiles"
 
     #locate scripts
     search_dirs = [
@@ -162,7 +196,7 @@ def main():
             f"{' '.join(cmd4)} &",
             f"{' '.join(cmd4).replace(args.insarmaps_host, '149.165.153.50')} &"
         ]
-        create_jobfile(base_dir / "sarvey2insarmaps.job", slurm_commands, mbtiles_path, stem)
+        create_jobfile(base_dir / "sarvey2insarmaps.job", slurm_commands, mbtiles_path, final_stem)
         return
 
     #run all steps sequentially
@@ -193,7 +227,7 @@ def main():
     print("Final metadata with inferred values:", metadata)
 
     #store final metadata for documentation
-    final_meta_path = outdir / f"{stem}_final_metadata.json"
+    final_meta_path = outdir / f"{final_stem}_final_metadata.json"
     with open(final_meta_path, "w") as f:
         json.dump(metadata, f, indent=2)
     print(f"Saved final metadata to: {final_meta_path}")
@@ -204,7 +238,7 @@ def main():
     print("\nAll done!")
     ref_lat = metadata.get("REF_LAT", 26.1)
     ref_lon = metadata.get("REF_LON", -80.1)
-    print(f"\nView on Insarmaps: https://{args.insarmaps_host}/start/{ref_lat:.4f}/{ref_lon:.4f}/11.0?flyToDatasetCenter=true&startDataset={stem}_geocorr")
+    print(f"\nView on Insarmaps: https://{args.insarmaps_host}/start/{ref_lat:.4f}/{ref_lon:.4f}/11.0?flyToDatasetCenter=true&startDataset={final_stem}_geocorr")
     #print(f"\nView on Insarmaps: https://{args.insarmaps_host}/start/26.1/-80.1/11.0?flyToDatasetCenter=true&startDataset={stem}_geocorr")
 
 
