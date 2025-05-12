@@ -239,7 +239,7 @@ def get_dir_log_remote_hdfeos5(he5_file):
         raise ValueError(f"Unexpected line format: {target_line}")
 
     dir = os.path.dirname(path)
-    suffix = he5_file.split('_')[-1]  # e.g., filtDel4DS.he5
+    suffix = [he5_file.split('_')[-1] if 'Del' in he5_file.split('_')[-1] else ''][0]  # e.g., filtDel4DS.he5
 
     # Extract prefix like RaungSenDT105
     target_prefix = path.split('/')[0]
@@ -267,6 +267,7 @@ def get_dir_log_remote_hdfeos5(he5_file):
 
         if counterpart_prefix not in other_path:
             continue
+
         if suffix not in other_path:
             continue
 
@@ -296,6 +297,7 @@ def main():
     dir, other_node = get_dir_log_remote_hdfeos5(he5_file=params['file'])
 
     plot_data_cmd_parts = ["plot_data.py", dir, other_node] + plot_data_cmd_parts
+    plot_data_cmd_parts = [str(part) if part is not None else '' for part in plot_data_cmd_parts]
     plot_data_cmd = " ".join(plot_data_cmd_parts)
 
     change_dir_cmd = f"cd {os.getenv('SCRATCHDIR')}/{dir}"
