@@ -101,31 +101,45 @@ def main():
     parser = argparse.ArgumentParser(
         description="End-to-end pipeline for: SARvey shapefiles -> csv -> Geocorrected csv -> JSON -> MBTiles -> Insarmaps",
         epilog="""\
-    Example:
-      sarvey2insarmaps.py ./input/shp/p2_coh70_ts.shp
-      sarvey2insarmaps.py ./input/shp/p2_coh70_ts.shp --no-geocorr
-      sarvey2insarmaps.py ./input/shp/p2_coh70_ts.shp --make-jobfile
-      sarvey2insarmaps.py ./input/shp/p2_coh70_ts.shp --skip-upload
+    Examples:
+
+      Basic usage:
+        sarvey2insarmaps.py ./input/shp/p2_coh70_ts.shp
+
+      Skip geolocation correction:
+        sarvey2insarmaps.py ./input/shp/p2_coh70_ts.shp --no-geocorr
+
+      Generate a jobfile only (no execution):
+        sarvey2insarmaps.py ./input/shp/p2_coh70_ts.shp --make-jobfile
+
+      Use alternate Insarmaps host:
+        sarvey2insarmaps.py ./input/shp/p2_coh70_ts.shp --insarmaps-host 149.165.153.50
+
+      Skip final upload step:
+        sarvey2insarmaps.py ./input/shp/p2_coh70_ts.shp --skip-upload
     """,
         formatter_class=argparse.RawTextHelpFormatter
     )
-    parser.add_argument("shapefile", help="Input shapefile path")
+    parser.add_argument("shapefile", help="Input shapefile path (.shp)")
     parser.add_argument("--config-json", help="Path to config.json (overrides default detection)")
     parser.add_argument("--skip-upload", action="store_true", help="Skip upload to Insarmaps")
     parser.add_argument("--make-jobfile", action="store_true", help="Generate jobfile")
     parser.add_argument("--no-geocorr", dest="do_geocorr", action="store_false", help="Skip geolocation correction step")
     parser.set_defaults(do_geocorr=True)
-    parser.add_argument("--insarmaps-host", default="insarmaps.miami.edu")
+    parser.add_argument("--insarmaps-host",
+        default=os.environ.get("INSARMAPS_HOST", "insarmaps.miami.edu"),
+        help="Insarmaps server host (default: insarmaps.miami.edu or env INSARMAPS_HOST)"
+    )
     parser.add_argument("--insarmaps-user", default="insaradmin")
     parser.add_argument("--insarmaps-pass", default="insaradmin")
     parser.add_argument("--insarmaps-email", default="insarmaps@insarmaps.com")
-    args = parser.parse_args()
-    print(f"Geolocation correction enabled: {args.do_geocorr}")
+    inps = parser.parse_args()
+    print(f"Geolocation correction enabled: {inps.do_geocorr}")
 
     #load config.json if provided or found in working dir
     config_json_path = None
-    if args.config_json:
-        config_json_path = Path(args.config_json).resolve()
+    if inps.config_json:
+        config_json_path = Path(inps.config_json).resolve()
     elif Path("config.json").exists():
         config_json_path = Path("config.json").resolve()
 
@@ -155,7 +169,7 @@ def main():
     scripts_root = Path(rsmasinsar_env).resolve()
 
     #input/output paths
-    shp_path = Path(args.shapefile).resolve()
+    shp_path = Path(inps.shapefile).resolve()
     stem = shp_path.stem
     final_stem = standardized_stem if standardized_stem else stem
 
@@ -170,7 +184,7 @@ def main():
     json_dir = base_dir / "JSON"
     json_dir.mkdir(parents=True, exist_ok=True)
 
-    mbtiles_path = json_dir / f"{final_stem}_geocorr.mbtiles" if args.do_geocorr else json_dir / f"{final_stem}.mbtiles"
+    mbtiles_path = json_dir / f"{final_stem}_geocorr.mbtiles" if inps.do_geocorr else json_dir / f"{final_stem}.mbtiles"
 
     #locate scripts
     search_dirs = [
@@ -186,20 +200,20 @@ def main():
     cmd1 = ["ogr2ogr", "-f", "CSV", "-lco", "GEOMETRY=AS_XY", "-t_srs", "EPSG:4326", str(csv_path), str(shp_path)]
     cmd2 = [correct_geolocation, str(csv_path), "--outfile", str(geocorr_csv)]
     #for geocorr option
-    if args.do_geocorr:
+    if inps.do_geocorr:
         input_csv = geocorr_csv
     else:
         input_csv = csv_path
     cmd3 = ["hdfeos5_or_csv_2json_mbtiles.py", str(input_csv), str(json_dir)]
-    cmd4 = ["json_mbtiles2insarmaps.py", "--num-workers", "3", "-u", args.insarmaps_user, "-p", args.insarmaps_pass,
-            "--host", args.insarmaps_host, "-P", "insarmaps", "-U", args.insarmaps_email,
+    cmd4 = ["json_mbtiles2insarmaps.py", "--num-workers", "3", "-u", inps.insarmaps_user, "-p", inps.insarmaps_pass,
+            "--host", inps.insarmaps_host, "-P", "insarmaps", "-U", inps.insarmaps_email,
             "--json_folder", str(json_dir), "--mbtiles_file", str(mbtiles_path)]
 
-    if args.make_jobfile:
+    if inps.make_jobfile:
         slurm_commands = [
             f"{' '.join(cmd1)}",
         ]
-        if args.do_geocorr:
+        if inps.do_geocorr:
             slurm_commands.append(f"{' '.join(cmd2)}")
             input_csv = geocorr_csv
         else:
@@ -211,14 +225,14 @@ def main():
             f"rm -rf {json_dir}",
             f"{' '.join(cmd3)}",
             f"{' '.join(cmd4)} &",
-            f"{' '.join(cmd4).replace(args.insarmaps_host, '149.165.153.50')} &"
+            f"{' '.join(cmd4).replace(inps.insarmaps_host, '149.165.153.50')} &"
         ])
         create_jobfile(base_dir / "sarvey2insarmaps.job", slurm_commands, mbtiles_path, final_stem)
         return
 
     #run all steps sequentially
     run_command(cmd1)
-    if args.do_geocorr:
+    if inps.do_geocorr:
         run_command(cmd2)
         input_csv = geocorr_csv
     else:
@@ -255,17 +269,17 @@ def main():
         json.dump(metadata, f, indent=2)
     print(f"Saved final metadata to: {final_meta_path}")
 
-    if not args.skip_upload:
+    if not inps.skip_upload:
         run_command(cmd4)
 
     print("\nAll done!")
     ref_lat = metadata.get("REF_LAT", 26.1)
     ref_lon = metadata.get("REF_LON", -80.1)
 
-    suffix = "_geocorr" if args.do_geocorr else ""
+    suffix = "_geocorr" if inps.do_geocorr else ""
 
-    protocol = "https" if args.insarmaps_host == "insarmaps.miami.edu" else "http"
-    url = f"{protocol}://{args.insarmaps_host}/start/{ref_lat:.4f}/{ref_lon:.4f}/11.0?flyToDatasetCenter=true&startDataset={final_stem}{suffix}"
+    protocol = "https" if inps.insarmaps_host == "insarmaps.miami.edu" else "http"
+    url = f"{protocol}://{inps.insarmaps_host}/start/{ref_lat:.4f}/{ref_lon:.4f}/11.0?flyToDatasetCenter=true&startDataset={final_stem}{suffix}"
 
     print(f"\nView on Insarmaps:\n{url}")
 
