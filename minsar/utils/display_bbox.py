@@ -13,7 +13,7 @@ Usage:
   display_bbox.py 'POLYGON((lon1 lat1, lon2 lat2, ..., lon1 lat1))'
 
 Examples:
-  display_bbox.py 25.937:25.958,-80.126:-80.114
+  display_bbox.py 25.937:25.958,-80.125:-80.118
   display_bbox.py 'POLYGON((-82.04 26.53, -81.92 26.53, -81.92 26.61, -82.04 26.61, -82.04 26.53))'
 
 Note:
@@ -73,10 +73,27 @@ def main():
         print_help()
         sys.exit(1)
 
+    if arg.lower().startswith("polygon"):
+        # Extract WKT coordinates and derive bounds
+        coords = list(wkt.loads(arg).exterior.coords)
+        lons, lats = zip(*coords)
+        lat_min, lat_max = min(lats), max(lats)
+        lon_min, lon_max = min(lons), max(lons)
+    else:
+        lat_part, lon_part = arg.split(',')
+        lat_min, lat_max = map(float, lat_part.split(':'))
+        lon_min, lon_max = map(float, lon_part.split(':'))
+    print('\nFor topsStack:')
+    print(f'topsStack.boundingBox                = {lat_min:.1f} {lat_max:.1f} {lon_min:.1f} {lon_max:.1f}')
+    print('\nFor miaplpy:')
+    print(f'mintpy.subset.lalo                   = {lat_min:.3f}:{lat_max:.3f},{lon_min:.3f}:{lon_max:.3f}    #[S:N,W:E / no], auto for no')
+    print(f'miaplpy.subset.lalo                  = {lat_min:.3f}:{lat_max:.3f},{lon_min:.3f}:{lon_max:.3f}    #[S:N,W:E / no], auto for no')
+    print('\nFor subsetting:')
+    print(f'subset.py slcStack.h5 --lat {lat_min:.3f} {lat_max:.3f} --lon {lon_min:.3f} {lon_max:.3f}')
+    print(f'subset.py geometryRadar.h5 --lat {lat_min:.3f} {lat_max:.3f} --lon {lon_min:.3f} {lon_max:.3f}\n')
     output_file = "bbox_map.html"
     m.save(output_file)
-    print(f"[INFO] Map saved to {output_file}")
-    print(f"[INFO] Open it with:\nopen -a Safari {output_file}\n")
+    print(f"Map saved to {output_file}. Open with:\nopen -a Safari {output_file}\n")
 
     url = f"file:///{os.getcwd()}/{output_file}"
     webbrowser.open(url)
