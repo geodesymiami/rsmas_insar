@@ -160,11 +160,12 @@ def build_commands(params):
 
     plot_data_cmd_parts.extend([
         "--plot-type=timeseries",
-        "--ref-lalo", f"{ref_lat:.5f}", f"{ref_lon:.5f}",
         "--resolution", "01s",
         "--isolines", "3",
-        "--lalo", f"{params['point_lat']:.5f}", f"{params['point_lon']:.5f}"
+        "--lalo", f"{fmt.format(params['point_lat'])}", f"{fmt.format(params['point_lon'])}",
     ])
+    if ref_lat is not None and ref_lon is not None:
+        plot_data_cmd_parts.extend([f"--ref-lalo {fmt.format(ref_lat)} {fmt.format(ref_lon)}"])
 
     #### Build the timeseries2velocity.py command string.
     ts2velocity_cmd_parts = [ "timeseries2velocity.py", f"{file}.he5" if file else "None.he5"]
