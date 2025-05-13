@@ -10,6 +10,7 @@ from datetime import date
 import re
 import pickle
 from shapely.geometry import box
+import webbrowser
 
 
 def find_script(script_name, search_paths):
@@ -82,16 +83,17 @@ def run_command(command, shell=False):
 def create_jobfile(jobfile_path, commands, mbtiles_path, dataset_name):
     with open(jobfile_path, 'w') as f:
         f.write("#!/bin/bash\n\n")
-        
+
         for cmd in commands:
             f.write(cmd + "\n")
             if "rm -rf" in cmd or "geolocation" in cmd or "hdfeos5" in cmd:
                 f.write("\n")
-        
+
         f.write("wait\n\n")
-        
-        f.write(f"cat >> insarmaps.log<<EOF\nhttps://insarmaps.miami.edu/start/26.1/-80.1/11.0?flyToDatasetCenter=true&startDataset={dataset_name}_geocorr\nEOF\n\n")
-        f.write(f"cat >> insarmaps.log<<EOF\nhttps://149.165.153.50/start/26.1/-80.1/11.0?flyToDatasetCenter=true&startDataset={dataset_name}_geocorr\nEOF\n")
+
+        suffix = "_geocorr" if "_geocorr" in mbtiles_path.stem else ""
+        f.write(f"cat >> insarmaps.log<<EOF\nhttps://insarmaps.miami.edu/start/26.1/-80.1/11.0?flyToDatasetCenter=true&startDataset={dataset_name}{suffix}\nEOF\n\n")
+        f.write(f"cat >> insarmaps.log<<EOF\nhttps://149.165.153.50/start/26.1/-80.1/11.0?flyToDatasetCenter=true&startDataset={dataset_name}{suffix}\nEOF\n")
     print(f"\nJobfile created: {jobfile_path}")
 
 
@@ -101,20 +103,24 @@ def main():
         epilog="""\
     Example:
       sarvey2insarmaps.py ./input/shp/p2_coh70_ts.shp
+      sarvey2insarmaps.py ./input/shp/p2_coh70_ts.shp --no-geocorr
       sarvey2insarmaps.py ./input/shp/p2_coh70_ts.shp --make-jobfile
       sarvey2insarmaps.py ./input/shp/p2_coh70_ts.shp --skip-upload
     """,
         formatter_class=argparse.RawTextHelpFormatter
-    )    
+    )
     parser.add_argument("shapefile", help="Input shapefile path")
     parser.add_argument("--config-json", help="Path to config.json (overrides default detection)")
     parser.add_argument("--skip-upload", action="store_true", help="Skip upload to Insarmaps")
     parser.add_argument("--make-jobfile", action="store_true", help="Generate jobfile")
+    parser.add_argument("--no-geocorr", dest="do_geocorr", action="store_false", help="Skip geolocation correction step")
+    parser.set_defaults(do_geocorr=True)
     parser.add_argument("--insarmaps-host", default="insarmaps.miami.edu")
     parser.add_argument("--insarmaps-user", default="insaradmin")
     parser.add_argument("--insarmaps-pass", default="insaradmin")
     parser.add_argument("--insarmaps-email", default="insarmaps@insarmaps.com")
     args = parser.parse_args()
+    print(f"Geolocation correction enabled: {args.do_geocorr}")
 
     #load config.json if provided or found in working dir
     config_json_path = None
@@ -164,11 +170,11 @@ def main():
     json_dir = base_dir / "JSON"
     json_dir.mkdir(parents=True, exist_ok=True)
 
-    mbtiles_path = json_dir / f"{final_stem}_geocorr.mbtiles"
+    mbtiles_path = json_dir / f"{final_stem}_geocorr.mbtiles" if args.do_geocorr else json_dir / f"{final_stem}.mbtiles"
 
     #locate scripts
     search_dirs = [
-        scripts_root / "minsar" / "emirhan_test",
+        scripts_root / "minsar" / "insarmaps_utils",
         scripts_root / "tools",
         scripts_root / "tools" / "insarmaps_scripts",
     ]
@@ -178,27 +184,47 @@ def main():
 
     #commands
     cmd1 = ["ogr2ogr", "-f", "CSV", "-lco", "GEOMETRY=AS_XY", "-t_srs", "EPSG:4326", str(csv_path), str(shp_path)]
-    cmd2 = ["python3", correct_geolocation, str(csv_path), "--outfile", str(geocorr_csv)]
-    cmd3 = ["hdfeos5_or_csv_2json_mbtiles.py", str(geocorr_csv), str(json_dir)]
+    cmd2 = [correct_geolocation, str(csv_path), "--outfile", str(geocorr_csv)]
+    #for geocorr option
+    if args.do_geocorr:
+        input_csv = geocorr_csv
+    else:
+        input_csv = csv_path
+    cmd3 = ["hdfeos5_or_csv_2json_mbtiles.py", str(input_csv), str(json_dir)]
     cmd4 = ["json_mbtiles2insarmaps.py", "--num-workers", "3", "-u", args.insarmaps_user, "-p", args.insarmaps_pass,
             "--host", args.insarmaps_host, "-P", "insarmaps", "-U", args.insarmaps_email,
             "--json_folder", str(json_dir), "--mbtiles_file", str(mbtiles_path)]
 
     if args.make_jobfile:
         slurm_commands = [
-	    f"{' '.join(cmd1)}",
-    	    f"{' '.join(cmd2)}",
+            f"{' '.join(cmd1)}",
+        ]
+        if args.do_geocorr:
+            slurm_commands.append(f"{' '.join(cmd2)}")
+            input_csv = geocorr_csv
+        else:
+            input_csv = csv_path
+
+        cmd3 = ["hdfeos5_or_csv_2json_mbtiles.py", str(input_csv), str(json_dir)]
+
+        slurm_commands.extend([
             f"rm -rf {json_dir}",
             f"{' '.join(cmd3)}",
             f"{' '.join(cmd4)} &",
             f"{' '.join(cmd4).replace(args.insarmaps_host, '149.165.153.50')} &"
-        ]
+        ])
         create_jobfile(base_dir / "sarvey2insarmaps.job", slurm_commands, mbtiles_path, final_stem)
         return
 
     #run all steps sequentially
     run_command(cmd1)
-    run_command(cmd2)
+    if args.do_geocorr:
+        run_command(cmd2)
+        input_csv = geocorr_csv
+    else:
+        input_csv = csv_path
+
+    cmd3 = ["hdfeos5_or_csv_2json_mbtiles.py", str(input_csv), str(json_dir)]
     run_command(cmd3)
     #update metadata with inferred values from *_metadata.pickle
     final_metadata_path = json_dir / "metadata.pickle"
@@ -212,7 +238,7 @@ def main():
             for key in ["first_date", "last_date", "data_footprint"]:
                 if key in final_metadata:
                     metadata[key.replace("first_", "start_").replace("last_", "end_")] = final_metadata[key]
-                    
+
             #add REF_LAT and REF_LON to metadata
             for ref_key in ["REF_LAT", "REF_LON"]:
                 if ref_key in final_metadata:
@@ -235,9 +261,15 @@ def main():
     print("\nAll done!")
     ref_lat = metadata.get("REF_LAT", 26.1)
     ref_lon = metadata.get("REF_LON", -80.1)
-    print(f"\nView on Insarmaps: https://{args.insarmaps_host}/start/{ref_lat:.4f}/{ref_lon:.4f}/11.0?flyToDatasetCenter=true&startDataset={final_stem}_geocorr")
-    #print(f"\nView on Insarmaps: https://{args.insarmaps_host}/start/26.1/-80.1/11.0?flyToDatasetCenter=true&startDataset={stem}_geocorr")
 
+    suffix = "_geocorr" if args.do_geocorr else ""
+
+    protocol = "https" if args.insarmaps_host == "insarmaps.miami.edu" else "http"
+    url = f"{protocol}://{args.insarmaps_host}/start/{ref_lat:.4f}/{ref_lon:.4f}/11.0?flyToDatasetCenter=true&startDataset={final_stem}{suffix}"
+
+    print(f"\nView on Insarmaps:\n{url}")
+
+    webbrowser.open(url)
 
 if __name__ == "__main__":
     main()
