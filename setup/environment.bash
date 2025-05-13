@@ -92,7 +92,7 @@ export PYTHONWARNINGS="ignore"
 #####################################
 ############  PATH  #################
 #####################################
-export PATH=${PATH}:${RSMASINSAR_HOME}/minsar/insarmaps_utils:$PATH
+export PATH=${RSMASINSAR_HOME}/minsar/insarmaps_utils:${PATH}
 export PATH=${PATH}:${SSARAHOME}
 export PATH=${PATH}:${RSMASINSAR_HOME}/minsar/cli
 export PATH=${PATH}:${RSMASINSAR_HOME}/minsar
