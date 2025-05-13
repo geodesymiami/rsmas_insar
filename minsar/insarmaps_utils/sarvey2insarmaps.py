@@ -10,6 +10,7 @@ from datetime import date
 import re
 import pickle
 from shapely.geometry import box
+import webbrowser
 
 
 def find_script(script_name, search_paths):
@@ -82,14 +83,14 @@ def run_command(command, shell=False):
 def create_jobfile(jobfile_path, commands, mbtiles_path, dataset_name):
     with open(jobfile_path, 'w') as f:
         f.write("#!/bin/bash\n\n")
-        
+
         for cmd in commands:
             f.write(cmd + "\n")
             if "rm -rf" in cmd or "geolocation" in cmd or "hdfeos5" in cmd:
                 f.write("\n")
-        
+
         f.write("wait\n\n")
-        
+
         suffix = "_geocorr" if "_geocorr" in mbtiles_path.stem else ""
         f.write(f"cat >> insarmaps.log<<EOF\nhttps://insarmaps.miami.edu/start/26.1/-80.1/11.0?flyToDatasetCenter=true&startDataset={dataset_name}{suffix}\nEOF\n\n")
         f.write(f"cat >> insarmaps.log<<EOF\nhttps://149.165.153.50/start/26.1/-80.1/11.0?flyToDatasetCenter=true&startDataset={dataset_name}{suffix}\nEOF\n")
@@ -107,7 +108,7 @@ def main():
       sarvey2insarmaps.py ./input/shp/p2_coh70_ts.shp --skip-upload
     """,
         formatter_class=argparse.RawTextHelpFormatter
-    )    
+    )
     parser.add_argument("shapefile", help="Input shapefile path")
     parser.add_argument("--config-json", help="Path to config.json (overrides default detection)")
     parser.add_argument("--skip-upload", action="store_true", help="Skip upload to Insarmaps")
@@ -222,7 +223,7 @@ def main():
         input_csv = geocorr_csv
     else:
         input_csv = csv_path
-    
+
     cmd3 = ["hdfeos5_or_csv_2json_mbtiles.py", str(input_csv), str(json_dir)]
     run_command(cmd3)
     #update metadata with inferred values from *_metadata.pickle
@@ -237,7 +238,7 @@ def main():
             for key in ["first_date", "last_date", "data_footprint"]:
                 if key in final_metadata:
                     metadata[key.replace("first_", "start_").replace("last_", "end_")] = final_metadata[key]
-                    
+
             #add REF_LAT and REF_LON to metadata
             for ref_key in ["REF_LAT", "REF_LON"]:
                 if ref_key in final_metadata:
@@ -262,9 +263,13 @@ def main():
     ref_lon = metadata.get("REF_LON", -80.1)
 
     suffix = "_geocorr" if args.do_geocorr else ""
-    print(f"\nView on Insarmaps: https://{args.insarmaps_host}/start/{ref_lat:.4f}/{ref_lon:.4f}/11.0?flyToDatasetCenter=true&startDataset={final_stem}{suffix}")
-    #print(f"\nView on Insarmaps: https://{args.insarmaps_host}/start/{ref_lat:.4f}/{ref_lon:.4f}/11.0?flyToDatasetCenter=true&startDataset={final_stem}")
 
+    protocol = "https" if args.insarmaps_host == "insarmaps.miami.edu" else "http"
+    url = f"{protocol}://{args.insarmaps_host}/start/{ref_lat:.4f}/{ref_lon:.4f}/11.0?flyToDatasetCenter=true&startDataset={final_stem}{suffix}"
+
+    print(f"\nView on Insarmaps:\n{url}")
+
+    webbrowser.open(url)
 
 if __name__ == "__main__":
     main()
