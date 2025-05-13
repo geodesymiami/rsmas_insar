@@ -92,10 +92,10 @@ export PYTHONWARNINGS="ignore"
 #####################################
 ############  PATH  #################
 #####################################
-export PATH=${RSMASINSAR_HOME}/minsar/insarmaps_utils:${PATH}
 export PATH=${PATH}:${SSARAHOME}
 export PATH=${PATH}:${RSMASINSAR_HOME}/minsar/cli
 export PATH=${PATH}:${RSMASINSAR_HOME}/minsar
+export PATH=${PATH}:${RSMASINSAR_HOME}/minsar/insarmaps_utils
 export PATH=${PATH}:${RSMASINSAR_HOME}/minsar/utils
 export PATH=${PATH}:${MINTPY_HOME}/src/mintpy/cli
 export PATH=${PATH}:${PLOTDATA_HOME}/src/plotdata/cli
