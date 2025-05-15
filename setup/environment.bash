@@ -84,8 +84,8 @@ export PYTHONPATH=${PYTHONPATH}:${SARVEY_HOME}
 export PYTHONPATH=${PYTHONPATH}:${SARVEY_HOME}/sarvey
 export PYTHONPATH=${PYTHONPATH}:${SARDEM_HOME}
 export PYTHONPATH=${PYTHONPATH}:${VSM_HOME}/VSM
+export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/tools/sarplotter-main
 #export PYTHONPATH=${PYTHONPATH}:${RSMASINSAR_HOME}/tools      # needed for mimt. Need to talk to Sara on how to do this smarter
-
 ######### Ignore warnings ############
 export PYTHONWARNINGS="ignore"
 
