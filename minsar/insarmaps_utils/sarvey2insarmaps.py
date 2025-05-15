@@ -11,6 +11,7 @@ import re
 import pickle
 from shapely.geometry import box
 import webbrowser
+import h5py
 
 
 def find_script(script_name, search_paths):
@@ -29,7 +30,9 @@ def extract_metadata_from_inputs(inputs_path):
 
     if slc_path.exists():
         slc_attr = readfile.read_attribute(str(slc_path))
-        for key in ["mission", "beam_mode", "flight_direction", "relative_orbit", "processing_method",
+        print("slcStack.h5 attributes:", slc_attr)
+
+        for key in ["mission", "PLATFORM", "beam_mode", "flight_direction", "relative_orbit", "processing_method",
                     "REF_LAT", "REF_LON", "areaName", "DATE", "LAT_REF1", "LAT_REF2", "LAT_REF3", "LAT_REF4",
                     "LON_REF1", "LON_REF2", "LON_REF3", "LON_REF4"]:
             if key in slc_attr:
@@ -40,6 +43,7 @@ def extract_metadata_from_inputs(inputs_path):
         if "beamSwath" in geom_attr:
             attributes["beamSwath"] = geom_attr["beamSwath"]
 
+    # Default values
     attributes["data_type"] = "LOS_TIMESERIES"
     attributes["look_direction"] = "R" if attributes.get("mission", "").upper() != "NISAR" else "L"
     attributes["start_date"] = "TO_INFER"
@@ -47,12 +51,37 @@ def extract_metadata_from_inputs(inputs_path):
     attributes["history"] = str(date.today())
     attributes["data_footprint"] = "TO_INFER"
 
-    #build standardized_stem from slcStack.h5
+    # Attempt to build standardized_stem
     try:
-        mission = attributes.get("mission", "S1")
-        rel_orbit = f"{int(attributes.get('relative_orbit', 0)):03d}"
-        start_date = attributes.get("DATE", "YYYYMMDD")
+        platform_raw = (attributes.get("PLATFORM") or attributes.get("mission") or "").upper()
+        platform_aliases = {
+            "TSX": "TSX",
+            "TERRASAR-X": "TSX",
+            "SENTINEL-1": "S1",
+            "S1": "S1",
+            "ERS": "ERS",
+            "ENVISAT": "ENVISAT",
+            "ALOS": "ALOS",
+        }
+        mission = platform_aliases.get(platform_raw, platform_raw or "S1")
+        rel_orbit_raw = attributes.get("relative_orbit", "")
+        rel_orbit = f"{int(rel_orbit_raw):03d}" if str(rel_orbit_raw).isdigit() else "000"
+
+        # Default fallback values
+        start_date = "YYYYMMDD"
         end_date = "XXXXXXXX"
+
+        # Try reading from /date dataset in slcStack.h5
+        if slc_path.exists():
+            try:
+                with h5py.File(slc_path, "r") as f:
+                    if "date" in f:
+                        date_list = [d.decode() if isinstance(d, bytes) else str(d) for d in f["date"][:]]
+                        if date_list:
+                            start_date = date_list[0]
+                            end_date = date_list[-1]
+            except Exception as e:
+                print(f"Warning: Could not read 'date' dataset: {e}")
 
         # bbox from LAT_REF/LON_REF
         lat_vals = [float(attributes[k]) for k in ["LAT_REF1", "LAT_REF2", "LAT_REF3", "LAT_REF4"] if k in attributes]
@@ -70,9 +99,13 @@ def extract_metadata_from_inputs(inputs_path):
             lon2 = f"W{abs(int(min_lon * 10000)):06d}"
 
             standardized_stem = f"{mission}_{rel_orbit}_{start_date}_{end_date}_{lat1}_{lat2}_{lon1}_{lon2}"
+        else:
+            standardized_stem = f"{mission}_{rel_orbit}_{start_date}_{end_date}"
+
     except Exception as e:
         print(f"Warning: Could not generate standardized_stem: {e}")
 
+    print("standardized_stem:", standardized_stem)
     return attributes, standardized_stem
 
 def run_command(command, shell=False):
@@ -103,20 +136,12 @@ def main():
         epilog="""\
     Examples:
 
-      Basic usage:
-        sarvey2insarmaps.py ./input/shp/p2_coh70_ts.shp
+        sarvey2insarmaps.py ./outputs/shp/p2_coh70_ts.shp
+        sarvey2insarmaps.py ./outputs/shp/p2_coh70_ts.shp --no-geocorr
+        sarvey2insarmaps.py ./outputs/shp/p2_coh70_ts.shp --make-jobfile
+        sarvey2insarmaps.py ./outputs/shp/p2_coh70_ts.shp --insarmaps-host 149.165.153.50
+        sarvey2insarmaps.py ./outputs/shp/p2_coh70_ts.shp --skip-upload
 
-      Skip geolocation correction:
-        sarvey2insarmaps.py ./input/shp/p2_coh70_ts.shp --no-geocorr
-
-      Generate a jobfile only (no execution):
-        sarvey2insarmaps.py ./input/shp/p2_coh70_ts.shp --make-jobfile
-
-      Use alternate Insarmaps host:
-        sarvey2insarmaps.py ./input/shp/p2_coh70_ts.shp --insarmaps-host 149.165.153.50
-
-      Skip final upload step:
-        sarvey2insarmaps.py ./input/shp/p2_coh70_ts.shp --skip-upload
     """,
         formatter_class=argparse.RawTextHelpFormatter
     )
@@ -137,26 +162,45 @@ def main():
     print(f"Geolocation correction enabled: {inps.do_geocorr}")
 
     #load config.json if provided or found in working dir
-    config_json_path = None
+    inputs_path = None
+
     if inps.config_json:
         config_json_path = Path(inps.config_json).resolve()
     elif Path("config.json").exists():
         config_json_path = Path("config.json").resolve()
+    else:
+        config_json_path = None
 
     if config_json_path:
         print(f"Using config file: {config_json_path}")
         with open(config_json_path) as f:
             config_text = f.read()
-            #formatting to valid JSON because SARvey's config.json uses unquoted keys and trailing commas
-            config_text = re.sub(r"(?<![\w\"]) (\w+) *:", r'"\1":', config_text)  #quote keys
-            config_text = re.sub(r",\s*([\]}])", r"\1", config_text)              #remove trailing commas
-            config_text = config_text.replace("null", "null").replace("true", "true").replace("false", "false")  #keeps JSON-compatible
+            # formatting to valid JSON because SARvey's config.json uses unquoted keys and trailing commas
+            config_text = re.sub(r"(?<![\w\"]) (\w+) *:", r'"\1":', config_text)
+            config_text = re.sub(r",\s*([\]}])", r"\1", config_text)
+            config_text = config_text.replace("null", "null").replace("true", "true").replace("false", "false")
             config_data = json.loads(config_text)
-        inputs_path = Path(config_data["general"]["input_path"]).resolve()
-    else:
-        inputs_path = Path("inputs").resolve()
 
+        try:
+            inputs_path = Path(config_data["general"]["input_path"]).resolve()
+            print(f"Inputs path set from config.json: {inputs_path}")
+        except (KeyError, TypeError):
+            inputs_path = Path("inputs").resolve()
+            print("'input_path' not found in config.json. Defaulting to ./inputs/")
+    else:
+        inputs_path = Path(inps.shapefile).resolve().parents[1] / "inputs"
+        print(f"Using inferred inputs path: {inputs_path}")
+
+
+    # Ensure required files exist
+    required_files = ["slcStack.h5", "geometryRadar.h5"]
+    for fname in required_files:
+        fpath = inputs_path / fname
+        if not fpath.exists():
+            raise FileNotFoundError(f"Required file not found: {fpath}")
+    
     metadata, standardized_stem = extract_metadata_from_inputs(inputs_path)
+
     if not metadata:
         print("Warning: No metadata found in slcStack.h5 or geometryRadar.h5.")
     else:
@@ -173,15 +217,18 @@ def main():
     stem = shp_path.stem
     final_stem = standardized_stem if standardized_stem else stem
 
-    base_dir = shp_path.parent.parent.parent.resolve()
+    base_dir = shp_path.parent.parent.resolve()
 
-    outdir = base_dir / "output_csv"
+    outputs_dir = base_dir / "outputs"
+    outputs_dir.mkdir(parents=True, exist_ok=True)
+
+    outdir = outputs_dir / "output_csv"
     outdir.mkdir(parents=True, exist_ok=True)
 
     csv_path = outdir / f"{final_stem}.csv"
     geocorr_csv = outdir / f"{final_stem}_geocorr.csv"
 
-    json_dir = base_dir / "JSON"
+    json_dir = outputs_dir / "JSON"
     json_dir.mkdir(parents=True, exist_ok=True)
 
     mbtiles_path = json_dir / f"{final_stem}_geocorr.mbtiles" if inps.do_geocorr else json_dir / f"{final_stem}.mbtiles"
@@ -199,6 +246,7 @@ def main():
     #commands
     cmd1 = ["ogr2ogr", "-f", "CSV", "-lco", "GEOMETRY=AS_XY", "-t_srs", "EPSG:4326", str(csv_path), str(shp_path)]
     cmd2 = [correct_geolocation, str(csv_path), "--outfile", str(geocorr_csv)]
+
     #for geocorr option
     if inps.do_geocorr:
         input_csv = geocorr_csv
