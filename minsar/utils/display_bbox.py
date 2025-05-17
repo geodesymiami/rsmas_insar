@@ -89,6 +89,7 @@ def main():
     print(f'mintpy.subset.lalo                   = {lat_min:.3f}:{lat_max:.3f},{lon_min:.3f}:{lon_max:.3f}    #[S:N,W:E / no], auto for no')
     print(f'miaplpy.subset.lalo                  = {lat_min:.3f}:{lat_max:.3f},{lon_min:.3f}:{lon_max:.3f}    #[S:N,W:E / no], auto for no')
     print('\nFor subsetting:')
+    print('setmintpyfalk')
     print(f'subset.py slcStack.h5 --lat {lat_min:.3f} {lat_max:.3f} --lon {lon_min:.3f} {lon_max:.3f}')
     print(f'subset.py geometryRadar.h5 --lat {lat_min:.3f} {lat_max:.3f} --lon {lon_min:.3f} {lon_max:.3f}\n')
     output_file = "bbox_map.html"
