@@ -3,22 +3,38 @@
 import os
 import sys
 import folium
+import argparse
 from shapely import wkt
 import webbrowser
 
-def print_help():
-    print("""
+##############################################################################
+EXAMPLE = """Display and convert format of bounding boxes/polygons:
+
 Usage:
   display_bbox.py LATMIN:LATMAX,LONMIN:LONMAX
   display_bbox.py 'POLYGON((lon1 lat1, lon2 lat2, ..., lon1 lat1))'
 
 Examples:
   display_bbox.py 25.937:25.958,-80.125:-80.118
+  display_bbox.py --lat 25.937 25.958 --lon -80.125 -80.118
   display_bbox.py 'POLYGON((-82.04 26.53, -81.92 26.53, -81.92 26.61, -82.04 26.61, -82.04 26.53))'
 
 Note:
   If you are using a POLYGON, you **must** wrap it in single quotes to prevent a shell syntax error.
-""")
+"""
+
+DESCRIPTION = (
+    "Displays and converts subset/bounding boxes"
+)
+def create_parser():
+    parser = argparse.ArgumentParser(
+        description="Display a bounding box or polygon on a map.",
+        epilog=EXAMPLE, formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument("subset", nargs="?", help="Bounding box 'lat_min:lat_max,lon_min:lon_max' or WKT POLYGON")
+    parser.add_argument("--lat", nargs=2, type=float, help="Latitude range: min max")
+    parser.add_argument("--lon", nargs=2, type=float, help="Longitude range: min max")
+    return parser
 
 def draw_rectangle(subset):
     lat_part, lon_part = subset.split(',')
@@ -49,9 +65,10 @@ def draw_polygon(wkt_string):
     ).add_to(m)
     return m
 
+###########################################################
 def main():
     if len(sys.argv) < 2 or sys.argv[1] in ['-h', '--help']:
-        print_help()
+        print(EXAMPLE)
         sys.exit(0)
 
     # Detect common unquoted polygon misuse
@@ -61,7 +78,13 @@ def main():
         print("  ./display_bbox.py 'POLYGON((...))'\n")
         sys.exit(1)
 
-    arg = " ".join(sys.argv[1:])  # Join all arguments back into one string
+    if len(sys.argv) == 2:
+        arg = " ".join(sys.argv[1:])  # Join all arguments back into one string
+    else:
+        parser = create_parser()
+        inps = parser.parse_args(args=sys.argv[1:])
+        
+        arg = f"{inps.lat[0]}:{inps.lat[1]},{inps.lon[0]}:{inps.lon[1]}"
 
     try:
         if arg.lower().startswith("polygon"):
@@ -70,7 +93,7 @@ def main():
             m = draw_rectangle(arg)
     except Exception as e:
         print(f"[ERROR] Failed to parse input: {e}")
-        print_help()
+        print(EXAMPLE)
         sys.exit(1)
 
     if arg.lower().startswith("polygon"):
