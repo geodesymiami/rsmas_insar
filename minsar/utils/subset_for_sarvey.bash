@@ -20,6 +20,8 @@ function print_help {
 
 [[ "$1" == "-h" || "$1" == "--help" ]] && print_help
 
+args=( "$@" )
+
 INPUT_DIR="$1"
 shift
 
@@ -93,6 +95,7 @@ fi
 [[ -f "$INPUT_DIR/geometryRadar.h5" ]] || { echo "Missing $INPUT_DIR/geometryRadar.h5"; exit 1; }
 
 mkdir -p "$OUTDIR/inputs"
+echo "$(date +'%Y-%m-%d %H:%M:%S')  subset_for_sarvey.bash ${args[@]}" >> "${OUTDIR}/subset.log"
 echo "Running... subset.py $INPUT_DIR/slcStack.h5 --lat $LAT_MIN $LAT_MAX --lon $LON_MIN $LON_MAX --output $OUTDIR/inputs/slcStack.h5"
 subset.py $INPUT_DIR/slcStack.h5 --lat $LAT_MIN $LAT_MAX --lon $LON_MIN $LON_MAX --output $OUTDIR/inputs/slcStack.h5
 echo "Running... subset.py $INPUT_DIR/geometryRadar.h5 --lat $LAT_MIN $LAT_MAX --lon $LON_MIN $LON_MAX --output $OUTDIR/inputs/geometryRadar.h5"
