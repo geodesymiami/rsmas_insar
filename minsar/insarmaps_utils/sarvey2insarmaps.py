@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
-import argparse
 import os
+import sys
+import argparse
 import subprocess
-from pathlib import Path
 import json
-import ast
-from mintpy.utils import readfile
-from datetime import date
 import re
-import pickle
-from shapely.geometry import box
 import webbrowser
 import h5py
+from pathlib import Path
+from datetime import date
+import pickle
+from mintpy.utils import readfile
 
 
 def find_script(script_name, search_paths):
