@@ -7,7 +7,7 @@ echo SCRIPT_DIR "$SCRIPT_DIR"
 
 # for ssara
 SSARA_FILE="$SCRIPT_DIR/../tools/SSARA/password_config.py"
-characterCount=$(wc -m < "$SSARA_FILE")
+characterCount=$(wc -m < "$SSARA_FILE" | xargs)
 
 if [[ $characterCount == 75 ]]; then
   echo "Use default password_config.py for SSARA (because existing file lacks passwords)"
