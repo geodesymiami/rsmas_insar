@@ -2,19 +2,19 @@
 set -e
 
 function print_help {
-    echo "Usage: subset_for_sarvey.bash MIAPLPY_DIR [--lat LAT_MIN LAT_MAX --lon LON_MIN LON_MAX] [--outdir OUTPUT_DIR]"
+    echo "Usage: sarvey_subset.bash MIAPLPY_DIR [--lat LAT_MIN LAT_MAX --lon LON_MIN LON_MAX] [--outdir OUTPUT_DIR]"
     echo "       or"
-    echo "       subset_for_sarvey.bash MIAPLPY_DIR LAT_MIN:LAT_MAX,LON_MIN:LON_MAX --outdir OUTPUT_DIR"
+    echo "       sarvey_subset.bash MIAPLPY_DIR LAT_MIN:LAT_MAX,LON_MIN:LON_MAX --outdir OUTPUT_DIR"
     echo "           requires Falk's  MintPy modification supporting subsetting of non-geocoded data: "
     echo "           https://github.com/falkamelung/MintPy"
     echo "           (in Miami using alias setmintpyfalk)"
     echo ""
     echo "Examples:"
-    echo "  subset_for_sarvey.bash miaplpy_MDCBeach_201710_202310 --lat 25.937 25.958 --lon -80.125 -80.118 --outdir Oceana"
-    echo "  subset_for_sarvey.bash miaplpy_MDCBeach_201710_202310 25.937:25.958,-80.125:-80.118 --outdir Oceana"
+    echo "  sarvey_subset.bash miaplpy_MDCBeach_201710_202310 --lat 25.937 25.958 --lon -80.125 -80.118 --outdir Oceana"
+    echo "  sarvey_subset.bash miaplpy_MDCBeach_201710_202310 25.937:25.958,-80.125:-80.118 --outdir Oceana"
     echo ""
-    echo "  subset_for_sarvey.bash miaplpy_SN_201606_201608 --lat -0.84 -0.83 --lon -91.17 -91.16 --outdir minas"
-    echo "  subset_for_sarvey.bash miaplpy_SN_201606_201608 -0.84:-0.83,-91.17:-91.16 --outdir minas"
+    echo "  sarvey_subset.bash miaplpy_SN_201606_201608 --lat -0.84 -0.83 --lon -91.17 -91.16 --outdir minas"
+    echo "  sarvey_subset.bash miaplpy_SN_201606_201608 -0.84:-0.83,-91.17:-91.16 --outdir minas"
     exit 0
 }
 
@@ -95,7 +95,7 @@ fi
 [[ -f "$INPUT_DIR/geometryRadar.h5" ]] || { echo "Missing $INPUT_DIR/geometryRadar.h5"; exit 1; }
 
 mkdir -p "$OUTDIR/inputs"
-echo "$(date +'%Y-%m-%d %H:%M:%S')  subset_for_sarvey.bash ${args[@]}" >> "${OUTDIR}/subset.log"
+echo "$(date +'%Y-%m-%d %H:%M:%S')  sarvey_subset.bash ${args[@]}" >> "${OUTDIR}/sarvey_subset.log"
 echo "Running... subset.py $INPUT_DIR/slcStack.h5 --lat $LAT_MIN $LAT_MAX --lon $LON_MIN $LON_MAX --output $OUTDIR/inputs/slcStack.h5"
 subset.py $INPUT_DIR/slcStack.h5 --lat $LAT_MIN $LAT_MAX --lon $LON_MIN $LON_MAX --output $OUTDIR/inputs/slcStack.h5
 echo "Running... subset.py $INPUT_DIR/geometryRadar.h5 --lat $LAT_MIN $LAT_MAX --lon $LON_MIN $LON_MAX --output $OUTDIR/inputs/geometryRadar.h5"
