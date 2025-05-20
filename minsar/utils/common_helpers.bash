@@ -167,6 +167,8 @@ helptext="            \n\
      rsyncFJ MaunLoaSenAT124                     \n\
      rsyncFJ MaunLoaSenAT124/mintpy_5_20         \n\
      rsyncFJ unittestGalapagosSenDT128/miaplpy/network_single_reference \n\
+     rsyncFJ unittestGalapagosSenDT128/miaplpy_SN_201606_201608/inputs \n\
+     rsyncFJ unittestGalapagosSenDT128/miaplpy_SN_201606_201608/inverted \n\
 "
     printf "$helptext"
     return
