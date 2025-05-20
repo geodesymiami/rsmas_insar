@@ -149,16 +149,17 @@ def main():
     parser.add_argument("--skip-upload", action="store_true", help="Skip upload to Insarmaps")
     parser.add_argument("--make-jobfile", action="store_true", help="Generate jobfile")
     parser.add_argument("--no-geocorr", dest="do_geocorr", action="store_false", help="Skip geolocation correction step")
-    parser.set_defaults(do_geocorr=True)
+    parser.set_defaults(do_geocorr=False)
     parser.add_argument("--insarmaps-host",
-        #default=os.environ.get("INSARMAPS_HOST", "insarmaps.miami.edu"),
         default=os.environ.get("INSARMAPS_HOST", os.getenv("INSARMAPSHOST")),
         help="Insarmaps server host (default: environment variable INSARMAPS_HOST)"
     )
-    parser.add_argument("--insarmaps-user", default="insaradmin")
-    parser.add_argument("--insarmaps-pass", default="insaradmin")
-    parser.add_argument("--insarmaps-email", default="insarmaps@insarmaps.com")
+
     inps = parser.parse_args()
+
+    sys.path.insert(0, os.getenv('SSARAHOME'))
+    import password_config as password
+
     print(f"Geolocation correction enabled: {inps.do_geocorr}")
 
     #load config.json if provided or found in working dir
@@ -191,8 +192,7 @@ def main():
         inputs_path = Path(inps.shapefile).resolve().parents[1] / "inputs"
         print(f"Using inferred inputs path: {inputs_path}")
 
-    sys.path.insert(0, os.getenv('SSARAHOME'))
-    import password_config as password
+
 
     # Ensure required files exist
     required_files = ["slcStack.h5", "geometryRadar.h5"]
@@ -255,8 +255,8 @@ def main():
     else:
         input_csv = csv_path
     cmd3 = ["hdfeos5_or_csv_2json_mbtiles.py", str(input_csv), str(json_dir)]
-    cmd4 = ["json_mbtiles2insarmaps.py", "--num-workers", "3", "-u", inps.insarmaps_user, "-p", inps.insarmaps_pass,
-            "--host", inps.insarmaps_host, "-P", "insarmaps", "-U", inps.insarmaps_email,
+    cmd4 = ["json_mbtiles2insarmaps.py", "--num-workers", "3", "-u", password.docker_insaruser, "-p", password.docker_insarpass,
+            "--host", inps.insarmaps_host, "-P", "insarmaps", "-U", password.docker_databaseuser,
             "--json_folder", str(json_dir), "--mbtiles_file", str(mbtiles_path)]
 
     if inps.make_jobfile:
