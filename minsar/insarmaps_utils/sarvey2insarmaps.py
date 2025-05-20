@@ -152,8 +152,9 @@ def main():
     parser.add_argument("--no-geocorr", dest="do_geocorr", action="store_false", help="Skip geolocation correction step")
     parser.set_defaults(do_geocorr=True)
     parser.add_argument("--insarmaps-host",
-        default=os.environ.get("INSARMAPS_HOST", "insarmaps.miami.edu"),
-        help="Insarmaps server host (default: insarmaps.miami.edu or env INSARMAPS_HOST)"
+        #default=os.environ.get("INSARMAPS_HOST", "insarmaps.miami.edu"),
+        default=os.environ.get("INSARMAPS_HOST", os.getenv("INSARMAPSHOST")),
+        help="Insarmaps server host (default: environment variable INSARMAPS_HOST)"
     )
     parser.add_argument("--insarmaps-user", default="insaradmin")
     parser.add_argument("--insarmaps-pass", default="insaradmin")
@@ -191,6 +192,8 @@ def main():
         inputs_path = Path(inps.shapefile).resolve().parents[1] / "inputs"
         print(f"Using inferred inputs path: {inputs_path}")
 
+    sys.path.insert(0, os.getenv('SSARAHOME'))
+    import password_config as password
 
     # Ensure required files exist
     required_files = ["slcStack.h5", "geometryRadar.h5"]
