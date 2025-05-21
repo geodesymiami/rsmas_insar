@@ -35,8 +35,8 @@ git clone git@github.com:geodesymiami/precip tools/Precip
 git clone git@github.com:geodesymiami/precip_web tools/Precip_web
 git clone git@github.com:geodesymiami/precip_cron tools/Precip_cron
 git clone git@github.com:scottstanie/sardem tools/sardem
-git clone git@github.com:luhipi/sarvey tools/sarvey
 git clone git@github.com:falkamelung/MintPy.git tools/MintPy_falk
+git clone git@github.com:geodesymiami/SourceInversion.git tools/SourceInversion
 
 mamba install python=3.10  --file minsar/environment.yml --yes -c conda-forge                     # first install c-code
 mamba install --file tools/insarmaps_scripts/environment.yml -c conda-forge
@@ -50,12 +50,6 @@ pip install -r tools/PlotData/requirements.txt
 pip install -r tools/Precip/requirements.txt
 pip install -r tools/sardem/requirements.txt
 pip install -e tools/sardem
-
-## pip install tools/VSM
-#$VSM_ENV_PATH/bin/pip install -r tools/VSM/VSM/requirements.txt
-#
-#### Install GDAL into sarvey environment #########################
-#tools/miniforge3/bin/conda install -n sarvey -c conda-forge gdal -y
 
 ###  Reduce miniforge3 directory size #################
 rm -rf tools/miniforge3/pkgs
@@ -75,6 +69,7 @@ cp -p minsar/additions/mintpy/cli/save_hdfeos5.py tools/MintPy/src/mintpy/cli/
 cp -p minsar/additions/miaplpy/prep_slc_isce.py tools/MiaplPy/src/miaplpy
 
 ### Adding ISCE fixes and copying checked-out ISCE version (the latest) into miniforge directory ###
+if [[ "$(uname)" == "Linux" ]]; then
 cp -p minsar/additions/isce/logging.conf tools/miniforge3/lib/python3.?/site-packages/isce/defaults/logging/logging.conf
 cp -p minsar/additions/isce2/topsStack/FilterAndCoherence.py tools/isce2/contrib/stack/topsStack
 cp -p minsar/additions/isce2/stripmapStack/prepRawCSK.py tools/isce2/contrib/stack/stripmapStack
@@ -86,6 +81,7 @@ cp -r tools/isce2/contrib/stack/* tools/miniforge3/share/isce2
 cp -r tools/isce2/components/isceobj/Sensor/TOPS tools/miniforge3/share/isce2
 cp tools/isce2/components/isceobj/Sensor/TOPS/TOPSSwathSLCProduct.py tools/miniforge3/lib/python3.?/site-packages/isce/components/isceobj/Sensor/TOPS
 cp tools/isce2/contrib/demUtils/demstitcher/DemStitcher.py  tools/miniforge3/lib/python3.??/site-packages/isce/components/contrib/demUtils
+fi
 
 ### Create orbits and aux directories
 echo "mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX"
