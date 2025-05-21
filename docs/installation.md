@@ -39,6 +39,8 @@ wget http://149.165.154.65/data/circleci/ci_small_unittestGalapagosSenDT128.tar
 tar xvf ci_small_unittestGalapagosSenDT128.tar
 minsarApp.bash $SAMPLESDIR/circleci/ci_unittestGalapagosSenDT128.template --start dem
 ```
+### How not to loose your working installation
+You can't be sure the new installation works until you have tested it. It is recommended to keep a copy of the working installation, for example, instead of removing `rsmas_insar`  do `mv rsmas_insar good_rsmas_insar`. I have  old versions in `code_old`, `code_veryold` directories  which  can be used in the case of unexpected problems.
 
 ### #Orbits and aux files
 This has created directories for the orbits for Sentinel-1 (`$SENTINEL_ORBITS`), which The can be downloaded using `dloadOrbits.py`. The IPF calibration files (`SENTINEL_AUX`) are downloaded from: https://qc.sentinel1.eo.esa.int/aux_cal/ .
