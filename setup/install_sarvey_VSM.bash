@@ -26,4 +26,6 @@ pip install -e tools/sarvey
 ###  Reduce miniforge3 directory size #################
 rm -rf tools/miniforge3/pkgs
 
-echo "Installation DONE"
+echo ""
+echo "Installation of install_sarvey_VSM.bash DONE"
+echo ""

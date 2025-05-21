@@ -88,4 +88,6 @@ echo "mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX"
 mkdir -p $SENTINEL_ORBITS $SENTINEL_AUX
 ls -d $SENTINEL_ORBITS $SENTINEL_AUX
 
-echo "Installation with install_code.bash DONE"
+echo ""
+echo "Installation of install_code.bash DONE"
+echo ""
