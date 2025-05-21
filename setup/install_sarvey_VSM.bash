@@ -18,8 +18,8 @@ conda create --name sarvey python=3.10 pip -y
 conda install -n sarvey -c conda-forge setuptools cython pyproj h5py numpy scipy matplotlib numba mintpy shapely geopandas gstools pydantic=1.10.* json5 overpy -y
 source tools/miniforge3/etc/profile.d/conda.sh
 conda activate sarvey
-pip install -e tools/sarvey
 pip install -e tools/MiaplPy
+pip install -e tools/sarvey
 
 ###  Reduce miniforge3 directory size #################
 rm -rf tools/miniforge3/pkgs
