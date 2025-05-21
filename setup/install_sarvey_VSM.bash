@@ -14,7 +14,8 @@ conda create --name sarvey pip -y
 #conda install -n sarvey -c conda-forge gdal -y
 #conda env update --name sarvey -f tools/sarvey/environment.yml   #FA: elimintaed because OOM errors
 #conda install -n sarvey -c conda-forge numpy scipy matplotlib h5py pyproj -y
-conda install -n sarvey -c conda-forge setuptools cython pyproj h5py numpy scipy matplotlib numba mintpy shapely geopandas gstools pydantic=1.10.* json5 overpy
+conda install -n sarvey -c conda-forge setuptools cython pyproj h5py numpy scipy matplotlib numba mintpy shapely geopandas gstools pydantic=1.10.* json5 overpy -y
+source tools/miniforge3/etc/profile.d/conda.sh
 conda activate sarvey
 pip install -e tools/sarvey
 pip install -e tools/MiaplPy
