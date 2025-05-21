@@ -70,7 +70,7 @@ def extract_metadata_from_inputs(inputs_path):
         ]
         for key in keys_to_extract:
             if key in slc_attr:
-                attributes[key] = slc_attr[key]        
+                attributes[key] = slc_attr[key]
 
     #load geometryRadar.h5 attributes
     if geom_path.exists():
@@ -95,7 +95,7 @@ def extract_metadata_from_inputs(inputs_path):
             "ERS": "ERS", "ENVISAT": "ENVISAT", "ALOS": "ALOS"
         }
         mission = platform_aliases.get(platform_raw, platform_raw or "S1")
-        
+
         #orbit
         rel_orbit_raw = attributes.get("relative_orbit", "")
         rel_orbit = f"{int(rel_orbit_raw):03d}" if str(rel_orbit_raw).isdigit() else "000"
@@ -126,7 +126,7 @@ def extract_metadata_from_inputs(inputs_path):
             dataset_name = f"{mission}_{rel_orbit}_{start_date}_{end_date}_{lat1}_{lat2}_{lon1}_{lon2}"
         else:
             dataset_name = f"{mission}_{rel_orbit}_{start_date}_{end_date}"
-        
+
     except Exception as e:
         print(f"[WARN] Could not generate dataset_name: {e}")
 
@@ -195,7 +195,7 @@ def main():
     )
     parser.set_defaults(do_geocorr=False)
     parser.add_argument("--sarvey-geocorr", action="store_true", help="Apply geolocation correction for sarvey_export (-g, --correct_geo)")
-    
+
     inps = parser.parse_args()
     print(f"Geolocation correction enabled: {inps.do_geocorr}")
 
@@ -226,7 +226,7 @@ def main():
         fpath = inputs_path / fname
         if not fpath.exists():
             raise FileNotFoundError(f"Required file not found: {fpath}")
-    
+
     metadata, dataset_name = extract_metadata_from_inputs(inputs_path)
     if metadata:
         print("Extracted metadata:", metadata)
@@ -246,9 +246,11 @@ def main():
         shp_path = h5_path.parent / "shp" / f"{h5_path.stem}.shp"
         print(f"[INFO] Input is HDF5. Inferred shapefile path: {shp_path}")
         #step0: always run sarvey_export if input is HDF5
+        # Comment Falk: finding the correct path is better done in a function, e.g. in run_command
         sarvey_export_path = get_sarvey_export_path()
         cmd0 = [sarvey_export_path, str(h5_path), "-o", str(shp_path)]
         if inps.sarvey_geocorr:
+            # Comment Falk: don't use -g. full option name makes it more readable
             print("[INFO] Applying SARvey geolocation correction")
             cmd0.append("-g")
         run_command(cmd0, cwd=config_json_path.parent if config_json_path else h5_path.parent)
@@ -279,7 +281,7 @@ def main():
     ]
     correct_geolocation = find_script("correct_geolocation.py", search_dirs)
 
-    
+
     #commands
     cmd1 = ["ogr2ogr", "-f", "CSV", "-lco", "GEOMETRY=AS_XY", "-t_srs", "EPSG:4326", str(csv_path), str(shp_path)]
     cmd2 = [correct_geolocation, str(csv_path), "--outfile", str(geocorr_csv)]
@@ -296,7 +298,7 @@ def main():
     "--json_folder", str(json_dir),
     "--mbtiles_file", str(mbtiles_path),
 ]
-    
+
     if inps.make_jobfile:
         slurm_commands = []
 
@@ -316,7 +318,7 @@ def main():
             " ".join(cmd4).replace(REMOTEHOST_INSARMAPS1, REMOTEHOST_INSARMAPS2) + " &",
             " ".join(cmd4) + " &"
         ])
-        
+
         create_jobfile(base_dir / "sarvey2insarmaps.job", slurm_commands, mbtiles_path, dataset_name)
         return
 
