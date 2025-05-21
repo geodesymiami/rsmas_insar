@@ -19,15 +19,17 @@ cd $WORK2/code
 ```
 * Create a bash virgin environmen, clone the repo and install the code (including miniforge3 python). Work as user circleci. On stampede3 on the development queue (`idevdev`):
 ```
-env -i HOME=$HOME PATH=/usr/bin:/bin SHELL=/bin/bash USER=circleci bash --noprofile --norc
+env -i HOME=$HOME PATH=/usr/bin:/bin:/sbin SHELL=/bin/bash USER=circleci bash --noprofile --norc
 export USER=circleci
 git clone git@github.com:geodesymiami/rsmas_insar.git ;
 cd rsmas_insar
 bash -x setup/install_python.bash
 bash -x setup/install_code.bash
+bash -x setup/install_sarvey_VSM.bash
 bash -x setup/install_credential_files.bash
 ```
-The `install_python.bash` command is [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install_python.bash) and  `install_code.bash`  is  [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install_code.bash) and  `install_credential_files.bash`  is  [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install_credential_files.bash).
+The `install_python.bash` command is [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install_python.bash) and `install_code.bash`  is  [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install_code.bash) and `install_sarvey_VSM.bash`  is  
+[here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install_sarvey_VSM.bash) and  `install_credential_files.bash`  is  [here](https://github.com/geodesymiami/rsmas_insar/blob/master/setup/install_credential_files.bash).
 
 ---
 ### Test your installation
