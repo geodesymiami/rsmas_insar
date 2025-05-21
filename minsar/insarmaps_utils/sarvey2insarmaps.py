@@ -175,10 +175,13 @@ def main():
         epilog="""\
     Examples:
 
-        sarvey2insarmaps.py ./outputs/shp/p2_coh70_ts.shp
-        sarvey2insarmaps.py ./outputs/shp/p2_coh70_ts.shp --no-geocorr
-        sarvey2insarmaps.py ./outputs/shp/p2_coh70_ts.shp --make-jobfile
-        sarvey2insarmaps.py ./outputs/shp/p2_coh70_ts.shp --skip-upload
+        sarvey2insarmaps.py outputs/shp/p2_coh70_ts.shp
+        sarvey2insarmaps.py outputs/shp/p2_coh70_ts.shp --geocorr
+        sarvey2insarmaps.py outputs/shp/p2_coh70_ts.shp --make-jobfile
+        sarvey2insarmaps.py outputs/shp/p2_coh70_ts.shp --skip-upload
+
+        sarvey2insarmaps.py outputs/p2_coh80_ts.h5
+        sarvey2insarmaps.py outputs/p2_coh80_ts.h5 --sarvey-geocorr
     """,
         formatter_class=argparse.RawTextHelpFormatter
     )
@@ -186,8 +189,13 @@ def main():
     parser.add_argument("--config-json", help="Path to config.json (overrides default detection)")
     parser.add_argument("--skip-upload", action="store_true", help="Skip upload to Insarmaps")
     parser.add_argument("--make-jobfile", action="store_true", help="Generate jobfile")
-    parser.add_argument("--no-geocorr", dest="do_geocorr", action="store_false", help="Skip geolocation correction step")
-    parser.set_defaults(do_geocorr=True)
+    parser.add_argument(
+        "--geocorr", dest="do_geocorr", action="store_true",
+        help="Enable geolocation correction step (default: off)"
+    )
+    parser.set_defaults(do_geocorr=False)
+    parser.add_argument("--sarvey-geocorr", action="store_true", help="Apply geolocation correction for sarvey_export (-g, --correct_geo)")
+    
     inps = parser.parse_args()
     print(f"Geolocation correction enabled: {inps.do_geocorr}")
 
@@ -240,6 +248,9 @@ def main():
         #step0: always run sarvey_export if input is HDF5
         sarvey_export_path = get_sarvey_export_path()
         cmd0 = [sarvey_export_path, str(h5_path), "-o", str(shp_path)]
+        if inps.sarvey_geocorr:
+            print("[INFO] Applying SARvey geolocation correction")
+            cmd0.append("-g")
         run_command(cmd0, cwd=config_json_path.parent if config_json_path else h5_path.parent)
     else:
         shp_path = input_path
