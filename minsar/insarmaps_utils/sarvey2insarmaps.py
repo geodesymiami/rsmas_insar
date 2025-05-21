@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
 import os
-import sys
 import argparse
 import subprocess
 import json
 import re
-import webbrowser
+import pickle
 import h5py
 from pathlib import Path
 from datetime import date
-import pickle
 from mintpy.utils import readfile
+import webbrowser
+import sys
+
+sys.path.insert(0, os.getenv("SSARAHOME"))
+import password_config as password
+
+REMOTEHOST_INSARMAPS1 = os.getenv("REMOTEHOST_INSARMAPS2", "149.165.153.50")
+REMOTEHOST_INSARMAPS2 = os.getenv("REMOTEHOST_INSARMAPS1", "insarmaps.miami.edu")
 
 
 def find_script(script_name, search_paths):
@@ -20,166 +26,179 @@ def find_script(script_name, search_paths):
             return str(full_path)
     raise FileNotFoundError(f"Could not find {script_name} in {search_paths}")
 
+def get_sarvey_export_path():
+    """Find the path to the 'sarvey_export' executable in the 'sarvey' conda environment."""
+
+    #try guessing from the current python executable path
+    try:
+        conda_root = Path(sys.executable).resolve().parents[2]
+        expected_path = conda_root / "envs" / "sarvey" / "bin" / "sarvey_export"
+        if expected_path.exists():
+            return str(expected_path)
+    except Exception as e:
+        print(f"[WARN] Could not locate 'sarvey_export' by guessing: {e}")
+
+    #fallback: use conda run
+    try:
+        result = subprocess.check_output(
+            ["conda", "run", "-n", "sarvey", "which", "sarvey_export"],
+            universal_newlines=True
+        )
+        return result.strip()
+    except Exception as e:
+        raise RuntimeError(f"Could not find 'sarvey_export' using conda run: {e}")
+
+
 def extract_metadata_from_inputs(inputs_path):
     attributes = {}
-    standardized_stem = None
+    dataset_name = None
 
     slc_path = inputs_path / "slcStack.h5"
     geom_path = inputs_path / "geometryRadar.h5"
 
+    #load slcStack.h5 attributes
     if slc_path.exists():
         slc_attr = readfile.read_attribute(str(slc_path))
-        print("slcStack.h5 attributes:", slc_attr)
+        print("[INFO] slcStack.h5 attributes:", slc_attr)
 
-        for key in ["mission", "PLATFORM", "beam_mode", "flight_direction", "relative_orbit", "processing_method",
-                    "REF_LAT", "REF_LON", "areaName", "DATE", "LAT_REF1", "LAT_REF2", "LAT_REF3", "LAT_REF4",
-                    "LON_REF1", "LON_REF2", "LON_REF3", "LON_REF4"]:
+
+        keys_to_extract = [
+            "mission", "PLATFORM", "beam_mode", "flight_direction", "relative_orbit",
+            "processing_method", "REF_LAT", "REF_LON", "areaName", "DATE",
+            "LAT_REF1", "LAT_REF2", "LAT_REF3", "LAT_REF4",
+            "LON_REF1", "LON_REF2", "LON_REF3", "LON_REF4"
+        ]
+        for key in keys_to_extract:
             if key in slc_attr:
-                attributes[key] = slc_attr[key]
+                attributes[key] = slc_attr[key]        
 
+    #load geometryRadar.h5 attributes
     if geom_path.exists():
         geom_attr = readfile.read_attribute(str(geom_path))
         if "beamSwath" in geom_attr:
             attributes["beamSwath"] = geom_attr["beamSwath"]
 
-    # Default values
-    attributes["data_type"] = "LOS_TIMESERIES"
-    attributes["look_direction"] = "R" if attributes.get("mission", "").upper() != "NISAR" else "L"
-    attributes["start_date"] = "TO_INFER"
-    attributes["end_date"] = "TO_INFER"
-    attributes["history"] = str(date.today())
-    attributes["data_footprint"] = "TO_INFER"
+    #set default/fallback attributes
+    attributes.setdefault("data_type", "LOS_TIMESERIES")
+    attributes.setdefault("look_direction", "R" if attributes.get("mission", "").upper() != "NISAR" else "L")
+    attributes.setdefault("start_date", "TO_INFER")
+    attributes.setdefault("end_date", "TO_INFER")
+    attributes.setdefault("history", str(date.today()))
+    attributes.setdefault("data_footprint", "TO_INFER")
 
-    # Attempt to build standardized_stem
+    #generate dataset name
     try:
+        #normalize platform name
         platform_raw = (attributes.get("PLATFORM") or attributes.get("mission") or "").upper()
         platform_aliases = {
-            "TSX": "TSX",
-            "TERRASAR-X": "TSX",
-            "SENTINEL-1": "S1",
-            "S1": "S1",
-            "ERS": "ERS",
-            "ENVISAT": "ENVISAT",
-            "ALOS": "ALOS",
+            "TSX": "TSX", "TERRASAR-X": "TSX", "SENTINEL-1": "S1", "S1": "S1",
+            "ERS": "ERS", "ENVISAT": "ENVISAT", "ALOS": "ALOS"
         }
         mission = platform_aliases.get(platform_raw, platform_raw or "S1")
+        
+        #orbit
         rel_orbit_raw = attributes.get("relative_orbit", "")
         rel_orbit = f"{int(rel_orbit_raw):03d}" if str(rel_orbit_raw).isdigit() else "000"
 
-        # Default fallback values
-        start_date = "YYYYMMDD"
-        end_date = "XXXXXXXX"
+        #default date values
+        start_date, end_date = "YYYYMMDD", "YYYYMMDD"
 
-        # Try reading from /date dataset in slcStack.h5
+        #try to get actual start/end dates from dataset
         if slc_path.exists():
             try:
                 with h5py.File(slc_path, "r") as f:
                     if "date" in f:
                         date_list = [d.decode() if isinstance(d, bytes) else str(d) for d in f["date"][:]]
                         if date_list:
-                            start_date = date_list[0]
-                            end_date = date_list[-1]
+                            start_date, end_date = date_list[0], date_list[-1]
             except Exception as e:
-                print(f"Warning: Could not read 'date' dataset: {e}")
+                print(f"[WARN] Could not read 'date' dataset from slcStack.h5: {e}")
 
-        # bbox from LAT_REF/LON_REF
+        #use bounding box to generate geographic part of the name
         lat_vals = [float(attributes[k]) for k in ["LAT_REF1", "LAT_REF2", "LAT_REF3", "LAT_REF4"] if k in attributes]
         lon_vals = [float(attributes[k]) for k in ["LON_REF1", "LON_REF2", "LON_REF3", "LON_REF4"] if k in attributes]
 
         if lat_vals and lon_vals:
-            min_lat = min(lat_vals)
-            max_lat = max(lat_vals)
-            min_lon = min(lon_vals)
-            max_lon = max(lon_vals)
-
-            lat1 = f"N{int(min_lat * 10000):05d}"
-            lat2 = f"N{int(max_lat * 10000):05d}"
-            lon1 = f"W{abs(int(max_lon * 10000)):06d}"
-            lon2 = f"W{abs(int(min_lon * 10000)):06d}"
-
-            standardized_stem = f"{mission}_{rel_orbit}_{start_date}_{end_date}_{lat1}_{lat2}_{lon1}_{lon2}"
+            lat1 = f"N{int(min(lat_vals) * 10000):05d}"
+            lat2 = f"N{int(max(lat_vals) * 10000):05d}"
+            lon1 = f"W{abs(int(max(lon_vals) * 10000)):06d}"
+            lon2 = f"W{abs(int(min(lon_vals) * 10000)):06d}"
+            dataset_name = f"{mission}_{rel_orbit}_{start_date}_{end_date}_{lat1}_{lat2}_{lon1}_{lon2}"
         else:
-            standardized_stem = f"{mission}_{rel_orbit}_{start_date}_{end_date}"
-
+            dataset_name = f"{mission}_{rel_orbit}_{start_date}_{end_date}"
+        
     except Exception as e:
-        print(f"Warning: Could not generate standardized_stem: {e}")
+        print(f"[WARN] Could not generate dataset_name: {e}")
 
-    print("standardized_stem:", standardized_stem)
-    return attributes, standardized_stem
-
-def run_command(command, shell=False):
-    print(f"\nRunning: {' '.join(command) if isinstance(command, list) else command}")
-    subprocess.run(command, check=True, shell=shell)
+    print("[INFO] dataset name:", dataset_name)
+    return attributes, dataset_name
 
 
-def create_jobfile(jobfile_path, commands, mbtiles_path, dataset_name):
+def run_command(command, shell=False, cwd=None):
+    cmd_str = ' '.join(command) if isinstance(command, list) else command
+    print(f"\nRunning: {cmd_str}")
+    try:
+        subprocess.run(command, check=True, shell=shell, cwd=cwd)
+    except subprocess.CalledProcessError as e:
+        print(f"[ERROR] Command failed with return code {e.returncode}: {cmd_str}")
+        raise
+
+
+def create_jobfile(jobfile_path, commands, mbtiles_path, insarmaps_dataset_id):
+    """Generate a bash jobfile to reproduce all steps of the pipeline."""
     with open(jobfile_path, 'w') as f:
         f.write("#!/bin/bash\n\n")
 
+        #write each command with spacing
         for cmd in commands:
             f.write(cmd + "\n")
-            if "rm -rf" in cmd or "geolocation" in cmd or "hdfeos5" in cmd:
+            if any(phrase in cmd for phrase in ("rm -rf", "geolocation", "hdfeos5")):
                 f.write("\n")
 
         f.write("wait\n\n")
 
+        #append insarmaps view URLs
         suffix = "_geocorr" if "_geocorr" in mbtiles_path.stem else ""
-        f.write(f"cat >> insarmaps.log<<EOF\nhttps://insarmaps.miami.edu/start/26.1/-80.1/11.0?flyToDatasetCenter=true&startDataset={dataset_name}{suffix}\nEOF\n\n")
-        f.write(f"cat >> insarmaps.log<<EOF\nhttps://149.165.153.50/start/26.1/-80.1/11.0?flyToDatasetCenter=true&startDataset={dataset_name}{suffix}\nEOF\n")
+        for host in ["insarmaps.miami.edu", "149.165.153.50"]:
+            f.write(
+                f"cat >> insarmaps.log<<EOF\n"
+                f"https://{host}/start/26.1/-80.1/11.0?flyToDatasetCenter=true&startDataset={insarmaps_dataset_id}{suffix}\n"
+                f"EOF\n\n"
+            )
+
     print(f"\nJobfile created: {jobfile_path}")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="End-to-end pipeline for: SARvey shapefiles -> csv -> Geocorrected csv -> JSON -> MBTiles -> Insarmaps",
+        description="End-to-end pipeline for: SARvey shapefiles -> CSV -> JSON -> MBTiles -> Insarmaps",
         epilog="""\
     Examples:
 
         sarvey2insarmaps.py ./outputs/shp/p2_coh70_ts.shp
         sarvey2insarmaps.py ./outputs/shp/p2_coh70_ts.shp --no-geocorr
         sarvey2insarmaps.py ./outputs/shp/p2_coh70_ts.shp --make-jobfile
-        sarvey2insarmaps.py ./outputs/shp/p2_coh70_ts.shp --insarmaps-host 149.165.153.50
         sarvey2insarmaps.py ./outputs/shp/p2_coh70_ts.shp --skip-upload
-
     """,
         formatter_class=argparse.RawTextHelpFormatter
     )
-    parser.add_argument("shapefile", help="Input shapefile path (.shp)")
+    parser.add_argument("input_file", help="Input .h5 or .shp file")
     parser.add_argument("--config-json", help="Path to config.json (overrides default detection)")
     parser.add_argument("--skip-upload", action="store_true", help="Skip upload to Insarmaps")
     parser.add_argument("--make-jobfile", action="store_true", help="Generate jobfile")
     parser.add_argument("--no-geocorr", dest="do_geocorr", action="store_false", help="Skip geolocation correction step")
-    parser.set_defaults(do_geocorr=False)
-    parser.add_argument("--insarmaps-host",
-        default=os.environ.get("INSARMAPS_HOST", os.getenv("INSARMAPSHOST")),
-        help="Insarmaps server host (default: environment variable INSARMAPS_HOST)"
-    )
-
+    parser.set_defaults(do_geocorr=True)
     inps = parser.parse_args()
-
-    sys.path.insert(0, os.getenv('SSARAHOME'))
-    import password_config as password
-
     print(f"Geolocation correction enabled: {inps.do_geocorr}")
 
-    #load config.json if provided or found in working dir
-    inputs_path = None
+    config_json_path = Path(inps.config_json).resolve() if inps.config_json else Path("config.json").resolve() if Path("config.json").exists() else None
 
-    if inps.config_json:
-        config_json_path = Path(inps.config_json).resolve()
-    elif Path("config.json").exists():
-        config_json_path = Path("config.json").resolve()
-    else:
-        config_json_path = None
-
-    if config_json_path:
+    if config_json_path and config_json_path.exists():
         print(f"Using config file: {config_json_path}")
         with open(config_json_path) as f:
             config_text = f.read()
-            # formatting to valid JSON because SARvey's config.json uses unquoted keys and trailing commas
-            config_text = re.sub(r"(?<![\w\"]) (\w+) *:", r'"\1":', config_text)
+            config_text = re.sub(r"(?<![\w\"])(\w+) *:", r'"\1":', config_text)
             config_text = re.sub(r",\s*([\]}])", r"\1", config_text)
-            config_text = config_text.replace("null", "null").replace("true", "true").replace("false", "false")
             config_data = json.loads(config_text)
 
         try:
@@ -189,24 +208,22 @@ def main():
             inputs_path = Path("inputs").resolve()
             print("'input_path' not found in config.json. Defaulting to ./inputs/")
     else:
-        inputs_path = Path(inps.shapefile).resolve().parents[1] / "inputs"
+        inputs_path = Path(inps.input_file).resolve().parents[1] / "inputs"
         print(f"Using inferred inputs path: {inputs_path}")
 
 
-
-    # Ensure required files exist
+    #ensure required files exist
     required_files = ["slcStack.h5", "geometryRadar.h5"]
     for fname in required_files:
         fpath = inputs_path / fname
         if not fpath.exists():
             raise FileNotFoundError(f"Required file not found: {fpath}")
     
-    metadata, standardized_stem = extract_metadata_from_inputs(inputs_path)
-
-    if not metadata:
-        print("Warning: No metadata found in slcStack.h5 or geometryRadar.h5.")
-    else:
+    metadata, dataset_name = extract_metadata_from_inputs(inputs_path)
+    if metadata:
         print("Extracted metadata:", metadata)
+    else:
+        print("Warning: No metadata found in slcStack.h5 or geometryRadar.h5.")
 
     #use $RSMASINSAR_HOME as the root for now (temporarily)
     rsmasinsar_env = os.environ.get("RSMASINSAR_HOME")
@@ -215,25 +232,33 @@ def main():
     scripts_root = Path(rsmasinsar_env).resolve()
 
     #input/output paths
-    shp_path = Path(inps.shapefile).resolve()
-    stem = shp_path.stem
-    final_stem = standardized_stem if standardized_stem else stem
+    input_path = Path(inps.input_file).resolve()
+    if input_path.suffix == ".h5":
+        h5_path = input_path
+        shp_path = h5_path.parent / "shp" / f"{h5_path.stem}.shp"
+        print(f"[INFO] Input is HDF5. Inferred shapefile path: {shp_path}")
+        #step0: always run sarvey_export if input is HDF5
+        sarvey_export_path = get_sarvey_export_path()
+        cmd0 = [sarvey_export_path, str(h5_path), "-o", str(shp_path)]
+        run_command(cmd0, cwd=config_json_path.parent if config_json_path else h5_path.parent)
+    else:
+        shp_path = input_path
+        h5_path = shp_path.with_suffix(".h5")
+        print(f"[INFO] Input is SHP. Inferred HDF5 path: {h5_path}")
+
 
     base_dir = shp_path.parent.parent.resolve()
-
     outputs_dir = base_dir / "outputs"
     outputs_dir.mkdir(parents=True, exist_ok=True)
 
     outdir = outputs_dir / "output_csv"
     outdir.mkdir(parents=True, exist_ok=True)
-
-    csv_path = outdir / f"{final_stem}.csv"
-    geocorr_csv = outdir / f"{final_stem}_geocorr.csv"
+    csv_path = outdir / f"{dataset_name}.csv"
+    geocorr_csv = outdir / f"{dataset_name}_geocorr.csv"
 
     json_dir = outputs_dir / "JSON"
     json_dir.mkdir(parents=True, exist_ok=True)
-
-    mbtiles_path = json_dir / f"{final_stem}_geocorr.mbtiles" if inps.do_geocorr else json_dir / f"{final_stem}.mbtiles"
+    mbtiles_path = json_dir / f"{dataset_name}_geocorr.mbtiles" if inps.do_geocorr else json_dir / f"{dataset_name}.mbtiles"
 
     #locate scripts
     search_dirs = [
@@ -242,79 +267,72 @@ def main():
         scripts_root / "tools" / "insarmaps_scripts",
     ]
     correct_geolocation = find_script("correct_geolocation.py", search_dirs)
-    to_json = find_script("hdfeos5_or_csv_2json_mbtiles.py", search_dirs)
-    to_insarmaps = find_script("json_mbtiles2insarmaps.py", search_dirs)
 
+    
     #commands
     cmd1 = ["ogr2ogr", "-f", "CSV", "-lco", "GEOMETRY=AS_XY", "-t_srs", "EPSG:4326", str(csv_path), str(shp_path)]
     cmd2 = [correct_geolocation, str(csv_path), "--outfile", str(geocorr_csv)]
-
-    #for geocorr option
-    if inps.do_geocorr:
-        input_csv = geocorr_csv
-    else:
-        input_csv = csv_path
+    input_csv = geocorr_csv if inps.do_geocorr else csv_path
     cmd3 = ["hdfeos5_or_csv_2json_mbtiles.py", str(input_csv), str(json_dir)]
-    cmd4 = ["json_mbtiles2insarmaps.py", "--num-workers", "3", "-u", password.docker_insaruser, "-p", password.docker_insarpass,
-            "--host", inps.insarmaps_host, "-P", "insarmaps", "-U", password.docker_databaseuser,
-            "--json_folder", str(json_dir), "--mbtiles_file", str(mbtiles_path)]
-
+    cmd4 = [
+    "json_mbtiles2insarmaps.py",
+    "--num-workers", "3",
+    "-u", password.docker_insaruser,
+    "-p", password.docker_insarpass,
+    "--host", REMOTEHOST_INSARMAPS1,
+    "-P", password.docker_databasepass,
+    "-U", password.docker_databaseuser,
+    "--json_folder", str(json_dir),
+    "--mbtiles_file", str(mbtiles_path),
+]
+    
     if inps.make_jobfile:
-        slurm_commands = [
-            f"{' '.join(cmd1)}",
-        ]
+        slurm_commands = []
+
+        if input_path.suffix == ".h5":
+            cmd0 = [sarvey_export_path, str(h5_path), "-o", str(shp_path)]
+            slurm_commands.append(" ".join(cmd0))
+
+        slurm_commands.append(" ".join(cmd1))
+
         if inps.do_geocorr:
-            slurm_commands.append(f"{' '.join(cmd2)}")
-            input_csv = geocorr_csv
-        else:
-            input_csv = csv_path
+            slurm_commands.append(" ".join(cmd2))
 
         cmd3 = ["hdfeos5_or_csv_2json_mbtiles.py", str(input_csv), str(json_dir)]
-
         slurm_commands.extend([
             f"rm -rf {json_dir}",
-            f"{' '.join(cmd3)}",
-            f"{' '.join(cmd4)} &",
-            f"{' '.join(cmd4).replace(inps.insarmaps_host, '149.165.153.50')} &"
+            " ".join(cmd3),
+            " ".join(cmd4).replace(REMOTEHOST_INSARMAPS1, REMOTEHOST_INSARMAPS2) + " &",
+            " ".join(cmd4) + " &"
         ])
-        create_jobfile(base_dir / "sarvey2insarmaps.job", slurm_commands, mbtiles_path, final_stem)
+        
+        create_jobfile(base_dir / "sarvey2insarmaps.job", slurm_commands, mbtiles_path, dataset_name)
         return
 
     #run all steps sequentially
     run_command(cmd1)
     if inps.do_geocorr:
         run_command(cmd2)
-        input_csv = geocorr_csv
-    else:
-        input_csv = csv_path
-
-    cmd3 = ["hdfeos5_or_csv_2json_mbtiles.py", str(input_csv), str(json_dir)]
     run_command(cmd3)
-    #update metadata with inferred values from *_metadata.pickle
+
     final_metadata_path = json_dir / "metadata.pickle"
     if final_metadata_path.exists():
         try:
             with open(final_metadata_path, "rb") as f:
                 meta = pickle.load(f)
-
             final_metadata = meta.get("attributes", {})
-
             for key in ["first_date", "last_date", "data_footprint"]:
                 if key in final_metadata:
                     metadata[key.replace("first_", "start_").replace("last_", "end_")] = final_metadata[key]
-
-            #add REF_LAT and REF_LON to metadata
             for ref_key in ["REF_LAT", "REF_LON"]:
                 if ref_key in final_metadata:
                     metadata[ref_key] = float(final_metadata[ref_key])
-
         except Exception as e:
             print(f"Warning: Failed to read final metadata from pickle: {e}")
 
+    #update metadata with inferred values from *_metadata.pickle
     print("Final metadata with inferred values:", metadata)
-
-    #store final metadata for documentation
-    final_meta_path = outdir / f"{final_stem}_final_metadata.json"
+    final_meta_path = outdir / f"{dataset_name}_final_metadata.json"
     with open(final_meta_path, "w") as f:
         json.dump(metadata, f, indent=2)
     print(f"Saved final metadata to: {final_meta_path}")
@@ -325,14 +343,10 @@ def main():
     print("\nAll done!")
     ref_lat = metadata.get("REF_LAT", 26.1)
     ref_lon = metadata.get("REF_LON", -80.1)
-
     suffix = "_geocorr" if inps.do_geocorr else ""
-
-    protocol = "https" if inps.insarmaps_host == "insarmaps.miami.edu" else "http"
-    url = f"{protocol}://{inps.insarmaps_host}/start/{ref_lat:.4f}/{ref_lon:.4f}/11.0?flyToDatasetCenter=true&startDataset={final_stem}{suffix}"
-
+    protocol = "https" if REMOTEHOST_INSARMAPS1.startswith("insarmaps.miami.edu") else "http"
+    url = f"{protocol}://{REMOTEHOST_INSARMAPS1}/start/{ref_lat:.4f}/{ref_lon:.4f}/11.0?flyToDatasetCenter=true&startDataset={dataset_name}{suffix}"
     print(f"\nView on Insarmaps:\n{url}")
-
     webbrowser.open(url)
 
 if __name__ == "__main__":
