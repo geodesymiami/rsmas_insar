@@ -49,6 +49,8 @@ def extract_mask(file_path, coords):
     writefile.write(data, out_file=out_file, metadata=attr)
     print(f"Extracted mask -> {out_file}")
 
+    return out_file
+
 def extract_avgSpatialCoherence(file_path, coords):
     data, attr = readfile.read(file_path, datasetName='HDFEOS/GRIDS/timeseries/quality/avgSpatialCoherence')
     attr['FILE_TYPE'] = 'avgSpatialCoherence'
@@ -56,12 +58,16 @@ def extract_avgSpatialCoherence(file_path, coords):
     writefile.write(data, out_file=out_file, metadata=attr)
     print(f"Extracted avgSpatialCoherence -> {out_file}")
 
+    return out_file
+
 def extract_temporalCoherence(file_path, coords):
     data, attr = readfile.read(file_path, datasetName='HDFEOS/GRIDS/timeseries/quality/temporalCoherence')
     attr['FILE_TYPE'] = 'temporalCoherence'
     out_file = "geo_temporalCoherence.h5" if coords=="GEO" else "temporalCoherence.h5"
     writefile.write(data, out_file=out_file, metadata=attr)
     print(f"Extracted temporalCoherence -> {out_file}")
+
+    return out_file
 
 def extract_geometry(file_path, coords):
     group_path = 'HDFEOS/GRIDS/timeseries/geometry'
@@ -83,6 +89,8 @@ def extract_geometry(file_path, coords):
     writefile.write(geo_data, out_file=out_file, metadata=geo_attr)
     print(f"Extracted geometry -> {out_file}")
 
+    return out_file
+
     if coords=="RADAR":
         os.makedirs('inputs',exist_ok=True)
         shutil.copy('geometryRadar.h5', 'inputs')
@@ -102,11 +110,11 @@ def extract_timeseries(file_path, coords):
         print("Error: No displacement datasets found.", file=sys.stderr)
         sys.exit(1)
     date_list = sorted(date_list)
-    
+
     dataset_name_list = []
     for date_str in date_list:
         dataset_name_list.append(f'HDFEOS/GRIDS/timeseries/observation/displacement-{date_str}')
-    
+
     data, attr  = readfile.read(file_path, datasetName=dataset_name_list)
 
     with h5py.File(file_path, 'r') as f:
@@ -135,6 +143,8 @@ def extract_timeseries(file_path, coords):
     writefile.layout_hdf5(out_file, ds_name_dict, metadata=attr)
     writefile.write_hdf5_block(out_file, data=data, datasetName= 'timeseries', block=block)
     print(f"Extracted timeseries (displacement) -> {out_file}")
+
+    return out_file
 
 def main():
     parser = argparse.ArgumentParser(
