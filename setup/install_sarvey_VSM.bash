@@ -10,7 +10,8 @@ git clone git@github.com:EliTras/VSM.git tools/VSM
 git clone git@github.com:luhipi/sarvey tools/sarvey
 
 ### Install GDAL into sarvey environment #########################
-conda create --name sarvey pip -y
+conda create --name sarvey python=3.10 pip -y
+
 #conda install -n sarvey -c conda-forge gdal -y
 #conda env update --name sarvey -f tools/sarvey/environment.yml   #FA: elimintaed because OOM errors
 #conda install -n sarvey -c conda-forge numpy scipy matplotlib h5py pyproj -y
