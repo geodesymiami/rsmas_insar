@@ -15,7 +15,9 @@ conda create --name sarvey python=3.10 pip -y
 #conda install -n sarvey -c conda-forge gdal -y
 #conda env update --name sarvey -f tools/sarvey/environment.yml   #FA: elimintaed because OOM errors
 #conda install -n sarvey -c conda-forge numpy scipy matplotlib h5py pyproj -y
-conda install -n sarvey -c conda-forge setuptools cython pyproj h5py numpy scipy matplotlib numba mintpy shapely geopandas gstools pydantic=1.10.* json5 overpy -y
+
+# FA 5/2025: shoupd install whatever possible with pip, e.g. pip install PySide6
+conda install -n sarvey -c conda-forge setuptools cython pyproj h5py numpy scipy matplotlib numba mintpy shapely geopandas gstools pydantic=1.10.* json5 overpy PySide6 -y
 source tools/miniforge3/etc/profile.d/conda.sh
 conda activate sarvey
 pip install -e tools/MiaplPy
