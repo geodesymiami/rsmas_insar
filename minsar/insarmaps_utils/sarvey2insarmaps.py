@@ -16,7 +16,7 @@ sys.path.insert(0, os.getenv("SSARAHOME"))
 import password_config as password
 
 # FA comment: The script prints lots of information to the screen including tons of metadata. Reduce to what is really necessary,
-educe sugnificantly. OST_INSARMAPS1 not needed as it now uses INSARMAPSHOST
+# FA comment:RMOTEHOST_INSARMAPS1 not needed as it now uses INSARMAPSHOST
 REMOTEHOST_INSARMAPS1 = os.getenv("REMOTEHOST_INSARMAPS2", "149.165.153.50")
 REMOTEHOST_INSARMAPS2 = os.getenv("REMOTEHOST_INSARMAPS1", "insarmaps.miami.edu")
 
