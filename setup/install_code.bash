@@ -65,8 +65,9 @@ make -C tools/snaphu-v2.0.5/src
 cp -p minsar/additions/mintpy/save_hdfeos5.py tools/MintPy/src/mintpy/
 cp -p minsar/additions/mintpy/cli/save_hdfeos5.py tools/MintPy/src/mintpy/cli/
 
-### Adding MiaplPy fix which Sara says she is going to fix
+### Adding not-committed MiaplPy fixes (for the first Sara said she will do it; the second is wrongly out-commented isce imports)
 cp -p minsar/additions/miaplpy/prep_slc_isce.py tools/MiaplPy/src/miaplpy
+cp minsar/additions/miaplpy/unwrap_ifgram.py tools/MiaplPy/src/miaplpy
 
 ### Adding ISCE fixes and copying checked-out ISCE version (the latest) into miniforge directory ###
 if [[ "$(uname)" == "Linux" ]]; then
