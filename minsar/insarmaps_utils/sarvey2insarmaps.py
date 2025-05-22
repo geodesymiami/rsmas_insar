@@ -15,9 +15,12 @@ import sys
 sys.path.insert(0, os.getenv("SSARAHOME"))
 import password_config as password
 
+# FA comment: The script prints lots of information to the screen including tons of metadata. Reduce to what is really necessary,
+educe sugnificantly. OST_INSARMAPS1 not needed as it now uses INSARMAPSHOST
 REMOTEHOST_INSARMAPS1 = os.getenv("REMOTEHOST_INSARMAPS2", "149.165.153.50")
 REMOTEHOST_INSARMAPS2 = os.getenv("REMOTEHOST_INSARMAPS1", "insarmaps.miami.edu")
 
+# FA comment: Good practive is to have the important functions like create_parser at the top.
 
 def find_script(script_name, search_paths):
     for path in search_paths:
@@ -49,6 +52,7 @@ def get_sarvey_export_path():
         raise RuntimeError(f"Could not find 'sarvey_export' using conda run: {e}")
 
 
+# FA comment: Add a 1-2 liner docstring to explain what this is for and what is returned. I don;t like docstrings that explain the obvious which Chat generates.
 def extract_metadata_from_inputs(inputs_path):
     attributes = {}
     dataset_name = None
@@ -169,6 +173,7 @@ def create_jobfile(jobfile_path, commands, mbtiles_path, insarmaps_dataset_id):
     print(f"\nJobfile created: {jobfile_path}")
 
 
+# FA: The main function is much to long.
 def main():
     parser = argparse.ArgumentParser(
         description="End-to-end pipeline for: SARvey shapefiles -> CSV -> JSON -> MBTiles -> Insarmaps",
@@ -194,13 +199,20 @@ def main():
         help="Enable geolocation correction step (default: off)"
     )
     parser.set_defaults(do_geocorr=False)
+    # FA comment:: don't use -g in our code
     parser.add_argument("--sarvey-geocorr", action="store_true", help="Apply geolocation correction for sarvey_export (-g, --correct_geo)")
 
     inps = parser.parse_args()
     print(f"Geolocation correction enabled: {inps.do_geocorr}")
 
+    # FA comment: remove the reading of config.json. We need to take a strategic decision of whetehr we want or don't want to read it.
+    # FA comment: Preferably not to keep it simple.
+    # FA comment: My gut feeling it we should have an option to call sarvey2insarmaps.py without arguments. In this case the config.json is used to determine everything
+
     config_json_path = Path(inps.config_json).resolve() if inps.config_json else Path("config.json").resolve() if Path("config.json").exists() else None
 
+    # FA comments:All these PATH  issues adds too much complexities. Use  relative paths assuming we are in the project directory as in the other code.
+    # FA comments: If full paths are really required we could add them in run_command function
     if config_json_path and config_json_path.exists():
         print(f"Using config file: {config_json_path}")
         with open(config_json_path) as f:
@@ -273,6 +285,7 @@ def main():
     json_dir.mkdir(parents=True, exist_ok=True)
     mbtiles_path = json_dir / f"{dataset_name}_geocorr.mbtiles" if inps.do_geocorr else json_dir / f"{dataset_name}.mbtiles"
 
+    # FA comment: Do we really located the scripts? They should be on the PATH?
     #locate scripts
     search_dirs = [
         scripts_root / "minsar" / "insarmaps_utils",
@@ -281,24 +294,24 @@ def main():
     ]
     correct_geolocation = find_script("correct_geolocation.py", search_dirs)
 
-
     #commands
     cmd1 = ["ogr2ogr", "-f", "CSV", "-lco", "GEOMETRY=AS_XY", "-t_srs", "EPSG:4326", str(csv_path), str(shp_path)]
     cmd2 = [correct_geolocation, str(csv_path), "--outfile", str(geocorr_csv)]
     input_csv = geocorr_csv if inps.do_geocorr else csv_path
     cmd3 = ["hdfeos5_or_csv_2json_mbtiles.py", str(input_csv), str(json_dir)]
     cmd4 = [
-    "json_mbtiles2insarmaps.py",
-    "--num-workers", "3",
-    "-u", password.docker_insaruser,
-    "-p", password.docker_insarpass,
-    "--host", REMOTEHOST_INSARMAPS1,
-    "-P", password.docker_databasepass,
-    "-U", password.docker_databaseuser,
-    "--json_folder", str(json_dir),
-    "--mbtiles_file", str(mbtiles_path),
-]
+        "json_mbtiles2insarmaps.py",
+         "--num-workers", "3",
+         "-u", password.docker_insaruser,
+         "-p", password.docker_insarpass,
+         "--host", REMOTEHOST_INSARMAPS1,
+         "-P", password.docker_databasepass,
+         "-U", password.docker_databaseuser,
+         "--json_folder", str(json_dir),
+         "--mbtiles_file", str(mbtiles_path),
+    ]
 
+    # FA comment: This should be a function for better readibility
     if inps.make_jobfile:
         slurm_commands = []
 
