@@ -15,22 +15,122 @@ import sys
 sys.path.insert(0, os.getenv("SSARAHOME"))
 import password_config as password
 
-# FA comment: The script prints lots of information to the screen including tons of metadata. Reduce to what is really necessary,
-# FA comment:RMOTEHOST_INSARMAPS1 not needed as it now uses INSARMAPSHOST
-REMOTEHOST_INSARMAPS1 = os.getenv("REMOTEHOST_INSARMAPS2", "149.165.153.50")
-REMOTEHOST_INSARMAPS2 = os.getenv("REMOTEHOST_INSARMAPS1", "insarmaps.miami.edu")
 
-# FA comment: Good practive is to have the important functions like create_parser at the top.
+def create_parser():
+    parser = argparse.ArgumentParser(
+        description="End-to-end pipeline for: SARvey shapefiles -> CSV -> JSON -> MBTiles -> Insarmaps",
+        epilog="""\
+    Examples:
 
-def find_script(script_name, search_paths):
-    for path in search_paths:
-        full_path = Path(path) / script_name
-        if full_path.exists():
-            return str(full_path)
-    raise FileNotFoundError(f"Could not find {script_name} in {search_paths}")
+        sarvey2insarmaps.py outputs/shp/p2_coh70_ts.shp
+        sarvey2insarmaps.py outputs/shp/p2_coh70_ts.shp --geocorr
+        sarvey2insarmaps.py outputs/shp/p2_coh70_ts.shp --make-jobfile
+        sarvey2insarmaps.py outputs/shp/p2_coh70_ts.shp --skip-upload
+
+        sarvey2insarmaps.py outputs/p2_coh80_ts.h5
+        sarvey2insarmaps.py outputs/p2_coh80_ts.h5 --sarvey-geocorr
+    """,
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument("input_file", nargs="?", help="Optional input .h5 or .shp file (uses config.json if omitted)")
+    parser.add_argument("--config-json", help="Path to config.json (overrides default detection)")
+    parser.add_argument("--insarmaps-host",
+        default=os.environ.get("INSARMAPS_HOST", os.getenv("INSARMAPSHOST")),
+        help="Insarmaps server host (default: environment variable INSARMAPS_HOST)"
+    )
+    parser.add_argument("--skip-upload", action="store_true", help="Skip upload to Insarmaps")
+    parser.add_argument("--make-jobfile", action="store_true", help="Generate jobfile")
+    parser.add_argument(
+        "--geocorr", dest="do_geocorr", action="store_true",
+        help="Enable geolocation correction step (default: off)"
+    )
+    parser.set_defaults(do_geocorr=False)
+    parser.add_argument("--sarvey-geocorr", action="store_true", help="Apply geolocation correction for sarvey_export (--correct_geo)")
+
+    return parser
+
+def load_config_and_input_path(inps):
+    """
+    Load input path from config.json or infer it from the input file location.
+    """
+    config_json_path = Path(inps.config_json).resolve() if inps.config_json else None
+
+    if config_json_path and config_json_path.exists():
+        print(f"Using config file: {config_json_path}")
+        with open(config_json_path) as f:
+            config_text = f.read()
+            config_text = re.sub(r"(?<![\w\"])(\w+) *:", r'"\1":', config_text)
+            config_text = re.sub(r",\s*([\]}])", r"\1", config_text)
+            config_data = json.loads(config_text)
+
+        try:
+            inputs_path = Path(config_data["general"]["input_path"]).resolve()
+            print(f"Inputs path set from config.json: {inputs_path}")
+        except (KeyError, TypeError):
+            inputs_path = Path("inputs").resolve()
+            print("'input_path' not found in config.json. Defaulting to ./inputs/")
+    elif inps.input_file:
+        inputs_path = Path(inps.input_file).resolve().parents[1] / "inputs"
+        print(f"Using inferred inputs path: {inputs_path}")
+    else:
+        raise ValueError("Must provide either --input_file or a valid config.json.")
+
+    return inputs_path
+
+
+def set_output_paths(shp_path, dataset_name, do_geocorr):
+    """
+    Create output directories and return key paths.
+    Returns: csv_path, geocorr_csv, json_dir, mbtiles_path, outdir, base_dir
+    """
+    base_dir = shp_path.parent.parent.resolve()
+    outputs_dir = base_dir / "outputs"
+    outputs_dir.mkdir(parents=True, exist_ok=True)
+
+    outdir = outputs_dir / "output_csv"
+    outdir.mkdir(parents=True, exist_ok=True)
+    csv_path = outdir / f"{dataset_name}.csv"
+    geocorr_csv = outdir / f"{dataset_name}_geocorr.csv"
+
+    json_dir = outputs_dir / "JSON"
+    json_dir.mkdir(parents=True, exist_ok=True)
+    mbtiles_name = f"{dataset_name}_geocorr.mbtiles" if do_geocorr else f"{dataset_name}.mbtiles"
+    mbtiles_path = json_dir / mbtiles_name
+
+    return csv_path, geocorr_csv, json_dir, mbtiles_path, outdir, base_dir
+
+def build_commands(shp_path, csv_path, geocorr_csv, json_dir, mbtiles_path, input_csv, inps):
+    """
+    Build the list of shell command sequences for the SARvey-to-Insarmaps pipeline.
+
+    Returns four commands:
+        cmd1 - Convert SHP to CSV using ogr2ogr with WGS84 coordinates.
+        cmd2 - Apply geolocation correction using correct_geolocation.py (if --geocorr).
+        cmd3 - Convert CSV or HDF5 to JSON and MBTiles format using hdfeos5_or_csv_2json_mbtiles.py.
+        cmd4 - Upload MBTiles and JSON data to the Insarmaps server using json_mbtiles2insarmaps.py.
+    """
+    cmd1 = ["ogr2ogr", "-f", "CSV", "-lco", "GEOMETRY=AS_XY", "-t_srs", "EPSG:4326", str(csv_path), str(shp_path)]
+    cmd2 = ["correct_geolocation.py", str(csv_path), "--outfile", str(geocorr_csv)]
+    cmd3 = ["hdfeos5_or_csv_2json_mbtiles.py", str(input_csv), str(json_dir)]
+
+    host = inps.insarmaps_host.split(",")[0]
+    cmd4 = [
+        "json_mbtiles2insarmaps.py",
+         "--num-workers", "3",
+         "-u", password.docker_insaruser,
+         "-p", password.docker_insarpass,
+         "--host", host,
+         "-P", password.docker_databasepass,
+         "-U", password.docker_databaseuser,
+         "--json_folder", str(json_dir),
+         "--mbtiles_file", str(mbtiles_path),
+    ]
+    return cmd1, cmd2, cmd3, cmd4
 
 def get_sarvey_export_path():
-    """Find the path to the 'sarvey_export' executable in the 'sarvey' conda environment."""
+    """
+    Find the path to the 'sarvey_export' executable in the 'sarvey' conda environment.
+    """
 
     #try guessing from the current python executable path
     try:
@@ -52,8 +152,11 @@ def get_sarvey_export_path():
         raise RuntimeError(f"Could not find 'sarvey_export' using conda run: {e}")
 
 
-# FA comment: Add a 1-2 liner docstring to explain what this is for and what is returned. I don;t like docstrings that explain the obvious which Chat generates.
 def extract_metadata_from_inputs(inputs_path):
+    """
+    Extract essential metadata from slcStack.h5 and geometryRadar.h5 to generate a dataset name.
+    Returns a dict of metadata and a created dataset name string based on platform, dates, and bbox.
+    """
     attributes = {}
     dataset_name = None
 
@@ -63,9 +166,7 @@ def extract_metadata_from_inputs(inputs_path):
     #load slcStack.h5 attributes
     if slc_path.exists():
         slc_attr = readfile.read_attribute(str(slc_path))
-        print("[INFO] slcStack.h5 attributes:", slc_attr)
-
-
+        
         keys_to_extract = [
             "mission", "PLATFORM", "beam_mode", "flight_direction", "relative_orbit",
             "processing_method", "REF_LAT", "REF_LON", "areaName", "DATE",
@@ -134,103 +235,89 @@ def extract_metadata_from_inputs(inputs_path):
     except Exception as e:
         print(f"[WARN] Could not generate dataset_name: {e}")
 
-    print("[INFO] dataset name:", dataset_name)
+    #info summary
+    mission = attributes.get('mission') or attributes.get('PLATFORM')
+    platform = attributes.get('PLATFORM')
+    beam = attributes.get('beam_mode')
+    orbit = attributes.get('relative_orbit')
+
+    bbox = f"({attributes.get('LAT_REF3')}, {attributes.get('LON_REF4')}) to ({attributes.get('LAT_REF2')}, {attributes.get('LON_REF1')})"
+
+    print(f"[INFO] slcStack.h5: mission={mission}, platform={platform}, beam_mode={beam}, orbit={orbit}")
+    print(f"[INFO] bounding box: {bbox}")
+    print(f"[INFO] dataset name: {dataset_name}")
+    
     return attributes, dataset_name
 
 
 def run_command(command, shell=False, cwd=None):
+    """
+    Execute a shell command and print the command string.
+    """
     cmd_str = ' '.join(command) if isinstance(command, list) else command
     print(f"\nRunning: {cmd_str}")
     try:
-        subprocess.run(command, check=True, shell=shell, cwd=cwd)
+        subprocess.run(command, check=True, shell=shell, cwd=str(cwd) if cwd else None)
     except subprocess.CalledProcessError as e:
         print(f"[ERROR] Command failed with return code {e.returncode}: {cmd_str}")
         raise
 
+def create_jobfile(inps, input_path, cmds, json_dir, base_dir, mbtiles_path, dataset_name, metadata):
+    """
+    Generate a SLURM-compatible jobfile with all processing steps and Insarmaps URL.
+    """
+    cmd0, cmd1, cmd2, cmd3, cmd4 = cmds
+    jobfile_path = base_dir / "sarvey2insarmaps.job"
+    slurm_commands = []
 
-def create_jobfile(jobfile_path, commands, mbtiles_path, insarmaps_dataset_id):
-    """Generate a bash jobfile to reproduce all steps of the pipeline."""
+    if input_path.suffix == ".h5":
+        slurm_commands.append(" ".join(cmd0))
+
+    slurm_commands.append(" ".join(cmd1))
+
+    if inps.do_geocorr:
+        slurm_commands.append(" ".join(cmd2))
+
+    main_host = inps.insarmaps_host.split(",")[0]
+    slurm_commands.extend([
+        f"rm -rf {json_dir}",
+        " ".join(cmd3),
+        " ".join(cmd4).replace(inps.insarmaps_host, "insarmaps.miami.edu") + " &",
+        " ".join(cmd4).replace(inps.insarmaps_host, main_host) + " &"
+    ])
+
     with open(jobfile_path, 'w') as f:
         f.write("#!/bin/bash\n\n")
+        f.write("# Generated by sarvey2insarmaps.py\n")
+        f.write(f"# Dataset: {dataset_name}\n")
+        f.write(f"# Generated on: {date.today()}\n\n")
 
-        #write each command with spacing
-        for cmd in commands:
+        for cmd in slurm_commands:
             f.write(cmd + "\n")
-            if any(phrase in cmd for phrase in ("rm -rf", "geolocation", "hdfeos5")):
+            if any(key in cmd for key in ("rm -rf", "geolocation", "hdfeos5")):
                 f.write("\n")
 
         f.write("wait\n\n")
 
-        #append insarmaps view URLs
+        ref_lat = metadata.get("REF_LAT", 26.1)
+        ref_lon = metadata.get("REF_LON", -80.1)
         suffix = "_geocorr" if "_geocorr" in mbtiles_path.stem else ""
+        
         for host in ["insarmaps.miami.edu", "149.165.153.50"]:
             f.write(
                 f"cat >> insarmaps.log<<EOF\n"
-                f"https://{host}/start/26.1/-80.1/11.0?flyToDatasetCenter=true&startDataset={insarmaps_dataset_id}{suffix}\n"
+                f"https://{host}/start/{ref_lat:.4f}/{ref_lon:.4f}/11.0?flyToDatasetCenter=true&startDataset={dataset_name}{suffix}\n"
                 f"EOF\n\n"
             )
 
     print(f"\nJobfile created: {jobfile_path}")
 
-
-# FA: The main function is much to long.
 def main():
-    parser = argparse.ArgumentParser(
-        description="End-to-end pipeline for: SARvey shapefiles -> CSV -> JSON -> MBTiles -> Insarmaps",
-        epilog="""\
-    Examples:
-
-        sarvey2insarmaps.py outputs/shp/p2_coh70_ts.shp
-        sarvey2insarmaps.py outputs/shp/p2_coh70_ts.shp --geocorr
-        sarvey2insarmaps.py outputs/shp/p2_coh70_ts.shp --make-jobfile
-        sarvey2insarmaps.py outputs/shp/p2_coh70_ts.shp --skip-upload
-
-        sarvey2insarmaps.py outputs/p2_coh80_ts.h5
-        sarvey2insarmaps.py outputs/p2_coh80_ts.h5 --sarvey-geocorr
-    """,
-        formatter_class=argparse.RawTextHelpFormatter
-    )
-    parser.add_argument("input_file", help="Input .h5 or .shp file")
-    parser.add_argument("--config-json", help="Path to config.json (overrides default detection)")
-    parser.add_argument("--skip-upload", action="store_true", help="Skip upload to Insarmaps")
-    parser.add_argument("--make-jobfile", action="store_true", help="Generate jobfile")
-    parser.add_argument(
-        "--geocorr", dest="do_geocorr", action="store_true",
-        help="Enable geolocation correction step (default: off)"
-    )
-    parser.set_defaults(do_geocorr=False)
-    # FA comment:: don't use -g in our code
-    parser.add_argument("--sarvey-geocorr", action="store_true", help="Apply geolocation correction for sarvey_export (-g, --correct_geo)")
-
+    parser = create_parser()
     inps = parser.parse_args()
     print(f"Geolocation correction enabled: {inps.do_geocorr}")
 
-    # FA comment: remove the reading of config.json. We need to take a strategic decision of whetehr we want or don't want to read it.
-    # FA comment: Preferably not to keep it simple.
-    # FA comment: My gut feeling it we should have an option to call sarvey2insarmaps.py without arguments. In this case the config.json is used to determine everything
-
-    config_json_path = Path(inps.config_json).resolve() if inps.config_json else Path("config.json").resolve() if Path("config.json").exists() else None
-
-    # FA comments:All these PATH  issues adds too much complexities. Use  relative paths assuming we are in the project directory as in the other code.
-    # FA comments: If full paths are really required we could add them in run_command function
-    if config_json_path and config_json_path.exists():
-        print(f"Using config file: {config_json_path}")
-        with open(config_json_path) as f:
-            config_text = f.read()
-            config_text = re.sub(r"(?<![\w\"])(\w+) *:", r'"\1":', config_text)
-            config_text = re.sub(r",\s*([\]}])", r"\1", config_text)
-            config_data = json.loads(config_text)
-
-        try:
-            inputs_path = Path(config_data["general"]["input_path"]).resolve()
-            print(f"Inputs path set from config.json: {inputs_path}")
-        except (KeyError, TypeError):
-            inputs_path = Path("inputs").resolve()
-            print("'input_path' not found in config.json. Defaulting to ./inputs/")
-    else:
-        inputs_path = Path(inps.input_file).resolve().parents[1] / "inputs"
-        print(f"Using inferred inputs path: {inputs_path}")
-
+    inputs_path = load_config_and_input_path(inps)
 
     #ensure required files exist
     required_files = ["slcStack.h5", "geometryRadar.h5"]
@@ -240,16 +327,14 @@ def main():
             raise FileNotFoundError(f"Required file not found: {fpath}")
 
     metadata, dataset_name = extract_metadata_from_inputs(inputs_path)
-    if metadata:
-        print("Extracted metadata:", metadata)
-    else:
-        print("Warning: No metadata found in slcStack.h5 or geometryRadar.h5.")
+    
+    if not metadata:
+        print("[WARN] No metadata found in slcStack.h5 or geometryRadar.h5.")
 
     #use $RSMASINSAR_HOME as the root for now (temporarily)
     rsmasinsar_env = os.environ.get("RSMASINSAR_HOME")
     if not rsmasinsar_env:
         raise EnvironmentError("Environment variable RSMASINSAR_HOME is not set.")
-    scripts_root = Path(rsmasinsar_env).resolve()
 
     #input/output paths
     input_path = Path(inps.input_file).resolve()
@@ -258,82 +343,34 @@ def main():
         shp_path = h5_path.parent / "shp" / f"{h5_path.stem}.shp"
         print(f"[INFO] Input is HDF5. Inferred shapefile path: {shp_path}")
         #step0: always run sarvey_export if input is HDF5
-        # Comment Falk: finding the correct path is better done in a function, e.g. in run_command
         sarvey_export_path = get_sarvey_export_path()
         cmd0 = [sarvey_export_path, str(h5_path), "-o", str(shp_path)]
         if inps.sarvey_geocorr:
-            # Comment Falk: don't use -g. full option name makes it more readable
             print("[INFO] Applying SARvey geolocation correction")
-            cmd0.append("-g")
-        run_command(cmd0, cwd=config_json_path.parent if config_json_path else h5_path.parent)
+            cmd0.append("--correct_geo")
     else:
         shp_path = input_path
         h5_path = shp_path.with_suffix(".h5")
         print(f"[INFO] Input is SHP. Inferred HDF5 path: {h5_path}")
 
 
-    base_dir = shp_path.parent.parent.resolve()
-    outputs_dir = base_dir / "outputs"
-    outputs_dir.mkdir(parents=True, exist_ok=True)
+    csv_path, geocorr_csv, json_dir, mbtiles_path, outdir, base_dir = set_output_paths(shp_path, dataset_name, inps.do_geocorr)
 
-    outdir = outputs_dir / "output_csv"
-    outdir.mkdir(parents=True, exist_ok=True)
-    csv_path = outdir / f"{dataset_name}.csv"
-    geocorr_csv = outdir / f"{dataset_name}_geocorr.csv"
-
-    json_dir = outputs_dir / "JSON"
-    json_dir.mkdir(parents=True, exist_ok=True)
-    mbtiles_path = json_dir / f"{dataset_name}_geocorr.mbtiles" if inps.do_geocorr else json_dir / f"{dataset_name}.mbtiles"
-
-    # FA comment: Do we really located the scripts? They should be on the PATH?
-    #locate scripts
-    search_dirs = [
-        scripts_root / "minsar" / "insarmaps_utils",
-        scripts_root / "tools",
-        scripts_root / "tools" / "insarmaps_scripts",
-    ]
-    correct_geolocation = find_script("correct_geolocation.py", search_dirs)
-
-    #commands
-    cmd1 = ["ogr2ogr", "-f", "CSV", "-lco", "GEOMETRY=AS_XY", "-t_srs", "EPSG:4326", str(csv_path), str(shp_path)]
-    cmd2 = [correct_geolocation, str(csv_path), "--outfile", str(geocorr_csv)]
     input_csv = geocorr_csv if inps.do_geocorr else csv_path
-    cmd3 = ["hdfeos5_or_csv_2json_mbtiles.py", str(input_csv), str(json_dir)]
-    cmd4 = [
-        "json_mbtiles2insarmaps.py",
-         "--num-workers", "3",
-         "-u", password.docker_insaruser,
-         "-p", password.docker_insarpass,
-         "--host", REMOTEHOST_INSARMAPS1,
-         "-P", password.docker_databasepass,
-         "-U", password.docker_databaseuser,
-         "--json_folder", str(json_dir),
-         "--mbtiles_file", str(mbtiles_path),
-    ]
+    cmd1, cmd2, cmd3, cmd4 = build_commands(
+        shp_path, csv_path, geocorr_csv, json_dir, mbtiles_path, input_csv, inps
+    )
 
-    # FA comment: This should be a function for better readibility
     if inps.make_jobfile:
-        slurm_commands = []
+            print("[INFO] Creating jobfile only, skipping execution.")
+            create_jobfile(inps, input_path, (cmd0, cmd1, cmd2, cmd3, cmd4), json_dir, base_dir, mbtiles_path, dataset_name, metadata)
+            return
+    
+    #only run if not --make-jobfile
+    if input_path.suffix == ".h5":
+        run_command(cmd0, cwd=h5_path.parent.parent)
 
-        if input_path.suffix == ".h5":
-            cmd0 = [sarvey_export_path, str(h5_path), "-o", str(shp_path)]
-            slurm_commands.append(" ".join(cmd0))
-
-        slurm_commands.append(" ".join(cmd1))
-
-        if inps.do_geocorr:
-            slurm_commands.append(" ".join(cmd2))
-
-        cmd3 = ["hdfeos5_or_csv_2json_mbtiles.py", str(input_csv), str(json_dir)]
-        slurm_commands.extend([
-            f"rm -rf {json_dir}",
-            " ".join(cmd3),
-            " ".join(cmd4).replace(REMOTEHOST_INSARMAPS1, REMOTEHOST_INSARMAPS2) + " &",
-            " ".join(cmd4) + " &"
-        ])
-
-        create_jobfile(base_dir / "sarvey2insarmaps.job", slurm_commands, mbtiles_path, dataset_name)
-        return
+    cmds = (cmd0, cmd1, cmd2, cmd3, cmd4)
 
     #run all steps sequentially
     run_command(cmd1)
@@ -357,11 +394,10 @@ def main():
             print(f"Warning: Failed to read final metadata from pickle: {e}")
 
     #update metadata with inferred values from *_metadata.pickle
-    print("Final metadata with inferred values:", metadata)
     final_meta_path = outdir / f"{dataset_name}_final_metadata.json"
     with open(final_meta_path, "w") as f:
         json.dump(metadata, f, indent=2)
-    print(f"Saved final metadata to: {final_meta_path}")
+    print(f"[INFO] Final metadata written to: {final_meta_path}")
 
     if not inps.skip_upload:
         run_command(cmd4)
@@ -370,8 +406,9 @@ def main():
     ref_lat = metadata.get("REF_LAT", 26.1)
     ref_lon = metadata.get("REF_LON", -80.1)
     suffix = "_geocorr" if inps.do_geocorr else ""
-    protocol = "https" if REMOTEHOST_INSARMAPS1.startswith("insarmaps.miami.edu") else "http"
-    url = f"{protocol}://{REMOTEHOST_INSARMAPS1}/start/{ref_lat:.4f}/{ref_lon:.4f}/11.0?flyToDatasetCenter=true&startDataset={dataset_name}{suffix}"
+    protocol = "https" if inps.insarmaps_host.startswith("insarmaps.miami.edu") else "http"
+    main_host = inps.insarmaps_host.split(",")[0]
+    url = f"{protocol}://{main_host}/start/{ref_lat:.4f}/{ref_lon:.4f}/11.0?flyToDatasetCenter=true&startDataset={dataset_name}{suffix}"
     print(f"\nView on Insarmaps:\n{url}")
     webbrowser.open(url)
 
