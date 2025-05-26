@@ -325,7 +325,7 @@ def create_jobfile(inps, input_path, cmds, json_dir, base_dir, mbtiles_path, dat
     Generate a SLURM-compatible jobfile with all processing steps and Insarmaps URL.
     """
     cmd0, cmd1, cmd2, cmd3, cmd4 = cmds
-    jobfile_path = base_dir / "sarvey2insarmaps.job"
+    jobfile_path = base_dir / "sarvey2insarmaps.log"
     slurm_commands = []
 
     if input_path.suffix == ".h5":
