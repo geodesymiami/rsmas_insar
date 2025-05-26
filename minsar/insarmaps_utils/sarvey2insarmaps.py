@@ -189,7 +189,7 @@ def extract_metadata_from_inputs(inputs_path):
     attributes.setdefault("start_date", "TO_INFER")
     attributes.setdefault("end_date", "TO_INFER")
     attributes.setdefault("history", str(date.today()))
-    attributes.setdefault("data_footprint", "TO_INFER")
+    attributes.setdefault("data_footprint", "")
 
     #generate dataset name
     try:
@@ -249,6 +249,64 @@ def extract_metadata_from_inputs(inputs_path):
     
     return attributes, dataset_name
 
+def update_and_save_final_metadata(json_dir, outdir, dataset_name, metadata):
+    """
+    Update metadata dictionary using metadata.pickle if available,
+    and save the final metadata as a JSON file.
+
+    Returns: updated metadata
+    """
+    final_metadata_path = json_dir / "metadata.pickle"
+    if final_metadata_path.exists():
+        try:
+            with open(final_metadata_path, "rb") as f:
+                meta = pickle.load(f)
+            final_metadata = meta.get("attributes", {})
+            for key in ["first_date", "last_date", "data_footprint"]:
+                if key in final_metadata:
+                    metadata[key.replace("first_", "start_").replace("last_", "end_")] = final_metadata[key]
+            for ref_key in ["REF_LAT", "REF_LON"]:
+                if ref_key in final_metadata:
+                    metadata[ref_key] = float(final_metadata[ref_key])
+        except Exception as e:
+            print(f"[WARN] Failed to read final metadata from pickle: {e}")
+
+    final_meta_path = outdir / f"{dataset_name}_final_metadata.json"
+    with open(final_meta_path, "w") as f:
+        json.dump(metadata, f, indent=2)
+    print(f"[INFO] Final metadata written to: {final_meta_path}")
+
+    return metadata
+
+def get_data_footprint(metadata):
+    """
+    Compute center of WKT-style POLYGON string in 'data_footprint'.
+    Falls back to REF_LAT and REF_LON if needed.
+    """
+    from shapely.wkt import loads as load_wkt
+
+    wkt = metadata.get("data_footprint", "")
+    if not isinstance(wkt, str) or not wkt.strip().upper().startswith("POLYGON"):
+        print("[WARN] No valid data_footprint available — using REF_LAT/REF_LON instead")
+        return metadata.get("REF_LAT", 26.1), metadata.get("REF_LON", -80.1)
+
+    try:
+        polygon = load_wkt(wkt)
+        centroid = polygon.centroid
+        return centroid.y, centroid.x  # lat, lon
+    except Exception as e:
+        print(f"[WARN] Failed to parse data_footprint WKT: {e}")
+        return metadata.get("REF_LAT", 26.1), metadata.get("REF_LON", -80.1)
+
+
+def generate_insarmaps_url(host, dataset_name, metadata, geocorr=False):
+    """
+    Generate an Insarmaps viewer URL using center of data footprint if available.
+    """
+    lat, lon = get_data_footprint(metadata)
+    protocol = "https" if host.startswith("insarmaps.miami.edu") else "http"
+    suffix = "_geocorr" if geocorr else ""
+    return f"{protocol}://{host}/start/{lat:.4f}/{lon:.4f}/11.0?flyToDatasetCenter=true&startDataset={dataset_name}{suffix}"
 
 def run_command(command, shell=False, cwd=None):
     """
@@ -278,12 +336,12 @@ def create_jobfile(inps, input_path, cmds, json_dir, base_dir, mbtiles_path, dat
     if inps.do_geocorr:
         slurm_commands.append(" ".join(cmd2))
 
-    main_host = inps.insarmaps_host.split(",")[0]
+    host = inps.insarmaps_host.split(",")[0]
     slurm_commands.extend([
         f"rm -rf {json_dir}",
         " ".join(cmd3),
         " ".join(cmd4).replace(inps.insarmaps_host, "insarmaps.miami.edu") + " &",
-        " ".join(cmd4).replace(inps.insarmaps_host, main_host) + " &"
+        " ".join(cmd4).replace(inps.insarmaps_host, host) + " &"
     ])
 
     with open(jobfile_path, 'w') as f:
@@ -299,16 +357,12 @@ def create_jobfile(inps, input_path, cmds, json_dir, base_dir, mbtiles_path, dat
 
         f.write("wait\n\n")
 
-        ref_lat = metadata.get("REF_LAT", 26.1)
-        ref_lon = metadata.get("REF_LON", -80.1)
-        suffix = "_geocorr" if "_geocorr" in mbtiles_path.stem else ""
-        
-        for host in ["insarmaps.miami.edu", "149.165.153.50"]:
-            f.write(
-                f"cat >> insarmaps.log<<EOF\n"
-                f"https://{host}/start/{ref_lat:.4f}/{ref_lon:.4f}/11.0?flyToDatasetCenter=true&startDataset={dataset_name}{suffix}\n"
-                f"EOF\n\n"
-            )
+        #use generate_insarmaps_url to compute accurate footprint center URLs
+        url_1 = generate_insarmaps_url("insarmaps.miami.edu", dataset_name, metadata, geocorr=inps.do_geocorr)
+        url_2 = generate_insarmaps_url(inps.insarmaps_host.split(",")[0], dataset_name, metadata, geocorr=inps.do_geocorr)
+
+        f.write(f"cat >> insarmaps.log<<EOF\n{url_1}\nEOF\n\n")
+        f.write(f"cat >> insarmaps.log<<EOF\n{url_2}\nEOF\n\n")
 
     print(f"\nJobfile created: {jobfile_path}")
 
@@ -370,45 +424,21 @@ def main():
     if input_path.suffix == ".h5":
         run_command(cmd0, cwd=h5_path.parent.parent)
 
-    cmds = (cmd0, cmd1, cmd2, cmd3, cmd4)
-
     #run all steps sequentially
     run_command(cmd1)
     if inps.do_geocorr:
         run_command(cmd2)
     run_command(cmd3)
 
-    final_metadata_path = json_dir / "metadata.pickle"
-    if final_metadata_path.exists():
-        try:
-            with open(final_metadata_path, "rb") as f:
-                meta = pickle.load(f)
-            final_metadata = meta.get("attributes", {})
-            for key in ["first_date", "last_date", "data_footprint"]:
-                if key in final_metadata:
-                    metadata[key.replace("first_", "start_").replace("last_", "end_")] = final_metadata[key]
-            for ref_key in ["REF_LAT", "REF_LON"]:
-                if ref_key in final_metadata:
-                    metadata[ref_key] = float(final_metadata[ref_key])
-        except Exception as e:
-            print(f"Warning: Failed to read final metadata from pickle: {e}")
-
-    #update metadata with inferred values from *_metadata.pickle
-    final_meta_path = outdir / f"{dataset_name}_final_metadata.json"
-    with open(final_meta_path, "w") as f:
-        json.dump(metadata, f, indent=2)
-    print(f"[INFO] Final metadata written to: {final_meta_path}")
+    metadata = update_and_save_final_metadata(json_dir, outdir, dataset_name, metadata)
 
     if not inps.skip_upload:
         run_command(cmd4)
 
     print("\nAll done!")
-    ref_lat = metadata.get("REF_LAT", 26.1)
-    ref_lon = metadata.get("REF_LON", -80.1)
-    suffix = "_geocorr" if inps.do_geocorr else ""
-    protocol = "https" if inps.insarmaps_host.startswith("insarmaps.miami.edu") else "http"
-    main_host = inps.insarmaps_host.split(",")[0]
-    url = f"{protocol}://{main_host}/start/{ref_lat:.4f}/{ref_lon:.4f}/11.0?flyToDatasetCenter=true&startDataset={dataset_name}{suffix}"
+
+    host = inps.insarmaps_host.split(",")[0]
+    url = generate_insarmaps_url(host, dataset_name, metadata, geocorr=inps.do_geocorr)
     print(f"\nView on Insarmaps:\n{url}")
     webbrowser.open(url)
 
