@@ -37,14 +37,13 @@ git clone git@github.com:falkamelung/MintPy.git tools/MintPy_falk
 #git clone git@github.com:geodesymiami/SourceInversion.git tools/SourceInversion
 
 mamba install --file minsar/conda_requirements.txt --yes -c conda-forge
-mamba install --file tools/insarmaps_scripts/conda_requirements.txt -c conda-forge
+mamba install --file tools/insarmaps_scripts/conda_requirements.txt --yes -c conda-forge
 
 ### Install python code and dependencies  ########
 pip install -r tools/MintPy/requirements.txt
 pip install -e tools/MintPy
 pip install -e tools/MiaplPy
-pip install -r minsar/requirements.txt
-pip install -r tools/insarmaps_scripts/requirements.txt
+pip install -r minsar/pip_requirements.txt
 pip install -r tools/PlotData/requirements.txt
 pip install -r tools/Precip/requirements.txt
 pip install -r tools/sardem/requirements.txt
