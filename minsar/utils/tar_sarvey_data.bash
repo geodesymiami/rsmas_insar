@@ -8,22 +8,32 @@ if [[ $# -ne 1 || "$1" == "--help" || "$1" == "-h" ]]; then
     echo "Example:  $0 milleniumtower"
     exit 1
 fi
-
 base_dir="$1"
+archive="${base_dir}.tar.gz"
+parent_dir="$(dirname "$base_dir")"
+subpath="$(basename "$base_dir")"
 
-# Check existence of required files and folders
-for item in inputs inverted config.json subset.log; do
-    if [[ ! -e "${base_dir}/${item}" ]]; then
-        echo "Error: ${base_dir}/${item} does not exist."
-        exit 1
+# List of target files/directories
+targets=("inputs" "inverted" "config.json" "subset.log")
+
+# Build the list of existing paths
+include_args=()
+for target in "${targets[@]}"; do
+    full_path="${base_dir}/${target}"
+    if [ -e "$full_path" ]; then
+        include_args+=("${subpath}/${target}")
+    else
+        echo "Warning: ${full_path} does not exist, skipping."
     fi
 done
 
-# Create tar.gz archive with correct relative paths
-tar -czf "${base_dir}.tar.gz" -C "$(dirname "$base_dir")" \
-    "$(basename "$base_dir")/inputs" \
-    "$(basename "$base_dir")/inverted" \
-    "$(basename "$base_dir")/config.json" \
-    "$(basename "$base_dir")/subset.log"
+# Only proceed if at least one file/dir exists
+if [ "${#include_args[@]}" -eq 0 ]; then
+    echo "Error: No files or directories found to archive."
+    exit 1
+fi
+
+# Create the archive
+tar -czf "$archive" -C "$parent_dir" "${include_args[@]}"
 
 echo "Created archive: ${base_dir}.tar.gz"
