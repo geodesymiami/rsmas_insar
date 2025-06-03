@@ -11,10 +11,8 @@ source setup/environment.bash;
 mamba install python=3.10 wget git tree numpy --yes
 pip install bypy
 
-if [[ "$(uname)" == "Darwin" ]]; then
-  mamba install mintpy --yes
-else
-  mamba install isce2 mintpy --yes
+if [[ "$(uname)" == "Linux" ]]; then
+  mamba install isce2 --yes
 fi
 
 mamba install numpy pandas xarray netcdf4 packaging gmt pygmt --yes
@@ -38,11 +36,13 @@ git clone git@github.com:scottstanie/sardem tools/sardem
 git clone git@github.com:falkamelung/MintPy.git tools/MintPy_falk
 #git clone git@github.com:geodesymiami/SourceInversion.git tools/SourceInversion
 
-mamba install python=3.10  --file minsar/environment.yml --yes -c conda-forge                     # first install c-code
-mamba install --file tools/insarmaps_scripts/environment.yml -c conda-forge
+mamba install --file minsar/conda_requirements.txt --yes -c conda-forge
+mamba install --file tools/insarmaps_scripts/conda_requirements.txt -c conda-forge
 
 ### Install python code and dependencies  ########
+pip install -r tools/MintPy/requirements.txt
 pip install -e tools/MintPy
+pip install -r tools/MiaplPy/requirements.txt
 pip install -e tools/MiaplPy
 pip install -r minsar/requirements.txt
 pip install -r tools/insarmaps_scripts/requirements.txt
