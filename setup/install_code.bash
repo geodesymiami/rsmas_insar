@@ -42,7 +42,6 @@ mamba install --file tools/insarmaps_scripts/conda_requirements.txt -c conda-for
 ### Install python code and dependencies  ########
 pip install -r tools/MintPy/requirements.txt
 pip install -e tools/MintPy
-pip install -r tools/MiaplPy/requirements.txt
 pip install -e tools/MiaplPy
 pip install -r minsar/requirements.txt
 pip install -r tools/insarmaps_scripts/requirements.txt
