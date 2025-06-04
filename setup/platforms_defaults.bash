@@ -2,8 +2,8 @@
 SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
 echo "sourcing ${SCRIPT_DIR}/platforms_defaults.bash ..."
 
-[ -z ${USER_PREFERRED} ] && export USER_PREFERRED=$USER
-[ -z $HOSTNAME ] && export HOSTNAME=`hostname`
+[ -z "${USER_PREFERRED}" ] && export USER_PREFERRED=$USER
+[ -z "${HOSTNAME}" ] && export HOSTNAME=`hostname`
 export JOBSCHEDULER=NONE
 export QUEUENAME=NONE
 export WORKDIR=~/insarlab
@@ -84,7 +84,7 @@ then
   export SCRATCHDIR=/oasis/scratch/comet/$USER/temp_project
 fi
 ###############################################
-if [[ ${USER} == *circleci* ]] 
+if [[ ${USER} == *circleci* ]]
 then
   export PLATFORM_NAME=circleci
   export JOBSCHEDULER=SLURM
