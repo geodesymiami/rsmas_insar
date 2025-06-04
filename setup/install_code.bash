@@ -44,6 +44,7 @@ pip install -r tools/MintPy/requirements.txt
 pip install -e tools/MintPy
 pip install -e tools/MiaplPy
 pip install -r minsar/pip_requirements.txt
+pip install -r tools/insarmaps_scripts/pip_requirements.txt
 pip install -r tools/PlotData/requirements.txt
 pip install -r tools/Precip/requirements.txt
 pip install -r tools/sardem/requirements.txt
