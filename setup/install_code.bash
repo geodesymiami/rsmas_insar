@@ -66,6 +66,7 @@ cp -p minsar/additions/mintpy/cli/save_hdfeos5.py tools/MintPy/src/mintpy/cli/
 ### Adding not-committed MiaplPy fixes (for the first Sara said she will do it; the second is wrongly out-commented isce imports)
 cp -p minsar/additions/miaplpy/prep_slc_isce.py tools/MiaplPy/src/miaplpy
 cp minsar/additions/miaplpy/unwrap_ifgram.py tools/MiaplPy/src/miaplpy
+cp minsar/additions/miaplpy/utils.py tools/MiaplPy/src/miaplpy/objects
 
 ### Adding ISCE fixes and copying checked-out ISCE version (the latest) into miniforge directory ###
 if [[ "$(uname)" == "Linux" ]]; then
