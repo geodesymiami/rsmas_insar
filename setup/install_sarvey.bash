@@ -16,6 +16,9 @@ conda activate sarvey
 conda install -c conda-forge pysolid gdal --yes
 pip install -e tools/sarvey[dev]
 
+pip install PySide6
+
+git clone git@github.com:falkamelung/sarplotter-main.git tools/sarplotter-main
 ###  Reduce miniforge3 directory size #################
 rm -rf tools/miniforge3/pkgs
 
