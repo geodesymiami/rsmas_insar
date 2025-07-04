@@ -96,7 +96,7 @@ def topstack_check_longitude(lon1, lon2):
     return topLon1, topLon2
 
 
-def main(file_name):
+def read_excel(file_name):
     path = os.path.join(scratch, file_name)
 
     if not os.path.exists(path):
@@ -105,10 +105,6 @@ def main(file_name):
     df = pd.read_excel(path)
 
     return df
-
-
-if __name__ == '__main__':
-    main()
 
 
 def create_insar_template(inps, path, swath, troposphere, lat_step, start_date, end_date, satellite, lat1, lat2, lon1, lon2, miaLon1, miaLon2, topLon1, topLon2):
@@ -330,8 +326,7 @@ def main(iargs=None):
     data_collection = []
 
     if inps.excel:
-        from src.maketemplate.read_excel import main
-        df = main(inps.excel)
+        df = read_excel(inps.excel)
 
         for index, row in df.iterrows():
             lat1, lat2, lon1, lon2 = parse_polygon(row.polygon)
