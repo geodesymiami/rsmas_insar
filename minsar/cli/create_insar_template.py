@@ -5,22 +5,23 @@ import math
 import argparse
 import datetime
 import requests
+import pandas as pd
 from datetime import datetime as dt
 from datetime import timedelta as td
 from urllib.parse import urlparse, parse_qs
-import pandas as pd
-
-scratch = os.getenv('SCRATCHDIR')
 
 
 EXAMPLE = f"""
 DEFAULT FULLPATH FOR EXCEL IS ${os.getenv('SCRATCHDIR')}
+
+EXCEL EXAMPLE IS IN minsar/docs/Central_America.xlsx
 
 create_insar_template.py --excel Central_America.xlsx --save
 create_insar_template.py --swath '1 2' --url https://search.asf.alaska.edu/#/?zoom=9.065&center=130.657,31.033&polygon=POLYGON((130.5892%2031.2764,131.0501%2031.2764,131.0501%2031.5882,130.5892%2031.5882,130.5892%2031.2764))&productTypes=SLC&flightDirs=Ascending&resultsLoaded=true&granule=S1B_IW_SLC__1SDV_20190627T092113_20190627T092140_016880_01FC2F_0C69-SLC
 create_insar_template.py  --polygon 'POLYGON((130.5892 31.2764,131.0501 31.2764,131.0501 31.5882,130.5892 31.5882,130.5892 31.2764))' --path 54 --swath '1 2' --satellite 'Sen' --start-date '20160601' --end-date '20230926'
 """
 SCRATCHDIR = os.getenv('SCRATCHDIR')
+TEMPLATES = os.path.join('minsar', 'defaults')
 
 
 def create_parser():
@@ -29,6 +30,7 @@ def create_parser():
     parser = argparse.ArgumentParser(description=synopsis, epilog=epilog, formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument('--excel', type=str, help="Path to the Excel file with volcano data.")
+    parser.add_argument('--template', type=str, default=f'{os.path.join(TEMPLATES, 'insar_template.template')}', help="Insar template (default: %(default)s).")
     parser.add_argument('--url', type=str, help="URL to the ASF data.")
     parser.add_argument('--polygon', type=str, help="Polygon coordinates in WKT format.")
     parser.add_argument('--path', type=int, help="Path number.")
@@ -65,6 +67,13 @@ def create_parser():
         if not inps.end_date:
             inps.end_date = datetime.datetime.now().strftime("%Y%m%d")
 
+    if inps.template:
+        if os.path.isabs(inps.template):
+            inps.template = inps.template
+
+        elif TEMPLATES not in os.path.basename:
+            inps.template = os.path.join(TEMPLATES, inps.template)
+
     return inps
 
 
@@ -97,10 +106,10 @@ def topstack_check_longitude(lon1, lon2):
 
 
 def read_excel(file_name):
-    path = os.path.join(scratch, file_name)
+    path = os.path.join(SCRATCHDIR, file_name)
 
     if not os.path.exists(path):
-        raise FileNotFoundError(f"File {file_name} does not exist in {scratch}")
+        raise FileNotFoundError(f"File {file_name} does not exist in {SCRATCHDIR}")
 
     df = pd.read_excel(path)
 
@@ -130,6 +139,7 @@ def create_insar_template(inps, path, swath, troposphere, lat_step, start_date, 
     print(f"Topstack longitude range: {topLon1}, {topLon2}\n")
 
     template = generate_config(
+        template_path=inps.template,
         path=path,
         satellite=satellite,
         lat1=lat1,
@@ -249,75 +259,55 @@ def get_satellite_name(satellite):
         raise ValueError("Invalid satellite name. Choose from ['Sen', 'Radarsat', 'TerraSAR']")
 
 
-def generate_config(path, satellite, lat1, lat2, lon1, lon2, topLon1, topLon2, swath, tropo, miaLon1, miaLon2, lat_step, lon_step, start_date, end_date, thresh, jetstream, insarmaps):
-    config = f"""\
-######################################################
-cleanopt                          = 0   # [ 0 / 1 / 2 / 3 / 4]   0,1: none 2: keep merged,geom_master,SLC 3: keep MINTPY 4: everything
-processor                         = isce
-ssaraopt.platform                 = {satellite}  # [Sentinel-1 / ALOS2 / RADARSAT2 / TerraSAR-X / COSMO-Skymed]
-ssaraopt.relativeOrbit            = {path}
-ssaraopt.startDate                = {start_date}  # YYYYMMDD
-ssaraopt.endDate                  = {end_date}    # YYYYMMDD
-hazard_products_flag              = False
-#insarmaps_flag                     = True
-######################################################
-#topsStack.boundingBox             = {lat1} {lat2} {topLon1} {topLon2}    # -1 0.15 -91.6 -90.9
-#topsStack.excludeDates            =  20240926
-topsStack.subswath                = {swath} # '1 2'
-topsStack.numConnections          = 4    # comment
-topsStack.azimuthLooks            = 3    # comment
-topsStack.rangeLooks              = 15   # comment
-topsStack.filtStrength            = 0.2  # comment
-topsStack.unwMethod               = snaphu  # comment
-topsStack.coregistration          = auto  # [NESD geometry], auto for NESD
-#topsStack.referenceDate           = 20151220
+def generate_config(template_path, path, satellite, lat1, lat2, lon1, lon2, topLon1, topLon2, swath, tropo, miaLon1, miaLon2, lat_step, lon_step, start_date, end_date, thresh, jetstream, insarmaps):
+    """
+    Generate a configuration file by replacing placeholders in the template.
 
-######################################################
-mintpy.load.autoPath              = yes
-mintpy.subset.lalo                = {lat1}:{lat2},{lon1}:{lon2}
-mintpy.compute.cluster            = local #[local / slurm / pbs / lsf / none], auto for none, cluster type
-mintpy.compute.numWorker          = 30 #[int > 1 / all], auto for 4 (local) or 40 (non-local), num of workers
-#mintpy.reference.lalo             = {lat1},{lon1}     # S of SN
+    Args:
+        template_path (str): Path to the template file.
+        path (int): Relative orbit path.
+        satellite (str): Satellite name.
+        lat1, lat2, lon1, lon2 (float): Latitude and longitude bounds.
+        topLon1, topLon2 (float): Top bounding box longitude values.
+        swath (str): Subswath values.
+        tropo (str): Tropospheric delay method.
+        miaLon1, miaLon2 (float): MIA longitude bounds.
+        lat_step, lon_step (float): Latitude and longitude step sizes.
+        start_date, end_date (str): Start and end dates in YYYYMMDD format.
+        thresh (float): Minimum temporal coherence threshold.
+        jetstream (bool): Flag for uploading to Jetstream.
+        insarmaps (bool): Flag for generating InSAR maps.
 
-mintpy.networkInversion.parallel  = yes  #[yes / no], auto for no, parallel processing using dask
-mintpy.network.tempBaseMax        = auto  #[1-inf, no], auto for no, max temporal baseline in days
-mintpy.network.perpBaseMax        = auto  #[1-inf, no], auto for no, max perpendicular spatial baseline in meter
-mintpy.network.connNumMax         = auto  #[1-inf, no], auto for no, max number of neighbors for each acquisition
-mintpy.network.coherenceBased     = auto  #[yes / no], auto for no, exclude interferograms with coherence < minCoherence
-mintpy.network.aoiLALO            = auto  #[S:N,W:E / no], auto for no - use the whole area
-mintpy.networkInversion.minTempCoh  = 0.6 #[0.0-1.0], auto for 0.7, min temporal coherence for mask
+    Returns:
+        str: The generated configuration string.
+    """
+    # Read the template file
+    with open(template_path, 'r') as file:
+        template = file.read()
 
-mintpy.troposphericDelay.method   = {tropo}   # pyaps  #[pyaps / height_correlation / base_trop_cor / no], auto for pyaps
-mintpy.save.hdfEos5               = yes   #[yes / update / no], auto for no, save timeseries to UNAVCO InSAR Archive format
-mintpy.save.hdfEos5.update        = yes   #[yes / no], auto for no, put XXXXXXXX as endDate in output filename
-mintpy.save.hdfEos5.subset        = yes   #[yes / no], auto for no, put subset range info in output filename
-mintpy.save.kmz                   = yes   #[yes / no], auto for yes, save geocoded velocity to Google Earth KMZ file
-####################
-minsar.miaplpyDir.addition         = date  #[name / lalo / no] auto for no (miaply_$name_startDate_endDate))
-miaplpy.subset.lalo                = {lat1}:{lat2},{miaLon1}:{miaLon2}  #[S:N,W:E / no], auto for no
-miaplpy.load.startDate             = auto # 20200101
-miaplpy.load.endDate               = auto
-mintpy.geocode.laloStep            = {lat_step},{lon_step}
-mintpy.reference.minCoherence      = 0.5      #[0.0-1.0], auto for 0.85, minimum coherence for auto method
-miaplpy.interferograms.delaunayBaselineRatio = 4
-miaplpy.interferograms.delaunayTempThresh    = 120     # [days] temporal threshold for delaunay triangles, auto for 120
-miaplpy.interferograms.delaunayPerpThresh    = 200     # [meters] Perp baseline threshold for delaunay triangles, auto for 200
-miaplpy.interferograms.networkType           = single_reference # network
-miaplpy.interferograms.networkType           = delaunay # network
-#############################################
-miaplpy.load.processor            = isce
-miaplpy.multiprocessing.numProcessor = 40
-miaplpy.inversion.rangeWindow     = 24   # range window size for searching SHPs, auto for 15
-miaplpy.inversion.azimuthWindow   = 7    # azimuth window size for searching SHPs, auto for 15
-miaplpy.timeseries.tempCohType    = full     # [full, average], auto for full.
-miaplpy.timeseries.minTempCoh     = 0.50     # auto for 0.5
-mintpy.networkInversion.minTempCoh = {thresh}
-#############################################
-minsar.upload_flag                = {jetstream}    # [True / False ], upload to jetstream (Default: False)
-minsar.insarmaps_flag             = {insarmaps}
-minsar.insarmaps_dataset          = filt*DS
-#############################################
-"""
+    # Perform substitutions
+    config = template.format(
+        path=path,
+        satellite=satellite,
+        lat1=lat1,
+        lat2=lat2,
+        lon1=lon1,
+        lon2=lon2,
+        topLon1=topLon1,
+        topLon2=topLon2,
+        swath=swath,
+        tropo=tropo,
+        miaLon1=miaLon1,
+        miaLon2=miaLon2,
+        lat_step=lat_step,
+        lon_step=lon_step,
+        start_date=start_date,
+        end_date=end_date,
+        thresh=thresh,
+        jetstream=jetstream,
+        insarmaps=insarmaps
+    )
+
     return config
 
 
