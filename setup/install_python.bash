@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -eo pipefail
+echo "Exiting for circleCI test 9/2025"
+exit 1 # for CircleCI test 9/2025
 
 ### Install python #########################
 rm -rf tools/miniforge3
