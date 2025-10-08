@@ -1,4 +1,5 @@
-## RSMAS InSAR code
+## This repository has been replaced by geodesymiami/minsar
+## RSMAS InSAR code 
 [![CircleCI](https://dl.circleci.com/status-badge/img/circleci/7w2RUppWsbs2rhMzycmYD4/51opWY8YqFRnTCqTVPPwYy/tree/master.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/circleci/7w2RUppWsbs2rhMzycmYD4/51opWY8YqFRnTCqTVPPwYy/tree/master)
 
 The Miami INterferometric SAR software  (MinSAR) is an open-source python package for Interferometric Synthetic Aperture Radar processing and time series analysis written at the Geodesy Lab of the University of Miami at the Rosenstiel School of Marine and Atmospheric Science (RSMAS). MinSAR uses the following packages:
